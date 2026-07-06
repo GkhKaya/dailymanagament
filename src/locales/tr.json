@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "login": "Giriş Yap",
+    "emailPlaceholder": "E-posta",
+    "passwordPlaceholder": "Şifre",
+    "usernamePlaceholder": "Kullanıcı Adı",
+    "agePlaceholder": "Yaş",
+    "welcomeTitle": "Hoş Geldiniz",
+    "registerTitle": "Kayıt Ol",
+    "rememberMe": "Beni hatırla",
+    "forgotPassword": "Şifremi Unuttum",
+    "forgotPasswordTitle": "Şifrenizi mi Unuttunuz?",
+    "forgotPasswordSubtitle": "E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.",
+    "resetPasswordButton": "Bağlantı Gönder",
+    "backToLogin": "Giriş Ekranına Dön",
+    "noAccount": "Hesabınız yok mu?",
+    "signUp": "Başvur",
+    "hasAccount": "Zaten hesabınız var mı?",
+    "signIn": "Giriş Yap"
+  },
+  "home": {
+    "logo": "Daily Management",
+    "heroTitle": "Kalorini ve gelir giderini yönet",
+    "heroSubtitle": "Günlük beslenmeni takip et aldığın kalori miktarını gör ve takip et aynı zamanda gelir giderlerini yöneterek tasarruf et"
+  }
+}

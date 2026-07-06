@@ -1,26 +1,220 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Colors ── */
+  --background:            #0b1326;
+  --on-surface:            #dae2fd;
+  --on-surface-variant:    #c7c4d7;
+  --primary:               #c0c1ff;
+  --inverse-primary:       #494bd6;
+  --inverse-primary-hover: #5b5df0;
+  --surface-container-low: #131b2e;
+  --outline:               #908fa0;
+  --surface-tint:          #c0c1ff;
+
+  /* ── Radii ── */
+  --radius-btn:   9999px;
+  --radius-input: 8px;
+
+  /* ── Spacing ── */
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+
+  /* ── Typography tokens (single source of truth) ── */
+  /* Logo / Display */
+  --font-logo-size:        clamp(24px, 3vw, 36px);
+  --font-logo-weight:      700;
+  --font-logo-tracking:    -0.03em;
+
+  /* Headline (page title, hero h2) */
+  --font-headline-size:    clamp(22px, 2.8vw, 34px);
+  --font-headline-weight:  700;
+  --font-headline-leading: 1.2;
+  --font-headline-tracking: -0.02em;
+
+  /* Subtitle (welcome h2 on form side) */
+  --font-subtitle-size:    clamp(20px, 2.4vw, 30px);
+  --font-subtitle-weight:  700;
+  --font-subtitle-tracking: -0.02em;
+
+  /* Body */
+  --font-body-size:        16px;
+  --font-body-weight:      400;
+  --font-body-leading:     1.65;
+
+  /* Caption / label-caps */
+  --font-caption-size:     12px;
+  --font-caption-weight:   600;
+  --font-caption-tracking: 0.08em;
+
+  /* Button */
+  --font-btn-size:   14px;
+  --font-btn-weight: 600;
+  --size-btn-h:      52px;
 }
 
+/* ── Tailwind theme bridge ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:      var(--background);
+  --color-foreground:      var(--on-surface);
+  --color-primary:         var(--primary);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-surface:         var(--surface-container-low);
+  --color-border:          var(--outline);
+  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Base ── */
+body {
+  background-color: var(--background);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: var(--font-body-size);
+  line-height: var(--font-body-leading);
+}
+
+/* ── Typography utility classes ── */
+.text-logo {
+  font-size:      var(--font-logo-size);
+  font-weight:    var(--font-logo-weight);
+  letter-spacing: var(--font-logo-tracking);
+  line-height:    1.1;
+}
+
+.text-headline {
+  font-size:      var(--font-headline-size);
+  font-weight:    var(--font-headline-weight);
+  line-height:    var(--font-headline-leading);
+  letter-spacing: var(--font-headline-tracking);
+}
+
+.text-subtitle {
+  font-size:      var(--font-subtitle-size);
+  font-weight:    var(--font-subtitle-weight);
+  letter-spacing: var(--font-subtitle-tracking);
+  line-height:    1.15;
+}
+
+.text-body {
+  font-size:   var(--font-body-size);
+  font-weight: var(--font-body-weight);
+  line-height: var(--font-body-leading);
+}
+
+.text-caption {
+  font-size:      var(--font-caption-size);
+  font-weight:    var(--font-caption-weight);
+  letter-spacing: var(--font-caption-tracking);
+  text-transform: uppercase;
+}
+
+/* ── Ambient background glow ── */
+.ambient-bg {
+  background:
+    radial-gradient(circle at 25% 75%, rgba(73, 75, 214, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(217, 119, 33, 0.06) 0%, transparent 50%),
+    var(--background);
+}
+
+/* ── Input: underline style (floating label) ── */
+.input-group {
+  position:      relative;
+  padding-top:   1.4rem;   /* room for the floating label above */
+  margin-bottom: 2rem;
+}
+
+.input-field {
+  background:   transparent;
+  border:       none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  width:        100%;
+  padding:      0.45rem 0;
+  color:        var(--on-surface);
+  font-size:    var(--font-body-size);
+  font-family:  inherit;
+  transition:   border-color 0.25s ease;
+}
+
+.input-field:focus {
+  outline:            none;
+  border-bottom-color: var(--primary);
+  box-shadow:         none;
+}
+
+/* Floating label — sits inside the field, slides up on focus/filled */
+.input-label {
+  position:       absolute;
+  left:           0;
+  top:            calc(1.4rem + 0.45rem); /* aligned with input text */
+  color:          var(--outline);
+  font-size:      var(--font-body-size);
+  font-family:    inherit;
+  pointer-events: none;
+  transition:     top 0.25s ease, font-size 0.25s ease, color 0.25s ease, letter-spacing 0.25s ease;
+}
+
+.input-field:focus ~ .input-label,
+.input-field:not(:placeholder-shown) ~ .input-label {
+  top:            0;
+  font-size:      var(--font-caption-size);
+  color:          var(--primary);
+  letter-spacing: var(--font-caption-tracking);
+  text-transform: uppercase;
+}
+
+/* ── Primary button ── */
+.btn-primary {
+  background-color: var(--inverse-primary);
+  color:            white;
+  height:           var(--size-btn-h);
+  font-size:        var(--font-btn-size);
+  font-weight:      var(--font-btn-weight);
+  border-radius:    var(--radius-btn);
+  transition:       background-color 0.25s ease, box-shadow 0.25s ease;
+  cursor:           pointer;
+  border:           none;
+}
+
+.btn-primary:hover {
+  background-color: var(--inverse-primary-hover);
+  box-shadow:       0 0 24px rgba(73, 75, 214, 0.45);
+}
+
+/* ── Animations ── */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
+
+.animate-slide-up {
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+/* Delays for staggered animations */
+.anim-delay-100 { animation-delay: 100ms; }
+.anim-delay-150 { animation-delay: 150ms; }
+.anim-delay-200 { animation-delay: 200ms; }
+.anim-delay-300 { animation-delay: 300ms; }
+.anim-delay-400 { animation-delay: 400ms; }
+
