@@ -218,3 +218,47 @@ body {
 .anim-delay-300 { animation-delay: 300ms; }
 .anim-delay-400 { animation-delay: 400ms; }
 
+/* ── Dashboard Ambient Modes ── */
+.ambient-health {
+  background:
+    radial-gradient(circle at 10% 20%, rgba(33, 196, 93, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(217, 119, 33, 0.06) 0%, transparent 50%),
+    var(--background);
+  transition: background 0.8s ease-in-out;
+}
+
+.ambient-finance {
+  background:
+    radial-gradient(circle at 10% 20%, rgba(73, 75, 214, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.06) 0%, transparent 50%),
+    var(--background);
+  transition: background 0.8s ease-in-out;
+}
+
+/* Glass separator line */
+.glass-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  margin: 1.5rem 0;
+}
+
+/* Subtle glass item (no hard borders) */
+.glass-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  transition: background 0.3s ease;
+}
+.glass-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Hide scrollbar for horizontal lists */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

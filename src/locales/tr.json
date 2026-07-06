@@ -18,6 +18,33 @@
     "hasAccount": "Zaten hesabınız var mı?",
     "signIn": "Giriş Yap"
   },
+  "dashboard": {
+    "tabHealth": "Sağlık",
+    "tabFinance": "Cüzdan",
+    "health": {
+      "caloriesRemaining": "Kalan Kalori",
+      "caloriesBurned": "Yakılan",
+      "caloriesConsumed": "Alınan",
+      "meals": "Öğünler",
+      "breakfast": "Kahvaltı",
+      "lunch": "Öğle Yemeği",
+      "dinner": "Akşam Yemeği",
+      "snacks": "Atıştırmalıklar"
+    },
+    "finance": {
+      "totalBalance": "Toplam Bakiye",
+      "monthlyBudget": "Kalan Bütçe",
+      "dailySpend": "Günlük Harcama",
+      "recentTransactions": "Son İşlemler",
+      "accounts": "Hesaplar"
+    },
+    "fab": {
+      "addMeal": "Yemek Ekle",
+      "addExercise": "Egzersiz",
+      "addExpense": "Gider",
+      "addIncome": "Gelir"
+    }
+  },
   "home": {
     "logo": "Daily Management",
     "heroTitle": "Kalorini ve gelir giderini yönet",
