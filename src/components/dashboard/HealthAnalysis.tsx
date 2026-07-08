@@ -147,7 +147,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
-                  formatter={(value: number) => `${value}%`}
+                  formatter={(value: any) => `${value}%`}
                 />
               </PieChart>
             </ResponsiveContainer>

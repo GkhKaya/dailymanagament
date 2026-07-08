@@ -1,9 +1,17 @@
+import { 
+  MealType, 
+  AccountType, 
+  TransactionType, 
+  CategoryType, 
+  DebtDirection 
+} from './Enums';
+
 export type DashboardMode = 'overview' | 'health' | 'finance' | 'health-analysis' | 'finance-analysis';
 
 // ── Health Data Models ──
 export interface MealInfo {
   id: string;
-  type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  type: MealType;
   foodName: string;
   calories: number;
   foods?: { name: string; amount: string; calories: number }[];
@@ -24,7 +32,8 @@ export interface AccountInfo {
   id: string;
   name: string;
   balance: number;
-  type: 'cash' | 'credit' | 'debit';
+  type: AccountType;
+  include_in_total_balance?: boolean;
 }
 
 export interface TransactionInfo {
@@ -32,19 +41,19 @@ export interface TransactionInfo {
   title: string;
   amount: number;
   date: string;
-  type: 'income' | 'expense';
+  type: TransactionType;
 }
 
 export interface CategoryInfo {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: CategoryType;
 }
 
 export interface DebtInfo {
   id: string;
   personName: string;
-  type: 'borrowed' | 'lent';
+  direction: DebtDirection;
   amount: number;
   remainingAmount: number;
   dueDate: string;

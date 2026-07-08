@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { HandCoins, ArrowUpRight, ArrowDownRight, Plus, Calendar } from 'lucide-react';
+import { DebtDirection } from '@/models/Enums';
 
 export function ManageDebtsForm({ onClose }: { onClose: () => void }) {
   const [isAdding, setIsAdding] = useState(false);
-  const [debtType, setDebtType] = useState<'lent' | 'borrowed'>('lent');
+  const [debtDirection, setDebtDirection] = useState<DebtDirection>(DebtDirection.GIVEN);
 
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
 
   const debts = [
-    { id: '1', person: 'Ahmet Yılmaz', type: 'lent', amount: 1500, dueDate: '15.07.2026' },
-    { id: '2', person: 'Kredi Kartı Taksidi', type: 'borrowed', amount: 4500, dueDate: '22.07.2026' },
-    { id: '3', person: 'Ayşe (Yemek)', type: 'lent', amount: 350, dueDate: '10.07.2026' },
+    { id: '1', person: 'Ahmet Yılmaz', direction: DebtDirection.GIVEN, amount: 1500, dueDate: '15.07.2026' },
+    { id: '2', person: 'Kredi Kartı Taksidi', direction: DebtDirection.TAKEN, amount: 4500, dueDate: '22.07.2026' },
+    { id: '3', person: 'Ayşe (Yemek)', direction: DebtDirection.GIVEN, amount: 350, dueDate: '10.07.2026' },
   ];
 
   return (
@@ -32,7 +33,7 @@ export function ManageDebtsForm({ onClose }: { onClose: () => void }) {
 
           <div className="flex flex-col gap-3">
             {debts.map((debt) => {
-              const isLent = debt.type === 'lent';
+              const isLent = debt.direction === DebtDirection.GIVEN;
               return (
                 <div key={debt.id} className="glass-item px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -67,15 +68,15 @@ export function ManageDebtsForm({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-4 animate-fade-in">
           <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-2xl">
             <button 
-              onClick={() => setDebtType('lent')}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl text-body font-medium transition-all ${debtType === 'lent' ? 'bg-[#4ade80] shadow-sm text-[var(--background)]' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+              onClick={() => setDebtDirection(DebtDirection.GIVEN)}
+              className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl text-body font-medium transition-all ${debtDirection === DebtDirection.GIVEN ? 'bg-[#4ade80] shadow-sm text-[var(--background)]' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
             >
               <ArrowUpRight size={18} />
               Borç Verdim
             </button>
             <button 
-              onClick={() => setDebtType('borrowed')}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl text-body font-medium transition-all ${debtType === 'borrowed' ? 'bg-orange-400 shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+              onClick={() => setDebtDirection(DebtDirection.TAKEN)}
+              className={`flex-1 py-3 flex items-center justify-center gap-2 rounded-xl text-body font-medium transition-all ${debtDirection === DebtDirection.TAKEN ? 'bg-orange-400 shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
             >
               <ArrowDownRight size={18} />
               Borç Aldım
@@ -99,7 +100,7 @@ export function ManageDebtsForm({ onClose }: { onClose: () => void }) {
                 <input 
                   type="number" 
                   placeholder="0,00" 
-                  className={`w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body font-semibold text-white focus:outline-none transition-all ${debtType === 'lent' ? 'focus:border-[#4ade80]' : 'focus:border-orange-400'}`}
+                  className={`w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body font-semibold text-white focus:outline-none transition-all ${debtDirection === DebtDirection.GIVEN ? 'focus:border-[#4ade80]' : 'focus:border-orange-400'}`}
                 />
               </div>
             </div>

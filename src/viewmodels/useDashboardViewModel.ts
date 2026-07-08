@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DashboardMode, HealthDataDTO, FinanceDataDTO } from '@/models/DashboardTypes';
+import { MealType, AccountType, TransactionType, CategoryType, DebtDirection } from '@/models/Enums';
 
 // Mock veriler
 const MOCK_HEALTH_DATA: HealthDataDTO = {
@@ -11,7 +12,7 @@ const MOCK_HEALTH_DATA: HealthDataDTO = {
   exerciseMinutes: 45,
   meals: [
     { 
-      id: '1', type: 'breakfast', foodName: 'Yulaf & Süt', calories: 320,
+      id: '1', type: MealType.BREAKFAST, foodName: 'Yulaf & Süt', calories: 320,
       foods: [
         { name: 'Yulaf Ezmesi', amount: '50 gr', calories: 190 },
         { name: 'Yarım Yağlı Süt', amount: '200 ml', calories: 90 },
@@ -19,7 +20,7 @@ const MOCK_HEALTH_DATA: HealthDataDTO = {
       ]
     },
     { 
-      id: '2', type: 'lunch', foodName: 'Tavuk Salata', calories: 450,
+      id: '2', type: MealType.LUNCH, foodName: 'Tavuk Salata', calories: 450,
       foods: [
         { name: 'Izgara Tavuk Göğsü', amount: '200 gr', calories: 330 },
         { name: 'Mevsim Yeşillikleri', amount: '1 porsiyon', calories: 20 },
@@ -27,14 +28,14 @@ const MOCK_HEALTH_DATA: HealthDataDTO = {
       ]
     },
     { 
-      id: '3', type: 'snack', foodName: 'Elma & Badem', calories: 180,
+      id: '3', type: MealType.SNACK, foodName: 'Elma & Badem', calories: 180,
       foods: [
         { name: 'Yeşil Elma', amount: '1 adet', calories: 80 },
         { name: 'Çiğ Badem', amount: '15 gr', calories: 100 }
       ]
     },
     { 
-      id: '4', type: 'dinner', foodName: 'Izgara Somon', calories: 500,
+      id: '4', type: MealType.DINNER, foodName: 'Izgara Somon', calories: 500,
       foods: [
         { name: 'Somon Fileto', amount: '150 gr', calories: 310 },
         { name: 'Haşlanmış Brokoli', amount: '100 gr', calories: 35 },
@@ -49,22 +50,22 @@ const MOCK_FINANCE_DATA: FinanceDataDTO = {
   monthlyBudget: 12000,
   dailySpend: 450,
   accounts: [
-    { id: 'a1', name: 'Nakit Cüzdan', balance: 1500, type: 'cash' },
-    { id: 'a2', name: 'Garanti Kredi Kartı', balance: -4500, type: 'credit' },
-    { id: 'a3', name: 'Enpara Maaş', balance: 37500, type: 'debit' },
+    { id: 'a1', name: 'Nakit Cüzdan', balance: 1500, type: AccountType.CASH, include_in_total_balance: true },
+    { id: 'a2', name: 'Garanti Kredi Kartı', balance: -4500, type: AccountType.CREDIT_CARD, include_in_total_balance: true },
+    { id: 'a3', name: 'Enpara Maaş', balance: 37500, type: AccountType.BANK_ACCOUNT, include_in_total_balance: true },
   ],
   recentTransactions: [
-    { id: 't1', title: 'Migros Alışverişi', amount: 450, date: 'Bugün, 14:30', type: 'expense' },
-    { id: 't2', title: 'Netflix Aboneliği', amount: 150, date: 'Dün, 09:00', type: 'expense' },
-    { id: 't3', title: 'Maaş Ödemesi', amount: 45000, date: '01 Tem, 08:00', type: 'income' },
+    { id: 't1', title: 'Migros Alışverişi', amount: 450, date: 'Bugün, 14:30', type: TransactionType.EXPENSE },
+    { id: 't2', title: 'Netflix Aboneliği', amount: 150, date: 'Dün, 09:00', type: TransactionType.EXPENSE },
+    { id: 't3', title: 'Maaş Ödemesi', amount: 45000, date: '01 Tem, 08:00', type: TransactionType.INCOME },
   ],
   categories: [
-    { id: 'c1', name: 'Market', type: 'expense' },
-    { id: 'c2', name: 'Maaş', type: 'income' },
-    { id: 'c3', name: 'Eğlence', type: 'expense' },
+    { id: 'c1', name: 'Market', type: CategoryType.EXPENSE },
+    { id: 'c2', name: 'Maaş', type: CategoryType.INCOME },
+    { id: 'c3', name: 'Eğlence', type: CategoryType.EXPENSE },
   ],
   debts: [
-    { id: 'd1', personName: 'Ali', type: 'lent', amount: 2000, remainingAmount: 1000, dueDate: '2026-07-20' },
+    { id: 'd1', personName: 'Ali', direction: DebtDirection.GIVEN, amount: 2000, remainingAmount: 1000, dueDate: '2026-07-20' },
   ],
   subscriptions: [
     { id: 's1', name: 'Netflix', amount: 150, nextBillingDate: '2026-07-15' },

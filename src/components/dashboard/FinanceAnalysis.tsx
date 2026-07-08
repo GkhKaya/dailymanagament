@@ -118,7 +118,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
-                  formatter={(value: number) => fmt(value)}
+                  formatter={(value: any) => fmt(value)}
                 />
                 <Line type="monotone" dataKey="spent" name="Harcama" stroke="#fb923c" strokeWidth={3} dot={{ r: 4, fill: '#fb923c', strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
@@ -171,7 +171,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
-                  formatter={(value: number) => fmt(value)}
+                  formatter={(value: any) => fmt(value as number)}
                 />
               </PieChart>
             </ResponsiveContainer>
