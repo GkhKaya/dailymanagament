@@ -1,17 +1,37 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
 
 export function useLoginViewModel() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to actual authentication service
-    console.log('Login attempt:', { email, password, rememberMe });
-    router.push('/dashboard');
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error: signInError } = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe,
+      });
+      
+      if (data && !signInError) {
+        router.push('/dashboard');
+      } else {
+        setError(signInError?.message || 'Giriş başarısız oldu.');
+      }
+    } catch (err: any) {
+      setError('Giriş yapılırken beklenmedik bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
@@ -22,5 +42,7 @@ export function useLoginViewModel() {
     rememberMe,
     setRememberMe,
     handleLogin,
+    loading,
+    error,
   };
 }

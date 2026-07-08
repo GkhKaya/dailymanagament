@@ -17,6 +17,8 @@ export function LoginForm() {
     rememberMe,
     setRememberMe,
     handleLogin,
+    loading,
+    error,
   } = useLoginViewModel();
 
   return (
@@ -63,8 +65,14 @@ export function LoginForm() {
         </Link>
       </div>
 
-      <Button type="submit" withArrow>
-        {t("auth.login")}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+
+      <Button type="submit" withArrow disabled={loading}>
+        {loading ? "Giriş yapılıyor..." : t("auth.login")}
       </Button>
 
       {/* Hesabınız yok mu? */}

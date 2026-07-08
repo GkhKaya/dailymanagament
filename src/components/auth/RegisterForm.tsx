@@ -18,6 +18,8 @@ export function RegisterForm() {
     age,
     setAge,
     handleRegister,
+    loading,
+    error,
   } = useRegisterViewModel();
 
   return (
@@ -58,8 +60,14 @@ export function RegisterForm() {
         required
       />
 
-      <Button type="submit" withArrow className="mt-8">
-        {t("auth.registerTitle")}
+      {error && (
+        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+
+      <Button type="submit" withArrow className="mt-8" disabled={loading}>
+        {loading ? "Kayıt olunuyor..." : t("auth.registerTitle")}
       </Button>
 
       {/* Zaten hesabınız var mı? */}

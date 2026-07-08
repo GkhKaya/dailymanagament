@@ -12,6 +12,9 @@ export function ForgotPasswordForm() {
     email,
     setEmail,
     handleResetPassword,
+    loading,
+    error,
+    success,
   } = useForgotPasswordViewModel();
 
   return (
@@ -30,8 +33,20 @@ export function ForgotPasswordForm() {
         className="mb-8"
       />
 
-      <Button type="submit" withArrow>
-        {t("auth.resetPasswordButton")}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 text-sm">
+          Şifre sıfırlama e-postası başarıyla gönderildi. Lütfen gelen kutunuzu kontrol edin.
+        </div>
+      )}
+
+      <Button type="submit" withArrow disabled={loading || success}>
+        {loading ? "Gönderiliyor..." : t("auth.resetPasswordButton")}
       </Button>
 
       {/* Giriş Ekranına Dön */}
