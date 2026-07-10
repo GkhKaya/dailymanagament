@@ -1,82 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardMode, HealthDataDTO, FinanceDataDTO } from '@/models/DashboardTypes';
-import { MealType, AccountType, TransactionType, CategoryType, DebtDirection } from '@/models/Enums';
-
-// Mock veriler
-const MOCK_HEALTH_DATA: HealthDataDTO = {
-  date: new Date().toISOString(),
-  targetCalories: 2400,
-  consumedCalories: 1450,
-  burnedCalories: 450,
-  sleepMinutes: 0, // 0 to simulate missing sleep data
-  exerciseMinutes: 45,
-  meals: [
-    { 
-      id: '1', type: MealType.BREAKFAST, foodName: 'Yulaf & Süt', calories: 320,
-      foods: [
-        { name: 'Yulaf Ezmesi', amount: '50 gr', calories: 190 },
-        { name: 'Yarım Yağlı Süt', amount: '200 ml', calories: 90 },
-        { name: 'Ceviz', amount: '10 gr', calories: 40 }
-      ]
-    },
-    { 
-      id: '2', type: MealType.LUNCH, foodName: 'Tavuk Salata', calories: 450,
-      foods: [
-        { name: 'Izgara Tavuk Göğsü', amount: '200 gr', calories: 330 },
-        { name: 'Mevsim Yeşillikleri', amount: '1 porsiyon', calories: 20 },
-        { name: 'Zeytinyağı', amount: '1 yemek kaşığı', calories: 100 }
-      ]
-    },
-    { 
-      id: '3', type: MealType.SNACK, foodName: 'Elma & Badem', calories: 180,
-      foods: [
-        { name: 'Yeşil Elma', amount: '1 adet', calories: 80 },
-        { name: 'Çiğ Badem', amount: '15 gr', calories: 100 }
-      ]
-    },
-    { 
-      id: '4', type: MealType.DINNER, foodName: 'Izgara Somon', calories: 500,
-      foods: [
-        { name: 'Somon Fileto', amount: '150 gr', calories: 310 },
-        { name: 'Haşlanmış Brokoli', amount: '100 gr', calories: 35 },
-        { name: 'Kinoa', amount: '50 gr', calories: 155 }
-      ]
-    },
-  ],
-};
-
-const MOCK_FINANCE_DATA: FinanceDataDTO = {
-  totalBalance: 34500,
-  monthlyBudget: 12000,
-  dailySpend: 450,
-  accounts: [
-    { id: 'a1', name: 'Nakit Cüzdan', balance: 1500, type: AccountType.CASH, include_in_total_balance: true },
-    { id: 'a2', name: 'Garanti Kredi Kartı', balance: -4500, type: AccountType.CREDIT_CARD, include_in_total_balance: true },
-    { id: 'a3', name: 'Enpara Maaş', balance: 37500, type: AccountType.BANK_ACCOUNT, include_in_total_balance: true },
-  ],
-  recentTransactions: [
-    { id: 't1', title: 'Migros Alışverişi', amount: 450, date: 'Bugün, 14:30', type: TransactionType.EXPENSE },
-    { id: 't2', title: 'Netflix Aboneliği', amount: 150, date: 'Dün, 09:00', type: TransactionType.EXPENSE },
-    { id: 't3', title: 'Maaş Ödemesi', amount: 45000, date: '01 Tem, 08:00', type: TransactionType.INCOME },
-  ],
-  categories: [
-    { id: 'c1', name: 'Market', type: CategoryType.EXPENSE },
-    { id: 'c2', name: 'Maaş', type: CategoryType.INCOME },
-    { id: 'c3', name: 'Eğlence', type: CategoryType.EXPENSE },
-  ],
-  debts: [
-    { id: 'd1', personName: 'Ali', direction: DebtDirection.GIVEN, amount: 2000, remainingAmount: 1000, dueDate: '2026-07-20' },
-  ],
-  subscriptions: [
-    { id: 's1', name: 'Netflix', amount: 150, nextBillingDate: '2026-07-15' },
-    { id: 's2', name: 'Spor Salonu', amount: 500, nextBillingDate: '2026-07-10' },
-  ]
-};
+import { getHealthDataAction, getFinanceDataAction } from '@/actions/dashboard';
 
 export function useDashboardViewModel() {
   const [mode, setMode] = useState<DashboardMode>('overview');
-  // For health date navigation
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  
+  const [healthData, setHealthData] = useState<HealthDataDTO | null>(null);
+  const [financeData, setFinanceData] = useState<FinanceDataDTO | null>(null);
+  
+  const [isLoadingHealth, setIsLoadingHealth] = useState(false);
+  const [isLoadingFinance, setIsLoadingFinance] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchHealthData = useCallback(async (date: Date) => {
+    setIsLoadingHealth(true);
+    try {
+      const dateString = date.toISOString();
+      const result = await getHealthDataAction(dateString);
+      if (result.success && result.data) {
+        setHealthData(result.data);
+      } else {
+        console.error(result.error);
+        setError("Sağlık verileri yüklenemedi.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Beklenmedik bir hata oluştu.");
+    } finally {
+      setIsLoadingHealth(false);
+    }
+  }, []);
+
+  const fetchFinanceData = useCallback(async () => {
+    setIsLoadingFinance(true);
+    try {
+      const result = await getFinanceDataAction();
+      if (result.success && result.data) {
+        setFinanceData(result.data);
+      } else {
+        console.error(result.error);
+        setError("Finans verileri yüklenemedi.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Beklenmedik bir hata oluştu.");
+    } finally {
+      setIsLoadingFinance(false);
+    }
+  }, []);
+
+  const refreshData = useCallback(async () => {
+    await fetchHealthData(currentDate);
+    await fetchFinanceData();
+  }, [currentDate, fetchHealthData, fetchFinanceData]);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
   const handlePrevDay = () => {
     const prev = new Date(currentDate);
@@ -90,21 +71,17 @@ export function useDashboardViewModel() {
     setCurrentDate(next);
   };
 
-  // Override mock data date with current date for demonstration
-  const activeHealthData = {
-    ...MOCK_HEALTH_DATA,
-    date: currentDate.toISOString(),
-    // slightly randomize calories based on date just to show UI updates
-    consumedCalories: MOCK_HEALTH_DATA.consumedCalories + (currentDate.getDate() % 3) * 100
-  };
-
   return {
     mode,
     setMode,
     currentDate,
     handlePrevDay,
     handleNextDay,
-    healthData: activeHealthData,
-    financeData: MOCK_FINANCE_DATA,
+    healthData,
+    financeData,
+    isLoadingHealth,
+    isLoadingFinance,
+    error,
+    refreshData,
   };
 }

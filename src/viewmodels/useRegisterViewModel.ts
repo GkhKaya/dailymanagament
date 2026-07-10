@@ -24,7 +24,7 @@ export function useRegisterViewModel() {
       });
       
       if (data && !signUpError) {
-        router.push('/dashboard');
+        router.push('/onboarding');
       } else {
         setError(signUpError?.message || 'Kayıt başarısız oldu.');
       }

@@ -71,10 +71,10 @@ export function EditMealForm({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="mt-4 flex gap-3">
-        <button onClick={onClose} className="flex-1 py-4 rounded-2xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
+        <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
           İptal
         </button>
-        <button onClick={onClose} className="flex-[2] py-4 rounded-2xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
+        <button onClick={onClose} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
           Güncelle
         </button>
       </div>

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { CategoryType } from './Enums';
 
 export interface ICategory extends Document {
-  user_id?: mongoose.Types.ObjectId | null;
+  user_id: string;
   name: string;
   type: CategoryType;
   icon: string;
@@ -11,7 +11,7 @@ export interface ICategory extends Document {
 }
 
 const CategorySchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  user_id: { type: String, ref: 'User', default: null },
   name: { type: String, required: true },
   type: { type: String, enum: Object.values(CategoryType), required: true },
   icon: { type: String, required: true },

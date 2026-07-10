@@ -78,16 +78,17 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         <div className="absolute w-full h-20 rounded-full bg-[rgba(33,196,93,0.08)] blur-xl -z-10"></div>
         
         <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesRemaining")}:</span>
-            <span className="font-semibold text-lg text-[#4ade80]">{remaining}</span>
-          </div>
-          <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+          {/* Alınan Kalori */}
           <div className="flex items-center gap-2">
             <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesConsumed")}:</span>
-            <span className="font-medium text-white">{data.consumedCalories}</span>
+            <span className="font-bold text-white flex items-center gap-1">
+              <Utensils size={14} /> {data.consumedCalories}
+            </span>
           </div>
+          
           <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+          
+          {/* Yakılan Kalori */}
           {data.sleepMinutes === 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesBurned")}:</span>
@@ -96,11 +97,19 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesBurned")}:</span>
-              <span className="font-medium text-orange-400 flex items-center gap-1">
+              <span className="font-bold text-orange-400 flex items-center gap-1">
                 <Flame size={14} /> {data.burnedCalories}
               </span>
             </div>
           )}
+
+          <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+
+          {/* Kalan Kalori */}
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesRemaining")}:</span>
+            <span className="font-bold text-lg text-[#4ade80]">{remaining}</span>
+          </div>
         </div>
       </div>
 

@@ -1,24 +1,52 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Calendar } from 'lucide-react';
+import { useAddTransactionViewModel } from '@/viewmodels/useAddTransactionViewModel';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function AddTransactionForm({ onClose }: { onClose: () => void }) {
-  const [type, setType] = useState<'expense' | 'income'>('expense');
-  // Format today's date to YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0];
-  const [date, setDate] = useState(today);
+export function AddTransactionForm({ 
+  onClose,
+  onSuccess,
+  categories, 
+  accounts 
+}: { 
+  onClose: () => void,
+  onSuccess: () => void,
+  categories: { id: string; name: string; type: string }[],
+  accounts: { id: string; name: string }[]
+}) {
+  const {
+    type, setType,
+    amount, setAmount,
+    date, setDate,
+    categoryId, setCategoryId,
+    accountId, setAccountId,
+    description, setDescription,
+    isLoading, error, handleSubmit
+  } = useAddTransactionViewModel(onSuccess);
+
+  // Filter categories based on transaction type
+  const filteredCategories = categories.filter(c => c.type === type);
 
   return (
-    <div className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
+          {error}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
         <button 
-          onClick={() => setType('expense')}
+          type="button"
+          onClick={() => { setType('expense'); setCategoryId(''); }}
           className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'expense' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gider
         </button>
         <button 
-          onClick={() => setType('income')}
+          type="button"
+          onClick={() => { setType('income'); setCategoryId(''); }}
           className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'income' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gelir
@@ -34,7 +62,11 @@ export function AddTransactionForm({ onClose }: { onClose: () => void }) {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
               <input 
                 type="number" 
-                placeholder="0,00" 
+                step="0.01"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00" 
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-xl font-semibold text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
               />
             </div>
@@ -46,6 +78,7 @@ export function AddTransactionForm({ onClose }: { onClose: () => void }) {
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
               <input 
                 type="date" 
+                required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
@@ -54,26 +87,35 @@ export function AddTransactionForm({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        {/* Hesap */}
+        <div className="flex flex-col gap-2">
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hesap</label>
+          <select 
+            required
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
+          >
+            <option value="" disabled>Hesap seçiniz...</option>
+            {accounts.map(acc => (
+              <option key={acc.id} value={acc.id}>{acc.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Kategori */}
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kategori</label>
-          <select className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none">
-            {type === 'expense' ? (
-              <>
-                <option value="market">Market & Gıda</option>
-                <option value="transport">Ulaşım</option>
-                <option value="entertainment">Eğlence</option>
-                <option value="bills">Faturalar</option>
-                <option value="health">Sağlık</option>
-              </>
-            ) : (
-              <>
-                <option value="salary">Maaş</option>
-                <option value="freelance">Freelance İş</option>
-                <option value="investment">Yatırım Getirisi</option>
-                <option value="gift">Hediye / Ödül</option>
-              </>
-            )}
+          <select 
+            required
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
+          >
+            <option value="" disabled>Kategori seçiniz...</option>
+            {filteredCategories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
           </select>
         </div>
 
@@ -82,6 +124,9 @@ export function AddTransactionForm({ onClose }: { onClose: () => void }) {
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Açıklama</label>
           <input 
             type="text" 
+            required
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="İşlem açıklaması girin..." 
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
           />
@@ -89,13 +134,13 @@ export function AddTransactionForm({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="mt-2 flex gap-3">
-        <button onClick={onClose} className="flex-1 py-4 rounded-2xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
+        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
           İptal
         </button>
-        <button onClick={onClose} className={`flex-[2] py-4 rounded-2xl text-white font-bold transition-colors ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}>
-          {type === 'income' ? 'Gelir Ekle' : 'Gider Ekle'}
+        <button type="submit" disabled={isLoading} className={`flex-[2] py-3 rounded-xl text-white font-bold transition-colors flex items-center justify-center ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}>
+          {isLoading ? <LoadingSpinner size="sm" /> : (type === 'income' ? 'Gelir Ekle' : 'Gider Ekle')}
         </button>
       </div>
-    </div>
+    </form>
   );
 }

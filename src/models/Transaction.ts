@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { TransactionType, TransactionSource } from './Enums';
 
 export interface ITransaction extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: string;
   type: TransactionType;
   amount: mongoose.Types.Decimal128;
   date: Date;
@@ -21,7 +21,7 @@ export interface ITransaction extends Document {
 }
 
 const TransactionSchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: String, ref: 'User', required: true },
   type: { 
     type: String, 
     enum: Object.values(TransactionType), 

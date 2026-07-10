@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { DebtDirection, DebtStatus } from './Enums';
 
 export interface IDebt extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: string;
   person_name: string;
   direction: DebtDirection;
   original_amount: mongoose.Types.Decimal128;
@@ -20,7 +20,7 @@ export interface IDebt extends Document {
 }
 
 const DebtSchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: String, ref: 'User', required: true },
   person_name: { type: String, required: true },
   direction: { type: String, enum: Object.values(DebtDirection), required: true },
   original_amount: { type: Schema.Types.Decimal128, required: true },

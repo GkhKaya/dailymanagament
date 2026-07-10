@@ -21,7 +21,7 @@ export interface IFoodEntry {
 }
 
 export interface IDailyLog extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: string;
   date: Date;
   meals: {
     breakfast: IFoodEntry[];
@@ -72,7 +72,7 @@ const FoodEntrySchema = new Schema({
 }, { _id: false });
 
 const DailyLogSchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: String, ref: 'User', required: true },
   date: { type: Date, required: true },
   meals: {
     breakfast: [FoodEntrySchema],
@@ -104,15 +104,14 @@ const DailyLogSchema: Schema = new Schema({
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-DailyLogSchema.pre('validate', function(next: any) {
+DailyLogSchema.pre('validate', function() {
   const doc = this as unknown as IDailyLog;
   if (doc.date) {
     doc.date.setUTCHours(0, 0, 0, 0);
   }
-  next();
 });
 
-DailyLogSchema.pre('findOneAndUpdate', function(next: any) {
+DailyLogSchema.pre('findOneAndUpdate', function() {
   const query = this.getQuery();
   if (query.date && query.date instanceof Date) {
     query.date.setUTCHours(0, 0, 0, 0);
@@ -123,7 +122,6 @@ DailyLogSchema.pre('findOneAndUpdate', function(next: any) {
     if (update.$set && update.$set.date && update.$set.date instanceof Date) update.$set.date.setUTCHours(0, 0, 0, 0);
     if (update.$setOnInsert && update.$setOnInsert.date && update.$setOnInsert.date instanceof Date) update.$setOnInsert.date.setUTCHours(0, 0, 0, 0);
   }
-  next();
 });
 
 // Index: { user_id: 1, date: 1 } unique compound

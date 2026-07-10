@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { AccountType } from './Enums';
 
 export interface IAccount extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: string;
   name: string;
   type: AccountType;
   currency: string;
@@ -20,7 +20,7 @@ export interface IAccount extends Document {
 }
 
 const AccountSchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: String, ref: 'User', required: true },
   name: { type: String, required: true },
   type: { type: String, enum: Object.values(AccountType), required: true },
   currency: { type: String, default: 'TRY' },

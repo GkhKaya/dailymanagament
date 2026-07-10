@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
+import { logoutAction } from "@/actions/auth";
 import { t } from "@/lib/i18n";
 import { useDashboardViewModel } from "@/viewmodels/useDashboardViewModel";
 import { HealthSection } from "@/components/dashboard/HealthSection";
@@ -20,24 +23,36 @@ import { AddSleepForm } from "@/components/forms/AddSleepForm";
 
 import { HealthAnalysis } from "@/components/dashboard/HealthAnalysis";
 import { FinanceAnalysis } from "@/components/dashboard/FinanceAnalysis";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export function DashboardView() {
-  const { mode, setMode, currentDate, handlePrevDay, handleNextDay, healthData, financeData } = useDashboardViewModel();
+  const router = useRouter();
+  const { mode, setMode, currentDate, handlePrevDay, handleNextDay, healthData, financeData, isLoadingHealth, isLoadingFinance, refreshData } = useDashboardViewModel();
   
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
 
+  const handleLogout = async () => {
+    await logoutAction();
+    router.push('/login');
+  };
+
+  const handleSuccess = () => {
+    setActiveSheet(null);
+    refreshData();
+  };
+
   const renderSheetContent = () => {
     switch (activeSheet) {
-      case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} />;
-      case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} />;
-      case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} />;
-      case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} />;
-      case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} />;
-      case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet(null)} />;
-      case 'editAccount': return <EditAccountForm onClose={() => setActiveSheet(null)} />;
-      case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} />;
-      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} />;
-      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} />;
+      case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
+      case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'editAccount': return <EditAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
+      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
+      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       default: return null;
     }
   };
@@ -68,38 +83,85 @@ export function DashboardView() {
       
       {/* ── Top Bar / Mode Switcher (Top Right) ── */}
       <header className="w-full pt-8 pb-4 px-8 flex justify-between items-center animate-fade-in z-10 relative">
-        <h1 className="text-logo text-white">{t("home.logo")}</h1>
+        <div className="flex-1">
+          <h1 className="text-logo text-white">{t("home.logo")}</h1>
+        </div>
         
         {/* Only show mode switcher if not in analysis mode */}
+        <div className="flex-1 flex justify-center hidden sm:flex">
+          {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
+            <div className="flex bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
+              <button
+                onClick={() => setMode('overview')}
+                className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+                  mode === 'overview' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                }`}
+              >
+                Tüm Veriler
+              </button>
+              <button
+                onClick={() => setMode('health')}
+                className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+                  mode === 'health' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                }`}
+              >
+                {t("dashboard.tabHealth")}
+              </button>
+              <button
+                onClick={() => setMode('finance')}
+                className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+                  mode === 'finance' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                }`}
+              >
+                {t("dashboard.tabFinance")}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Logout */}
+        <div className="flex-1 flex justify-end">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-red-500/20 hover:text-red-400 text-[var(--on-surface-variant)] transition-all"
+          >
+            <LogOut size={18} />
+            <span className="text-sm font-medium hidden sm:inline">Çıkış Yap</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Mode Switcher (shows below header on small screens) */}
+      <div className="w-full px-8 pb-4 sm:hidden flex justify-center relative z-10">
         {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
-          <div className="flex bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
+          <div className="flex w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
             <button
               onClick={() => setMode('overview')}
-              className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+              className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
                 mode === 'overview' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
               }`}
             >
-              Tüm Veriler
+              Tümü
             </button>
             <button
               onClick={() => setMode('health')}
-              className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+              className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
                 mode === 'health' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
               }`}
             >
-              {t("dashboard.tabHealth")}
+              Sağlık
             </button>
             <button
               onClick={() => setMode('finance')}
-              className={`px-6 py-2 rounded-full text-body font-medium transition-all duration-300 ${
+              className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
                 mode === 'finance' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
               }`}
             >
-              {t("dashboard.tabFinance")}
+              Finans
             </button>
           </div>
         )}
-      </header>
+      </div>
 
       {/* ── Main Content Area ── */}
       <main className="w-full px-8 pb-24 relative z-0">
@@ -107,33 +169,37 @@ export function DashboardView() {
           <div className="flex flex-col md:flex-row gap-8 w-full max-w-[1400px] mx-auto animate-fade-in">
             {/* Split Screen for Overview */}
             <div className="flex-1 ambient-health rounded-3xl p-6 relative overflow-hidden border border-[rgba(255,255,255,0.05)]">
-              <HealthSection data={healthData} isOverview={true} onOpenSheet={setActiveSheet} />
+              {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={setActiveSheet} />}
             </div>
             <div className="flex-1 ambient-finance rounded-3xl p-6 relative overflow-hidden border border-[rgba(255,255,255,0.05)]">
-              <FinanceSection data={financeData} isOverview={true} onOpenSheet={setActiveSheet} />
+              {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={setActiveSheet} />}
             </div>
           </div>
         )}
 
         {mode === 'health' && (
-          <HealthSection 
-            data={healthData} 
-            isOverview={false} 
-            currentDate={currentDate} 
-            onPrevDay={handlePrevDay} 
-            onNextDay={handleNextDay} 
-            onShowAnalysis={() => setMode('health-analysis')}
-            onOpenSheet={setActiveSheet}
-          />
+          isLoadingHealth || !healthData ? <LoadingSpinner /> : (
+            <HealthSection 
+              data={healthData} 
+              isOverview={false} 
+              currentDate={currentDate} 
+              onPrevDay={handlePrevDay} 
+              onNextDay={handleNextDay} 
+              onShowAnalysis={() => setMode('health-analysis')}
+              onOpenSheet={setActiveSheet}
+            />
+          )
         )}
 
         {mode === 'finance' && (
-          <FinanceSection 
-            data={financeData} 
-            isOverview={false} 
-            onOpenSheet={setActiveSheet} 
-            onShowAnalysis={() => setMode('finance-analysis')}
-          />
+          isLoadingFinance || !financeData ? <LoadingSpinner /> : (
+            <FinanceSection 
+              data={financeData} 
+              isOverview={false} 
+              onOpenSheet={setActiveSheet} 
+              onShowAnalysis={() => setMode('finance-analysis')}
+            />
+          )
         )}
 
         {mode === 'health-analysis' && (

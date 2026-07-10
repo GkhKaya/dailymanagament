@@ -2,6 +2,9 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import mongoose from "mongoose";
+import { connectDB } from "@/lib/db";
+import { Category } from "@/models/Category";
 
 export async function loginAction(formData: FormData) {
   try {
@@ -55,6 +58,24 @@ export async function registerAction(formData: FormData) {
     });
 
     if (response?.user) {
+      try {
+        await connectDB();
+        const defaultCats = [
+          { user_id: response.user.id, name: 'Market', type: 'expense', icon: 'cart', color: '#ef4444', is_default: false },
+          { user_id: response.user.id, name: 'Ulaşım', type: 'expense', icon: 'car', color: '#f59e0b', is_default: false },
+          { user_id: response.user.id, name: 'Eğlence', type: 'expense', icon: 'film', color: '#8b5cf6', is_default: false },
+          { user_id: response.user.id, name: 'Kafe/Restoran', type: 'expense', icon: 'coffee', color: '#f43f5e', is_default: false },
+          { user_id: response.user.id, name: 'Faturalar', type: 'expense', icon: 'zap', color: '#0ea5e9', is_default: false },
+          { user_id: response.user.id, name: 'Ev/Kira', type: 'expense', icon: 'home', color: '#10b981', is_default: false },
+          { user_id: response.user.id, name: 'Sağlık', type: 'expense', icon: 'heart', color: '#ec4899', is_default: false },
+          { user_id: response.user.id, name: 'Maaş', type: 'income', icon: 'briefcase', color: '#22c55e', is_default: false },
+          { user_id: response.user.id, name: 'Yatırım Getirisi', type: 'income', icon: 'trending', color: '#3b82f6', is_default: false },
+          { user_id: response.user.id, name: 'Diğer (Gelir)', type: 'income', icon: 'gift', color: '#14b8a6', is_default: false },
+        ];
+        await Category.insertMany(defaultCats);
+      } catch (err) {
+        console.error("Failed to seed default categories for new user:", err);
+      }
       return { success: true };
     }
 

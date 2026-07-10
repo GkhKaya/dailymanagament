@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { SubscriptionFrequency } from './Enums';
 
 export interface ISubscription extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: string;
   name: string;
   amount: mongoose.Types.Decimal128;
   category_id: mongoose.Types.ObjectId;
@@ -15,7 +15,7 @@ export interface ISubscription extends Document {
 }
 
 const SubscriptionSchema: Schema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: String, ref: 'User', required: true },
   name: { type: String, required: true },
   amount: { type: Schema.Types.Decimal128, required: true },
   category_id: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
