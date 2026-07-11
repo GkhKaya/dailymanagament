@@ -10,11 +10,55 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     servingDescription, setServingDescription,
     quantity, setQuantity,
     calories, setCalories,
+    protein, setProtein,
+    carbs, setCarbs,
+    fat, setFat,
+    fatsecretFoodId, setFatsecretFoodId,
     isLoading, error, handleSubmit
   } = useAddMealViewModel(onSuccess);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  
+  // FatSecret serving tracking
+  const [perGramMacros, setPerGramMacros] = useState({ cals: 0, protein: 0, carbs: 0, fat: 0 });
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (foodName && foodName.length > 2 && activeTab === 'new' && !fatsecretFoodId) {
+        setIsSearching(true);
+        setShowDropdown(true);
+        try {
+          const res = await fetch(`/api/fatsecret/search?query=${encodeURIComponent(foodName)}`);
+          if (res.ok) {
+            const data = await res.json();
+            const foods = data.foods?.food || [];
+            setSearchResults(Array.isArray(foods) ? foods : [foods]);
+            setApiError(null);
+          } else {
+            const errData = await res.json();
+            setApiError(errData.error || "Arama sırasında bir hata oluştu.");
+            setSearchResults([]);
+          }
+        } catch (err) {
+          console.error("FatSecret search error:", err);
+          setApiError("Bağlantı hatası oluştu.");
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [foodName, activeTab, fatsecretFoodId]);
 
   useEffect(() => {
     // Only set initial if not already set, or just let ViewModel handle it.
@@ -37,8 +81,72 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     setCalories(recipe.calories.toString());
     setQuantity('1');
     setServingDescription('1 porsiyon');
+    setFatsecretFoodId(null);
     setActiveTab('new');
   };
+
+  const handleSearchResultSelect = (food: any) => {
+    setFoodName(food.food_name);
+    setFatsecretFoodId(food.food_id);
+    
+    // Parse description for base macros
+    const desc = food.food_description || '';
+    const calsMatch = desc.match(/Calories: ([\d.]+)kcal/);
+    const fatMatch = desc.match(/Fat: ([\d.]+)g/);
+    const carbsMatch = desc.match(/Carbs: ([\d.]+)g/);
+    const proteinMatch = desc.match(/Protein: ([\d.]+)g/);
+
+    const baseCals = calsMatch ? parseFloat(calsMatch[1]) : 0;
+    const baseFat = fatMatch ? parseFloat(fatMatch[1]) : 0;
+    const baseCarbs = carbsMatch ? parseFloat(carbsMatch[1]) : 0;
+    const baseProtein = proteinMatch ? parseFloat(proteinMatch[1]) : 0;
+
+    let multiplier = 1 / 100; // Default: assume the description is for 100g
+    if (desc.includes('100g') || desc.includes('100 g')) {
+      multiplier = 1 / 100;
+    } else if (desc.includes('1 oz')) {
+      multiplier = 1 / 28.3495;
+    } else {
+      // Try to extract any "Per Xg" or "Per X g"
+      const gMatch = desc.match(/Per ([\d.]+)\s*g/i);
+      if (gMatch) {
+        multiplier = 1 / parseFloat(gMatch[1]);
+      }
+    }
+
+    const perGram = {
+      cals: baseCals * multiplier,
+      protein: baseProtein * multiplier,
+      carbs: baseCarbs * multiplier,
+      fat: baseFat * multiplier
+    };
+    
+    setPerGramMacros(perGram);
+    
+    // Set default quantity to 100 grams
+    setQuantity('100');
+    setServingDescription('100 gram');
+    
+    setCalories(Math.round(perGram.cals * 100).toString());
+    setProtein(Math.round(perGram.protein * 100).toString());
+    setCarbs(Math.round(perGram.carbs * 100).toString());
+    setFat(Math.round(perGram.fat * 100).toString());
+
+    setShowDropdown(false);
+  };
+
+  // Re-calculate macros when quantity changes
+  useEffect(() => {
+    const qty = parseFloat(quantity) || 0;
+    setServingDescription(`${qty} gram`);
+    
+    if (fatsecretFoodId) {
+      setCalories(Math.round(perGramMacros.cals * qty).toString());
+      setProtein(Math.round(perGramMacros.protein * qty).toString());
+      setCarbs(Math.round(perGramMacros.carbs * qty).toString());
+      setFat(Math.round(perGramMacros.fat * qty).toString());
+    }
+  }, [quantity, perGramMacros, fatsecretFoodId]);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -88,7 +196,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
       {activeTab === 'new' ? (
         <div className="flex flex-col gap-4 animate-fade-in">
           {/* Yemek Arama / Adı */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 relative z-50">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Yemek Adı</label>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={20} />
@@ -96,11 +204,48 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 type="text" 
                 required
                 value={foodName}
-                onChange={(e) => setFoodName(e.target.value)}
+                onChange={(e) => {
+                  setFoodName(e.target.value);
+                  setFatsecretFoodId(null); // Clear ID when user edits the text
+                }}
+                onFocus={() => {
+                  if (searchResults.length > 0) setShowDropdown(true);
+                }}
+                onBlur={() => {
+                  // Small delay to allow clicking on dropdown items
+                  setTimeout(() => setShowDropdown(false), 200);
+                }}
                 placeholder="Yemek adını girin..." 
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
               />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <LoadingSpinner size="sm" />
+                </div>
+              )}
             </div>
+
+            {/* Dropdown Results */}
+            {showDropdown && (
+              <div className="absolute top-[100%] left-0 w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto hide-scrollbar z-50">
+                {apiError ? (
+                  <div className="p-4 text-center text-red-400 text-sm">{apiError}</div>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((food: any) => (
+                    <div 
+                      key={food.food_id}
+                      onClick={() => handleSearchResultSelect(food)}
+                      className="p-4 hover:bg-[rgba(255,255,255,0.08)] cursor-pointer border-b border-[rgba(255,255,255,0.05)] last:border-0 transition-colors"
+                    >
+                      <div className="text-body font-medium text-white">{food.food_name}</div>
+                      <div className="text-caption text-[var(--on-surface-variant)] mt-1">{food.food_description}</div>
+                    </div>
+                  ))
+                ) : foodName.length > 2 && !isSearching && (
+                  <div className="p-4 text-center text-[var(--on-surface-variant)] text-sm">Sonuç bulunamadı.</div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -117,32 +262,36 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar (Gram)</label>
               <input 
                 type="number" 
                 step="0.1"
                 required
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="1" 
+                placeholder="Örn: 100" 
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
               />
             </div>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Birim Seçimi</label>
-            <select 
-              value={servingDescription}
-              onChange={(e) => setServingDescription(e.target.value)}
-              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
-            >
-              <option value="1 porsiyon">Porsiyon</option>
-              <option value="100 gram">Gram (100g)</option>
-              <option value="1 adet">Adet</option>
-              <option value="1 bardak">Bardak / Kupa</option>
-            </select>
-          </div>
+          
+          {/* Makro Önizleme */}
+          {(parseFloat(protein) > 0 || parseFloat(carbs) > 0 || parseFloat(fat) > 0) && (
+            <div className="flex gap-4 p-3 bg-[rgba(255,255,255,0.02)] rounded-xl border border-[rgba(255,255,255,0.05)] justify-center">
+              <div className="text-center">
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Karb</div>
+                <div className="font-medium text-[#60a5fa]">{carbs}g</div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Protein</div>
+                <div className="font-medium text-[#4ade80]">{protein}g</div>
+              </div>
+              <div className="text-center">
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Yağ</div>
+                <div className="font-medium text-[#facc15]">{fat}g</div>
+              </div>
+            </div>
+          )}
 
           {/* Tarif Olarak Kaydet */}
           <label className="flex items-center gap-3 cursor-pointer mt-2 group" onClick={() => setSaveAsRecipe(!saveAsRecipe)}>

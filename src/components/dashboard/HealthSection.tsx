@@ -73,10 +73,11 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       )}
 
       {/* Organic Inline Summary */}
-      <div className="flex items-center justify-center relative mt-2 py-4">
+      <div className="flex flex-col items-center justify-center relative mt-2 py-4 gap-4">
         {/* Soft glowing orb */}
         <div className="absolute w-full h-20 rounded-full bg-[rgba(33,196,93,0.08)] blur-xl -z-10"></div>
         
+        {/* Row 1: Calories */}
         <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
           {/* Alınan Kalori */}
           <div className="flex items-center gap-2">
@@ -111,9 +112,32 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <span className="font-bold text-lg text-[#4ade80]">{remaining}</span>
           </div>
         </div>
-      </div>
 
-      <div className="glass-divider my-2"></div>
+        {/* Row 2: Macros */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
+          {/* Karbonhidrat */}
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">Karb:</span>
+            <span className="font-bold text-[#60a5fa]">{data.carbs || 0}g</span>
+          </div>
+          
+          <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+          
+          {/* Yağ */}
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">Yağ:</span>
+            <span className="font-bold text-[#facc15]">{data.fat || 0}g</span>
+          </div>
+
+          <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+
+          {/* Protein */}
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">Protein:</span>
+            <span className="font-bold text-[#4ade80]">{data.protein || 0}g</span>
+          </div>
+        </div>
+      </div>
 
       {/* Sleep and Exercise Inline Stats (Only in detailed mode) */}
       {!isOverview && (

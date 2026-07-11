@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import { useAddTransactionViewModel } from '@/viewmodels/useAddTransactionViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 export function AddTransactionForm({ 
   onClose,
@@ -23,9 +24,6 @@ export function AddTransactionForm({
     description, setDescription,
     isLoading, error, handleSubmit
   } = useAddTransactionViewModel(onSuccess);
-
-  // Filter categories based on transaction type
-  const filteredCategories = categories.filter(c => c.type === type);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -90,33 +88,25 @@ export function AddTransactionForm({
         {/* Hesap */}
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hesap</label>
-          <select 
+          <CustomSelect 
             required
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
-            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
-          >
-            <option value="" disabled>Hesap seçiniz...</option>
-            {accounts.map(acc => (
-              <option key={acc.id} value={acc.id}>{acc.name}</option>
-            ))}
-          </select>
+            onChange={setAccountId}
+            placeholder="Hesap seçiniz..."
+            options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+          />
         </div>
 
         {/* Kategori */}
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kategori</label>
-          <select 
+          <CustomSelect 
             required
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
-          >
-            <option value="" disabled>Kategori seçiniz...</option>
-            {filteredCategories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
+            onChange={setCategoryId}
+            placeholder="Kategori seçiniz..."
+            options={categories.filter(c => c.type === type).map(c => ({ value: c.id, label: c.name }))}
+          />
         </div>
 
         {/* Açıklama */}

@@ -32,6 +32,7 @@ export interface IDailyLog extends Document {
   sleep: {
     duration_minutes?: number;
     calories_burned?: number;
+    quality?: string;
   };
   exercises: {
     entry_id: mongoose.Types.ObjectId;
@@ -82,7 +83,8 @@ const DailyLogSchema: Schema = new Schema({
   },
   sleep: {
     duration_minutes: { type: Number, default: null },
-    calories_burned: { type: Number, default: 0 }
+    calories_burned: { type: Number, default: 0 },
+    quality: { type: String, default: null }
   },
   exercises: [{
     _id: false,

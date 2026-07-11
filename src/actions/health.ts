@@ -17,7 +17,7 @@ async function getUserId() {
 }
 
 // ── MEALS ──
-export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; calories: number }) {
+export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; calories: number; protein_g: number; carbs_g: number; fat_g: number; fatsecret_food_id?: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -42,11 +42,12 @@ export async function addMealAction(data: { date: string; type: string; food_nam
       food_name: data.food_name,
       serving_description: data.serving_description,
       quantity: data.quantity,
+      fatsecret_food_id: data.fatsecret_food_id,
       nutrition_snapshot: {
         calories: data.calories,
-        protein_g: 0,
-        carbs_g: 0,
-        fat_g: 0
+        protein_g: data.protein_g,
+        carbs_g: data.carbs_g,
+        fat_g: data.fat_g
       }
     };
 
@@ -58,6 +59,9 @@ export async function addMealAction(data: { date: string; type: string; food_nam
 
     // Update totals
     log.totals.calories_consumed += data.calories;
+    log.totals.protein_g += data.protein_g;
+    log.totals.carbs_g += data.carbs_g;
+    log.totals.fat_g += data.fat_g;
     
     await log.save();
     return { success: true };
@@ -104,7 +108,7 @@ export async function addExerciseAction(data: { date: string; name: string; dura
 }
 
 // ── SLEEP ──
-export async function addSleepAction(data: { date: string; duration_minutes: number }) {
+export async function addSleepAction(data: { date: string; duration_minutes: number; quality?: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -135,7 +139,8 @@ export async function addSleepAction(data: { date: string; duration_minutes: num
 
     log.sleep = {
       duration_minutes: data.duration_minutes,
-      calories_burned: calories_burned
+      calories_burned: calories_burned,
+      quality: data.quality
     };
     log.totals.calories_burned_sleep += calories_burned;
     

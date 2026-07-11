@@ -7,6 +7,10 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [servingDescription, setServingDescription] = useState('1 porsiyon');
   const [quantity, setQuantity] = useState('1');
   const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('0');
+  const [carbs, setCarbs] = useState('0');
+  const [fat, setFat] = useState('0');
+  const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,11 @@ export function useAddMealViewModel(onSuccess: () => void) {
         food_name: foodName,
         serving_description: servingDescription,
         quantity: parseFloat(quantity),
-        calories: parseFloat(calories)
+        calories: parseFloat(calories),
+        protein_g: parseFloat(protein) || 0,
+        carbs_g: parseFloat(carbs) || 0,
+        fat_g: parseFloat(fat) || 0,
+        fatsecret_food_id: fatsecretFoodId || undefined
       });
 
       if (res.success) {
@@ -47,6 +55,10 @@ export function useAddMealViewModel(onSuccess: () => void) {
     servingDescription, setServingDescription,
     quantity, setQuantity,
     calories, setCalories,
+    protein, setProtein,
+    carbs, setCarbs,
+    fat, setFat,
+    fatsecretFoodId, setFatsecretFoodId,
     isLoading, error,
     handleSubmit
   };

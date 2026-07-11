@@ -24,6 +24,9 @@ export interface HealthDataDTO {
   burnedCalories: number;
   sleepMinutes: number;
   exerciseMinutes: number;
+  protein: number;
+  carbs: number;
+  fat: number;
   meals: MealInfo[];
 }
 

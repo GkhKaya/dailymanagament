@@ -20,9 +20,9 @@ export function useAddExerciseViewModel(onSuccess: () => void) {
 
       const res = await addExerciseAction({
         date: new Date().toISOString(),
-        exercise_type: exerciseType,
+        name: exerciseType,
         duration_minutes: parseInt(durationMinutes),
-        burned_calories: parseFloat(burnedCalories)
+        calories_burned: parseFloat(burnedCalories)
       });
 
       if (res.success) {
