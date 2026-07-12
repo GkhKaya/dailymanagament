@@ -23,6 +23,7 @@ export interface HealthDataDTO {
   consumedCalories: number;
   burnedCalories: number;
   sleepMinutes: number;
+  sleepCalories?: number;
   exerciseMinutes: number;
   protein: number;
   carbs: number;

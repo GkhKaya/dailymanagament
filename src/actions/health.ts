@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
+import { SavedFood } from "@/models/SavedFood";
 
 // Helper to check session
 async function getUserId() {
@@ -17,7 +18,7 @@ async function getUserId() {
 }
 
 // ── MEALS ──
-export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; calories: number; protein_g: number; carbs_g: number; fat_g: number; fatsecret_food_id?: string }) {
+export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; calories: number; protein_g: number; carbs_g: number; fat_g: number; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -64,6 +65,22 @@ export async function addMealAction(data: { date: string; type: string; food_nam
     log.totals.fat_g += data.fat_g;
     
     await log.save();
+
+    // Save as recipe if requested
+    if (data.save_as_recipe) {
+      await SavedFood.create({
+        user_id: userId,
+        food_name: data.food_name,
+        serving_description: data.serving_description,
+        quantity: data.quantity,
+        fatsecret_food_id: data.fatsecret_food_id,
+        calories: data.calories,
+        protein_g: data.protein_g,
+        carbs_g: data.carbs_g,
+        fat_g: data.fat_g
+      });
+    }
+
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -146,6 +163,33 @@ export async function addSleepAction(data: { date: string; duration_minutes: num
     
     await log.save();
     return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// ── SAVED FOODS ──
+export async function getSavedFoodsAction() {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    
+    const saved = await SavedFood.find({ user_id: userId }).sort({ created_at: -1 }).lean();
+    
+    return { 
+      success: true, 
+      data: saved.map((s: any) => ({
+        id: s._id.toString(),
+        name: s.food_name,
+        calories: s.calories,
+        protein: s.protein_g,
+        carbs: s.carbs_g,
+        fat: s.fat_g,
+        quantity: s.quantity,
+        serving_description: s.serving_description,
+        fatsecret_food_id: s.fatsecret_food_id
+      }))
+    };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

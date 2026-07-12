@@ -40,7 +40,7 @@ export function useResetPasswordViewModel() {
       if (result.success) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/login');
+          router.push('/');
         }, 3000);
       } else {
         setError(result.error || 'İşlem başarısız oldu.');

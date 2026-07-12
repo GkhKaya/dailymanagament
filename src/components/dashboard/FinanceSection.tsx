@@ -24,9 +24,10 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
 
   // Reusable components for both views
   const HeaderStats = () => (
-    <div className="flex items-center justify-center relative mt-2 py-4">
+    <div className="flex flex-col items-center justify-center relative mt-2 py-4 gap-4">
       <div className="absolute w-full h-20 rounded-full bg-[rgba(73,75,214,0.1)] blur-xl -z-10"></div>
       
+      {/* Row 1: Balance and Budget */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
         <div className="flex items-center gap-2">
           <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.totalBalance")}:</span>
@@ -37,7 +38,10 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.monthlyBudget")}:</span>
           <span className="font-medium text-[#c0c1ff]">{fmt(data.monthlyBudget)}</span>
         </div>
-        <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+      </div>
+
+      {/* Row 2: Daily Spend */}
+      <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
         <div className="flex items-center gap-2">
           <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.dailySpend")}:</span>
           <span className="font-medium text-[rgba(217,119,33,0.9)]">{fmt(data.dailySpend)}</span>
@@ -46,41 +50,66 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
     </div>
   );
 
-  const TransactionsList = () => (
-    <div>
-      <h3 className="text-subtitle mb-4 px-2">{t("dashboard.finance.recentTransactions")}</h3>
-      <div className="flex flex-col gap-3">
-        {data.recentTransactions.map((txn) => {
-          const isIncome = txn.type === 'income';
-          return (
-            <div key={txn.id} className="flex items-center justify-between glass-item px-5 py-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center ${isIncome ? 'text-[#4ade80]' : 'text-orange-400'}`}>
-                  {isIncome ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-body font-medium">{txn.title}</span>
-                  <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-                    {txn.date}
-                  </span>
-                </div>
+  const TransactionsList = () => {
+    // Group transactions by date
+    const grouped = data.recentTransactions.reduce((acc, txn) => {
+      // txn.date is like "Bugün, 14:30" or "12 Tem, 14:30"
+      const datePart = txn.date.split(',')[0];
+      if (!acc[datePart]) acc[datePart] = [];
+      acc[datePart].push(txn);
+      return acc;
+    }, {} as Record<string, typeof data.recentTransactions>);
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-4 px-2">
+          <h3 className="text-subtitle">{t("dashboard.finance.recentTransactions")}</h3>
+          <button 
+            onClick={() => onOpenSheet && onOpenSheet('transaction')}
+            className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+        <div className="flex flex-col gap-4">
+          {Object.entries(grouped).map(([date, txns]) => (
+            <div key={date} className="flex flex-col gap-2">
+              <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider px-2">{date}</span>
+              <div className="flex flex-col gap-2">
+                {txns.map((txn) => {
+                  const isIncome = txn.type === 'income';
+                  return (
+                    <div key={txn.id} className="flex items-center justify-between glass-item px-5 py-3">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center ${isIncome ? 'text-[#4ade80]' : 'text-orange-400'}`}>
+                          {isIncome ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-body font-medium">{txn.title}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                            {txn.date.split(', ')[1]}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-body font-bold ${isIncome ? 'text-[#4ade80]' : 'text-white'}`}>
+                        {isIncome ? '+' : '-'}{fmt(txn.amount)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <span className={`text-body font-bold ${isIncome ? 'text-[#4ade80]' : 'text-white'}`}>
-                {isIncome ? '+' : '-'}{fmt(txn.amount)}
-              </span>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // The Overview Layout (1 column)
   if (isOverview) {
     return (
       <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto animate-slide-up anim-delay-100">
         <HeaderStats />
-        <div className="glass-divider my-2"></div>
         <TransactionsList />
       </div>
     );
@@ -103,7 +132,6 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           </button>
         </div>
         <HeaderStats />
-        <div className="glass-divider my-2"></div>
         <TransactionsList />
         <div className="h-24 lg:hidden"></div>
       </div>

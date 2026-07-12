@@ -14,11 +14,12 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     carbs, setCarbs,
     fat, setFat,
     fatsecretFoodId, setFatsecretFoodId,
+    saveAsRecipe, setSaveAsRecipe,
+    savedFoods, isLoadingSaved,
     isLoading, error, handleSubmit
   } = useAddMealViewModel(onSuccess);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
-  const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -70,18 +71,15 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     else setMealType('snack');
   }, [setMealType]);
 
-  const savedRecipes = [
-    { id: 1, name: 'Yulaf Lapası', calories: 350 },
-    { id: 2, name: 'Tavuk Salata', calories: 420 },
-    { id: 3, name: 'Protein Shake', calories: 200 }
-  ];
-
   const handleSavedRecipeClick = (recipe: any) => {
     setFoodName(recipe.name);
     setCalories(recipe.calories.toString());
-    setQuantity('1');
-    setServingDescription('1 porsiyon');
-    setFatsecretFoodId(null);
+    setProtein(recipe.protein?.toString() || '0');
+    setCarbs(recipe.carbs?.toString() || '0');
+    setFat(recipe.fat?.toString() || '0');
+    setQuantity(recipe.quantity?.toString() || '1');
+    setServingDescription(recipe.serving_description || '1 porsiyon');
+    setFatsecretFoodId(recipe.fatsecret_food_id || null);
     setActiveTab('new');
   };
 
@@ -210,6 +208,13 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 }}
                 onFocus={() => {
                   if (searchResults.length > 0) setShowDropdown(true);
+                  // Check for first time FatSecret usage
+                  const hasSeenAlert = localStorage.getItem('hasSeenFatSecretAlert');
+                  if (!hasSeenAlert) {
+                    // Use standard alert as placeholder (or a toast if a toast system existed)
+                    alert("Bilgilendirme: FatSecret API'nin ücretsiz versiyonu yalnızca İngilizce çalışmaktadır. Lütfen yemekleri İngilizce (örn: chicken, egg) aratınız.");
+                    localStorage.setItem('hasSeenFatSecretAlert', 'true');
+                  }
                 }}
                 onBlur={() => {
                   // Small delay to allow clicking on dropdown items
@@ -303,16 +308,26 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         </div>
       ) : (
         <div className="flex flex-col gap-3 animate-fade-in">
-          {savedRecipes.map(recipe => (
-            <div 
-              key={recipe.id} 
-              onClick={() => handleSavedRecipeClick(recipe)}
-              className="p-4 flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-2xl hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors"
-            >
-              <span className="text-body font-medium text-white">{recipe.name}</span>
-              <span className="text-body font-bold text-[var(--inverse-primary)]">{recipe.calories} kcal</span>
+          {isLoadingSaved ? (
+            <div className="flex justify-center py-4">
+              <LoadingSpinner size="sm" />
             </div>
-          ))}
+          ) : savedFoods.length > 0 ? (
+            savedFoods.map((recipe: any) => (
+              <div 
+                key={recipe.id} 
+                onClick={() => handleSavedRecipeClick(recipe)}
+                className="p-4 flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-2xl hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors"
+              >
+                <span className="text-body font-medium text-white">{recipe.name}</span>
+                <span className="text-body font-bold text-[var(--inverse-primary)]">{recipe.calories} kcal</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-sm text-[var(--on-surface-variant)] py-4">
+              Henüz kaydedilmiş bir yemeğiniz bulunmuyor. Yeni bir yemek eklerken "Kaydet" seçeneğini işaretleyebilirsiniz.
+            </div>
+          )}
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { addAccountAction } from '@/actions/finance';
 
-export function useAddAccountViewModel(onSuccess: () => void) {
+export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
   const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>('bank');
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
@@ -50,7 +50,13 @@ export function useAddAccountViewModel(onSuccess: () => void) {
 
       const res = await addAccountAction(payload);
       if (res.success) {
-        onSuccess();
+        setName('');
+        setBalance('');
+        setLimit('');
+        setCurrentDebt('');
+        setStatementDay('');
+        setDueDay('');
+        onSuccess(payload.name);
       } else {
         setError(res.error || "Hesap eklenirken bir hata oluştu.");
       }

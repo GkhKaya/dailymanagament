@@ -3,8 +3,33 @@ import { DashboardMode, HealthDataDTO, FinanceDataDTO } from '@/models/Dashboard
 import { getHealthDataAction, getFinanceDataAction } from '@/actions/dashboard';
 
 export function useDashboardViewModel() {
-  const [mode, setMode] = useState<DashboardMode>('overview');
+  const [mode, setModeState] = useState<DashboardMode>('overview');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash.replace('#', '') as DashboardMode;
+        if (['overview', 'health', 'finance', 'health-analysis', 'finance-analysis'].includes(hash)) {
+          setModeState(hash);
+        } else {
+          setModeState('overview');
+        }
+      }
+    };
+
+    handleHashChange(); // Set initial on mount
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const setMode = useCallback((newMode: DashboardMode) => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = newMode;
+    } else {
+      setModeState(newMode);
+    }
+  }, []);
   
   const [healthData, setHealthData] = useState<HealthDataDTO | null>(null);
   const [financeData, setFinanceData] = useState<FinanceDataDTO | null>(null);

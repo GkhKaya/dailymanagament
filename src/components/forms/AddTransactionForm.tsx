@@ -111,13 +111,12 @@ export function AddTransactionForm({
 
         {/* Açıklama */}
         <div className="flex flex-col gap-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Açıklama</label>
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Açıklama (İsteğe Bağlı)</label>
           <input 
             type="text" 
-            required
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="İşlem açıklaması girin..." 
+            placeholder="Örn: Market alışverişi"
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
           />
         </div>

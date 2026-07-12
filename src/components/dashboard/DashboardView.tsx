@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { t } from "@/lib/i18n";
 import { useDashboardViewModel } from "@/viewmodels/useDashboardViewModel";
@@ -33,7 +33,7 @@ export function DashboardView() {
 
   const handleLogout = async () => {
     await logoutAction();
-    router.push('/login');
+    router.push('/');
   };
 
   const handleSuccess = () => {
@@ -119,8 +119,15 @@ export function DashboardView() {
           )}
         </div>
 
-        {/* Logout */}
-        <div className="flex-1 flex justify-end">
+        {/* Logout and Profile */}
+        <div className="flex-1 flex justify-end gap-2">
+          <button 
+            onClick={() => router.push('/profile')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white transition-all"
+          >
+            <User size={18} />
+            <span className="text-sm font-medium hidden sm:inline">Profil</span>
+          </button>
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-red-500/20 hover:text-red-400 text-[var(--on-surface-variant)] transition-all"

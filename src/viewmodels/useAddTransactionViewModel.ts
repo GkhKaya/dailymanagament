@@ -21,13 +21,12 @@ export function useAddTransactionViewModel(onSuccess: () => void) {
       if (!amount) throw new Error("Tutar zorunludur.");
       if (!categoryId) throw new Error("Kategori seçimi zorunludur.");
       if (!accountId) throw new Error("Hesap seçimi zorunludur.");
-      if (!description) throw new Error("Açıklama zorunludur.");
 
       const res = await addTransactionAction({
         type,
         amount: parseFloat(amount),
         date,
-        description,
+        description: description || "İşlem",
         category_id: categoryId,
         account_id: accountId
       });

@@ -13,6 +13,7 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
   const [financeStep, setFinanceStep] = useState<'account' | 'debt' | 'category'>('account');
   const [categories, setCategories] = useState<any[]>(initialCategories);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState<any[]>([]);
 
   const handleNext = () => {
     if (financeStep === 'account') setFinanceStep('debt');
@@ -45,9 +46,30 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
 
       <div className="flex-1 overflow-y-auto hide-scrollbar mb-8">
         {financeStep === 'account' && (
-          <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-            <p className="text-sm text-[var(--on-surface-variant)] mb-6">Maaş hesabınızı, nakit cüzdanınızı veya kredi kartınızı ekleyerek başlayın.</p>
-            <AddAccountForm onClose={handleNext} onSuccess={handleNext} />
+          <div className="flex flex-col gap-6">
+            <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
+              <p className="text-sm text-[var(--on-surface-variant)] mb-6">Maaş hesabınızı, nakit cüzdanınızı veya kredi kartınızı ekleyerek başlayın.</p>
+              <AddAccountForm 
+                onClose={() => {}} 
+                onSuccess={(name) => {
+                  setCreatedAccounts(prev => [...prev, { id: Date.now().toString(), name: name || "Yeni Hesap", type: "bank" }]);
+                }} 
+              />
+            </div>
+            
+            {createdAccounts.length > 0 && (
+              <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
+                <h3 className="text-lg font-bold text-white mb-4">Eklenen Hesaplar</h3>
+                <div className="flex flex-col gap-3">
+                  {createdAccounts.map((acc, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                      <Wallet size={18} className="text-[var(--primary)]" />
+                      <span className="text-body text-white font-medium">{acc.name} eklendi</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

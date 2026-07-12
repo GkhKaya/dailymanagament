@@ -1,44 +1,30 @@
-import React, { useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from 'recharts';
+import { useFinanceAnalysisViewModel } from '@/viewmodels/useFinanceAnalysisViewModel';
 
 export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'year'>('month');
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(6); // Mock index for July 2026
-  
+  const {
+    timeFilter,
+    setTimeFilter,
+    currentMonthIndex,
+    handlePrevMonth,
+    handleNextMonth,
+    isLoading,
+    totalIncome,
+    totalExpense,
+    barData,
+    pieData,
+    lineData
+  } = useFinanceAnalysisViewModel();
+
   const months = [
-    'Ocak 2026', 'Şubat 2026', 'Mart 2026', 'Nisan 2026', 
-    'Mayıs 2026', 'Haziran 2026', 'Temmuz 2026', 'Ağustos 2026'
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 
+    'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
+  
+  const currentYear = new Date().getFullYear();
 
-  const handlePrevMonth = () => setCurrentMonthIndex(prev => Math.max(0, prev - 1));
-  const handleNextMonth = () => setCurrentMonthIndex(prev => Math.min(months.length - 1, prev + 1));
-
-  // Mock data for Income vs Expense
-  const barData = [
-    { name: 'Hafta 1', income: 4000, expense: 2400 },
-    { name: 'Hafta 2', income: 3000, expense: 1398 },
-    { name: 'Hafta 3', income: 2000, expense: 9800 },
-    { name: 'Hafta 4', income: 2780, expense: 3908 },
-  ];
-
-  // Mock data for Categories (Expenses)
-  const pieData = [
-    { name: 'Market', value: 3400, color: '#4ade80' },
-    { name: 'Ulaşım', value: 1200, color: '#60a5fa' },
-    { name: 'Eğlence', value: 850, color: '#c084fc' },
-    { name: 'Yemek', value: 2100, color: '#fb923c' },
-  ];
-
-  // Mock data for Daily Spending Trend
-  const lineData = [
-    { day: '01', spent: 150 }, { day: '05', spent: 400 }, { day: '10', spent: 120 },
-    { day: '15', spent: 850 }, { day: '20', spent: 200 }, { day: '25', spent: 300 },
-    { day: '30', spent: 180 }
-  ];
-
-  const totalIncome = barData.reduce((acc, curr) => acc + curr.income, 0);
-  const totalExpense = barData.reduce((acc, curr) => acc + curr.expense, 0);
   const diff = totalIncome - totalExpense;
 
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
@@ -78,16 +64,22 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
             <ChevronLeft size={20} />
           </button>
           <span className="text-body font-bold text-white min-w-[120px] text-center">
-            {months[currentMonthIndex]}
+            {months[currentMonthIndex]} {currentYear}
           </span>
-          <button onClick={handleNextMonth} disabled={currentMonthIndex === months.length - 1} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handleNextMonth} disabled={currentMonthIndex === 11} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="animate-spin text-[var(--primary)]" size={32} />
+        </div>
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-[#4ade80]">
           <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Toplam Gelir</span>
           <span className="text-xl font-bold text-[#4ade80]">{fmt(totalIncome)}</span>
@@ -188,6 +180,8 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

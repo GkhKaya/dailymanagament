@@ -53,6 +53,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           consumedCalories: 0,
           burnedCalories: 0,
           sleepMinutes: 0,
+          sleepCalories: 0,
           exerciseMinutes: 0,
           meals: []
         }
@@ -91,6 +92,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       consumedCalories: dailyLog.totals.calories_consumed,
       burnedCalories: dailyLog.totals.calories_burned_exercise,
       sleepMinutes: dailyLog.sleep?.duration_minutes || 0,
+      sleepCalories: dailyLog.totals.calories_burned_sleep || 0,
       exerciseMinutes: dailyLog.exercises?.reduce((acc: number, ex: any) => acc + ex.duration_minutes, 0) || 0,
       protein: Math.round(dailyLog.totals.protein_g || 0),
       carbs: Math.round(dailyLog.totals.carbs_g || 0),

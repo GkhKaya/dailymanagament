@@ -72,7 +72,7 @@ function ResetPasswordFormContent() {
       {/* Giriş Ekranına Dön */}
       <div style={{ marginTop: 28, textAlign: "center" }}>
         <Link
-          href="/login"
+          href="/"
           className="text-body"
           style={{ color: "var(--primary)", textDecoration: "none", fontWeight: 500 }}
         >

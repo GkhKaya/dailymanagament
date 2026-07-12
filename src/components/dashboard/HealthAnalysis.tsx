@@ -1,44 +1,27 @@
-import React, { useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend, CartesianGrid, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { useHealthAnalysisViewModel } from '@/viewmodels/useHealthAnalysisViewModel';
 
 export function HealthAnalysis({ onBack }: { onBack: () => void }) {
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month'>('week');
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(6); // Mock index for July 2026
-  
+  const {
+    timeFilter,
+    setTimeFilter,
+    currentMonthIndex,
+    handlePrevMonth,
+    handleNextMonth,
+    isLoading,
+    calorieData,
+    sleepData,
+    macroData
+  } = useHealthAnalysisViewModel();
+
   const months = [
-    'Ocak 2026', 'Şubat 2026', 'Mart 2026', 'Nisan 2026', 
-    'Mayıs 2026', 'Haziran 2026', 'Temmuz 2026', 'Ağustos 2026'
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 
+    'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
-
-  const handlePrevMonth = () => setCurrentMonthIndex(prev => Math.max(0, prev - 1));
-  const handleNextMonth = () => setCurrentMonthIndex(prev => Math.min(months.length - 1, prev + 1));
-
-  const calorieData = [
-    { day: 'Pzt', consumed: 2200, burned: 2400 },
-    { day: 'Sal', consumed: 2400, burned: 2100 },
-    { day: 'Çar', consumed: 2100, burned: 2600 },
-    { day: 'Per', consumed: 1900, burned: 2200 },
-    { day: 'Cum', consumed: 2500, burned: 2300 },
-    { day: 'Cmt', consumed: 2800, burned: 2800 },
-    { day: 'Paz', consumed: 2300, burned: 2100 },
-  ];
-
-  const sleepData = [
-    { day: 'Pzt', sleep: 7.5 },
-    { day: 'Sal', sleep: 6.8 },
-    { day: 'Çar', sleep: 8.0 },
-    { day: 'Per', sleep: 7.2 },
-    { day: 'Cum', sleep: 6.5 },
-    { day: 'Cmt', sleep: 9.0 },
-    { day: 'Paz', sleep: 8.5 },
-  ];
-
-  const macroData = [
-    { name: 'Karbonhidrat', value: 45, color: '#c0c1ff' },
-    { name: 'Protein', value: 30, color: '#4ade80' },
-    { name: 'Yağ', value: 25, color: '#fb923c' },
-  ];
+  
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
@@ -74,15 +57,20 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
             <ChevronLeft size={20} />
           </button>
           <span className="text-body font-bold text-white min-w-[120px] text-center">
-            {months[currentMonthIndex]}
+            {months[currentMonthIndex]} {currentYear}
           </span>
-          <button onClick={handleNextMonth} disabled={currentMonthIndex === months.length - 1} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handleNextMonth} disabled={currentMonthIndex === 11} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="animate-spin text-[var(--primary)]" size={32} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calorie Trend Line Chart (Full Width) */}
         <div className="glass-item p-6 h-[400px] flex flex-col lg:col-span-2">
           <h3 className="text-body font-bold text-white mb-6">Kalori Alım / Yakım Trendi</h3>
@@ -167,6 +155,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

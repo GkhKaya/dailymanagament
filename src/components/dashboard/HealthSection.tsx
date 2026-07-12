@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { Flame, Utensils, Apple, Coffee, ChevronLeft, ChevronRight, Moon, Activity, ChevronDown, Edit2 } from "lucide-react";
+import { Flame, Utensils, Apple, Coffee, ChevronLeft, ChevronRight, Moon, Activity, ChevronDown, Edit2, Plus } from "lucide-react";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -93,14 +93,22 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           {data.sleepMinutes === 0 ? (
             <div className="flex items-center gap-2">
               <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesBurned")}:</span>
-              <span className="font-medium text-[rgba(255,255,255,0.4)] text-sm">Uyku Bekleniyor</span>
+              <span className="font-medium text-[rgba(255,255,255,0.4)] text-sm flex items-center gap-1">
+                <Flame size={14} /> {data.burnedCalories}
+              </span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.health.caloriesBurned")}:</span>
-              <span className="font-bold text-orange-400 flex items-center gap-1">
-                <Flame size={14} /> {data.burnedCalories}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-orange-400 flex items-center gap-1">
+                  <Flame size={14} /> {data.burnedCalories}
+                </span>
+                <span className="text-[var(--on-surface-variant)] text-sm">+</span>
+                <span className="font-bold text-blue-400 flex items-center gap-1" title="Uykuda Yakılan">
+                  <Moon size={14} /> {data.sleepCalories}
+                </span>
+              </div>
             </div>
           )}
 
@@ -168,15 +176,23 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       <div>
         <div className="flex items-center justify-between mb-4 px-2">
           <h3 className="text-subtitle">{t("dashboard.health.meals")}</h3>
-          {data.sleepMinutes === 0 && isOverview && (
+          <div className="flex items-center gap-2">
+            {data.sleepMinutes === 0 && isOverview && (
+              <button 
+                onClick={() => onOpenSheet && onOpenSheet('addSleep')}
+                className="text-caption text-blue-400 bg-[rgba(96,165,250,0.1)] px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[rgba(96,165,250,0.2)] transition-colors"
+              >
+                <Moon size={12} />
+                Uyku Verisi Ekle
+              </button>
+            )}
             <button 
-              onClick={() => onOpenSheet && onOpenSheet('addSleep')}
-              className="text-caption text-blue-400 bg-[rgba(96,165,250,0.1)] px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[rgba(96,165,250,0.2)] transition-colors"
+              onClick={() => onOpenSheet && onOpenSheet('meal')}
+              className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--on-surface-variant)] hover:text-white"
             >
-              <Moon size={12} />
-              Uyku Verisi Ekle
+              <Plus size={16} />
             </button>
-          )}
+          </div>
         </div>
         <div className="flex flex-col gap-3">
           {data.meals.map((meal) => {
