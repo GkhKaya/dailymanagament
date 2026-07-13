@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { Flame, Utensils, Apple, Coffee, ChevronLeft, ChevronRight, Moon, Activity, ChevronDown, Edit2, Plus } from "lucide-react";
+import { Flame, Utensils, Apple, Coffee, ChevronLeft, ChevronRight, Moon, Activity, ChevronDown, Edit2, Plus, TrendingDown } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -10,7 +11,7 @@ interface HealthSectionProps {
   onPrevDay?: () => void;
   onNextDay?: () => void;
   onShowAnalysis?: () => void;
-  onOpenSheet?: (type: string) => void;
+  onOpenSheet?: (type: string, payload?: any) => void;
 }
 
 const MealIcon = ({ type }: { type: string }) => {
@@ -147,11 +148,12 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
       </div>
 
-      {/* Sleep and Exercise Inline Stats (Only in detailed mode) */}
+      {/* Sleep, Weight and Exercise Inline Stats (Only in detailed mode) */}
       {!isOverview && (
-        <div className="flex justify-between items-center px-4 -mt-4 mb-2">
-          <div className="flex items-center gap-3 text-[var(--on-surface-variant)]">
-            <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-blue-400">
+        <div className="flex justify-between items-center px-2 -mt-4 mb-2">
+          {/* Sleep */}
+          <div className="flex items-center gap-2 text-[var(--on-surface-variant)] flex-1">
+            <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-blue-400 shrink-0">
               <Moon size={16} />
             </div>
             <div>
@@ -160,17 +162,37 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             </div>
           </div>
           
-          <div className="flex items-center gap-3 text-[var(--on-surface-variant)]">
+          {/* Weight */}
+          <div className="flex items-center justify-center gap-2 text-[var(--on-surface-variant)] flex-1 border-x border-[rgba(255,255,255,0.05)] mx-2 px-2">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <span className="text-body font-medium text-white">{data.currentWeight}</span>
+                <span className="text-caption">kg</span>
+                <button 
+                  onClick={() => onOpenSheet && onOpenSheet('addWeight', { currentWeight: data.currentWeight, weightHistory: data.weightHistory })}
+                  className="ml-1 text-[var(--primary)] hover:text-white transition-colors"
+                >
+                  <Edit2 size={12} />
+                </button>
+              </div>
+              <span className="text-caption block mt-0.5 text-center">Kilo</span>
+            </div>
+          </div>
+
+          {/* Exercise */}
+          <div className="flex items-center justify-end gap-2 text-[var(--on-surface-variant)] flex-1">
             <div className="flex flex-col items-end">
               <span className="text-body font-medium text-white">{data.exerciseMinutes} dk</span>
               <span className="text-caption block mt-0.5">Egzersiz</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-orange-400">
+            <div className="w-8 h-8 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-orange-400 shrink-0">
               <Activity size={16} />
             </div>
           </div>
         </div>
       )}
+
+
 
       {/* Meals List - Expandable */}
       <div>
@@ -219,15 +241,6 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onOpenSheet) onOpenSheet('editMeal');
-                      }}
-                      className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--on-surface-variant)] hover:text-white"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
                         toggleMeal(meal.id);
                       }}
                       className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--on-surface-variant)] hover:text-white"
@@ -244,13 +257,24 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                       <div className="w-full h-px bg-[rgba(255,255,255,0.05)] mb-2"></div>
                       {meal.foods && meal.foods.length > 0 ? (
                         meal.foods.map((food, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-caption">
+                          <div key={idx} className="flex justify-between items-center text-caption group">
                             <div className="flex items-center gap-2">
                               <span className="w-1.5 h-1.5 rounded-full bg-[rgba(255,255,255,0.2)]"></span>
                               <span className="text-[var(--on-surface-variant)]">{food.name}</span>
                               <span className="text-[rgba(255,255,255,0.3)]">({food.amount})</span>
                             </div>
-                            <span className="text-white">{food.calories} kcal</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white">{food.calories} kcal</span>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onOpenSheet) onOpenSheet('editMeal', { ...food, type: meal.type, date: data.date });
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] transition-all text-white"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                            </div>
                           </div>
                         ))
                       ) : (

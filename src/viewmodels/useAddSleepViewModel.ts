@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { addSleepAction } from '@/actions/health';
 
 export function useAddSleepViewModel(onSuccess: () => void) {
-  const [durationMinutes, setDurationMinutes] = useState('');
+  const [hours, setHours] = useState('');
+  const [mins, setMins] = useState('');
   const [quality, setQuality] = useState('İyi');
   
   const [isLoading, setIsLoading] = useState(false);
@@ -14,11 +15,15 @@ export function useAddSleepViewModel(onSuccess: () => void) {
     setIsLoading(true);
 
     try {
-      if (!durationMinutes) throw new Error("Süre zorunludur.");
+      const h = parseInt(hours || '0');
+      const m = parseInt(mins || '0');
+      const totalMinutes = h * 60 + m;
+
+      if (totalMinutes <= 0) throw new Error("Süre zorunludur.");
 
       const res = await addSleepAction({
         date: new Date().toISOString(),
-        duration_minutes: parseInt(durationMinutes),
+        duration_minutes: totalMinutes,
         quality
       });
 
@@ -35,7 +40,8 @@ export function useAddSleepViewModel(onSuccess: () => void) {
   };
 
   return {
-    durationMinutes, setDurationMinutes,
+    hours, setHours,
+    mins, setMins,
     quality, setQuality,
     isLoading, error,
     handleSubmit

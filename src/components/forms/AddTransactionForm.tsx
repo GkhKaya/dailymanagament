@@ -1,6 +1,26 @@
-import React from 'react';
-import { Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, ShoppingCart, Car, Film, Coffee, Home, Zap, Heart, Gift, Briefcase, Wallet, TrendingUp, Cpu, Utensils, Music, Book } from 'lucide-react';
 import { useAddTransactionViewModel } from '@/viewmodels/useAddTransactionViewModel';
+
+const ICONS = [
+  { id: 'cart', component: <ShoppingCart size={24} /> },
+  { id: 'car', component: <Car size={24} /> },
+  { id: 'film', component: <Film size={24} /> },
+  { id: 'coffee', component: <Coffee size={24} /> },
+  { id: 'home', component: <Home size={24} /> },
+  { id: 'zap', component: <Zap size={24} /> },
+  { id: 'heart', component: <Heart size={24} /> },
+  { id: 'gift', component: <Gift size={24} /> },
+  { id: 'briefcase', component: <Briefcase size={24} /> },
+  { id: 'wallet', component: <Wallet size={24} /> },
+  { id: 'trending', component: <TrendingUp size={24} /> },
+  { id: 'tech', component: <Cpu size={24} /> },
+  { id: 'food', component: <Utensils size={24} /> },
+  { id: 'music', component: <Music size={24} /> },
+  { id: 'book', component: <Book size={24} /> },
+];
+
+const getIcon = (id: string) => ICONS.find(i => i.id === id)?.component || <ShoppingCart size={24} />;
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 
@@ -24,6 +44,8 @@ export function AddTransactionForm({
     description, setDescription,
     isLoading, error, handleSubmit
   } = useAddTransactionViewModel(onSuccess);
+
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -97,16 +119,56 @@ export function AddTransactionForm({
           />
         </div>
 
-        {/* Kategori */}
+        {/* Kategori Seçimi (Grid / Dropdown) */}
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kategori</label>
-          <CustomSelect 
-            required
-            value={categoryId}
-            onChange={setCategoryId}
-            placeholder="Kategori seçiniz..."
-            options={categories.filter(c => c.type === type).map(c => ({ value: c.id, label: c.name }))}
-          />
+          
+          <button 
+            type="button"
+            onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+            className="w-full flex items-center justify-between bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 px-4 text-body text-white hover:bg-[rgba(255,255,255,0.05)] transition-all focus:outline-none focus:border-[var(--inverse-primary)]"
+          >
+            {categoryId ? (
+              <div className="flex items-center gap-2">
+                <div className={`${type === 'income' ? 'text-[#4ade80]' : 'text-orange-400'}`}>
+                  {getIcon((categories.find(c => c.id === categoryId) as any)?.icon || 'cart')}
+                </div>
+                <span>{categories.find(c => c.id === categoryId)?.name}</span>
+              </div>
+            ) : (
+              <span className="text-[var(--on-surface-variant)]">Kategori seçiniz...</span>
+            )}
+            <div className={`transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--on-surface-variant)]"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </button>
+
+          {isCategoryOpen && (
+            <div className="grid grid-cols-4 gap-3 max-h-[200px] overflow-y-auto hide-scrollbar mt-2 p-2 bg-[rgba(0,0,0,0.2)] rounded-xl border border-[rgba(255,255,255,0.05)]">
+              {categories.filter(c => c.type === type).map(c => {
+                const isSelected = categoryId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => { setCategoryId(c.id); setIsCategoryOpen(false); }}
+                    className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all ${
+                      isSelected 
+                        ? 'border-[var(--inverse-primary)] bg-[rgba(73,75,214,0.1)] text-[var(--inverse-primary)] shadow-md shadow-[var(--primary)]/20' 
+                        : 'border-transparent bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.08)]'
+                    }`}
+                  >
+                    <div className={`${type === 'income' ? 'text-[#4ade80]' : 'text-orange-400'}`}>
+                      {getIcon((c as any).icon || 'cart')}
+                    </div>
+                    <span className={`text-[10px] text-center px-1 truncate w-full ${isSelected ? 'font-bold text-white' : 'font-medium group-hover:text-white'}`}>
+                      {c.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Açıklama */}

@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateUserHealthProfileAction } from '@/actions/user';
+import { calculateTargetCalories } from '@/lib/calories';
 
 export type OnboardingStep = 'welcome' | 'health' | 'finance' | 'categories';
 
-export function useOnboardingViewModel() {
+export function useOnboardingViewModel(initialAge: number = 25) {
   const router = useRouter();
   
   // -- Step Control --
@@ -22,31 +23,13 @@ export function useOnboardingViewModel() {
   // -- Calculated Calories --
   const targetCalories = useMemo(() => {
     if (!weight || !height) return 0;
-    const a = 25; // Default/Assumed age since user says we have it
+    const a = initialAge; // Using real age from DB or 25 fallback
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (isNaN(w) || isNaN(h)) return 0;
 
-    // Mifflin-St Jeor Equation
-    let bmr = (10 * w) + (6.25 * h) - (5 * a);
-    bmr += gender === 'Male' ? 5 : -161;
-
-    // Activity Multiplier
-    const multipliers: Record<string, number> = {
-      sedentary: 1.2,
-      light: 1.375,
-      moderate: 1.55,
-      active: 1.725,
-      very_active: 1.9
-    };
-    let tdee = bmr * multipliers[activityLevel];
-
-    // Goal adjustment
-    if (goal === 'lose') tdee -= 500;
-    if (goal === 'gain') tdee += 500;
-
-    return Math.max(1200, Math.round(tdee)); // Min 1200 kalori
-  }, [weight, height, gender, activityLevel, goal]);
+    return calculateTargetCalories(w, h, a, gender, activityLevel, goal);
+  }, [weight, height, gender, activityLevel, goal, initialAge]);
 
   // -- Actions --
   const skipToDashboard = () => {
@@ -67,7 +50,7 @@ export function useOnboardingViewModel() {
     setError(null);
     try {
       const res = await updateUserHealthProfileAction({
-        age: 25, // Fallback/assumed age
+        age: initialAge, 
         weight: parseFloat(weight),
         height: parseFloat(height),
         gender,

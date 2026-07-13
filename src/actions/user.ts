@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { User } from "@/models/User";
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -24,22 +25,18 @@ export async function updateUserHealthProfileAction(data: {
 }) {
   try {
     await connectDB();
-    const userId = await getUserId();
+    const userIdStr = await getUserId();
+    const userId = new mongoose.Types.ObjectId(userIdStr);
 
-    const db = mongoose.connection.db;
-    if (!db) throw new Error("Database connection is not established");
-
-    await db.collection("user").updateOne(
+    await User.updateOne(
       { _id: userId },
       {
         $set: {
-          age: data.age,
-          weight: data.weight,
-          height: data.height,
-          gender: data.gender,
-          activity_level: data.activity_level,
-          goal: data.goal,
-          targetCalories: data.targetCalories,
+          current_weight_kg: data.weight,
+          "profile.height_cm": data.height,
+          "profile.gender": data.gender,
+          "profile.activity_level": data.activity_level,
+          "settings.daily_calorie_goal": data.targetCalories,
         }
       }
     );

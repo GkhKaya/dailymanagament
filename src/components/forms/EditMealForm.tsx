@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Search } from 'lucide-react';
+import { useEditMealViewModel } from '@/viewmodels/useEditMealViewModel';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditMealForm({ onClose }: { onClose: () => void }) {
-  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
+  const {
+    mealType, setMealType,
+    foodName, setFoodName,
+    quantity, setQuantity,
+    unit, setUnit,
+    calories, setCalories,
+    getServingDesc,
+    isLoading, error,
+    handleUpdate, handleDelete
+  } = useEditMealViewModel(initialData, onSuccess);
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,7 +44,8 @@ export function EditMealForm({ onClose }: { onClose: () => void }) {
             <input 
               type="text" 
               placeholder="Besin, marka veya yemek..." 
-              defaultValue="Tavuk Salata"
+              value={foodName}
+              onChange={(e) => setFoodName(e.target.value)}
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
             />
           </div>
@@ -45,13 +57,18 @@ export function EditMealForm({ onClose }: { onClose: () => void }) {
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar</label>
             <input 
               type="number" 
-              defaultValue={1}
+              value={quantity}
+              onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
             />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Birim</label>
-            <select className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none">
+            <select 
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none"
+            >
               <option value="portion">Porsiyon</option>
               <option value="gram">Gram</option>
               <option value="piece">Adet</option>
@@ -60,22 +77,30 @@ export function EditMealForm({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {/* Özet (Mock) */}
-        <div className="glass-item p-4 flex items-center justify-between mt-2">
-          <div className="flex flex-col gap-1">
-            <span className="text-body font-medium text-white">Tahmini Kalori</span>
-            <span className="text-caption text-[var(--on-surface-variant)]">1 Porsiyon (350g)</span>
-          </div>
-          <span className="text-xl font-bold text-[var(--primary)]">350 kcal</span>
+        {/* Kalori */}
+        <div className="flex flex-col gap-2 mt-2">
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kalori (Kcal)</label>
+          <input 
+            type="number" 
+            value={calories}
+            onChange={(e) => setCalories(e.target.value)}
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body font-bold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+          />
         </div>
       </div>
 
-      <div className="mt-4 flex gap-3">
-        <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-          İptal
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
+          {error}
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-col gap-3">
+        <button onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
+          {isLoading ? <LoadingSpinner size="sm" /> : "Değişiklikleri Kaydet"}
         </button>
-        <button onClick={onClose} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
-          Güncelle
+        <button onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">
+          Yemeği Sil
         </button>
       </div>
     </div>

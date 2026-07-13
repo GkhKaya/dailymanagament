@@ -13,8 +13,14 @@ import { ManageDebtsForm } from '@/components/forms/ManageDebtsForm';
 import { ManageSubscriptionsForm } from '@/components/forms/ManageSubscriptionsForm';
 // We also need something for Accounts (Maybe a generic Accounts form if one existed, but AddAccountForm is for one).
 import { AddAccountForm } from '@/components/forms/AddAccountForm';
+import { UpdateEmailForm } from '@/components/forms/UpdateEmailForm';
+import { UpdatePasswordForm } from '@/components/forms/UpdatePasswordForm';
+import { UpdateWeightForm } from '@/components/forms/UpdateWeightForm';
+import { UpdateAgeForm } from '@/components/forms/UpdateAgeForm';
+import { ManageAccountsForm } from '@/components/forms/ManageAccountsForm';
+import { FinanceDataDTO } from '@/models/DashboardTypes';
 
-export function ProfileView({ initialUser }: { initialUser: any }) {
+export function ProfileView({ initialUser, financeData }: { initialUser: any, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
 
@@ -22,10 +28,22 @@ export function ProfileView({ initialUser }: { initialUser: any }) {
 
   const renderSheetContent = () => {
     switch (activeSheet) {
-      case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
-      case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={[]} />;
-      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={[]} />;
-      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={[]} categories={[]} accounts={[]} />;
+      case 'manageAccounts': return (
+        <ManageAccountsForm 
+          onClose={() => setActiveSheet(null)} 
+          onOpenAdd={() => setActiveSheet('addAccount')}
+          onOpenEdit={(id) => { /* Later implementation for edit */ }}
+          accounts={financeData?.accounts || []} 
+        />
+      );
+      case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet('manageAccounts')} onSuccess={handleSuccess} />;
+      case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
+      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
+      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
+      case 'email': return <UpdateEmailForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialEmail={initialUser.email} />;
+      case 'password': return <UpdatePasswordForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'weight': return <UpdateWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialWeight={initialUser.weight} />;
+      case 'age': return <UpdateAgeForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialBirthDate={initialUser.birth_date} />;
       default: return (
         <div className="p-8 text-center text-[var(--on-surface-variant)]">
           Bu form yapım aşamasındadır.
@@ -40,6 +58,7 @@ export function ProfileView({ initialUser }: { initialUser: any }) {
       case 'email': return 'E-posta Değiştir';
       case 'weight': return 'Kilo Bilgisini Güncelle';
       case 'age': return 'Yaş Bilgisini Güncelle';
+      case 'manageAccounts': return 'Mevcut Hesaplar';
       case 'addAccount': return 'Hesap Yönetimi';
       case 'debts': return 'Borç Yönetimi';
       case 'subscriptions': return 'Abonelik Yönetimi';
@@ -128,7 +147,7 @@ export function ProfileView({ initialUser }: { initialUser: any }) {
         <div>
           <h3 className="text-subtitle mb-4 px-2">Finans Yönetimi</h3>
           <div className="flex flex-col gap-2">
-            <button onClick={() => setActiveSheet('addAccount')} className="flex items-center gap-4 glass-item px-5 py-4 hover:bg-[rgba(255,255,255,0.08)] transition-colors text-left group">
+            <button onClick={() => setActiveSheet('manageAccounts')} className="flex items-center gap-4 glass-item px-5 py-4 hover:bg-[rgba(255,255,255,0.08)] transition-colors text-left group">
               <div className="w-10 h-10 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-[var(--primary)] group-hover:scale-110 transition-transform">
                 <Wallet size={18} />
               </div>

@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Building2, LayoutGrid
 interface FinanceSectionProps {
   data: FinanceDataDTO;
   isOverview?: boolean;
-  onOpenSheet?: (type: string) => void;
+  onOpenSheet?: (type: string, payload?: any) => void;
   onShowAnalysis?: () => void;
 }
 
@@ -27,38 +27,39 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
     <div className="flex flex-col items-center justify-center relative mt-2 py-4 gap-4">
       <div className="absolute w-full h-20 rounded-full bg-[rgba(73,75,214,0.1)] blur-xl -z-10"></div>
       
-      {/* Row 1: Balance and Budget */}
+      {/* Row 1: Balance */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
         <div className="flex items-center gap-2">
           <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.totalBalance")}:</span>
           <span className="font-semibold text-lg text-white">{fmt(data.totalBalance)}</span>
         </div>
-        <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
-        <div className="flex items-center gap-2">
-          <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.monthlyBudget")}:</span>
-          <span className="font-medium text-[#c0c1ff]">{fmt(data.monthlyBudget)}</span>
-        </div>
       </div>
 
-      {/* Row 2: Daily Spend */}
+      {/* Row 2: Income and Expense */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 w-full justify-center items-center text-body">
         <div className="flex items-center gap-2">
-          <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">{t("dashboard.finance.dailySpend")}:</span>
-          <span className="font-medium text-[rgba(217,119,33,0.9)]">{fmt(data.dailySpend)}</span>
+          <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">Aylık Gelir:</span>
+          <span className="font-medium text-[#4ade80]">+{fmt(data.monthlyIncome)}</span>
+        </div>
+        <div className="w-1 h-1 rounded-full bg-[rgba(255,255,255,0.2)]"></div>
+        <div className="flex items-center gap-2">
+          <span className="text-[var(--on-surface-variant)] uppercase tracking-wider text-xs">Aylık Gider:</span>
+          <span className="font-medium text-orange-400">-{fmt(data.monthlyExpense)}</span>
         </div>
       </div>
     </div>
   );
 
   const TransactionsList = () => {
-    // Group transactions by date
+    // Group transactions by date and calculate daily net
     const grouped = data.recentTransactions.reduce((acc, txn) => {
       // txn.date is like "Bugün, 14:30" or "12 Tem, 14:30"
       const datePart = txn.date.split(',')[0];
-      if (!acc[datePart]) acc[datePart] = [];
-      acc[datePart].push(txn);
+      if (!acc[datePart]) acc[datePart] = { txns: [], net: 0 };
+      acc[datePart].txns.push(txn);
+      acc[datePart].net += txn.type === 'income' ? txn.amount : -txn.amount;
       return acc;
-    }, {} as Record<string, typeof data.recentTransactions>);
+    }, {} as Record<string, { txns: typeof data.recentTransactions, net: number }>);
 
     return (
       <div>
@@ -72,11 +73,16 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           </button>
         </div>
         <div className="flex flex-col gap-4">
-          {Object.entries(grouped).map(([date, txns]) => (
+          {Object.entries(grouped).map(([date, groupData]) => (
             <div key={date} className="flex flex-col gap-2">
-              <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider px-2">{date}</span>
+              <div className="flex items-center justify-between px-2">
+                <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{date}</span>
+                <span className={`text-caption font-semibold ${groupData.net > 0 ? 'text-[#4ade80]' : groupData.net < 0 ? 'text-orange-400' : 'text-[var(--on-surface-variant)]'}`}>
+                  {groupData.net > 0 ? '+' : ''}{fmt(groupData.net)}
+                </span>
+              </div>
               <div className="flex flex-col gap-2">
-                {txns.map((txn) => {
+                {groupData.txns.map((txn) => {
                   const isIncome = txn.type === 'income';
                   return (
                     <div key={txn.id} className="flex items-center justify-between glass-item px-5 py-3">
@@ -115,6 +121,11 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
     );
   }
 
+  // Format Current Month and Year
+  const rawMonthName = new Date().toLocaleString('tr-TR', { month: 'long' });
+  const monthName = rawMonthName.charAt(0).toUpperCase() + rawMonthName.slice(1);
+  const currentMonthYear = `${monthName} ${new Date().getFullYear()}`;
+
   // Detailed Layout (2 columns on lg, 1 on small)
   return (
     <div className="w-full mt-8 animate-slide-up anim-delay-100 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
@@ -122,7 +133,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
       {/* LEFT COLUMN: Overview & Transactions */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-2xl font-bold tracking-tight text-white">Günlük Özet</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-white">{currentMonthYear}</h2>
           <button 
             onClick={onShowAnalysis}
             className="px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.1)] text-white font-medium transition-all flex items-center gap-2 text-sm"
@@ -162,7 +173,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                 <div className="flex items-center gap-3">
                   <span className="text-body font-bold">{fmt(acc.balance)}</span>
                   <button 
-                    onClick={() => onOpenSheet && onOpenSheet('editAccount')}
+                    onClick={() => onOpenSheet && onOpenSheet('editAccount', acc)}
                     className="opacity-0 group-hover:opacity-100 p-2 rounded-full bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] transition-all text-white"
                   >
                     <Edit2 size={14} />

@@ -11,6 +11,7 @@ import { Category } from "@/models/Category";
 import { Subscription } from "@/models/Subscription";
 import { Debt } from "@/models/Debt";
 import { User } from "@/models/User";
+import { WeightLog } from "@/models/WeightLog";
 import { HealthDataDTO, FinanceDataDTO } from "@/models/DashboardTypes";
 
 async function getSession() {
@@ -43,6 +44,20 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       date: targetDate
     }).lean();
 
+    // Get Weight History (Last 30 days)
+    const thirtyDaysAgo = new Date(targetDate);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const weightLogs = await WeightLog.find({
+      user_id: session.user.id,
+      date: { $gte: thirtyDaysAgo, $lte: targetDate }
+    }).sort({ date: 1 }).lean();
+
+    const weightHistory = weightLogs.map(log => ({
+      date: log.date.toISOString(),
+      weight: log.weight_kg
+    }));
+
     if (!dailyLog) {
       // Return empty DTO if no data exists for this day
       return {
@@ -55,7 +70,12 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           sleepMinutes: 0,
           sleepCalories: 0,
           exerciseMinutes: 0,
-          meals: []
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          meals: [],
+          currentWeight: user?.current_weight_kg || 0,
+          weightHistory
         }
       };
     }
@@ -70,6 +90,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         const mappedFoods = foods.map((f: any) => {
           mealCalories += f.nutrition_snapshot.calories;
           return {
+            id: f.entry_id ? f.entry_id.toString() : new mongoose.Types.ObjectId().toString(),
             name: f.food_name,
             amount: f.serving_description,
             calories: f.nutrition_snapshot.calories
@@ -100,7 +121,14 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       meals
     };
 
-    return { success: true, data };
+    return { 
+      success: true, 
+      data: {
+        ...data,
+        currentWeight: user?.current_weight_kg || 0,
+        weightHistory
+      } 
+    };
   } catch (err: any) {
     console.error("getHealthDataAction error:", err);
     return { success: false, error: err.message };
@@ -162,7 +190,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     const categories = categoriesRaw.map((cat: any) => ({
       id: cat._id.toString(),
       name: cat.name,
-      type: cat.type
+      type: cat.type,
+      icon: cat.icon
     }));
 
     // Fetch subscriptions
@@ -182,22 +211,30 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       direction: debt.direction,
       amount: parseFloat(debt.original_amount.toString()),
       remainingAmount: parseFloat(debt.remaining_amount.toString()),
-      dueDate: debt.due_date ? new Date(debt.due_date).toISOString().split("T")[0] : undefined
+      dueDate: debt.due_date ? new Date(debt.due_date).toISOString().split("T")[0] : ""
     }));
 
-    // Daily Spend (Transactions of today that are expenses)
-    const todayStart = new Date();
-    todayStart.setHours(0,0,0,0);
-    const todayExpenses = await Transaction.aggregate([
-      { $match: { user_id: userId, type: "expense", date: { $gte: todayStart } } },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
+    // Monthly Income and Expense
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const monthlyStats = await Transaction.aggregate([
+      { $match: { user_id: session.user.id, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $group: { _id: "$type", total: { $sum: "$amount" } } }
     ]);
-    const dailySpend = todayExpenses.length > 0 ? parseFloat(todayExpenses[0].total.toString()) : 0;
+    
+    let monthlyIncome = 0;
+    let monthlyExpense = 0;
+    
+    monthlyStats.forEach((stat: any) => {
+      if (stat._id === 'income') monthlyIncome = parseFloat(stat.total.toString());
+      if (stat._id === 'expense') monthlyExpense = parseFloat(stat.total.toString());
+    });
 
     const data: FinanceDataDTO = {
       totalBalance,
-      monthlyBudget: 12000, // Hardcoded or calculated
-      dailySpend,
+      monthlyIncome,
+      monthlyExpense,
       accounts,
       recentTransactions,
       categories,

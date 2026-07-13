@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon } from 'lucide-react';
+import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditAccountForm({ onClose }: { onClose: () => void }) {
-  // Mock initial data
-  const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>('bank');
+export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
+  const {
+    accountName, setAccountName,
+    accountType, setAccountType,
+    balance, setBalance,
+    creditLimit, setCreditLimit,
+    creditDebt, setCreditDebt,
+    cutoffDay, setCutoffDay,
+    dueDay, setDueDay,
+    isLoading, error,
+    handleUpdate, handleDelete
+  } = useEditAccountViewModel(initialData, onSuccess);
   
   return (
     <div className="flex flex-col gap-6">
@@ -13,7 +24,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hesap Adı</label>
           <input 
             type="text" 
-            defaultValue="Garanti Maaş"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
           />
         </div>
@@ -57,7 +69,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
-                    defaultValue="50000"
+                    value={creditLimit}
+                    onChange={(e) => setCreditLimit(e.target.value)}
                     className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
                   />
                 </div>
@@ -69,7 +82,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
-                    defaultValue="12500"
+                    value={creditDebt}
+                    onChange={(e) => setCreditDebt(e.target.value)}
                     className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 pl-10 pr-4 text-body text-orange-400 focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
                   />
                 </div>
@@ -85,7 +99,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
                   <input 
                     type="number" 
                     min="1" max="31"
-                    defaultValue="15"
+                    value={cutoffDay}
+                    onChange={(e) => setCutoffDay(e.target.value)}
                     className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
                   />
                 </div>
@@ -99,7 +114,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
                   <input 
                     type="number" 
                     min="1" max="31"
-                    defaultValue="25"
+                    value={dueDay}
+                    onChange={(e) => setDueDay(e.target.value)}
                     className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
                   />
                 </div>
@@ -114,7 +130,8 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
               <input 
                 type="number" 
-                defaultValue="42500"
+                value={balance}
+                onChange={(e) => setBalance(e.target.value)}
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-xl font-semibold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
               />
             </div>
@@ -122,11 +139,17 @@ export function EditAccountForm({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
+      {error && (
+        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
+          {error}
+        </div>
+      )}
+
       <div className="mt-2 flex flex-col gap-3">
-        <button onClick={onClose} className="w-full py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
-          Değişiklikleri Kaydet
+        <button onClick={handleUpdate} disabled={isLoading} className="w-full py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
+          {isLoading ? <LoadingSpinner size="sm" /> : "Değişiklikleri Kaydet"}
         </button>
-        <button onClick={onClose} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">
+        <button onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">
           Hesabı Sil
         </button>
       </div>

@@ -5,27 +5,14 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function AddSleepForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const {
-    durationMinutes, setDurationMinutes,
+    hours, setHours,
+    mins, setMins,
     quality, setQuality,
     isLoading, error, handleSubmit
   } = useAddSleepViewModel(onSuccess);
 
-  const [hours, setHours] = useState('');
-  const [mins, setMins] = useState('');
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const h = parseInt(hours || '0');
-    const m = parseInt(mins || '0');
-    setDurationMinutes((h * 60 + m).toString());
-    // Use a slight delay to allow state to update before submitting
-    setTimeout(() => {
-      handleSubmit(e);
-    }, 0);
-  };
-
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-6 animate-fade-in">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
       {error && (
         <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
           {error}

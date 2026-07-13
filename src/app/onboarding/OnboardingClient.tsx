@@ -6,8 +6,8 @@ import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
 import { OnboardingHealth } from '@/components/onboarding/OnboardingHealth';
 import { OnboardingFinance } from '@/components/onboarding/OnboardingFinance';
 
-export function OnboardingClient({ initialCategories }: { initialCategories: any[] }) {
-  const viewModel = useOnboardingViewModel();
+export function OnboardingClient({ initialCategories, initialAge = 25 }: { initialCategories: any[], initialAge?: number }) {
+  const viewModel = useOnboardingViewModel(initialAge);
   
   return (
     <div className="min-h-screen bg-[var(--background)] relative overflow-x-hidden flex flex-col">

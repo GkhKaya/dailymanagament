@@ -40,6 +40,7 @@ const UserSchema: Schema = new Schema({
     timezone: { type: String }
   }
 }, {
+  collection: 'user',
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 

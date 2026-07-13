@@ -7,6 +7,8 @@ import { headers } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
 import { SavedFood } from "@/models/SavedFood";
+import { WeightLog } from "@/models/WeightLog";
+import { calculateTargetCalories } from "@/lib/calories";
 
 // Helper to check session
 async function getUserId() {
@@ -81,6 +83,96 @@ export async function addMealAction(data: { date: string; type: string; food_nam
       });
     }
 
+    return { success: true };
+  } catch (err: any) {
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const targetDate = new Date(data.date);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    const log = await DailyLog.findOne({ user_id: userId, date: targetDate });
+    if (!log) return { success: false, error: "Günlük kayıt bulunamadı." };
+
+    let foundFood = null;
+    let oldCal = 0, oldProt = 0, oldCarb = 0, oldFat = 0;
+
+    // Find and remove from old type array
+    const oldType = data.old_type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    if (log.meals[oldType]) {
+      const idx = log.meals[oldType].findIndex((f: any) => f.entry_id.toString() === data.entry_id);
+      if (idx !== -1) {
+        foundFood = log.meals[oldType][idx];
+        oldCal = foundFood.nutrition_snapshot.calories;
+        oldProt = foundFood.nutrition_snapshot.protein_g;
+        oldCarb = foundFood.nutrition_snapshot.carbs_g;
+        oldFat = foundFood.nutrition_snapshot.fat_g;
+        log.meals[oldType].splice(idx, 1);
+      }
+    }
+
+    if (!foundFood) return { success: false, error: "Kayıt bulunamadı." };
+
+    // Update food details
+    foundFood.food_name = data.food_name;
+    foundFood.serving_description = data.serving_description;
+    foundFood.nutrition_snapshot.calories = data.calories;
+    foundFood.nutrition_snapshot.protein_g = data.protein_g;
+    foundFood.nutrition_snapshot.carbs_g = data.carbs_g;
+    foundFood.nutrition_snapshot.fat_g = data.fat_g;
+
+    // Push to new type array
+    const newType = data.type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    log.meals[newType].push(foundFood);
+
+    // Update totals
+    log.totals.calories_consumed += (data.calories - oldCal);
+    log.totals.protein_g += (data.protein_g - oldProt);
+    log.totals.carbs_g += (data.carbs_g - oldCarb);
+    log.totals.fat_g += (data.fat_g - oldFat);
+
+    await log.save();
+    return { success: true };
+  } catch (err: any) {
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteMealAction(data: { date: string; entry_id: string; type: string; }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const targetDate = new Date(data.date);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    const log = await DailyLog.findOne({ user_id: userId, date: targetDate });
+    if (!log) return { success: false, error: "Günlük kayıt bulunamadı." };
+
+    const type = data.type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    if (!log.meals[type]) return { success: false, error: "Kategori bulunamadı." };
+
+    const idx = log.meals[type].findIndex((f: any) => f.entry_id.toString() === data.entry_id);
+    if (idx === -1) return { success: false, error: "Kayıt bulunamadı." };
+
+    const oldFood = log.meals[type][idx];
+    
+    // Update totals
+    log.totals.calories_consumed -= oldFood.nutrition_snapshot.calories;
+    log.totals.protein_g -= oldFood.nutrition_snapshot.protein_g;
+    log.totals.carbs_g -= oldFood.nutrition_snapshot.carbs_g;
+    log.totals.fat_g -= oldFood.nutrition_snapshot.fat_g;
+
+    // Remove from array
+    log.meals[type].splice(idx, 1);
+
+    await log.save();
     return { success: true };
   } catch (err: any) {
     console.error(err);
@@ -191,6 +283,75 @@ export async function getSavedFoodsAction() {
       }))
     };
   } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+// ── WEIGHT ──
+export async function addWeightLogAction(data: { date: string; weight: number; note?: string }) {
+  try {
+    const userId = await getUserId();
+    await connectDB();
+    
+    const targetDate = new Date(data.date);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    // Update or insert WeightLog for this day
+    await WeightLog.findOneAndUpdate(
+      { user_id: userId, date: targetDate },
+      { 
+        $set: { 
+          weight_kg: data.weight,
+          ...(data.note && { note: data.note })
+        } 
+      },
+      { upsert: true, new: true }
+    );
+
+    // If today is the date (or past), update current user profile
+    const today = new Date();
+    today.setUTCHours(0,0,0,0);
+    
+    const userObjId = new mongoose.Types.ObjectId(userId);
+    const user = await User.findById(userObjId).lean();
+    
+    if (user && user.profile) {
+      // Calculate age
+      let age = 25;
+      if (user.profile.birth_date) {
+        age = new Date().getFullYear() - new Date(user.profile.birth_date).getFullYear();
+      }
+
+      const oldWeight = user.current_weight_kg || data.weight;
+      const oldBmr = (10 * oldWeight) + (6.25 * (user.profile.height_cm || 170)) - (5 * age) + (user.profile.gender === 'Male' ? 5 : -161);
+      const multipliers: Record<string, number> = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+      const oldTdee = Math.round(oldBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
+      const oldTarget = user.settings?.daily_calorie_goal || oldTdee;
+      const deficit = oldTarget - oldTdee; // e.g. -500 for lose
+
+      const newBmr = (10 * data.weight) + (6.25 * (user.profile.height_cm || 170)) - (5 * age) + (user.profile.gender === 'Male' ? 5 : -161);
+      const newTdee = Math.round(newBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
+      const newTarget = Math.max(1200, newTdee + deficit);
+      
+      await User.updateOne(
+        { _id: userObjId },
+        { 
+          $set: { 
+            current_weight_kg: data.weight,
+            "settings.daily_calorie_goal": newTarget
+          } 
+        }
+      );
+    } else {
+      await User.updateOne(
+        { _id: userObjId },
+        { $set: { current_weight_kg: data.weight } }
+      );
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error(err);
     return { success: false, error: err.message };
   }
 }

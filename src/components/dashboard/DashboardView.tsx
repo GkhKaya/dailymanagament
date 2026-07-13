@@ -20,6 +20,7 @@ import { ManageDebtsForm } from "@/components/forms/ManageDebtsForm";
 import { ManageSubscriptionsForm } from "@/components/forms/ManageSubscriptionsForm";
 import { EditMealForm } from "@/components/forms/EditMealForm";
 import { AddSleepForm } from "@/components/forms/AddSleepForm";
+import { AddWeightForm } from "@/components/forms/AddWeightForm";
 
 import { HealthAnalysis } from "@/components/dashboard/HealthAnalysis";
 import { FinanceAnalysis } from "@/components/dashboard/FinanceAnalysis";
@@ -30,6 +31,7 @@ export function DashboardView() {
   const { mode, setMode, currentDate, handlePrevDay, handleNextDay, healthData, financeData, isLoadingHealth, isLoadingFinance, refreshData } = useDashboardViewModel();
   
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  const [sheetPayload, setSheetPayload] = useState<any>(null);
 
   const handleLogout = async () => {
     await logoutAction();
@@ -38,18 +40,25 @@ export function DashboardView() {
 
   const handleSuccess = () => {
     setActiveSheet(null);
+    setSheetPayload(null);
     refreshData();
+  };
+
+  const handleOpenSheet = (sheetName: string, payload?: any) => {
+    setSheetPayload(payload || null);
+    setActiveSheet(sheetName);
   };
 
   const renderSheetContent = () => {
     switch (activeSheet) {
       case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
-      case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'addWeight': return <AddWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} currentWeight={sheetPayload?.currentWeight || 0} weightHistory={sheetPayload?.weightHistory || []} currentDate={currentDate.toISOString()} />;
       case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
-      case 'editAccount': return <EditAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'editAccount': return <EditAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
       case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
       case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
@@ -64,6 +73,7 @@ export function DashboardView() {
       case 'editMeal': return 'Öğün Düzenle';
       case 'exercise': return 'Egzersiz Ekle';
       case 'addSleep': return 'Uyku Verisi Ekle';
+      case 'addWeight': return 'Kilo Güncelle';
       case 'addAccount': return 'Hesap Oluştur';
       case 'editAccount': return 'Hesabı Düzenle';
       case 'categories': return 'Kategori Yönetimi';
@@ -176,10 +186,10 @@ export function DashboardView() {
           <div className="flex flex-col md:flex-row gap-8 w-full max-w-[1400px] mx-auto animate-fade-in">
             {/* Split Screen for Overview */}
             <div className="flex-1 ambient-health rounded-3xl p-6 relative overflow-hidden border border-[rgba(255,255,255,0.05)]">
-              {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={setActiveSheet} />}
+              {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} />}
             </div>
             <div className="flex-1 ambient-finance rounded-3xl p-6 relative overflow-hidden border border-[rgba(255,255,255,0.05)]">
-              {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={setActiveSheet} />}
+              {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} />}
             </div>
           </div>
         )}
@@ -193,7 +203,7 @@ export function DashboardView() {
               onPrevDay={handlePrevDay} 
               onNextDay={handleNextDay} 
               onShowAnalysis={() => setMode('health-analysis')}
-              onOpenSheet={setActiveSheet}
+              onOpenSheet={handleOpenSheet}
             />
           )
         )}
@@ -203,7 +213,7 @@ export function DashboardView() {
             <FinanceSection 
               data={financeData} 
               isOverview={false} 
-              onOpenSheet={setActiveSheet} 
+              onOpenSheet={handleOpenSheet} 
               onShowAnalysis={() => setMode('finance-analysis')}
             />
           )
@@ -220,7 +230,7 @@ export function DashboardView() {
 
       {/* ── FAB Menu ── */}
       {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
-        <FABMenu mode={mode} onOpenSheet={setActiveSheet} />
+        <FABMenu mode={mode} onOpenSheet={handleOpenSheet} />
       )}
 
       <BottomSheet isOpen={!!activeSheet} onClose={() => setActiveSheet(null)} title={getSheetTitle()}>

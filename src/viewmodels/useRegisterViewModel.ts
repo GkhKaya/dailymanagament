@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import { updateAgeAction } from '@/actions/profile';
 
 export function useRegisterViewModel() {
   const [email, setEmail] = useState('');
@@ -15,7 +16,12 @@ export function useRegisterViewModel() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+    if (password.length < 8) {
+      setError('Şifre en az 8 karakter olmalıdır.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error: signUpError } = await authClient.signUp.email({
         email,
@@ -24,12 +30,18 @@ export function useRegisterViewModel() {
       });
       
       if (data && !signUpError) {
+        if (age) {
+          const currentYear = new Date().getFullYear();
+          const birthDate = new Date();
+          birthDate.setFullYear(currentYear - parseInt(age));
+          await updateAgeAction(birthDate.toISOString());
+        }
         router.push('/onboarding');
       } else {
         setError(signUpError?.message || 'Kayıt başarısız oldu.');
       }
     } catch (err: any) {
-      setError('Kayıt olurken beklenmedik bir hata oluştu.');
+      setError(err.message || 'Kayıt olurken beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);
     }

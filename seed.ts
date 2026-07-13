@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId } from "mongodb";
 
 const MONGODB_URI = "mongodb://127.0.0.1:27017/dailymanagement";
-const USER_ID = "6a4e88d36dd2bf30516ce5f0";
+const USER_ID = new ObjectId("6a4e88d36dd2bf30516ce5f0");
 
 async function main() {
   const client = new MongoClient(MONGODB_URI);
@@ -43,9 +43,9 @@ async function main() {
   await db.collection("sleeps").deleteMany({ user_id: USER_ID });
   
   // Insert Categories
-  const catIncomeId = new ObjectId().toString();
-  const catExpenseId1 = new ObjectId().toString();
-  const catExpenseId2 = new ObjectId().toString();
+  const catIncomeId = new ObjectId();
+  const catExpenseId1 = new ObjectId();
+  const catExpenseId2 = new ObjectId();
   
   await db.collection("categories").insertMany([
     { _id: catIncomeId, user_id: USER_ID, name: "Maaş", icon: "briefcase", color: "#4ade80", type: "income", created_at: new Date() },
@@ -54,8 +54,8 @@ async function main() {
   ]);
   
   // Insert Accounts
-  const account1Id = new ObjectId().toString();
-  const account2Id = new ObjectId().toString();
+  const account1Id = new ObjectId();
+  const account2Id = new ObjectId();
   
   await db.collection("accounts").insertMany([
     { _id: account1Id, user_id: USER_ID, name: "Akbank Maaş", type: "bank", balance: 15500, currency: "TRY", icon: "wallet", color: "#ef4444", include_in_total: true, created_at: new Date() },

@@ -14,7 +14,7 @@ export interface MealInfo {
   type: MealType;
   foodName: string;
   calories: number;
-  foods?: { name: string; amount: string; calories: number }[];
+  foods?: { id: string; name: string; amount: string; calories: number }[];
 }
 
 export interface HealthDataDTO {
@@ -29,6 +29,8 @@ export interface HealthDataDTO {
   carbs: number;
   fat: number;
   meals: MealInfo[];
+  currentWeight?: number;
+  weightHistory?: { date: string; weight: number }[];
 }
 
 // ── Finance Data Models ──
@@ -52,6 +54,7 @@ export interface CategoryInfo {
   id: string;
   name: string;
   type: CategoryType;
+  icon?: string;
 }
 
 export interface DebtInfo {
@@ -72,12 +75,11 @@ export interface SubscriptionInfo {
 
 export interface FinanceDataDTO {
   totalBalance: number;
-  monthlyBudget: number;
-  dailySpend: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
   accounts: AccountInfo[];
   recentTransactions: TransactionInfo[];
   categories: CategoryInfo[];
   debts: DebtInfo[];
   subscriptions: SubscriptionInfo[];
 }
-

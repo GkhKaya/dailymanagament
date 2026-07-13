@@ -49,5 +49,34 @@
     "logo": "Daily Management",
     "heroTitle": "Kalorini ve gelir giderini yönet",
     "heroSubtitle": "Günlük beslenmeni takip et aldığın kalori miktarını gör ve takip et aynı zamanda gelir giderlerini yöneterek tasarruf et"
+  },
+  "profile": {
+    "updateEmail": {
+      "title": "E-posta Değiştir",
+      "description": "Hesabınıza bağlı e-posta adresini güncelleyin.",
+      "newEmailLabel": "Yeni E-posta",
+      "newEmailPlaceholder": "örn: yeni@email.com",
+      "submit": "Güncelle"
+    },
+    "updatePassword": {
+      "title": "Şifre Güncelle",
+      "description": "Hesap güvenliğiniz için şifrenizi güncelleyin.",
+      "currentPasswordLabel": "Mevcut Şifre",
+      "newPasswordLabel": "Yeni Şifre",
+      "confirmPasswordLabel": "Yeni Şifre (Tekrar)",
+      "submit": "Şifreyi Değiştir"
+    },
+    "updateWeight": {
+      "title": "Kilo Bilgisini Güncelle",
+      "description": "Güncel kilonuzu girerek kalori hedeflerinizi daha doğru hesaplamamızı sağlayın.",
+      "weightLabel": "Kilonuz (kg)",
+      "submit": "Kaydet"
+    },
+    "updateAge": {
+      "title": "Doğum Tarihini Güncelle",
+      "description": "Doğum tarihinizi girerek hedeflerinizi daha doğru hesaplamamızı sağlayın.",
+      "dateLabel": "Doğum Tarihi",
+      "submit": "Kaydet"
+    }
   }
 }
