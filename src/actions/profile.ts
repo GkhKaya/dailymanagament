@@ -28,7 +28,8 @@ export async function updateWeightAction(weightKg: number) {
     );
     
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error("updateWeightAction error:", err);
     return { success: false, error: err.message };
   }
@@ -52,7 +53,8 @@ export async function updateAgeAction(birthDateStr: string) {
     );
     
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error("updateAgeAction error:", err);
     return { success: false, error: err.message };
   }

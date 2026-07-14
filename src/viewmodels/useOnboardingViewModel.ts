@@ -64,7 +64,8 @@ export function useOnboardingViewModel(initialAge: number = 25) {
       } else {
         setError(res.error || "Sağlık bilgileri kaydedilirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

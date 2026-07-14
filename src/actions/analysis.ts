@@ -18,38 +18,45 @@ async function getUserId() {
 }
 
 /**
- * Helper to get date boundaries based on time filter and current month index.
- * Note: currentMonthIndex is relative to the start of the current year.
- * For a production app this should probably take a real Date instead, but to match the UI:
+ * Helper to get date boundaries based on time filter and offset.
+ * offset: 0 means current (this week/month/year). -1 means previous, 1 means next.
  */
-function getDateRange(filter: 'week' | 'month' | 'year', currentMonthIndex: number) {
+function getDateRange(filter: 'week' | 'month' | 'year', offset: number) {
   const now = new Date();
-  let start = new Date(now.getFullYear(), currentMonthIndex, 1);
-  let end = new Date(now.getFullYear(), currentMonthIndex + 1, 0, 23, 59, 59, 999);
+  let start = new Date(now);
+  let end = new Date(now);
 
   if (filter === 'year') {
-    start = new Date(now.getFullYear(), 0, 1);
-    end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    start.setFullYear(now.getFullYear() + offset, 0, 1);
+    start.setHours(0, 0, 0, 0);
+    
+    end.setFullYear(now.getFullYear() + offset, 11, 31);
+    end.setHours(23, 59, 59, 999);
+  } else if (filter === 'month') {
+    start.setMonth(now.getMonth() + offset, 1);
+    start.setHours(0, 0, 0, 0);
+    
+    end.setMonth(now.getMonth() + offset + 1, 0);
+    end.setHours(23, 59, 59, 999);
   } else if (filter === 'week') {
-    // Just a mock week range based on current date for now, or we could calculate the exact week
     const day = now.getDay() || 7; 
-    start = new Date(now);
+    start.setDate(now.getDate() - day + 1 + (offset * 7));
     start.setHours(0,0,0,0);
-    start.setDate(now.getDate() - day + 1); // Monday
+    
     end = new Date(start);
-    end.setDate(start.getDate() + 6); // Sunday
+    end.setDate(start.getDate() + 6);
     end.setHours(23, 59, 59, 999);
   }
 
   return { start, end };
 }
 
-export async function getFinanceAnalysisAction(filter: 'week' | 'month' | 'year', monthIndex: number) {
+export async function getFinanceAnalysisAction(filter: 'week' | 'month' | 'year', offset: number) {
   try {
     await connectDB();
     const userId = await getUserId();
     
-    const { start, end } = getDateRange(filter, monthIndex);
+    const { start, end } = getDateRange(filter, offset);
 
     // Fetch transactions
     const txnsRaw = await Transaction.find({
@@ -128,18 +135,19 @@ export async function getFinanceAnalysisAction(filter: 'week' | 'month' | 'year'
       }
     };
 
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
 }
 
-export async function getHealthAnalysisAction(filter: 'week' | 'month', monthIndex: number) {
+export async function getHealthAnalysisAction(filter: 'week' | 'month', offset: number) {
   try {
     await connectDB();
     const userId = await getUserId();
     
-    const { start, end } = getDateRange(filter, monthIndex);
+    const { start, end } = getDateRange(filter, offset);
 
     const logs = await DailyLog.find({
       user_id: userId,
@@ -191,7 +199,8 @@ export async function getHealthAnalysisAction(filter: 'week' | 'month', monthInd
       }
     };
 
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }

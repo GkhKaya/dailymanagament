@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import { useEditMealViewModel } from '@/viewmodels/useEditMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
+export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: { id: string, type: string, foods: any[] } }) {
   const {
     mealType, setMealType,
     foodName, setFoodName,

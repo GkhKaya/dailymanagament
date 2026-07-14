@@ -42,7 +42,8 @@ export async function updateUserHealthProfileAction(data: {
     );
 
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error("Update User Health Error:", err);
     return { success: false, error: err.message };
   }

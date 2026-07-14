@@ -20,7 +20,7 @@ import { UpdateAgeForm } from '@/components/forms/UpdateAgeForm';
 import { ManageAccountsForm } from '@/components/forms/ManageAccountsForm';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
 
-export function ProfileView({ initialUser, financeData }: { initialUser: any, financeData?: FinanceDataDTO | null }) {
+export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
 

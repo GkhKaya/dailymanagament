@@ -39,7 +39,8 @@ export async function addAccountAction(data: { name: string; type: string; balan
     });
     
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
@@ -59,7 +60,8 @@ export async function updateAccountAction(id: string, data: { name: string; bala
     );
     
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -70,7 +72,8 @@ export async function deleteAccountAction(id: string) {
     const userId = await getUserId();
     await Account.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -106,7 +109,8 @@ export async function addTransactionAction(data: { type: string; amount: number;
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
@@ -144,7 +148,8 @@ export async function getCategoriesAction() {
       user_id: cat.user_id?.toString()
     }));
     return { success: true, categories };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -161,7 +166,8 @@ export async function addCategoryAction(data: { name: string; type: string; icon
       color: data.color
     });
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -172,7 +178,8 @@ export async function deleteCategoryAction(id: string) {
     const userId = await getUserId();
     await Category.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id), user_id: userId, is_default: false });
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -193,7 +200,8 @@ export async function addDebtAction(data: { person_name: string; direction: stri
       status: 'unpaid'
     });
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -223,7 +231,8 @@ export async function addSubscriptionAction(data: { name: string; amount: number
       is_active: true
     });
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }

@@ -61,7 +61,8 @@ export function useAddMealViewModel(onSuccess: () => void) {
       } else {
         setError(res.error || "Öğün eklenirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

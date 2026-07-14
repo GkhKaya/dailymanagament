@@ -13,6 +13,7 @@ import { Debt } from "@/models/Debt";
 import { User } from "@/models/User";
 import { WeightLog } from "@/models/WeightLog";
 import { HealthDataDTO, FinanceDataDTO } from "@/models/DashboardTypes";
+import { syncSubscriptions } from "./sync";
 
 async function getSession() {
   return await auth.api.getSession({
@@ -129,7 +130,8 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         weightHistory
       } 
     };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error("getHealthDataAction error:", err);
     return { success: false, error: err.message };
   }
@@ -144,6 +146,9 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
 
     await connectDB();
     const userId = new mongoose.Types.ObjectId(session.user.id);
+
+    // Sync subscriptions before fetching data
+    await syncSubscriptions(session.user.id);
 
     // Fetch accounts
     const accountsRaw = await Account.find({ user_id: userId }).lean();
@@ -243,7 +248,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     };
 
     return { success: true, data };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error("getFinanceDataAction error:", err);
     return { success: false, error: err.message };
   }

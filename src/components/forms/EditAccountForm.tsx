@@ -3,7 +3,7 @@ import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon } from 
 import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
+export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean } }) {
   const {
     accountName, setAccountName,
     accountType, setAccountType,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Save, Check } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { Alert } from '@/lib/alerts';
 
 export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const {
@@ -71,7 +72,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     else setMealType('snack');
   }, [setMealType]);
 
-  const handleSavedRecipeClick = (recipe: any) => {
+  const handleSavedRecipeClick = (recipe: Record<string, unknown>) => {
     setFoodName(recipe.name);
     setCalories(recipe.calories.toString());
     setProtein(recipe.protein?.toString() || '0');
@@ -83,7 +84,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     setActiveTab('new');
   };
 
-  const handleSearchResultSelect = (food: any) => {
+  const handleSearchResultSelect = (food: Record<string, unknown>) => {
     setFoodName(food.food_name);
     setFatsecretFoodId(food.food_id);
     
@@ -212,7 +213,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                   const hasSeenAlert = localStorage.getItem('hasSeenFatSecretAlert');
                   if (!hasSeenAlert) {
                     // Use standard alert as placeholder (or a toast if a toast system existed)
-                    alert("Bilgilendirme: FatSecret API'nin ücretsiz versiyonu yalnızca İngilizce çalışmaktadır. Lütfen yemekleri İngilizce (örn: chicken, egg) aratınız.");
+                    Alert.info("Bilgilendirme: FatSecret API'nin ücretsiz versiyonu yalnızca İngilizce çalışmaktadır. Lütfen yemekleri İngilizce (örn: chicken, egg) aratınız.");
                     localStorage.setItem('hasSeenFatSecretAlert', 'true');
                   }
                 }}
@@ -236,7 +237,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 {apiError ? (
                   <div className="p-4 text-center text-red-400 text-sm">{apiError}</div>
                 ) : searchResults.length > 0 ? (
-                  searchResults.map((food: any) => (
+                  searchResults.map((food: Record<string, unknown>) => (
                     <div 
                       key={food.food_id}
                       onClick={() => handleSearchResultSelect(food)}
@@ -313,7 +314,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
               <LoadingSpinner size="sm" />
             </div>
           ) : savedFoods.length > 0 ? (
-            savedFoods.map((recipe: any) => (
+            savedFoods.map((recipe: Record<string, unknown>) => (
               <div 
                 key={recipe.id} 
                 onClick={() => handleSavedRecipeClick(recipe)}

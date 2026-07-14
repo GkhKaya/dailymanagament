@@ -6,7 +6,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 export function ManageSubscriptionsForm({ 
   onClose, onSuccess, subscriptions, categories, accounts 
 }: { 
-  onClose: () => void, onSuccess: () => void, subscriptions: any[], categories: any[], accounts: any[] 
+  onClose: () => void, onSuccess: () => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean }[] 
 }) {
   const [isAdding, setIsAdding] = useState(false);
   

@@ -3,7 +3,7 @@ import { getHealthAnalysisAction } from '@/actions/analysis';
 
 export function useHealthAnalysisViewModel() {
   const [timeFilter, setTimeFilter] = useState<'week' | 'month'>('week');
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
+  const [timeOffset, setTimeOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   
   const [data, setData] = useState({
@@ -15,7 +15,7 @@ export function useHealthAnalysisViewModel() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const res = await getHealthAnalysisAction(timeFilter, currentMonthIndex);
+      const res = await getHealthAnalysisAction(timeFilter, timeOffset);
       if (res.success && res.data) {
         setData(res.data);
       }
@@ -28,15 +28,15 @@ export function useHealthAnalysisViewModel() {
 
   useEffect(() => {
     loadData();
-  }, [timeFilter, currentMonthIndex]);
+  }, [timeFilter, timeOffset]);
 
-  const handlePrevMonth = () => setCurrentMonthIndex(prev => Math.max(0, prev - 1));
-  const handleNextMonth = () => setCurrentMonthIndex(prev => Math.min(11, prev + 1));
+  const handlePrevMonth = () => setTimeOffset(prev => prev - 1);
+  const handleNextMonth = () => setTimeOffset(prev => prev + 1);
 
   return {
     timeFilter,
     setTimeFilter,
-    currentMonthIndex,
+    timeOffset,
     handlePrevMonth,
     handleNextMonth,
     isLoading,

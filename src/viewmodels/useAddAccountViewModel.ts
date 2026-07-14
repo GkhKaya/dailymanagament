@@ -28,7 +28,7 @@ export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
       if (accountType === 'bank') mappedType = 'bank_account' as any;
       if (accountType === 'credit') mappedType = 'credit_card' as any;
 
-      let payload: any = {
+      let payload: Record<string, unknown> = {
         name,
         type: mappedType,
         balance: accountType === 'credit' ? 0 : parseFloat(balance),
@@ -60,7 +60,8 @@ export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
       } else {
         setError(res.error || "Hesap eklenirken bir hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

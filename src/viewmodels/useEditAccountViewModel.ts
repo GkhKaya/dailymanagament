@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateAccountAction, deleteAccountAction } from '@/actions/finance';
 
-export function useEditAccountViewModel(initialData: any, onSuccess?: () => void) {
+export function useEditAccountViewModel(initialData: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean }, onSuccess?: () => void) {
   const [accountName, setAccountName] = useState(initialData?.name || '');
   const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>(initialData?.type || 'bank');
   
@@ -23,7 +23,7 @@ export function useEditAccountViewModel(initialData: any, onSuccess?: () => void
     setIsLoading(true);
     setError(null);
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name: accountName,
         balance: parseFloat(accountType === 'credit' ? creditDebt || '0' : balance),
       };
@@ -35,7 +35,8 @@ export function useEditAccountViewModel(initialData: any, onSuccess?: () => void
       } else {
         setError(res.error || "Güncelleme başarısız.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
@@ -55,7 +56,8 @@ export function useEditAccountViewModel(initialData: any, onSuccess?: () => void
       } else {
         setError(res.error || "Silme işlemi başarısız.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);

@@ -27,7 +27,8 @@ export function useLoginViewModel() {
       } else {
         setError(signInError?.message || 'Giriş başarısız oldu.');
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError('Giriş yapılırken beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);

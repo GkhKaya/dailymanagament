@@ -44,7 +44,7 @@ export function DashboardView() {
     refreshData();
   };
 
-  const handleOpenSheet = (sheetName: string, payload?: any) => {
+  const handleOpenSheet = (sheetName: string, payload?: unknown) => {
     setSheetPayload(payload || null);
     setActiveSheet(sheetName);
   };

@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight, SkipForward, Flame, Activity } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function OnboardingHealth({ viewModel }: { viewModel: any }) {
+export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel> }) {
   const {
     weight, setWeight,
     height, setHeight,

@@ -11,7 +11,7 @@ interface HealthSectionProps {
   onPrevDay?: () => void;
   onNextDay?: () => void;
   onShowAnalysis?: () => void;
-  onOpenSheet?: (type: string, payload?: any) => void;
+  onOpenSheet?: (type: string, payload?: unknown) => void;
 }
 
 const MealIcon = ({ type }: { type: string }) => {

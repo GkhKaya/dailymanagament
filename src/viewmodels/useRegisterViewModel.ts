@@ -50,7 +50,8 @@ export function useRegisterViewModel() {
       } else {
         Alert.error(signUpError?.message || 'Kayıt başarısız oldu.');
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       Alert.error(err.message || 'Kayıt olurken beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);

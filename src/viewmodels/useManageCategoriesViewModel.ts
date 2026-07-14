@@ -32,7 +32,8 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
       } else {
         setError(res.error || "Kategori eklenirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -52,7 +53,8 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
       } else {
         setError(res.error || "Kategori silinirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

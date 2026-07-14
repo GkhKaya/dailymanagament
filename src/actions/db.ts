@@ -25,9 +25,10 @@ export async function syncDatabaseSchemas() {
       // Ensure collection exists (Mongoose will create it if we just do syncIndexes, but creating it explicitly is safe too)
       try {
         await model.createCollection();
-      } catch (err: any) {
+      } catch (e: unknown) {
+    const err = e as Error;
         // Ignore "Namespace exists" error
-        if (err.code !== 48) {
+        if ((err as any).code !== 48) {
           console.warn(`Could not create collection for ${model.modelName}:`, err.message);
         }
       }
@@ -38,7 +39,8 @@ export async function syncDatabaseSchemas() {
     }
 
     return { success: true, message: 'Veritabanı şemaları ve indeksleri başarıyla senkronize edildi.' };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    const error = e as Error;
     console.error('Veritabanı senkronizasyon hatası:', error);
     return { success: false, error: error.message || 'Bilinmeyen bir hata oluştu' };
   }

@@ -38,7 +38,8 @@ export function useManageSubscriptionsViewModel(onSuccess: () => void) {
       } else {
         setError(res.error || "Abonelik eklenirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

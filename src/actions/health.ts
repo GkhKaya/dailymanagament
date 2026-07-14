@@ -84,7 +84,8 @@ export async function addMealAction(data: { date: string; type: string; food_nam
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
@@ -139,7 +140,8 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
 
     await log.save();
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
@@ -174,7 +176,8 @@ export async function deleteMealAction(data: { date: string; entry_id: string; t
 
     await log.save();
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }
@@ -211,7 +214,8 @@ export async function addExerciseAction(data: { date: string; name: string; dura
     
     await log.save();
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -255,7 +259,8 @@ export async function addSleepAction(data: { date: string; duration_minutes: num
     
     await log.save();
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -282,7 +287,8 @@ export async function getSavedFoodsAction() {
         fatsecret_food_id: s.fatsecret_food_id
       }))
     };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     return { success: false, error: err.message };
   }
 }
@@ -350,7 +356,8 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (e: unknown) {
+    const err = e as Error;
     console.error(err);
     return { success: false, error: err.message };
   }

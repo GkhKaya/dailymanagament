@@ -30,7 +30,8 @@ export function useAddExerciseViewModel(onSuccess: () => void) {
       } else {
         setError(res.error || "Egzersiz eklenirken hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

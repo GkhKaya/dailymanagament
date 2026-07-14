@@ -6,7 +6,7 @@ import { ManageDebtsForm } from '../forms/ManageDebtsForm';
 import { ManageCategoriesForm } from '../forms/ManageCategoriesForm';
 import { getCategoriesAction } from '@/actions/finance';
 
-export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewModel: any, initialCategories?: any[] }) {
+export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewModel: ReturnType<import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel>, initialCategories?: { id: string, name: string, type: string, icon: string }[] }) {
   const { skipFinance, finishOnboarding } = viewModel;
   
   // Local step for finance

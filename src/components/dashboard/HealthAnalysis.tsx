@@ -7,7 +7,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
   const {
     timeFilter,
     setTimeFilter,
-    currentMonthIndex,
+    timeOffset,
     handlePrevMonth,
     handleNextMonth,
     isLoading,
@@ -21,6 +21,19 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
     'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
   
+  const formatTimeOffset = () => {
+    if (timeOffset === 0) return timeFilter === 'week' ? 'Bu Hafta' : 'Bu Ay';
+    if (timeOffset === -1) return timeFilter === 'week' ? 'Geçen Hafta' : 'Geçen Ay';
+    
+    const now = new Date();
+    if (timeFilter === 'month') {
+      const d = new Date(now.getFullYear(), now.getMonth() + timeOffset, 1);
+      return `${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    
+    return `${Math.abs(timeOffset)} Hafta Önce`;
+  };
+
   const currentYear = new Date().getFullYear();
 
   return (
@@ -53,13 +66,13 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
 
         {/* Month Navigator */}
         <div className="flex items-center justify-center gap-4 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl py-3 w-fit mx-auto px-6">
-          <button onClick={handlePrevMonth} disabled={currentMonthIndex === 0} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handlePrevMonth} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
             <ChevronLeft size={20} />
           </button>
           <span className="text-body font-bold text-white min-w-[120px] text-center">
-            {months[currentMonthIndex]} {currentYear}
+            {formatTimeOffset()}
           </span>
-          <button onClick={handleNextMonth} disabled={currentMonthIndex === 11} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handleNextMonth} disabled={timeOffset >= 0} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
             <ChevronRight size={20} />
           </button>
         </div>

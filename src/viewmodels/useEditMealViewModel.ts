@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateMealAction, deleteMealAction } from '@/actions/health';
 
-export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
+export function useEditMealViewModel(initialData: { id: string, type: string, foods: any[] }, onSuccess?: () => void) {
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(initialData?.type || 'lunch');
   const [foodName, setFoodName] = useState(initialData?.name || '');
   
@@ -47,7 +47,7 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     setIsLoading(true);
     setError(null);
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         date: initialData.date,
         entry_id: initialData.id,
         type: mealType,
@@ -67,7 +67,8 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
       } else {
         setError(res.error || "Güncelleme başarısız.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
@@ -91,7 +92,8 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
       } else {
         setError(res.error || "Silme işlemi başarısız.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);

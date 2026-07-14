@@ -21,7 +21,8 @@ export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: 
       }
 
       onSuccess();
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message);
     } finally {
       setIsLoading(false);

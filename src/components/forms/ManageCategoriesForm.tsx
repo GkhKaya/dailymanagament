@@ -21,7 +21,12 @@ const ICONS = [
   { id: 'book', component: <Book size={20} /> },
 ];
 
-export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoadingCategories = false }: { onClose: () => void, onSuccess: () => void, categories: any[], isLoadingCategories?: boolean }) {
+const COLORS = [
+  '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', 
+  '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', '#9ca3af'
+];
+
+export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoadingCategories = false }: { onClose: () => void, onSuccess: () => void, categories: { id: string, name: string, type: string, icon: string, color?: string }[], isLoadingCategories?: boolean }) {
   const [isAdding, setIsAdding] = useState(false);
   
   const {
@@ -85,7 +90,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
                     >
                       <X size={12} />
                     </button>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(255,255,255,0.05)] ${type === 'income' ? 'text-[#4ade80]' : 'text-orange-400'}`}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(255,255,255,0.05)]" style={{ color: cat.color || (type === 'income' ? '#4ade80' : '#f97316') }}>
                       {getIcon(cat.icon || 'cart')}
                     </div>
                     <span className="text-caption text-center px-1 truncate w-full text-[var(--on-surface-variant)] group-hover:text-white transition-colors">{cat.name}</span>
@@ -126,7 +131,8 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
                   key={i.id}
                   type="button"
                   onClick={() => setIcon(i.id)}
-                  className={`aspect-square rounded-xl flex items-center justify-center transition-all ${icon === i.id ? 'bg-[var(--inverse-primary)] text-white shadow-md' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.08)]'}`}
+                  className={`aspect-square rounded-xl flex items-center justify-center transition-all ${icon === i.id ? 'bg-[rgba(255,255,255,0.15)] shadow-md border border-[var(--inverse-primary)]' : 'bg-[rgba(255,255,255,0.03)] border border-transparent text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.08)]'}`}
+                  style={icon === i.id ? { color: color } : {}}
                 >
                   {i.component}
                 </button>
@@ -134,7 +140,24 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
             </div>
           </div>
 
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-col gap-2 mt-2">
+            <span className="text-caption text-[var(--on-surface-variant)]">Renk Seçin</span>
+            <div className="grid grid-cols-6 gap-2">
+              {COLORS.map(c => (
+                <button 
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`h-8 rounded-full transition-all flex items-center justify-center ${color === c ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-[#1a1a1a]' : 'hover:scale-105'}`}
+                  style={{ backgroundColor: c }}
+                >
+                  {color === c && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
             <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
               İptal
             </button>

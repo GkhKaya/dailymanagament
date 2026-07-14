@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Building2, LayoutGrid
 interface FinanceSectionProps {
   data: FinanceDataDTO;
   isOverview?: boolean;
-  onOpenSheet?: (type: string, payload?: any) => void;
+  onOpenSheet?: (type: string, payload?: unknown) => void;
   onShowAnalysis?: () => void;
 }
 

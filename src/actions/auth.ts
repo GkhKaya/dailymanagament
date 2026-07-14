@@ -31,7 +31,8 @@ export async function loginAction(formData: FormData) {
     }
 
     return { success: false, error: "Giriş başarısız oldu." };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    const error = e as Error;
     console.error("Login Error:", error);
     // better-auth throws an error for invalid credentials
     return { success: false, error: error.message || "Giriş yapılırken bir hata oluştu." };
@@ -80,7 +81,8 @@ export async function registerAction(formData: FormData) {
     }
 
     return { success: false, error: "Kayıt başarısız oldu." };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    const error = e as Error;
     console.error("Register Error:", error);
     return { success: false, error: error.message || "Kayıt olurken bir hata oluştu." };
   }
@@ -110,7 +112,8 @@ export async function forgotPasswordAction(formData: FormData) {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    const error = e as Error;
     console.error("Forgot Password Error:", error);
     return { success: false, error: error.message || "Bir hata oluştu." };
   }
@@ -134,7 +137,8 @@ export async function resetPasswordAction(formData: FormData) {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (e: unknown) {
+    const error = e as Error;
     console.error("Reset Password Error:", error);
     return { success: false, error: error.message || "Şifre sıfırlanırken bir hata oluştu." };
   }

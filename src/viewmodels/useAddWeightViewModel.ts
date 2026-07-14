@@ -33,7 +33,8 @@ export function useAddWeightViewModel(
       } else {
         setError(res.error || "Hata oluştu.");
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError(err.message || "Beklenmeyen hata.");
     } finally {
       setLoading(false);

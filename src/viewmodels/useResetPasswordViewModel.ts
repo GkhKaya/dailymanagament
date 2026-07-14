@@ -45,7 +45,8 @@ export function useResetPasswordViewModel() {
       } else {
         setError(result.error || 'İşlem başarısız oldu.');
       }
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as Error;
       setError('Beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);

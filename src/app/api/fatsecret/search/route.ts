@@ -37,6 +37,17 @@ async function getFatSecretToken() {
   return cachedToken;
 }
 
+const FALLBACK_FOODS = [
+  { id: "fallback_1", name: "Yumurta (Haşlanmış)", desc: "1 adet - Kalori: 78kcal | Yağ: 5.3g | Karb: 0.6g | Protein: 6.3g", c: 78, p: 6.3, f: 5.3, cb: 0.6 },
+  { id: "fallback_2", name: "Beyaz Ekmek", desc: "1 dilim - Kalori: 79kcal | Yağ: 0.8g | Karb: 14.7g | Protein: 2.7g", c: 79, p: 2.7, f: 0.8, cb: 14.7 },
+  { id: "fallback_3", name: "Süt (Tam Yağlı)", desc: "1 bardak (200ml) - Kalori: 122kcal | Yağ: 6.5g | Karb: 9.4g | Protein: 6.4g", c: 122, p: 6.4, f: 6.5, cb: 9.4 },
+  { id: "fallback_4", name: "Tavuk Göğsü (Izgara)", desc: "100g - Kalori: 165kcal | Yağ: 3.6g | Karb: 0g | Protein: 31g", c: 165, p: 31, f: 3.6, cb: 0 },
+  { id: "fallback_5", name: "Pirinç Pilavı", desc: "1 porsiyon (150g) - Kalori: 195kcal | Yağ: 4.5g | Karb: 34g | Protein: 3.5g", c: 195, p: 3.5, f: 4.5, cb: 34 },
+  { id: "fallback_6", name: "Elma", desc: "1 orta boy - Kalori: 95kcal | Yağ: 0.3g | Karb: 25g | Protein: 0.5g", c: 95, p: 0.5, f: 0.3, cb: 25 },
+  { id: "fallback_7", name: "Mercimek Çorbası", desc: "1 kase - Kalori: 138kcal | Yağ: 4g | Karb: 20g | Protein: 7g", c: 138, p: 7, f: 4, cb: 20 },
+  { id: "fallback_8", name: "Su", desc: "1 bardak - Kalori: 0kcal | Yağ: 0g | Karb: 0g | Protein: 0g", c: 0, p: 0, f: 0, cb: 0 }
+];
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('query');
@@ -44,6 +55,20 @@ export async function GET(request: Request) {
   if (!query) {
     return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
   }
+
+  const generateFallbackResponse = (q: string) => {
+    const qLower = q.toLowerCase();
+    const matches = FALLBACK_FOODS.filter(f => f.name.toLowerCase().includes(qLower));
+    return {
+      foods: {
+        food: matches.map(m => ({
+          food_id: m.id,
+          food_name: m.name,
+          food_description: m.desc
+        }))
+      }
+    };
+  };
 
   try {
     const token = await getFatSecretToken();
@@ -78,7 +103,11 @@ export async function GET(request: Request) {
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('FatSecret API Error:', error);
+    console.error('FatSecret API Error, using fallback:', error.message);
+    const fallbackData = generateFallbackResponse(query);
+    if (fallbackData.foods.food.length > 0) {
+      return NextResponse.json(fallbackData);
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import { DebtDirection } from '@/models/Enums';
 import { useManageDebtsViewModel } from '@/viewmodels/useManageDebtsViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => void, onSuccess: () => void, debts: any[] }) {
+export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => void, onSuccess: () => void, debts: { id: string, personName: string, amount: number, remainingAmount: number, direction: string, dueDate: string }[] }) {
   const [isAdding, setIsAdding] = useState(false);
   
   const {
