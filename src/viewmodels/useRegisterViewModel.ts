@@ -2,6 +2,8 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { updateAgeAction } from '@/actions/profile';
+import { Alert } from '@/lib/alerts';
+import { t } from '@/lib/i18n';
 
 export function useRegisterViewModel() {
   const [email, setEmail] = useState('');
@@ -9,18 +11,25 @@ export function useRegisterViewModel() {
   const [username, setUsername] = useState('');
   const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    if (password.length < 8) {
-      setError('Şifre en az 8 karakter olmalıdır.');
-      setLoading(false);
+    
+    // Validations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.error(t('errors.validation.invalidEmail'));
       return;
     }
+    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      Alert.error(t('errors.validation.weakPassword'));
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const { data, error: signUpError } = await authClient.signUp.email({
@@ -36,12 +45,13 @@ export function useRegisterViewModel() {
           birthDate.setFullYear(currentYear - parseInt(age));
           await updateAgeAction(birthDate.toISOString());
         }
+        Alert.success('Kayıt başarılı! Lütfen giriş yapın.');
         router.push('/onboarding');
       } else {
-        setError(signUpError?.message || 'Kayıt başarısız oldu.');
+        Alert.error(signUpError?.message || 'Kayıt başarısız oldu.');
       }
     } catch (err: any) {
-      setError(err.message || 'Kayıt olurken beklenmedik bir hata oluştu.');
+      Alert.error(err.message || 'Kayıt olurken beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -58,6 +68,5 @@ export function useRegisterViewModel() {
     setAge,
     handleRegister,
     loading,
-    error,
   };
 }
