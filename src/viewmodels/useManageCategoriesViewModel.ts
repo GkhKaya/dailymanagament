@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addCategoryAction, deleteCategoryAction } from '@/actions/finance';
 
@@ -9,11 +10,11 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
   const [color, setColor] = useState('#8b5cf6');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -30,11 +31,11 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
         setName('');
         onSuccess(); // Triggers refreshData
       } else {
-        setError(res.error || "Kategori eklenirken hata oluştu.");
+        toast.error(res.error || "Kategori eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +44,7 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
   const handleDelete = async (id: string) => {
     if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz? (Bağlı işlemler etkilenebilir)")) return;
     
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -51,11 +52,11 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Kategori silinirken hata oluştu.");
+        toast.error(res.error || "Kategori silinirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +67,7 @@ export function useManageCategoriesViewModel(onSuccess: () => void) {
     name, setName,
     icon, setIcon,
     color, setColor,
-    isLoading, error,
+    isLoading,
     handleAdd, handleDelete
   };
 }

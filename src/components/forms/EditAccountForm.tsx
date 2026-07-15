@@ -12,7 +12,7 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
     creditDebt, setCreditDebt,
     cutoffDay, setCutoffDay,
     dueDay, setDueDay,
-    isLoading, error,
+    isLoading,
     handleUpdate, handleDelete
   } = useEditAccountViewModel(initialData, onSuccess);
   
@@ -66,7 +66,7 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
               <div className="flex flex-col gap-2">
                 <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kart Limiti</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
                     value={creditLimit}
@@ -79,7 +79,7 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
               <div className="flex flex-col gap-2">
                 <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider text-orange-400">Güncel Borç</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
                     value={creditDebt}
@@ -127,23 +127,19 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
           <div className="flex flex-col gap-2 animate-fade-in">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Güncel Bakiye</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
               <input 
                 type="number" 
                 value={balance}
                 onChange={(e) => setBalance(e.target.value)}
-                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-xl font-semibold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-[var(--font-headline)] font-semibold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
               />
             </div>
           </div>
         )}
       </div>
 
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       <div className="mt-2 flex flex-col gap-3">
         <button onClick={handleUpdate} disabled={isLoading} className="w-full py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">

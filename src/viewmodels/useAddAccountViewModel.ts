@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addAccountAction } from '@/actions/finance';
 
@@ -13,11 +14,11 @@ export function useAddAccountViewModel(onSuccess: (id?: string, name?: string) =
   const [dueDay, setDueDay] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -61,11 +62,11 @@ export function useAddAccountViewModel(onSuccess: (id?: string, name?: string) =
         setDueDay('');
         onSuccess(res.id, payload.name as string);
       } else {
-        setError(res.error || "Hesap eklenirken bir hata oluştu.");
+        toast.error(res.error || "Hesap eklenirken bir hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +82,6 @@ export function useAddAccountViewModel(onSuccess: (id?: string, name?: string) =
     statementDay, setStatementDay,
     dueDay, setDueDay,
     isLoading,
-    error,
     handleSubmit
   };
 }

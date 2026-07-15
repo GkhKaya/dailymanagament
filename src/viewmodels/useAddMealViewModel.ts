@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { addMealAction, getSavedFoodsAction } from '@/actions/health';
 
@@ -14,7 +15,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const [savedFoods, setSavedFoods] = useState<any[]>([]);
   const [isLoadingSaved, setIsLoadingSaved] = useState(true);
@@ -36,7 +37,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -60,11 +61,11 @@ export function useAddMealViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Öğün eklenirken hata oluştu.");
+        toast.error(res.error || "Öğün eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +75,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
     e.preventDefault();
     if (selectedSavedFoods.length === 0) return;
     
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -102,10 +103,10 @@ export function useAddMealViewModel(onSuccess: () => void) {
       if (!hasError) {
         onSuccess();
       } else {
-        setError("Bazı öğünler eklenirken hata oluştu.");
+        toast.error("Bazı öğünler eklenirken hata oluştu.");
       }
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +125,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
-    isLoading, error,
+    isLoading,
     handleSubmit, handleMultiSubmit
   };
 }

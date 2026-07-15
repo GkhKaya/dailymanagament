@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, FormEvent } from 'react';
 import { addWeightLogAction } from '@/actions/health';
 
@@ -8,16 +9,16 @@ export function useAddWeightViewModel(
 ) {
   const [weight, setWeight] = useState(initialWeight ? initialWeight.toString() : '');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    
 
     const weightVal = parseFloat(weight);
     if (isNaN(weightVal) || weightVal <= 0) {
-      setError("Geçerli bir kilo girin.");
+      toast.error("Geçerli bir kilo girin.");
       setLoading(false);
       return;
     }
@@ -31,11 +32,11 @@ export function useAddWeightViewModel(
       if (res.success) {
         if (onSuccess) onSuccess();
       } else {
-        setError(res.error || "Hata oluştu.");
+        toast.error(res.error || "Hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message || "Beklenmeyen hata.");
+      toast.error(err.message || "Beklenmeyen hata.");
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,6 @@ export function useAddWeightViewModel(
     weight,
     setWeight,
     handleSubmit,
-    loading,
-    error
+    loading
   };
 }

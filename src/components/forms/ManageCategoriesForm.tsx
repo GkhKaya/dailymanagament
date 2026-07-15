@@ -34,7 +34,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
     name, setName,
     icon, setIcon,
     color, setColor,
-    isLoading, error,
+    isLoading,
     handleAdd, handleDelete
   } = useManageCategoriesViewModel(() => {
     setIsAdding(false);
@@ -46,11 +46,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
 
   return (
     <div className="flex flex-col gap-6">
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       {/* Tabs */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
@@ -77,7 +73,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
             {isLoadingCategories ? (
               <div className="col-span-full flex flex-col items-center justify-center py-12 gap-4">
                 <LoadingSpinner size="md" />
-                <span className="text-sm text-[var(--on-surface-variant)] animate-pulse">Kategoriler yükleniyor...</span>
+                <span className="text-[var(--font-body)] text-[var(--on-surface-variant)] animate-pulse">Kategoriler yükleniyor...</span>
               </div>
             ) : (
               <>

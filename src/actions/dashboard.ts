@@ -94,7 +94,10 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
             id: f.entry_id ? f.entry_id.toString() : new mongoose.Types.ObjectId().toString(),
             name: f.food_name,
             amount: f.serving_description,
-            calories: f.nutrition_snapshot.calories
+            calories: f.nutrition_snapshot.calories,
+            protein: f.nutrition_snapshot.protein_g || 0,
+            carbs: f.nutrition_snapshot.carbs_g || 0,
+            fat: f.nutrition_snapshot.fat_g || 0
           };
         });
 
@@ -172,6 +175,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       .sort({ date: -1 })
       .limit(10)
       .populate("category_id")
+      .populate("account_id")
       .lean();
 
     const recentTransactions = txRaw.map((tx: any) => {
@@ -186,7 +190,13 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         title: tx.description,
         amount: parseFloat(tx.amount.toString()),
         date: dateStr,
-        type: tx.type
+        rawDate: txDate.toISOString(),
+        type: tx.type,
+        category: tx.category_id?.name,
+        categoryId: tx.category_id?._id?.toString(),
+        accountName: tx.account_id?.name,
+        accountId: tx.account_id?._id?.toString(),
+        source: tx.source
       };
     });
 

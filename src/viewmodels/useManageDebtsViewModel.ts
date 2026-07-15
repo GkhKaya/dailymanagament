@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addDebtAction } from '@/actions/finance';
 import { DebtDirection } from '@/models/Enums';
@@ -9,11 +10,11 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
   const [dueDate, setDueDate] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -31,11 +32,11 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Borç eklenirken hata oluştu.");
+        toast.error(res.error || "Borç eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +47,7 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
     personName, setPersonName,
     amount, setAmount,
     dueDate, setDueDate,
-    isLoading, error,
+    isLoading,
     handleAdd
   };
 }

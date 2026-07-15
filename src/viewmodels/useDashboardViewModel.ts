@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useEffect, useCallback } from 'react';
 import { DashboardMode, HealthDataDTO, FinanceDataDTO } from '@/models/DashboardTypes';
 import { getHealthDataAction, getFinanceDataAction } from '@/actions/dashboard';
@@ -36,22 +37,25 @@ export function useDashboardViewModel() {
   
   const [isLoadingHealth, setIsLoadingHealth] = useState(false);
   const [isLoadingFinance, setIsLoadingFinance] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const fetchHealthData = useCallback(async (date: Date) => {
     setIsLoadingHealth(true);
     try {
-      const dateString = date.toISOString();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}T00:00:00.000Z`;
       const result = await getHealthDataAction(dateString);
       if (result.success && result.data) {
         setHealthData(result.data);
       } else {
         console.error(result.error);
-        setError("Sağlık verileri yüklenemedi.");
+        toast.error("Sağlık verileri yüklenemedi.");
       }
     } catch (err) {
       console.error(err);
-      setError("Beklenmedik bir hata oluştu.");
+      toast.error("Beklenmedik bir hata oluştu.");
     } finally {
       setIsLoadingHealth(false);
     }
@@ -65,11 +69,11 @@ export function useDashboardViewModel() {
         setFinanceData(result.data);
       } else {
         console.error(result.error);
-        setError("Finans verileri yüklenemedi.");
+        toast.error("Finans verileri yüklenemedi.");
       }
     } catch (err) {
       console.error(err);
-      setError("Beklenmedik bir hata oluştu.");
+      toast.error("Beklenmedik bir hata oluştu.");
     } finally {
       setIsLoadingFinance(false);
     }
@@ -106,7 +110,6 @@ export function useDashboardViewModel() {
     financeData,
     isLoadingHealth,
     isLoadingFinance,
-    error,
     refreshData,
   };
 }

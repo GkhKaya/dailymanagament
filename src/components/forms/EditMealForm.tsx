@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import React from 'react';
 import { Search } from 'lucide-react';
 import { useEditMealViewModel } from '@/viewmodels/useEditMealViewModel';
@@ -11,7 +12,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
     unit, setUnit,
     calories, setCalories,
     getServingDesc,
-    isLoading, error,
+    isLoading,
     handleUpdate, handleDelete
   } = useEditMealViewModel(initialData, onSuccess);
 
@@ -38,7 +39,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
       <div className="flex flex-col gap-4">
         {/* Yemek Adı */}
         <div className="flex flex-col gap-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Yemek Adı</label>
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.mealName')}</label>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={20} />
             <input 
@@ -54,7 +55,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
         {/* Miktar */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.quantity')}</label>
             <input 
               type="number" 
               value={quantity}
@@ -63,7 +64,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Birim</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.unit')}</label>
             <select 
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
@@ -79,7 +80,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
 
         {/* Kalori */}
         <div className="flex flex-col gap-2 mt-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kalori (Kcal)</label>
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.calories')}</label>
           <input 
             type="number" 
             value={calories}
@@ -89,11 +90,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
         </div>
       </div>
 
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       <div className="mt-4 flex flex-col gap-3">
         <button onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors">

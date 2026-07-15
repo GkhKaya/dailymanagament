@@ -85,5 +85,35 @@
       "invalidEmail": "Lütfen geçerli bir e-posta adresi girin.",
       "weakPassword": "Şifre en az 8 karakter olmalı, büyük/küçük harf, rakam ve özel karakter içermelidir."
     }
+  },
+  "forms": {
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "update": "Güncelle",
+    "delete": "Sil",
+    "close": "Kapat",
+    "amount": "Tutar",
+    "date": "Tarih",
+    "category": "Kategori",
+    "account": "Hesap",
+    "description": "Açıklama (İsteğe Bağlı)",
+    "expense": "Gider",
+    "income": "Gelir",
+    "addExpense": "Gider Ekle",
+    "addIncome": "Gelir Ekle",
+    "mealName": "Yemek Adı",
+    "quantity": "Miktar",
+    "unit": "Birim",
+    "calories": "Kalori (Kcal)",
+    "protein": "Protein",
+    "carbs": "Karb",
+    "fat": "Yağ",
+    "duration": "Süre (Dakika)",
+    "exerciseType": "Egzersiz Tipi",
+    "burnedCalories": "Yakılan Kalori (Kcal)",
+    "personOrInstitution": "Kişi / Kurum",
+    "dueDate": "Son Ödeme Tarihi",
+    "given": "Borç Verdim",
+    "taken": "Borç Aldım"
   }
 }

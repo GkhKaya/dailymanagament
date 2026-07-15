@@ -1,14 +1,15 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { updateWeightAction } from '@/actions/profile';
 
 export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: number) {
   const [weight, setWeight] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -23,7 +24,7 @@ export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: 
       onSuccess();
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -31,6 +32,6 @@ export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: 
 
   return {
     weight, setWeight,
-    isLoading, error, handleSubmit
+    isLoading, handleSubmit
   };
 }

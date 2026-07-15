@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { t } from '@/lib/i18n';
 
 export function UpdateWeightForm({ onClose, onSuccess, initialWeight }: { onClose: () => void, onSuccess: () => void, initialWeight?: number }) {
-  const { weight, setWeight, isLoading, error, handleSubmit } = useUpdateWeightViewModel(onSuccess, initialWeight);
+  const { weight, setWeight, isLoading, handleSubmit } = useUpdateWeightViewModel(onSuccess, initialWeight);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -13,11 +13,7 @@ export function UpdateWeightForm({ onClose, onSuccess, initialWeight }: { onClos
         {t("profile.updateWeight.description")}
       </div>
       
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
       
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">

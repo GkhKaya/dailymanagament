@@ -12,16 +12,12 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
     currentDebt, setCurrentDebt,
     statementDay, setStatementDay,
     dueDay, setDueDay,
-    isLoading, error, handleSubmit
+    isLoading, handleSubmit
   } = useAddAccountViewModel(onSuccess);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
       
       <div className="flex flex-col gap-4">
         {/* Hesap Adı */}
@@ -76,7 +72,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
               <div className="flex flex-col gap-2">
                 <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kart Limiti</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
                     step="0.01"
@@ -92,7 +88,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
               <div className="flex flex-col gap-2">
                 <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider text-orange-400">Güncel Borç</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                   <input 
                     type="number" 
                     step="0.01"
@@ -147,7 +143,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
           <div className="flex flex-col gap-2 animate-fade-in">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Başlangıç Bakiyesi</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
               <input 
                 type="number" 
                 step="0.01"
@@ -155,7 +151,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
                 value={balance}
                 onChange={(e) => setBalance(e.target.value)}
                 placeholder="0.00" 
-                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-xl font-semibold text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-[var(--font-headline)] font-semibold text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
               />
             </div>
           </div>

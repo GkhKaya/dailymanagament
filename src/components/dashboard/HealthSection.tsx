@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp } from "lucide-react";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -14,8 +14,16 @@ interface HealthSectionProps {
 }
 
 export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet }: HealthSectionProps) {
+  const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
+  
   const totalBurned = data.burnedCalories + (data.sleepCalories || 0);
   const remaining = data.targetCalories - data.consumedCalories + totalBurned;
+
+  const toggleMeal = (mealId: string) => {
+    setExpandedMeals(prev => 
+      prev.includes(mealId) ? prev.filter(id => id !== mealId) : [...prev, mealId]
+    );
+  };
 
   const formatDate = (date?: Date) => {
     if (!date) return "";
@@ -158,27 +166,59 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         
         <div className="flex flex-col gap-[var(--space-2)]">
           {data.meals.map((meal) => {
+            const isExpanded = expandedMeals.includes(meal.id);
             const subtitle = meal.foods?.map(f => f.name).join(', ') || meal.foodName;
+            
             return (
-              <div key={meal.id} className="glass-card px-[var(--space-3)] py-[var(--space-2)] flex flex-col gap-[var(--space-2)] cursor-pointer" onClick={() => onOpenSheet && onOpenSheet('editMeal', { ...meal.foods?.[0], type: meal.type, date: data.date })}>
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col">
-                    <span className="text-headline text-white capitalize">{t(`dashboard.health.${meal.type}`) || meal.type}</span>
-                    <span className="text-body text-[var(--on-surface-variant)] italic text-sm line-clamp-1">{subtitle}</span>
+              <div key={meal.id} className="glass-card flex flex-col overflow-hidden">
+                {/* Meal Header */}
+                <div 
+                  className="px-[var(--space-3)] py-[var(--space-2)] flex flex-col gap-[var(--space-2)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                  onClick={() => toggleMeal(meal.id)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-headline text-white capitalize">{t(`dashboard.health.${meal.type}`) || meal.type}</span>
+                        {isExpanded ? <ChevronUp size={16} className="text-[var(--on-surface-variant)]" /> : <ChevronDown size={16} className="text-[var(--on-surface-variant)]" />}
+                      </div>
+                      <span className="text-body text-[var(--on-surface-variant)] italic text-sm line-clamp-1">{subtitle}</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-headline text-[var(--primary)]">{meal.calories}</span>
+                      <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-headline text-[var(--primary)]">{meal.calories}</span>
-                    <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
+                  
+                  {/* Simulated Macro breakdown per meal based on image */}
+                  <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
+                    <span className="text-caption text-[var(--on-surface-variant)]">K: {Math.round(meal.calories * 0.1)}G</span>
+                    <span className="text-caption text-[var(--on-surface-variant)]">P: {Math.round(meal.calories * 0.05)}G</span>
+                    <span className="text-caption text-[var(--on-surface-variant)]">Y: {Math.round(meal.calories * 0.03)}G</span>
                   </div>
                 </div>
-                
-                {/* Simulated Macro breakdown per meal based on image */}
-                <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
-                  <span className="text-caption text-[var(--on-surface-variant)]">350GR</span>
-                  <span className="text-caption text-[var(--on-surface-variant)]">K: {Math.round(meal.calories * 0.1)}G</span>
-                  <span className="text-caption text-[var(--on-surface-variant)]">P: {Math.round(meal.calories * 0.05)}G</span>
-                  <span className="text-caption text-[var(--on-surface-variant)]">Y: {Math.round(meal.calories * 0.03)}G</span>
-                </div>
+
+                {/* Expanded Foods List */}
+                {isExpanded && meal.foods && meal.foods.length > 0 && (
+                  <div className="flex flex-col border-t border-[rgba(255,255,255,0.05)] bg-[rgba(0,0,0,0.2)]">
+                    {meal.foods.map((food, idx) => (
+                      <div 
+                        key={food.id || idx}
+                        className="flex items-center justify-between px-[var(--space-3)] py-3 border-b border-[rgba(255,255,255,0.02)] last:border-0 cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                        onClick={() => onOpenSheet && onOpenSheet('editMeal', { ...food, type: meal.type, date: data.date })}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-body text-white">{food.name}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)]">{food.amount}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-body font-medium text-[var(--primary)]">{food.calories}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)]">kcal</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

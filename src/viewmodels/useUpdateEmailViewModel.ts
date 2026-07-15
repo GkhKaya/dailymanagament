@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
@@ -5,11 +6,11 @@ export function useUpdateEmailViewModel(onSuccess: () => void, initialEmail: str
   const [currentEmail, setCurrentEmail] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -29,7 +30,7 @@ export function useUpdateEmailViewModel(onSuccess: () => void, initialEmail: str
       onSuccess();
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -38,6 +39,6 @@ export function useUpdateEmailViewModel(onSuccess: () => void, initialEmail: str
   return {
     currentEmail, setCurrentEmail,
     newEmail, setNewEmail,
-    isLoading, error, handleSubmit
+    isLoading, handleSubmit
   };
 }

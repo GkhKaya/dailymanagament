@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addSubscriptionAction } from '@/actions/finance';
 
@@ -10,11 +11,11 @@ export function useManageSubscriptionsViewModel(onSuccess: () => void) {
   const [frequency, setFrequency] = useState('monthly');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -36,11 +37,11 @@ export function useManageSubscriptionsViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Abonelik eklenirken hata oluştu.");
+        toast.error(res.error || "Abonelik eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +54,7 @@ export function useManageSubscriptionsViewModel(onSuccess: () => void) {
     accountId, setAccountId,
     categoryId, setCategoryId,
     frequency, setFrequency,
-    isLoading, error,
+    isLoading,
     handleAdd
   };
 }

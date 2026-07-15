@@ -8,16 +8,12 @@ export function AddSleepForm({ onClose, onSuccess }: { onClose: () => void, onSu
     hours, setHours,
     mins, setMins,
     quality, setQuality,
-    isLoading, error, handleSubmit
+    isLoading, handleSubmit
   } = useAddSleepViewModel(onSuccess);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       <div className="flex flex-col gap-4">
         {/* Süre */}

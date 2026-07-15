@@ -5,7 +5,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { t } from '@/lib/i18n';
 
 export function UpdateAgeForm({ onClose, onSuccess, initialBirthDate }: { onClose: () => void, onSuccess: () => void, initialBirthDate?: string | null }) {
-  const { birthDate, setBirthDate, isLoading, error, handleSubmit } = useUpdateAgeViewModel(onSuccess, initialBirthDate);
+  const { birthDate, setBirthDate, isLoading, handleSubmit } = useUpdateAgeViewModel(onSuccess, initialBirthDate);
   const [inputType, setInputType] = React.useState('text');
 
   let ageHint = "Doğum tarihinizi seçin (Kayıtlı yaşınız yok)";
@@ -20,11 +20,7 @@ export function UpdateAgeForm({ onClose, onSuccess, initialBirthDate }: { onClos
         {t("profile.updateAge.description")}
       </div>
       
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
       
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">

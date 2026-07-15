@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addExerciseAction } from '@/actions/health';
 
@@ -7,11 +8,11 @@ export function useAddExerciseViewModel(onSuccess: () => void) {
   const [burnedCalories, setBurnedCalories] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -28,11 +29,11 @@ export function useAddExerciseViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Egzersiz eklenirken hata oluştu.");
+        toast.error(res.error || "Egzersiz eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +43,7 @@ export function useAddExerciseViewModel(onSuccess: () => void) {
     exerciseType, setExerciseType,
     durationMinutes, setDurationMinutes,
     burnedCalories, setBurnedCalories,
-    isLoading, error,
+    isLoading,
     handleSubmit
   };
 }

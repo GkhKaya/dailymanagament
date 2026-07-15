@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resetPasswordAction } from '@/actions/auth';
@@ -6,7 +7,7 @@ export function useResetPasswordViewModel() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
   const [success, setSuccess] = useState(false);
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -15,17 +16,17 @@ export function useResetPasswordViewModel() {
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    
     setSuccess(false);
     
     if (password !== confirmPassword) {
-      setError('Şifreler eşleşmiyor.');
+      toast.error('Şifreler eşleşmiyor.');
       setLoading(false);
       return;
     }
 
     if (!token) {
-      setError('Geçersiz veya süresi dolmuş bağlantı.');
+      toast.error('Geçersiz veya süresi dolmuş bağlantı.');
       setLoading(false);
       return;
     }
@@ -43,11 +44,11 @@ export function useResetPasswordViewModel() {
           router.push('/');
         }, 3000);
       } else {
-        setError(result.error || 'İşlem başarısız oldu.');
+        toast.error(result.error || 'İşlem başarısız oldu.');
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError('Beklenmedik bir hata oluştu.');
+      toast.error('Beklenmedik bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,6 @@ export function useResetPasswordViewModel() {
     setConfirmPassword,
     handleResetPassword,
     loading,
-    error,
     success,
     hasToken: !!token,
   };

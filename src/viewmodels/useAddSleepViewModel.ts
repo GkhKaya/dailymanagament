@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addSleepAction } from '@/actions/health';
 
@@ -7,11 +8,11 @@ export function useAddSleepViewModel(onSuccess: () => void) {
   const [quality, setQuality] = useState('İyi');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -30,11 +31,11 @@ export function useAddSleepViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "Uyku eklenirken hata oluştu.");
+        toast.error(res.error || "Uyku eklenirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +45,7 @@ export function useAddSleepViewModel(onSuccess: () => void) {
     hours, setHours,
     mins, setMins,
     quality, setQuality,
-    isLoading, error,
+    isLoading,
     handleSubmit
   };
 }

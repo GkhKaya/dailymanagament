@@ -54,4 +54,7 @@ TransactionSchema.index({ user_id: 1, account_id: 1, date: -1 });
 TransactionSchema.index({ user_id: 1, category_id: 1 });
 TransactionSchema.index({ user_id: 1, subscription_id: 1 });
 
-export const Transaction = mongoose.models.Transaction || mongoose.model<ITransaction>('Transaction', TransactionSchema);
+if (mongoose.models.Transaction) {
+  delete mongoose.models.Transaction;
+}
+export const Transaction = mongoose.model<ITransaction>('Transaction', TransactionSchema);

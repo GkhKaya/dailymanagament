@@ -9,7 +9,7 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
     currentPassword, setCurrentPassword,
     newPassword, setNewPassword,
     confirmPassword, setConfirmPassword,
-    isLoading, error, handleSubmit 
+    isLoading, handleSubmit 
   } = useUpdatePasswordViewModel(onSuccess);
 
   return (
@@ -18,11 +18,7 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
         {t("profile.updatePassword.description")}
       </div>
       
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
       
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">

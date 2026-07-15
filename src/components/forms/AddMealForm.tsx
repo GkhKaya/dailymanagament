@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import React, { useState, useEffect } from 'react';
 import { Search, Save, Check } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
@@ -18,7 +19,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
-    isLoading, error, handleSubmit, handleMultiSubmit
+    isLoading, handleSubmit, handleMultiSubmit
   } = useAddMealViewModel(onSuccess);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
@@ -147,11 +148,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
 
   return (
     <form onSubmit={activeTab === 'saved' ? handleMultiSubmit : handleSubmit} className="flex flex-col gap-6">
-      {error && (
-        <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       {/* Top Tabs: Yeni vs Kaydedilenler */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
@@ -194,7 +191,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         <div className="flex flex-col gap-4 animate-fade-in">
           {/* Yemek Arama / Adı */}
           <div className="flex flex-col gap-2 relative z-50">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Yemek Adı</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.mealName')}</label>
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={20} />
               <input 
@@ -233,7 +230,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
             {showDropdown && (
               <div className="absolute top-[100%] left-0 w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto hide-scrollbar z-50">
                 {apiError ? (
-                  <div className="p-4 text-center text-red-400 text-sm">{apiError}</div>
+                  <div className="p-4 text-center text-red-400 text-[var(--font-body)]">{apiError}</div>
                 ) : searchResults.length > 0 ? (
                   searchResults.map((food: any) => (
                     <div 
@@ -246,7 +243,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                     </div>
                   ))
                 ) : foodName.length > 2 && !isSearching && (
-                  <div className="p-4 text-center text-[var(--on-surface-variant)] text-sm">Sonuç bulunamadı.</div>
+                  <div className="p-4 text-center text-[var(--on-surface-variant)] text-[var(--font-body)]">Sonuç bulunamadı.</div>
                 )}
               </div>
             )}
@@ -283,15 +280,15 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
           {(parseFloat(protein) > 0 || parseFloat(carbs) > 0 || parseFloat(fat) > 0) && (
             <div className="flex gap-4 p-3 bg-[rgba(255,255,255,0.02)] rounded-xl border border-[rgba(255,255,255,0.05)] justify-center">
               <div className="text-center">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Karb</div>
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.carbs')}</div>
                 <div className="font-medium text-[#60a5fa]">{carbs}g</div>
               </div>
               <div className="text-center">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Protein</div>
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.protein')}</div>
                 <div className="font-medium text-[#4ade80]">{protein}g</div>
               </div>
               <div className="text-center">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Yağ</div>
+                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.fat')}</div>
                 <div className="font-medium text-[#facc15]">{fat}g</div>
               </div>
             </div>
@@ -338,7 +335,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
               );
             })
           ) : (
-            <div className="text-center text-sm text-[var(--on-surface-variant)] py-4">
+            <div className="text-center text-[var(--font-body)] text-[var(--on-surface-variant)] py-4">
               Henüz kaydedilmiş bir yemeğiniz bulunmuyor. Yeni bir yemek eklerken "Kaydet" seçeneğini işaretleyebilirsiniz.
             </div>
           )}

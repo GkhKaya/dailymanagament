@@ -11,6 +11,7 @@ import { FinanceSection } from "@/components/dashboard/FinanceSection";
 import { FABMenu } from "@/components/dashboard/FABMenu";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { AddTransactionForm } from "@/components/forms/AddTransactionForm";
+import { EditTransactionForm } from "@/components/forms/EditTransactionForm";
 import { AddMealForm } from "@/components/forms/AddMealForm";
 import { AddExerciseForm } from "@/components/forms/AddExerciseForm";
 import { AddAccountForm } from "@/components/forms/AddAccountForm";
@@ -22,6 +23,8 @@ import { ManageAccountsForm } from "@/components/forms/ManageAccountsForm";
 import { EditMealForm } from "@/components/forms/EditMealForm";
 import { AddSleepForm } from "@/components/forms/AddSleepForm";
 import { AddWeightForm } from "@/components/forms/AddWeightForm";
+import { UpdateWeightForm } from '@/components/forms/UpdateWeightForm';
+import { VoiceAssistantFAB } from '@/components/assistant/VoiceAssistantFAB';
 
 import { HealthAnalysis } from "@/components/dashboard/HealthAnalysis";
 import { FinanceAnalysis } from "@/components/dashboard/FinanceAnalysis";
@@ -53,6 +56,7 @@ export function DashboardView() {
   const renderSheetContent = () => {
     switch (activeSheet) {
       case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
+      case 'edit-transaction': return <EditTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} transaction={sheetPayload} />;
       case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
@@ -84,6 +88,7 @@ export function DashboardView() {
   const getSheetTitle = () => {
     switch (activeSheet) {
       case 'transaction': return 'Gelir / Gider Ekle';
+      case 'edit-transaction': return 'İşlemi Düzenle';
       case 'meal': return 'Öğün Ekle';
       case 'editMeal': return 'Öğün Düzenle';
       case 'exercise': return 'Egzersiz Ekle';
@@ -187,7 +192,7 @@ export function DashboardView() {
               {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} />}
             </div>
             <div className="flex-1 relative">
-              {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} />}
+              {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} currentDate={currentDate} />}
             </div>
           </div>
         )}
@@ -210,9 +215,9 @@ export function DashboardView() {
           isLoadingFinance || !financeData ? <LoadingSpinner /> : (
             <FinanceSection 
               data={financeData} 
-              isOverview={false} 
               onOpenSheet={handleOpenSheet} 
-              onShowAnalysis={() => setMode('finance-analysis')}
+              onShowAnalysis={() => setMode('finance-analysis')} 
+              currentDate={currentDate}
             />
           )
         )}
@@ -234,6 +239,7 @@ export function DashboardView() {
       <BottomSheet isOpen={!!activeSheet} onClose={() => setActiveSheet(null)} title={getSheetTitle()}>
         {renderSheetContent()}
       </BottomSheet>
+      <VoiceAssistantFAB onSuccess={refreshData} />
     </div>
   );
 }

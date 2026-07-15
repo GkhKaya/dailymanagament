@@ -46,9 +46,14 @@ export interface TransactionInfo {
   id: string;
   title: string;
   amount: number;
-  date: string;
+  date: string;       // Formatted date for UI
+  rawDate: string;    // ISO string for editing
   type: TransactionType;
   category?: string;
+  categoryId?: string;
+  accountName?: string;
+  accountId?: string;
+  source?: string;
 }
 
 export interface CategoryInfo {

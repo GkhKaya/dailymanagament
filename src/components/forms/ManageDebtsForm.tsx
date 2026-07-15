@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import React, { useState } from 'react';
 import { HandCoins, ArrowUpRight, ArrowDownRight, Plus, Calendar } from 'lucide-react';
 import { DebtDirection } from '@/models/Enums';
@@ -12,7 +13,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
     personName, setPersonName,
     amount, setAmount,
     dueDate, setDueDate,
-    isLoading, error, handleAdd
+    isLoading, handleAdd
   } = useManageDebtsViewModel(() => {
     setIsAdding(false);
     onSuccess();
@@ -33,11 +34,11 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
           <div className="flex gap-4">
             <div className="flex-1 glass-item p-4 flex flex-col items-center justify-center border-l-4 border-l-[#4ade80]">
               <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Alınacak</span>
-              <span className="text-xl font-bold text-[#4ade80]">{fmt(totalGiven)}</span>
+              <span className="text-[var(--font-headline)] font-bold text-[#4ade80]">{fmt(totalGiven)}</span>
             </div>
             <div className="flex-1 glass-item p-4 flex flex-col items-center justify-center border-l-4 border-l-orange-400">
               <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Verilecek</span>
-              <span className="text-xl font-bold text-orange-400">{fmt(totalTaken)}</span>
+              <span className="text-[var(--font-headline)] font-bold text-orange-400">{fmt(totalTaken)}</span>
             </div>
           </div>
 
@@ -77,11 +78,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
       ) : (
         /* Yeni Borç Ekleme Formu */
         <form onSubmit={handleAdd} className="flex flex-col gap-4 animate-fade-in">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-              {error}
-            </div>
-          )}
+          
           
           <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-2xl">
             <button 
@@ -103,7 +100,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
           </div>
 
           <div className="flex flex-col gap-2 mt-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kişi / Kurum</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.personOrInstitution')}</label>
             <input 
               type="text" 
               required
@@ -116,9 +113,9 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Tutar</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.amount')}</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                 <input 
                   type="number"
                   step="0.01" 
@@ -132,7 +129,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
             </div>
             
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Son Ödeme Tarihi</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.dueDate')}</label>
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
                 <input 

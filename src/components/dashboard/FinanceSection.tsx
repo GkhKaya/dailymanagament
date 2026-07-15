@@ -8,6 +8,7 @@ interface FinanceSectionProps {
   isOverview?: boolean;
   onOpenSheet?: (type: string, payload?: unknown) => void;
   onShowAnalysis?: () => void;
+  currentDate?: Date;
 }
 
 const TxnIcon = ({ title }: { title: string }) => {
@@ -19,7 +20,7 @@ const TxnIcon = ({ title }: { title: string }) => {
   return <CreditCard size={18} />;
 };
 
-export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAnalysis }: FinanceSectionProps) {
+export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAnalysis, currentDate }: FinanceSectionProps) {
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(val);
 
   // Group transactions by date
@@ -102,7 +103,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
               <Plus size={12} />
             </button>
           </div>
-          <span className="text-caption text-[var(--on-surface-variant)] uppercase">TEMMUZ 2024</span>
+          <span className="text-caption text-[var(--on-surface-variant)] uppercase">{new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(currentDate || new Date()).toLocaleUpperCase('tr-TR')}</span>
         </div>
         
         <div className="flex flex-col gap-[var(--space-4)]">
@@ -118,21 +119,40 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                 {groupData.txns.map((txn) => {
                   const isIncome = txn.type === 'income';
                   return (
-                    <div key={txn.id} className="flex items-center justify-between px-2 py-[var(--space-2)] hover:bg-[rgba(255,255,255,0.02)] rounded-[var(--radius-card)] transition-colors">
+                    <div 
+                      key={txn.id} 
+                      onClick={() => onOpenSheet && onOpenSheet('edit-transaction', txn)}
+                      className="flex items-center justify-between px-2 py-[var(--space-2)] hover:bg-[rgba(255,255,255,0.02)] rounded-[var(--radius-card)] transition-colors cursor-pointer"
+                    >
                       <div className="flex items-center gap-[var(--space-3)]">
                         <div className="w-12 h-12 rounded-[var(--radius-input)] bg-[var(--surface-container)] flex items-center justify-center text-[var(--on-surface-variant)]">
                           <TxnIcon title={txn.title} />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-body font-bold text-white">{txn.title}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize">
-                            {txn.category || "Diğer"}
+                          <div className="flex items-center gap-2">
+                            <span className="text-body font-bold text-white">{txn.title}</span>
+                            {txn.source === 'voice' && (
+                              <div className="flex items-center text-[var(--primary)]" title="Sesli asistan ile eklendi">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize flex items-center gap-1">
+                            {txn.category || "Diğer"} 
+                            {txn.accountName && (
+                                <>
+                                  <span className="w-1 h-1 rounded-full bg-[var(--on-surface-variant)] opacity-50"></span>
+                                  {txn.accountName}
+                                </>
+                            )}
                           </span>
                         </div>
                       </div>
-                      <span className={`text-headline ${isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
-                        {isIncome ? '+' : '-'}{fmt(txn.amount)}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`text-headline ${isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
+                          {isIncome ? '+' : '-'}{fmt(txn.amount)}
+                        </span>
+                      </div>
                     </div>
                   );
                 })}

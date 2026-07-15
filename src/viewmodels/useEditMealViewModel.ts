@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useState, useEffect } from 'react';
 import { updateMealAction, deleteMealAction } from '@/actions/health';
 
 export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
@@ -26,9 +27,31 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
   const [quantity, setQuantity] = useState(parsed.qty);
   const [unit, setUnit] = useState(parsed.unit);
   const [calories, setCalories] = useState(initialData?.calories?.toString() || '0');
+  
+  const [protein, setProtein] = useState((initialData?.protein || 0).toString());
+  const [carbs, setCarbs] = useState((initialData?.carbs || 0).toString());
+  const [fat, setFat] = useState((initialData?.fat || 0).toString());
+
+  const [baseMacros] = useState(() => {
+    const bq = parsed.qty || 1;
+    return {
+      c: (initialData?.calories || 0) / bq,
+      p: (initialData?.protein || 0) / bq,
+      cb: (initialData?.carbs || 0) / bq,
+      f: (initialData?.fat || 0) / bq
+    };
+  });
+
+  useEffect(() => {
+    const q = quantity || 0;
+    setCalories(Math.round(baseMacros.c * q).toString());
+    setProtein(Math.round(baseMacros.p * q).toString());
+    setCarbs(Math.round(baseMacros.cb * q).toString());
+    setFat(Math.round(baseMacros.f * q).toString());
+  }, [quantity, baseMacros]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const getServingDesc = () => {
     switch (unit) {
@@ -45,7 +68,7 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     if (!initialData?.id || !initialData?.date) return;
     
     setIsLoading(true);
-    setError(null);
+    
     try {
       const payload: any = {
         date: initialData.date,
@@ -55,9 +78,9 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
         food_name: foodName,
         serving_description: getServingDesc(),
         calories: parseInt(calories, 10),
-        protein_g: initialData.protein || 0, // Keeping old macros if any
-        carbs_g: initialData.carbs || 0,
-        fat_g: initialData.fat || 0
+        protein_g: parseFloat(protein) || 0,
+        carbs_g: parseFloat(carbs) || 0,
+        fat_g: parseFloat(fat) || 0
       };
       
       const res = await updateMealAction(payload);
@@ -65,11 +88,11 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        setError(res.error || "Güncelleme başarısız.");
+        toast.error(res.error || "Güncelleme başarısız.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message || "Bir hata oluştu.");
+      toast.error(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +103,7 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     if (!window.confirm("Bu yemeği silmek istediğinize emin misiniz?")) return;
     
     setIsLoading(true);
-    setError(null);
+    
     try {
       const res = await deleteMealAction({
         date: initialData.date,
@@ -90,11 +113,11 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        setError(res.error || "Silme işlemi başarısız.");
+        toast.error(res.error || "Silme işlemi başarısız.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message || "Bir hata oluştu.");
+      toast.error(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -106,8 +129,9 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     quantity, setQuantity,
     unit, setUnit,
     calories, setCalories,
+    protein, carbs, fat,
     getServingDesc,
-    isLoading, error,
+    isLoading,
     handleUpdate, handleDelete
   };
 }

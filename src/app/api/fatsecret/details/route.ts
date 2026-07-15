@@ -32,7 +32,7 @@ async function getFatSecretToken() {
 
   const data = await response.json();
   cachedToken = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // 1 minute buffer
+  tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
 
   return cachedToken;
 }
@@ -50,73 +50,67 @@ const FALLBACK_FOODS = [
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('query');
+  const foodId = searchParams.get('foodId');
 
-  if (!query) {
-    return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
+  if (!foodId) {
+    return NextResponse.json({ error: 'foodId parameter is required' }, { status: 400 });
   }
 
-  const generateFallbackResponse = (q: string) => {
-    const qLower = q.toLowerCase();
-    const matches = FALLBACK_FOODS.filter(f => f.name.toLowerCase().includes(qLower));
-    return {
-      foods: matches.map(m => ({
-        food_id: m.id,
-        food_name: m.name,
-        food_description: m.desc
-      }))
-    };
-  };
+  if (foodId.startsWith('fallback_')) {
+    const fallbackItem = FALLBACK_FOODS.find(f => f.id === foodId);
+    if (fallbackItem) {
+      return NextResponse.json({
+        servings: [{
+          metric_serving_unit: "g",
+          metric_serving_amount: "100",
+          measurement_description: "1 adet",
+          calories: fallbackItem.c.toString(),
+          carbohydrate: fallbackItem.cb.toString(),
+          protein: fallbackItem.p.toString(),
+          fat: fallbackItem.f.toString(),
+          number_of_units: "1"
+        }]
+      });
+    }
+  }
 
   try {
     const token = await getFatSecretToken();
     
-    // FatSecret search API URL
-    const searchUrl = new URL('https://platform.fatsecret.com/rest/server.api');
-    searchUrl.searchParams.append('method', 'foods.search');
-    searchUrl.searchParams.append('search_expression', query);
-    searchUrl.searchParams.append('format', 'json');
-    searchUrl.searchParams.append('max_results', '10');
-    searchUrl.searchParams.append('region', 'TR');
-    searchUrl.searchParams.append('language', 'tr');
+    const detailsUrl = new URL('https://platform.fatsecret.com/rest/server.api');
+    detailsUrl.searchParams.append('method', 'food.get.v2');
+    detailsUrl.searchParams.append('food_id', foodId);
+    detailsUrl.searchParams.append('format', 'json');
+    detailsUrl.searchParams.append('region', 'TR');
+    detailsUrl.searchParams.append('language', 'tr');
 
-    const searchResponse = await fetch(searchUrl.toString(), {
+    const response = await fetch(detailsUrl.toString(), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
 
-    if (!searchResponse.ok) {
-      throw new Error('FatSecret search failed');
+    if (!response.ok) {
+      throw new Error('FatSecret details failed');
     }
 
-    const data = await searchResponse.json();
-    console.log("Raw FatSecret Response:", JSON.stringify(data, null, 2));
+    const data = await response.json();
     
-    // FatSecret returns 200 OK even for errors, but includes an "error" object
     if (data.error) {
-      return NextResponse.json({ error: data.error.message || 'FatSecret API error', code: data.error.code }, { status: 400 });
+      return NextResponse.json({ error: data.error.message || 'FatSecret API error' }, { status: 400 });
     }
 
-    const foodData = data.foods?.food;
-    const foodsArray = Array.isArray(foodData) ? foodData : (foodData ? [foodData] : []);
+    // Return just the servings array for convenience, or the whole food object
+    // In FatSecret: data.food.servings.serving
+    const servingData = data.food?.servings?.serving;
+    const servingsArray = Array.isArray(servingData) ? servingData : (servingData ? [servingData] : []);
 
-    if (foodsArray.length === 0) {
-      console.log('FatSecret returned 0 results, using fallback for:', query);
-      const fallbackData = generateFallbackResponse(query);
-      if (fallbackData.foods.length > 0) {
-        return NextResponse.json(fallbackData);
-      }
-    }
-
-    return NextResponse.json({ foods: foodsArray });
+    return NextResponse.json({
+        servings: servingsArray
+    });
   } catch (error: any) {
-    console.error('FatSecret API Error, using fallback:', error.message);
-    const fallbackData = generateFallbackResponse(query);
-    if (fallbackData.foods.length > 0) {
-      return NextResponse.json(fallbackData);
-    }
+    console.error('FatSecret Details Error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

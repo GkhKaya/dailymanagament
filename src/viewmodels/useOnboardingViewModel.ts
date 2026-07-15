@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateUserHealthProfileAction } from '@/actions/user';
@@ -11,7 +12,7 @@ export function useOnboardingViewModel() {
   // -- Step Control --
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   // -- Health Data --
   const [birthDate, setBirthDate] = useState('');
@@ -62,12 +63,12 @@ export function useOnboardingViewModel() {
 
   const saveHealthAndContinue = async () => {
     if (!weight || !height) {
-      setError("Lütfen boy ve kilo bilgilerinizi eksiksiz girin.");
+      toast.error("Lütfen boy ve kilo bilgilerinizi eksiksiz girin.");
       return;
     }
     
     setIsLoading(true);
-    setError(null);
+    
     try {
       const bDate = new Date(birthDate);
       let a = 25;
@@ -91,11 +92,11 @@ export function useOnboardingViewModel() {
       if (res.success) {
         setCurrentStep('finance');
       } else {
-        setError(res.error || "Sağlık bilgileri kaydedilirken hata oluştu.");
+        toast.error(res.error || "Sağlık bilgileri kaydedilirken hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +118,6 @@ export function useOnboardingViewModel() {
     currentStep,
     setCurrentStep,
     isLoading,
-    error,
     
     // Health State
     birthDate, setBirthDate,

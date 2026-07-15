@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { updateAccountAction, deleteAccountAction } from '@/actions/finance';
 
@@ -14,14 +15,14 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
   const [dueDay, setDueDay] = useState(initialData?.credit_card_details?.due_day?.toString() || '');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleUpdate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!initialData?.id) return;
     
     setIsLoading(true);
-    setError(null);
+    
     try {
       const payload = {
         name: accountName,
@@ -33,11 +34,11 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        setError(res.error || "Güncelleme başarısız.");
+        toast.error(res.error || "Güncelleme başarısız.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message || "Bir hata oluştu.");
+      toast.error(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -48,17 +49,17 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
     if (!window.confirm("Bu hesabı silmek istediğinize emin misiniz? (Tüm bağlı işlemler silinebilir)")) return;
     
     setIsLoading(true);
-    setError(null);
+    
     try {
       const res = await deleteAccountAction(initialData.id);
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        setError(res.error || "Silme işlemi başarısız.");
+        toast.error(res.error || "Silme işlemi başarısız.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message || "Bir hata oluştu.");
+      toast.error(err.message || "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +73,7 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
     creditDebt, setCreditDebt,
     cutoffDay, setCutoffDay,
     dueDay, setDueDay,
-    isLoading, error,
+    isLoading,
     handleUpdate, handleDelete
   };
 }

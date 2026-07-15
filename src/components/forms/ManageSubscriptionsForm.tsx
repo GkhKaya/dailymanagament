@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import React, { useState } from 'react';
 import { CalendarClock, PlaySquare, Music, Dumbbell, Plus } from 'lucide-react';
 import { useManageSubscriptionsViewModel } from '@/viewmodels/useManageSubscriptionsViewModel';
@@ -16,7 +17,7 @@ export function ManageSubscriptionsForm({
     billingDay, setBillingDay,
     accountId, setAccountId,
     categoryId, setCategoryId,
-    isLoading, error, handleAdd
+    isLoading, handleAdd
   } = useManageSubscriptionsViewModel(() => {
     setIsAdding(false);
     onSuccess();
@@ -69,11 +70,7 @@ export function ManageSubscriptionsForm({
       ) : (
         /* Yeni Abonelik Ekleme Formu */
         <form onSubmit={handleAdd} className="flex flex-col gap-4 animate-fade-in">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-              {error}
-            </div>
-          )}
+          
 
           <div className="flex flex-col gap-2">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Abonelik Adı</label>
@@ -88,7 +85,7 @@ export function ManageSubscriptionsForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kategori</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.category')}</label>
             <select 
               required
               value={categoryId}
@@ -121,7 +118,7 @@ export function ManageSubscriptionsForm({
             <div className="flex flex-col gap-2">
               <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Aylık Ücret</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-medium text-[var(--on-surface-variant)]">₺</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
                 <input 
                   type="number"
                   step="0.01" 

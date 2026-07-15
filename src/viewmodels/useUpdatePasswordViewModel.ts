@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
@@ -6,11 +7,11 @@ export function useUpdatePasswordViewModel(onSuccess: () => void) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -31,7 +32,7 @@ export function useUpdatePasswordViewModel(onSuccess: () => void) {
       onSuccess();
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -41,6 +42,6 @@ export function useUpdatePasswordViewModel(onSuccess: () => void) {
     currentPassword, setCurrentPassword,
     newPassword, setNewPassword,
     confirmPassword, setConfirmPassword,
-    isLoading, error, handleSubmit
+    isLoading, handleSubmit
   };
 }

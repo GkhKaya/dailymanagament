@@ -80,7 +80,7 @@ export async function deleteAccountAction(id: string) {
 }
 
 // ── TRANSACTIONS ──
-export async function addTransactionAction(data: { type: string; amount: number; date: string; description: string; category_id: string; account_id: string }) {
+export async function addTransactionAction(data: { type: string; amount: number; date: string; description: string; category_id: string; account_id: string; source?: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -93,7 +93,7 @@ export async function addTransactionAction(data: { type: string; amount: number;
       description: data.description,
       category_id: new mongoose.Types.ObjectId(data.category_id),
       account_id: new mongoose.Types.ObjectId(data.account_id),
-      source: "manual"
+      source: data.source || "manual"
     });
     
     // Update account balance
@@ -108,6 +108,96 @@ export async function addTransactionAction(data: { type: string; amount: number;
       account.balance = mongoose.Types.Decimal128.fromString(currentBal.toString());
       await account.save();
     }
+
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteTransactionAction(id: string) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    
+    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
+    if (!txn) {
+       return { success: false, error: "İşlem bulunamadı." };
+    }
+
+    // Revert account balance
+    const account = await Account.findOne({ _id: txn.account_id, user_id: userId });
+    if (account) {
+      let currentBal = parseFloat(account.balance.toString());
+      if (txn.type === 'income') {
+        currentBal -= parseFloat(txn.amount.toString());
+      } else {
+        currentBal += parseFloat(txn.amount.toString());
+      }
+      account.balance = mongoose.Types.Decimal128.fromString(currentBal.toString());
+      await account.save();
+    }
+
+    await Transaction.deleteOne({ _id: txn._id });
+    
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateTransactionAction(id: string, data: { type: string; amount: number; date: string; description: string; category_id: string; account_id: string }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    
+    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
+    if (!txn) {
+       return { success: false, error: "İşlem bulunamadı." };
+    }
+
+    const oldAmount = parseFloat(txn.amount.toString());
+    const oldType = txn.type;
+    const oldAccountId = txn.account_id.toString();
+
+    // Revert old transaction effect on old account
+    const oldAccount = await Account.findOne({ _id: txn.account_id, user_id: userId });
+    if (oldAccount) {
+      let oldBal = parseFloat(oldAccount.balance.toString());
+      if (oldType === 'income') {
+        oldBal -= oldAmount;
+      } else {
+        oldBal += oldAmount;
+      }
+      oldAccount.balance = mongoose.Types.Decimal128.fromString(oldBal.toString());
+      await oldAccount.save();
+    }
+
+    // Apply new transaction effect on new account
+    const newAccount = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id), user_id: userId });
+    if (newAccount) {
+      let newBal = parseFloat(newAccount.balance.toString());
+      if (data.type === 'income') {
+        newBal += data.amount;
+      } else {
+        newBal -= data.amount;
+      }
+      newAccount.balance = mongoose.Types.Decimal128.fromString(newBal.toString());
+      await newAccount.save();
+    }
+
+    // Update the transaction itself
+    txn.type = data.type;
+    txn.amount = mongoose.Types.Decimal128.fromString(data.amount.toString());
+    txn.date = new Date(data.date);
+    txn.description = data.description;
+    txn.category_id = new mongoose.Types.ObjectId(data.category_id);
+    txn.account_id = new mongoose.Types.ObjectId(data.account_id);
+    await txn.save();
 
     return { success: true };
   } catch (e: unknown) {

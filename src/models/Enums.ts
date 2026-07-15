@@ -53,6 +53,7 @@ export enum TransactionSource {
   MANUAL = 'manual',
   SUBSCRIPTION = 'subscription',
   ACCOUNT_EDIT = 'account_edit',
+  VOICE = 'voice',
 }
 
 export enum SubscriptionFrequency {

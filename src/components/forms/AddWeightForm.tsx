@@ -71,7 +71,7 @@ export function AddWeightForm({
         <input 
           type="number"
           step="0.1"
-          className="form-input text-lg"
+          className="form-input text-[var(--font-headline)]"
           placeholder="Örn: 75.5"
           value={viewModel.weight}
           onChange={(e) => viewModel.setWeight(e.target.value)}
@@ -84,7 +84,7 @@ export function AddWeightForm({
       </div>
 
       {viewModel.error && (
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[var(--font-body)]">
           {viewModel.error}
         </div>
       )}

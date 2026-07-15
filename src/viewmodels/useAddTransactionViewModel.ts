@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addTransactionAction } from '@/actions/finance';
 
@@ -10,11 +11,11 @@ export function useAddTransactionViewModel(onSuccess: () => void) {
   const [description, setDescription] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    
     setIsLoading(true);
 
     try {
@@ -34,11 +35,11 @@ export function useAddTransactionViewModel(onSuccess: () => void) {
       if (res.success) {
         onSuccess();
       } else {
-        setError(res.error || "İşlem eklenirken bir hata oluştu.");
+        toast.error(res.error || "İşlem eklenirken bir hata oluştu.");
       }
     } catch (e: unknown) {
       const err = e as Error;
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +52,7 @@ export function useAddTransactionViewModel(onSuccess: () => void) {
     categoryId, setCategoryId,
     accountId, setAccountId,
     description, setDescription,
-    isLoading, error,
+    isLoading,
     handleSubmit
   };
 }
