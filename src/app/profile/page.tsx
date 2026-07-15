@@ -19,12 +19,19 @@ export default async function ProfilePage() {
   const userId = new mongoose.Types.ObjectId(session.user.id);
   const userDoc = await User.findById(userId).lean();
 
+  let age = 0;
+  if (userDoc?.profile?.birth_date) {
+    const diffMs = Date.now() - new Date(userDoc.profile.birth_date).getTime();
+    age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+  }
+
   const userProfile = {
-    email: session.user.email,
-    id: session.user.id,
-    weight: userDoc?.current_weight_kg || userDoc?.weight || 0,
-    age: userDoc?.age || 0,
-    birth_date: userDoc?.profile?.birth_date || null
+    name: session.user.name || '',
+    email: session.user.email || '',
+    current_weight_kg: userDoc?.current_weight_kg || 0,
+    target_weight_kg: userDoc?.target_weight_kg || 0,
+    height_cm: userDoc?.profile?.height_cm || 0,
+    age
   };
 
   // Fetch Finance Data

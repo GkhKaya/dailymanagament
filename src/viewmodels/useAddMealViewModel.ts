@@ -18,6 +18,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
 
   const [savedFoods, setSavedFoods] = useState<any[]>([]);
   const [isLoadingSaved, setIsLoadingSaved] = useState(true);
+  const [selectedSavedFoods, setSelectedSavedFoods] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchSaved = async () => {
@@ -69,6 +70,47 @@ export function useAddMealViewModel(onSuccess: () => void) {
     }
   };
 
+  const handleMultiSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedSavedFoods.length === 0) return;
+    
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const selected = savedFoods.filter(f => selectedSavedFoods.includes(f.id));
+      
+      const promises = selected.map(food => {
+        return addMealAction({
+          date: new Date().toISOString(),
+          type,
+          food_name: food.name,
+          serving_description: food.serving_description || '1 porsiyon',
+          quantity: parseFloat(food.quantity) || 1,
+          calories: parseFloat(food.calories) || 0,
+          protein_g: parseFloat(food.protein) || 0,
+          carbs_g: parseFloat(food.carbs) || 0,
+          fat_g: parseFloat(food.fat) || 0,
+          fatsecret_food_id: food.fatsecret_food_id || undefined,
+          save_as_recipe: false
+        });
+      });
+
+      const results = await Promise.all(promises);
+      const hasError = results.some(r => !r.success);
+      
+      if (!hasError) {
+        onSuccess();
+      } else {
+        setError("Bazı öğünler eklenirken hata oluştu.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     type, setType,
     foodName, setFoodName,
@@ -81,7 +123,8 @@ export function useAddMealViewModel(onSuccess: () => void) {
     fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, isLoadingSaved,
+    selectedSavedFoods, setSelectedSavedFoods,
     isLoading, error,
-    handleSubmit
+    handleSubmit, handleMultiSubmit
   };
 }

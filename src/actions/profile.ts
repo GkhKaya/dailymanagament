@@ -20,7 +20,7 @@ export async function updateWeightAction(weightKg: number) {
     }
 
     await connectDB();
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = session.user.id;
     
     await User.updateOne(
       { _id: userId },
@@ -43,7 +43,7 @@ export async function updateAgeAction(birthDateStr: string) {
     }
 
     await connectDB();
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = session.user.id;
     
     const birthDate = new Date(birthDateStr);
     
@@ -56,6 +56,34 @@ export async function updateAgeAction(birthDateStr: string) {
   } catch (e: unknown) {
     const err = e as Error;
     console.error("updateAgeAction error:", err);
+    return { success: false, error: err.message };
+  }
+}
+export async function updateUsernameAction(newUsername: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await connectDB();
+    const userId = session.user.id;
+    
+    // Check uniqueness
+    const existing = await User.findOne({ username: newUsername });
+    if (existing && existing._id !== userId) {
+      return { success: false, error: "Bu kullanıcı adı zaten alınmış." };
+    }
+
+    await User.updateOne(
+      { _id: userId },
+      { $set: { username: newUsername } }
+    );
+
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error("Update Username Error:", err);
     return { success: false, error: err.message };
   }
 }

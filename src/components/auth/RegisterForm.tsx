@@ -15,8 +15,6 @@ export function RegisterForm() {
     setPassword,
     username,
     setUsername,
-    age,
-    setAge,
     handleRegister,
     loading,
   } = useRegisterViewModel();
@@ -47,15 +45,6 @@ export function RegisterForm() {
         label={t("auth.passwordPlaceholder")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-
-      <TextInput
-        id="age"
-        type="number"
-        label={t("auth.agePlaceholder")}
-        value={age}
-        onChange={(e) => setAge(e.target.value)}
         required
       />
 

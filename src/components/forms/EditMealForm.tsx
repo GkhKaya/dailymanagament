@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import { useEditMealViewModel } from '@/viewmodels/useEditMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: { id: string, type: string, foods: any[] } }) {
+export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
   const {
     mealType, setMealType,
     foodName, setFoodName,
@@ -28,7 +28,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
           <button 
             key={m.id}
             onClick={() => setMealType(m.id as any)}
-            className={`py-3 text-center rounded-2xl text-body font-medium transition-all ${mealType === m.id ? 'bg-[var(--inverse-primary)] text-white shadow-sm' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+            className={`py-3 text-center rounded-2xl text-body font-medium transition-all ${mealType === m.id ? 'bg-[var(--primary)] text-black shadow-sm' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
           >
             {m.label}
           </button>
@@ -96,7 +96,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
       )}
 
       <div className="mt-4 flex flex-col gap-3">
-        <button onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors">
+        <button onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors">
           {isLoading ? <LoadingSpinner size="sm" /> : "Değişiklikleri Kaydet"}
         </button>
         <button onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">

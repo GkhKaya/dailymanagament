@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { Gender, ActivityLevel, BmrFormula } from './Enums';
 
 export interface IUser extends Document {
+  username?: string;
   email: string;
   password_hash: string;
   profile: {
@@ -13,6 +14,7 @@ export interface IUser extends Document {
     bmr_formula?: BmrFormula;
   };
   current_weight_kg?: number;
+  target_weight_kg?: number;
   settings: {
     daily_calorie_goal?: number;
     currency: string;
@@ -23,6 +25,8 @@ export interface IUser extends Document {
 }
 
 const UserSchema: Schema = new Schema({
+  _id: { type: String, required: true },
+  username: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true, index: true },
   password_hash: { type: String, required: true },
   profile: {
@@ -34,6 +38,7 @@ const UserSchema: Schema = new Schema({
     bmr_formula: { type: String, enum: Object.values(BmrFormula) }
   },
   current_weight_kg: { type: Number },
+  target_weight_kg: { type: Number },
   settings: {
     daily_calorie_goal: { type: Number, default: null },
     currency: { type: String, default: 'TRY' },

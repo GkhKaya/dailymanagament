@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { updateAccountAction, deleteAccountAction } from '@/actions/finance';
 
-export function useEditAccountViewModel(initialData: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean }, onSuccess?: () => void) {
+export function useEditAccountViewModel(initialData: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean, credit_card_details?: any } | undefined, onSuccess?: () => void) {
   const [accountName, setAccountName] = useState(initialData?.name || '');
-  const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>(initialData?.type || 'bank');
+  const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>((initialData?.type as 'bank' | 'credit' | 'cash') || 'bank');
   
   // Note: credit limit/debt/cut-off dates could be extracted if they exist
   const [balance, setBalance] = useState(initialData?.balance?.toString() || '0');
@@ -23,7 +23,7 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
     setIsLoading(true);
     setError(null);
     try {
-      const payload: Record<string, unknown> = {
+      const payload = {
         name: accountName,
         balance: parseFloat(accountType === 'credit' ? creditDebt || '0' : balance),
       };

@@ -26,7 +26,7 @@ const COLORS = [
   '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', '#9ca3af'
 ];
 
-export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoadingCategories = false }: { onClose: () => void, onSuccess: () => void, categories: { id: string, name: string, type: string, icon: string, color?: string }[], isLoadingCategories?: boolean }) {
+export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoadingCategories = false }: { onClose: () => void, onSuccess: () => void, categories: { id: string, name: string, type: string, icon?: string, color?: string }[], isLoadingCategories?: boolean }) {
   const [isAdding, setIsAdding] = useState(false);
   
   const {
@@ -100,7 +100,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
                 {/* Add Button Box */}
                 <button 
                   onClick={() => setIsAdding(true)}
-                  className="aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[rgba(255,255,255,0.1)] hover:border-[var(--inverse-primary)] hover:bg-[rgba(73,75,214,0.1)] text-[var(--on-surface-variant)] hover:text-[var(--inverse-primary)] transition-all"
+                  className="aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[rgba(255,255,255,0.1)] hover:border-[var(--inverse-primary)] hover:bg-[rgba(73,75,214,0.1)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-all"
                 >
                   <Plus size={24} />
                   <span className="text-caption font-medium">Ekle</span>
@@ -161,7 +161,7 @@ export function ManageCategoriesForm({ onClose, onSuccess, categories, isLoading
             <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
               İptal
             </button>
-            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
+            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
               {isLoading ? <LoadingSpinner size="sm" /> : "Kaydet"}
             </button>
           </div>

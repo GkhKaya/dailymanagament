@@ -54,7 +54,7 @@ export function CustomSelect({ value, onChange, options, placeholder = "Seçiniz
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         <ChevronDown 
           size={20} 
-          className={`text-[var(--on-surface-variant)] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--inverse-primary)]' : ''}`} 
+          className={`text-[var(--on-surface-variant)] transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--primary)]' : ''}`} 
         />
       </button>
 

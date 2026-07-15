@@ -21,8 +21,8 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
 
   // Compute totals
-  const totalGiven = debts.filter(d => d.direction === DebtDirection.GIVEN).reduce((acc, curr) => acc + (curr.remaining_amount || curr.amount), 0);
-  const totalTaken = debts.filter(d => d.direction === DebtDirection.TAKEN).reduce((acc, curr) => acc + (curr.remaining_amount || curr.amount), 0);
+  const totalGiven = debts.filter(d => d.direction === DebtDirection.GIVEN).reduce((acc, curr) => acc + (curr.remainingAmount || curr.amount), 0);
+  const totalTaken = debts.filter(d => d.direction === DebtDirection.TAKEN).reduce((acc, curr) => acc + (curr.remainingAmount || curr.amount), 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,7 +44,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
           <div className="flex flex-col gap-3">
             {debts.map((debt) => {
               const isLent = debt.direction === DebtDirection.GIVEN;
-              const dDate = debt.due_date ? new Date(debt.due_date).toLocaleDateString('tr-TR') : 'Belirtilmedi';
+              const dDate = debt.dueDate ? new Date(debt.dueDate).toLocaleDateString('tr-TR') : 'Belirtilmedi';
               return (
                 <div key={debt.id} className="glass-item px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -52,12 +52,12 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
                       {isLent ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-body font-medium">{debt.person_name}</span>
+                      <span className="text-body font-medium">{debt.personName}</span>
                       <span className="text-caption text-[var(--on-surface-variant)]">Son Ödeme: {dDate}</span>
                     </div>
                   </div>
                   <span className={`text-body font-bold ${isLent ? 'text-[#4ade80]' : 'text-orange-400'}`}>
-                    {isLent ? '+' : '-'}{fmt(debt.remaining_amount || debt.amount)}
+                    {isLent ? '+' : '-'}{fmt(debt.remainingAmount || debt.amount)}
                   </span>
                 </div>
               );
@@ -149,7 +149,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
             <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
               İptal
             </button>
-            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
+            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
               {isLoading ? <LoadingSpinner size="sm" /> : "Kaydet"}
             </button>
           </div>

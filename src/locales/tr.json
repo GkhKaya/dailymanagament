@@ -19,8 +19,9 @@
     "signIn": "Giriş Yap"
   },
   "dashboard": {
-    "tabHealth": "Sağlık",
+    "tabHealth": "Beslenme",
     "tabFinance": "Cüzdan",
+    "tabProfile": "Profil",
     "health": {
       "caloriesRemaining": "Kalan Kalori",
       "caloriesBurned": "Yakılan",

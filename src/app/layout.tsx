@@ -8,6 +8,11 @@ export const metadata: Metadata = {
 
 import { Toaster } from 'react-hot-toast';
 
+import { Inter, Bricolage_Grotesque } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' });
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,10 +21,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`h-full antialiased`}
+      className={`h-full antialiased ${inter.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans">
         {children}
         <Toaster position="top-center" />
       </body>

@@ -23,7 +23,7 @@ export function Checkbox({
           className="peer sr-only"
           {...props}
         />
-        <div className="w-4 h-4 border border-[var(--outline)] rounded flex items-center justify-center peer-checked:bg-[var(--inverse-primary)] peer-checked:border-[var(--inverse-primary)] transition-colors cursor-pointer">
+        <div className="w-4 h-4 border border-[var(--outline)] rounded flex items-center justify-center peer-checked:bg-[var(--primary)] peer-checked:border-[var(--inverse-primary)] transition-colors cursor-pointer">
           <Check size={12} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={4} />
         </div>
         {label && (

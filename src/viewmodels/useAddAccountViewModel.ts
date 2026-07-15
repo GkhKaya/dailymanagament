@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { addAccountAction } from '@/actions/finance';
 
-export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
+export function useAddAccountViewModel(onSuccess: (id?: string, name?: string) => void) {
   const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>('bank');
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
@@ -28,7 +28,7 @@ export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
       if (accountType === 'bank') mappedType = 'bank_account' as any;
       if (accountType === 'credit') mappedType = 'credit_card' as any;
 
-      let payload: Record<string, unknown> = {
+      let payload: { name: string; type: string; balance: number; credit_card_details?: any } = {
         name,
         type: mappedType,
         balance: accountType === 'credit' ? 0 : parseFloat(balance),
@@ -37,6 +37,9 @@ export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
       if (accountType === 'credit') {
         if (!limit || !currentDebt || !statementDay || !dueDay) {
           throw new Error("Tüm kredi kartı alanlarını doldurunuz.");
+        }
+        if (parseFloat(currentDebt) > parseFloat(limit)) {
+          throw new Error("Güncel borç, kart limitinden yüksek olamaz.");
         }
         payload.credit_card_details = {
           total_limit: parseFloat(limit),
@@ -56,7 +59,7 @@ export function useAddAccountViewModel(onSuccess: (name?: string) => void) {
         setCurrentDebt('');
         setStatementDay('');
         setDueDay('');
-        onSuccess(payload.name);
+        onSuccess(res.id, payload.name as string);
       } else {
         setError(res.error || "Hesap eklenirken bir hata oluştu.");
       }

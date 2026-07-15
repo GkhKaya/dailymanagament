@@ -5,8 +5,9 @@ import { ManageSubscriptionsForm } from '../forms/ManageSubscriptionsForm';
 import { ManageDebtsForm } from '../forms/ManageDebtsForm';
 import { ManageCategoriesForm } from '../forms/ManageCategoriesForm';
 import { getCategoriesAction } from '@/actions/finance';
+import { getFinanceDataAction } from '@/actions/dashboard';
 
-export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewModel: ReturnType<import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel>, initialCategories?: { id: string, name: string, type: string, icon: string }[] }) {
+export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewModel: ReturnType<typeof import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel>, initialCategories?: { id: string, name: string, type: string, icon: string }[] }) {
   const { skipFinance, finishOnboarding } = viewModel;
   
   // Local step for finance
@@ -14,6 +15,16 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
   const [categories, setCategories] = useState<any[]>(initialCategories);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [debts, setDebts] = useState<any[]>([]);
+
+  const handleFinanceSuccess = async () => {
+    const res = await getFinanceDataAction();
+    if (res.success && res.data) {
+      setSubscriptions(res.data.subscriptions || []);
+      setDebts(res.data.debts || []);
+    }
+  };
 
   const handleNext = () => {
     if (financeStep === 'account') setFinanceStep('debt');
@@ -51,8 +62,8 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
               <p className="text-sm text-[var(--on-surface-variant)] mb-6">Maaş hesabınızı, nakit cüzdanınızı veya kredi kartınızı ekleyerek başlayın.</p>
               <AddAccountForm 
                 onClose={() => {}} 
-                onSuccess={(name) => {
-                  setCreatedAccounts(prev => [...prev, { id: Date.now().toString(), name: name || "Yeni Hesap", type: "bank" }]);
+                onSuccess={(id, name) => {
+                  setCreatedAccounts(prev => [...prev, { id: id || Date.now().toString(), name: name || "Yeni Hesap", type: "bank" }]);
                 }} 
               />
             </div>
@@ -77,12 +88,12 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
           <div className="flex flex-col gap-8">
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <h3 className="text-lg font-bold text-white mb-4">Abonelik Ekle</h3>
-              <ManageSubscriptionsForm onClose={() => {}} onSuccess={() => {}} subscriptions={[]} categories={categories} accounts={[]} />
+              <ManageSubscriptionsForm onClose={() => {}} onSuccess={handleFinanceSuccess} subscriptions={subscriptions} categories={categories} accounts={createdAccounts} />
             </div>
             
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-              <h3 className="text-lg font-bold text-white mb-4">Borç / Alacak Ekle</h3>
-              <ManageDebtsForm onClose={() => {}} onSuccess={() => {}} debts={[]} />
+              <h3 className="text-lg font-bold text-white mb-4">Borç Ekle</h3>
+              <ManageDebtsForm onClose={() => {}} onSuccess={handleFinanceSuccess} debts={debts} />
             </div>
           </div>
         )}
@@ -105,7 +116,7 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
         </button>
         <button 
           onClick={handleNext}
-          className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2"
         >
           <span>{financeStep === 'category' ? 'Kurulumu Tamamla' : 'Sonraki Adım'}</span>
           <ArrowRight size={20} />

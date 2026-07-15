@@ -2,10 +2,12 @@ import React from 'react';
 import { ArrowRight, SkipForward, Flame, Activity } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel> }) {
+export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<typeof import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel> }) {
   const {
+    birthDate, setBirthDate,
     weight, setWeight,
     height, setHeight,
+    targetWeight, setTargetWeight,
     gender, setGender,
     activityLevel, setActivityLevel,
     goal, setGoal,
@@ -40,13 +42,13 @@ export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<import("
           <div className="flex gap-2">
             <button 
               onClick={() => setGender('Male')}
-              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${gender === 'Male' ? 'bg-[var(--inverse-primary)] text-white shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)]'}`}
+              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${gender === 'Male' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)]'}`}
             >
               Erkek
             </button>
             <button 
               onClick={() => setGender('Female')}
-              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${gender === 'Female' ? 'bg-[var(--inverse-primary)] text-white shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)]'}`}
+              className={`flex-1 py-3 rounded-2xl text-sm font-medium transition-all ${gender === 'Female' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)]'}`}
             >
               Kadın
             </button>
@@ -54,7 +56,17 @@ export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<import("
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* Doğum Tarihi */}
+        <div className="flex flex-col gap-2">
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Doğum Tarihi</label>
+          <input 
+            type="date" 
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 px-4 text-white focus:border-green-400 focus:outline-none transition-colors"
+          />
+        </div>
         {/* Boy */}
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Boy (cm)</label>
@@ -74,6 +86,17 @@ export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<import("
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             placeholder="70"
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 px-4 text-white focus:border-green-400 focus:outline-none transition-colors"
+          />
+        </div>
+        {/* Hedef Kilo */}
+        <div className="flex flex-col gap-2">
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hedef Kilo</label>
+          <input 
+            type="number" 
+            value={targetWeight}
+            onChange={(e) => setTargetWeight(e.target.value)}
+            placeholder="65"
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 px-4 text-white focus:border-green-400 focus:outline-none transition-colors"
           />
         </div>

@@ -60,14 +60,14 @@ export function AddTransactionForm({
         <button 
           type="button"
           onClick={() => { setType('expense'); setCategoryId(''); }}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'expense' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'expense' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gider
         </button>
         <button 
           type="button"
           onClick={() => { setType('income'); setCategoryId(''); }}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'income' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'income' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gelir
         </button>
@@ -154,7 +154,7 @@ export function AddTransactionForm({
                     onClick={() => { setCategoryId(c.id); setIsCategoryOpen(false); }}
                     className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all ${
                       isSelected 
-                        ? 'border-[var(--inverse-primary)] bg-[rgba(73,75,214,0.1)] text-[var(--inverse-primary)] shadow-md shadow-[var(--primary)]/20' 
+                        ? 'border-[var(--inverse-primary)] bg-[rgba(73,75,214,0.1)] text-[var(--primary)] shadow-md shadow-[var(--primary)]/20' 
                         : 'border-transparent bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.08)]'
                     }`}
                   >
@@ -188,7 +188,7 @@ export function AddTransactionForm({
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
           İptal
         </button>
-        <button type="submit" disabled={isLoading} className={`flex-[2] py-3 rounded-xl text-white font-bold transition-colors flex items-center justify-center ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}>
+        <button type="submit" disabled={isLoading} className={`flex-[2] py-3 rounded-xl text-black font-bold transition-colors flex items-center justify-center ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}>
           {isLoading ? <LoadingSpinner size="sm" /> : (type === 'income' ? 'Gelir Ekle' : 'Gider Ekle')}
         </button>
       </div>

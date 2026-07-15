@@ -6,7 +6,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 export function ManageSubscriptionsForm({ 
   onClose, onSuccess, subscriptions, categories, accounts 
 }: { 
-  onClose: () => void, onSuccess: () => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance: boolean }[] 
+  onClose: () => void, onSuccess: () => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon?: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean }[] 
 }) {
   const [isAdding, setIsAdding] = useState(false);
   
@@ -24,7 +24,7 @@ export function ManageSubscriptionsForm({
 
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
 
-  const totalMonthly = subscriptions.reduce((acc, sub) => acc + parseFloat(sub.amount?.toString() || sub.amount), 0);
+  const totalMonthly = subscriptions.reduce((acc, sub) => acc + sub.amount, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,12 +45,12 @@ export function ManageSubscriptionsForm({
                   <div className="flex flex-col">
                     <span className="text-body font-medium">{sub.name}</span>
                     <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-1">
-                      <CalendarClock size={12} /> Her ayın {sub.billing_day}. günü
+                      <CalendarClock size={12} /> Sonraki ödeme: {new Date(sub.nextBillingDate).toLocaleDateString('tr-TR')}
                     </span>
                   </div>
                 </div>
                 <span className="text-body font-bold text-white">
-                  {fmt(parseFloat(sub.amount?.toString() || sub.amount))}
+                  {fmt(sub.amount)}
                 </span>
               </div>
             ))}
@@ -60,7 +60,7 @@ export function ManageSubscriptionsForm({
             <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
               Kapat
             </button>
-            <button type="button" onClick={() => setIsAdding(true)} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center gap-2">
+            <button type="button" onClick={() => setIsAdding(true)} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2">
               <Plus size={20} />
               <span>Abonelik Ekle</span>
             </button>
@@ -155,7 +155,7 @@ export function ManageSubscriptionsForm({
             <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
               İptal
             </button>
-            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
+            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
               {isLoading ? <LoadingSpinner size="sm" /> : "Kaydet"}
             </button>
           </div>

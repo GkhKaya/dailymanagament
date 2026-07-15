@@ -8,6 +8,7 @@ import { Account } from "@/models/Account";
 import { Transaction } from "@/models/Transaction";
 import { Category } from "@/models/Category";
 import { Debt } from "@/models/Debt";
+import { DebtStatus } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
 
 // Helper to check session
@@ -25,7 +26,7 @@ export async function addAccountAction(data: { name: string; type: string; balan
     await connectDB();
     const userId = await getUserId();
     
-    await Account.create({
+    const acc = await Account.create({
       user_id: userId,
       name: data.name,
       type: data.type,
@@ -38,7 +39,7 @@ export async function addAccountAction(data: { name: string; type: string; balan
       } : undefined
     });
     
-    return { success: true };
+    return { success: true, id: acc._id.toString() };
   } catch (e: unknown) {
     const err = e as Error;
     console.error(err);
@@ -197,7 +198,7 @@ export async function addDebtAction(data: { person_name: string; direction: stri
       remaining_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
       date: new Date(data.date),
       due_date: data.due_date ? new Date(data.due_date) : null,
-      status: 'unpaid'
+      status: DebtStatus.OPEN
     });
     return { success: true };
   } catch (e: unknown) {

@@ -7,12 +7,12 @@ import { OnboardingHealth } from '@/components/onboarding/OnboardingHealth';
 import { OnboardingFinance } from '@/components/onboarding/OnboardingFinance';
 
 export function OnboardingClient({ initialCategories, initialAge = 25 }: { initialCategories: any[], initialAge?: number }) {
-  const viewModel = useOnboardingViewModel(initialAge);
+  const viewModel = useOnboardingViewModel();
   
   return (
     <div className="min-h-screen bg-[var(--background)] relative overflow-x-hidden flex flex-col">
       {/* Background glow effects */}
-      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--inverse-primary)] opacity-10 blur-[120px] pointer-events-none z-0" />
+      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--primary)] opacity-10 blur-[120px] pointer-events-none z-0" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-green-500 opacity-10 blur-[120px] pointer-events-none z-0" />
       
       {/* Progress bar (Fixed at top) */}

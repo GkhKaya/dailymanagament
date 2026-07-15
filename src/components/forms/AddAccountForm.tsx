@@ -3,7 +3,7 @@ import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon } from 
 import { useAddAccountViewModel } from '@/viewmodels/useAddAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: (name?: string) => void }) {
+export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: (id?: string, name?: string) => void }) {
   const {
     accountType, setAccountType,
     name, setName,
@@ -44,7 +44,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
             <button 
               type="button"
               onClick={() => setAccountType('bank')}
-              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'bank' ? 'bg-[var(--inverse-primary)] text-white shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'bank' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <Building2 size={24} />
               <span className="text-caption font-medium">Banka</span>
@@ -52,7 +52,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
             <button 
               type="button"
               onClick={() => setAccountType('credit')}
-              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'credit' ? 'bg-[var(--inverse-primary)] text-white shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'credit' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <CreditCard size={24} />
               <span className="text-caption font-medium">Kredi Kartı</span>
@@ -60,7 +60,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
             <button 
               type="button"
               onClick={() => setAccountType('cash')}
-              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'cash' ? 'bg-[var(--inverse-primary)] text-white shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'cash' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <Wallet size={24} />
               <span className="text-caption font-medium">Nakit</span>
@@ -166,7 +166,7 @@ export function AddAccountForm({ onClose, onSuccess }: { onClose: () => void, on
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
           İptal
         </button>
-        <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
+        <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
           {isLoading ? <LoadingSpinner size="sm" /> : "Hesap Oluştur"}
         </button>
       </div>

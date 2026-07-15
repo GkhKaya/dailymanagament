@@ -17,7 +17,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, isLoadingSaved,
-    isLoading, error, handleSubmit
+    selectedSavedFoods, setSelectedSavedFoods,
+    isLoading, error, handleSubmit, handleMultiSubmit
   } = useAddMealViewModel(onSuccess);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
@@ -73,18 +74,15 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   }, [setMealType]);
 
   const handleSavedRecipeClick = (recipe: Record<string, unknown>) => {
-    setFoodName(recipe.name);
-    setCalories(recipe.calories.toString());
-    setProtein(recipe.protein?.toString() || '0');
-    setCarbs(recipe.carbs?.toString() || '0');
-    setFat(recipe.fat?.toString() || '0');
-    setQuantity(recipe.quantity?.toString() || '1');
-    setServingDescription(recipe.serving_description || '1 porsiyon');
-    setFatsecretFoodId(recipe.fatsecret_food_id || null);
-    setActiveTab('new');
+    const id = recipe.id as string;
+    if (selectedSavedFoods.includes(id)) {
+      setSelectedSavedFoods(selectedSavedFoods.filter(i => i !== id));
+    } else {
+      setSelectedSavedFoods([...selectedSavedFoods, id]);
+    }
   };
 
-  const handleSearchResultSelect = (food: Record<string, unknown>) => {
+  const handleSearchResultSelect = (food: any) => {
     setFoodName(food.food_name);
     setFatsecretFoodId(food.food_id);
     
@@ -148,7 +146,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   }, [quantity, perGramMacros, fatsecretFoodId]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={activeTab === 'saved' ? handleMultiSubmit : handleSubmit} className="flex flex-col gap-6">
       {error && (
         <div className="p-3 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
           {error}
@@ -160,14 +158,14 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         <button 
           type="button"
           onClick={() => setActiveTab('new')}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'new' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'new' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Yeni Öğün
         </button>
         <button 
           type="button"
           onClick={() => setActiveTab('saved')}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'saved' ? 'bg-[var(--inverse-primary)] shadow-sm text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'saved' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Kaydedilenler
         </button>
@@ -237,7 +235,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 {apiError ? (
                   <div className="p-4 text-center text-red-400 text-sm">{apiError}</div>
                 ) : searchResults.length > 0 ? (
-                  searchResults.map((food: Record<string, unknown>) => (
+                  searchResults.map((food: any) => (
                     <div 
                       key={food.food_id}
                       onClick={() => handleSearchResultSelect(food)}
@@ -301,7 +299,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
 
           {/* Tarif Olarak Kaydet */}
           <label className="flex items-center gap-3 cursor-pointer mt-2 group" onClick={() => setSaveAsRecipe(!saveAsRecipe)}>
-            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--inverse-primary)] border-[var(--inverse-primary)]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[rgba(255,255,255,0.4)]'}`}>
+            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--inverse-primary)]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[rgba(255,255,255,0.4)]'}`}>
               {saveAsRecipe && <Check size={14} className="text-white" />}
             </div>
             <span className="text-body text-[var(--on-surface-variant)] group-hover:text-white transition-colors">Bu yemeği favorilerime/tariflerime kaydet</span>
@@ -314,16 +312,31 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
               <LoadingSpinner size="sm" />
             </div>
           ) : savedFoods.length > 0 ? (
-            savedFoods.map((recipe: Record<string, unknown>) => (
-              <div 
-                key={recipe.id} 
-                onClick={() => handleSavedRecipeClick(recipe)}
-                className="p-4 flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-2xl hover:bg-[rgba(255,255,255,0.05)] cursor-pointer transition-colors"
-              >
-                <span className="text-body font-medium text-white">{recipe.name}</span>
-                <span className="text-body font-bold text-[var(--inverse-primary)]">{recipe.calories} kcal</span>
-              </div>
-            ))
+            savedFoods.map((recipe: Record<string, unknown>) => {
+              const isSelected = selectedSavedFoods.includes(recipe.id as string);
+              return (
+                <div 
+                  key={recipe.id as string} 
+                  onClick={() => handleSavedRecipeClick(recipe)}
+                  className={`p-4 flex items-center justify-between rounded-2xl cursor-pointer transition-colors border ${
+                    isSelected ? 'bg-[var(--primary)] border-[var(--primary)] text-black' : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
+                      isSelected ? 'bg-black/20 border-transparent text-black' : 'border-[rgba(255,255,255,0.2)]'
+                    }`}>
+                      {isSelected && <Check size={14} />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{recipe.name as string}</span>
+                      <span className={`text-caption ${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}`}>{recipe.serving_description as string || `${recipe.quantity} gram`}</span>
+                    </div>
+                  </div>
+                  <span className={`text-body font-bold ${isSelected ? 'text-black' : 'text-[var(--primary)]'}`}>{recipe.calories as number} kcal</span>
+                </div>
+              );
+            })
           ) : (
             <div className="text-center text-sm text-[var(--on-surface-variant)] py-4">
               Henüz kaydedilmiş bir yemeğiniz bulunmuyor. Yeni bir yemek eklerken "Kaydet" seçeneğini işaretleyebilirsiniz.
@@ -337,8 +350,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
           İptal
         </button>
-        <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
-          {isLoading ? <LoadingSpinner size="sm" /> : "Ekle"}
+        <button type="submit" disabled={isLoading || (activeTab === 'saved' && selectedSavedFoods.length === 0)} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+          {isLoading ? <LoadingSpinner size="sm" /> : (activeTab === 'saved' ? `Seçilenleri Ekle (${selectedSavedFoods.length})` : "Ekle")}
         </button>
       </div>
     </form>

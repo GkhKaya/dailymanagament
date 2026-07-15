@@ -1,15 +1,14 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
-import { updateAgeAction } from '@/actions/profile';
 import { Alert } from '@/lib/alerts';
 import { t } from '@/lib/i18n';
+import { checkUsernameUniqueAction, saveRegistrationDataAction } from '@/actions/user';
 
 export function useRegisterViewModel() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -23,7 +22,7 @@ export function useRegisterViewModel() {
       return;
     }
     
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
     if (!passwordRegex.test(password)) {
       Alert.error(t('errors.validation.weakPassword'));
       return;
@@ -32,6 +31,15 @@ export function useRegisterViewModel() {
     setLoading(true);
 
     try {
+      // 1. Check uniqueness
+      const uniqueRes = await checkUsernameUniqueAction(username);
+      if (!uniqueRes.isUnique) {
+        Alert.error("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane seçin.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Register
       const { data, error: signUpError } = await authClient.signUp.email({
         email,
         password,
@@ -39,13 +47,7 @@ export function useRegisterViewModel() {
       });
       
       if (data && !signUpError) {
-        if (age) {
-          const currentYear = new Date().getFullYear();
-          const birthDate = new Date();
-          birthDate.setFullYear(currentYear - parseInt(age));
-          await updateAgeAction(birthDate.toISOString());
-        }
-        Alert.success('Kayıt başarılı! Lütfen giriş yapın.');
+        Alert.success('Hesap kurma ekranına yönlendiriliyorsunuz...');
         router.push('/onboarding');
       } else {
         Alert.error(signUpError?.message || 'Kayıt başarısız oldu.');
@@ -65,8 +67,6 @@ export function useRegisterViewModel() {
     setPassword,
     username,
     setUsername,
-    age,
-    setAge,
     handleRegister,
     loading,
   };

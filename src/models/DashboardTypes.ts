@@ -48,6 +48,7 @@ export interface TransactionInfo {
   amount: number;
   date: string;
   type: TransactionType;
+  category?: string;
 }
 
 export interface CategoryInfo {

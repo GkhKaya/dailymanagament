@@ -32,7 +32,7 @@ export function ManageAccountsForm({
         </div>
         <button 
           onClick={onOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--inverse-primary)] text-white hover:bg-[var(--inverse-primary-hover)] transition-all font-medium text-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-black hover:bg-[var(--primary-hover)] transition-all font-medium text-sm"
         >
           <Plus size={16} />
           Yeni Ekle

@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateUserHealthProfileAction } from '@/actions/user';
 import { calculateTargetCalories } from '@/lib/calories';
 
 export type OnboardingStep = 'welcome' | 'health' | 'finance' | 'categories';
 
-export function useOnboardingViewModel(initialAge: number = 25) {
+export function useOnboardingViewModel() {
   const router = useRouter();
   
   // -- Step Control --
@@ -14,22 +14,42 @@ export function useOnboardingViewModel(initialAge: number = 25) {
   const [error, setError] = useState<string | null>(null);
 
   // -- Health Data --
+  const [birthDate, setBirthDate] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [targetWeight, setTargetWeight] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female'>('Male');
   const [activityLevel, setActivityLevel] = useState<'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'>('sedentary');
   const [goal, setGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
 
+  useEffect(() => {
+    if (weight && targetWeight) {
+      const w = parseFloat(weight);
+      const tw = parseFloat(targetWeight);
+      if (!isNaN(w) && !isNaN(tw)) {
+        if (tw < w) setGoal('lose');
+        else if (tw > w) setGoal('gain');
+        else setGoal('maintain');
+      }
+    }
+  }, [weight, targetWeight]);
+
   // -- Calculated Calories --
   const targetCalories = useMemo(() => {
-    if (!weight || !height) return 0;
-    const a = initialAge; // Using real age from DB or 25 fallback
+    if (!weight || !height || !birthDate) return 0;
+    const bDate = new Date(birthDate);
+    let a = 25; // default
+    if (!isNaN(bDate.getTime())) {
+      const diffMs = Date.now() - bDate.getTime();
+      const ageDt = new Date(diffMs);
+      a = Math.abs(ageDt.getUTCFullYear() - 1970);
+    }
     const w = parseFloat(weight);
     const h = parseFloat(height);
     if (isNaN(w) || isNaN(h)) return 0;
 
     return calculateTargetCalories(w, h, a, gender, activityLevel, goal);
-  }, [weight, height, gender, activityLevel, goal, initialAge]);
+  }, [weight, height, birthDate, gender, activityLevel, goal]);
 
   // -- Actions --
   const skipToDashboard = () => {
@@ -49,14 +69,23 @@ export function useOnboardingViewModel(initialAge: number = 25) {
     setIsLoading(true);
     setError(null);
     try {
+      const bDate = new Date(birthDate);
+      let a = 25;
+      if (!isNaN(bDate.getTime())) {
+        const diffMs = Date.now() - bDate.getTime();
+        a = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+      }
+
       const res = await updateUserHealthProfileAction({
-        age: initialAge, 
+        age: a,
         weight: parseFloat(weight),
         height: parseFloat(height),
         gender,
         activity_level: activityLevel,
         goal,
-        targetCalories
+        targetCalories,
+        birthDate,
+        targetWeight: targetWeight ? parseFloat(targetWeight) : undefined
       });
 
       if (res.success) {
@@ -91,8 +120,10 @@ export function useOnboardingViewModel(initialAge: number = 25) {
     error,
     
     // Health State
+    birthDate, setBirthDate,
     weight, setWeight,
     height, setHeight,
+    targetWeight, setTargetWeight,
     gender, setGender,
     activityLevel, setActivityLevel,
     goal, setGoal,

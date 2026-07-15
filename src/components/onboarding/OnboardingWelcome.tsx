@@ -13,7 +13,7 @@ export function OnboardingWelcome({ onStart, onSkip }: { onStart: () => void, on
       <div className="flex flex-col gap-3 w-full max-w-xs">
         <button 
           onClick={onStart}
-          className="w-full py-3 rounded-xl bg-[var(--inverse-primary)] hover:bg-[var(--inverse-primary-hover)] text-white font-medium text-sm transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-medium text-sm transition-colors flex items-center justify-center gap-2"
         >
           <span>Hadi Başlayalım</span>
           <ArrowRight size={18} />

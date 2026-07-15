@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateMealAction, deleteMealAction } from '@/actions/health';
 
-export function useEditMealViewModel(initialData: { id: string, type: string, foods: any[] }, onSuccess?: () => void) {
+export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(initialData?.type || 'lunch');
   const [foodName, setFoodName] = useState(initialData?.name || '');
   
@@ -47,7 +47,7 @@ export function useEditMealViewModel(initialData: { id: string, type: string, fo
     setIsLoading(true);
     setError(null);
     try {
-      const payload: Record<string, unknown> = {
+      const payload: any = {
         date: initialData.date,
         entry_id: initialData.id,
         type: mealType,
