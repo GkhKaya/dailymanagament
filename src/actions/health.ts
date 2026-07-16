@@ -318,8 +318,8 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
     const today = new Date();
     today.setUTCHours(0,0,0,0);
     
-    const userObjId = new mongoose.Types.ObjectId(userId);
-    const user = await User.findById(userObjId).lean();
+    // User._id is String — do NOT cast to ObjectId
+    const user = await User.findById(userId).lean();
     
     if (user && user.profile) {
       // Calculate age
@@ -333,14 +333,14 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
       const multipliers: Record<string, number> = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
       const oldTdee = Math.round(oldBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
       const oldTarget = user.settings?.daily_calorie_goal || oldTdee;
-      const deficit = oldTarget - oldTdee; // e.g. -500 for lose
+      const deficit = oldTarget - oldTdee;
 
       const newBmr = (10 * data.weight) + (6.25 * (user.profile.height_cm || 170)) - (5 * age) + (user.profile.gender === 'Male' ? 5 : -161);
       const newTdee = Math.round(newBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
       const newTarget = Math.max(1200, newTdee + deficit);
       
       await User.updateOne(
-        { _id: userObjId },
+        { _id: userId },
         { 
           $set: { 
             current_weight_kg: data.weight,
@@ -350,7 +350,7 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
       );
     } else {
       await User.updateOne(
-        { _id: userObjId },
+        { _id: userId },
         { $set: { current_weight_kg: data.weight } }
       );
     }

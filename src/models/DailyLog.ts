@@ -27,7 +27,7 @@ export interface IDailyLog extends Document {
     breakfast: IFoodEntry[];
     lunch: IFoodEntry[];
     dinner: IFoodEntry[];
-    snacks: IFoodEntry[];
+    snack: IFoodEntry[];
   };
   sleep: {
     duration_minutes?: number;
@@ -79,7 +79,7 @@ const DailyLogSchema: Schema = new Schema({
     breakfast: [FoodEntrySchema],
     lunch: [FoodEntrySchema],
     dinner: [FoodEntrySchema],
-    snacks: [FoodEntrySchema]
+    snack: [FoodEntrySchema]
   },
   sleep: {
     duration_minutes: { type: Number, default: null },

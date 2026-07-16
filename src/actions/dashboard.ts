@@ -29,7 +29,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     }
 
     await connectDB();
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
     
     // Parse target date and set boundaries
     const targetDate = new Date(dateString);
@@ -148,7 +148,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     }
 
     await connectDB();
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
 
     // Sync subscriptions before fetching data
     await syncSubscriptions(session.user.id);
@@ -171,7 +171,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     });
 
     // Fetch recent transactions (last 10)
-    const txRaw = await Transaction.find({ user_id: userId as any })
+    const txRaw = await Transaction.find({ user_id: userId })
       .sort({ date: -1 })
       .limit(10)
       .populate("category_id")
@@ -234,7 +234,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
     
     const monthlyStats = await Transaction.aggregate([
-      { $match: { user_id: session.user.id as any, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $match: { user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } } },
       { $group: { _id: "$type", total: { $sum: "$amount" } } }
     ]);
     

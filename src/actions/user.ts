@@ -74,7 +74,7 @@ export async function saveRegistrationDataAction(data: {
     
     // Fallback: Check username uniqueness again to prevent race conditions
     const existing = await User.findOne({ username: data.username });
-    if (existing && existing._id !== userIdStr) {
+    if (existing && existing._id.toString() !== userIdStr) {
       return { success: false, error: "Bu kullanıcı adı zaten alınmış." };
     }
 

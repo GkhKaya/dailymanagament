@@ -10,6 +10,13 @@ import mongoose from "mongoose";
 /**
  * Checks and processes due subscriptions for a given user.
  * This can be called safely whenever the user loads their dashboard.
+ * 
+ * NOTE: We intentionally do NOT use mongoose sessions/transactions here
+ * because MongoDB transactions require a Replica Set. Since standalone
+ * MongoDB deployments (e.g. Coolify single-node) do not support them,
+ * we do atomic operations individually. In the rare case of a crash
+ * mid-way, the subscription will be reprocessed on next load — acceptable
+ * for this use case.
  */
 export async function syncSubscriptions(userId: string) {
   try {
@@ -28,14 +35,11 @@ export async function syncSubscriptions(userId: string) {
     let processedCount = 0;
 
     for (const sub of dueSubscriptions) {
-      const session = await mongoose.startSession();
-      session.startTransaction();
-      
       try {
         const amountNum = parseFloat(sub.amount.toString());
 
-        // 1. Create Transaction
-        await Transaction.create([{
+        // 1. Create Transaction (no session — standalone MongoDB compatible)
+        await Transaction.create({
           user_id: userId,
           type: TransactionType.EXPENSE,
           amount: sub.amount,
@@ -43,19 +47,13 @@ export async function syncSubscriptions(userId: string) {
           description: `Abonelik: ${sub.name}`,
           category_id: sub.category_id,
           account_id: sub.account_id,
-          is_external_payment: false,
-          show_as_expense: true,
-          affects_account_balance: true,
           source: TransactionSource.SUBSCRIPTION,
-          subscription_id: sub._id,
-          is_deleted: false
-        }], { session });
+        });
 
-        // 2. Deduct from Account
+        // 2. Deduct from Account balance using $inc for atomicity
         await Account.findByIdAndUpdate(
           sub.account_id,
-          { $inc: { balance: -amountNum } },
-          { session }
+          { $inc: { balance: -amountNum } }
         );
 
         // 3. Calculate next run date
@@ -66,19 +64,20 @@ export async function syncSubscriptions(userId: string) {
 
         // Fast forward if overdue by multiple cycles
         while (nextDate <= now) {
-          if (sub.frequency === SubscriptionFrequency.MONTHLY) nextDate.setMonth(nextDate.getMonth() + 1);
+          if (sub.frequency === SubscriptionFrequency.MONTHLY) {
+            nextDate.setMonth(nextDate.getMonth() + 1);
+          } else {
+            break; // Prevent infinite loop for unsupported frequencies
+          }
         }
 
         sub.next_run_date = nextDate;
-        await sub.save({ session });
+        await sub.save();
 
-        await session.commitTransaction();
         processedCount++;
       } catch (err) {
-        await session.abortTransaction();
         console.error(`Failed to process subscription ${sub._id}:`, err);
-      } finally {
-        session.endSession();
+        // Continue processing remaining subscriptions
       }
     }
 
