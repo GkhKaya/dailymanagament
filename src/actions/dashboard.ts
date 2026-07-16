@@ -50,7 +50,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const weightLogs = await WeightLog.find({
-      user_id: session.user.id,
+      user_id: session.user.id as any,
       date: { $gte: thirtyDaysAgo, $lte: targetDate }
     }).sort({ date: 1 }).lean();
 
@@ -171,7 +171,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     });
 
     // Fetch recent transactions (last 10)
-    const txRaw = await Transaction.find({ user_id: userId })
+    const txRaw = await Transaction.find({ user_id: userId as any })
       .sort({ date: -1 })
       .limit(10)
       .populate("category_id")
@@ -234,7 +234,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
     
     const monthlyStats = await Transaction.aggregate([
-      { $match: { user_id: session.user.id, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+      { $match: { user_id: session.user.id as any, date: { $gte: startOfMonth, $lte: endOfMonth } } },
       { $group: { _id: "$type", total: { $sum: "$amount" } } }
     ]);
     

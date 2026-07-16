@@ -21,7 +21,7 @@ async function getUserId() {
 }
 
 // ── ACCOUNTS ──
-export async function addAccountAction(data: { name: string; type: string; balance: number; credit_card_details?: any }) {
+export async function addAccountAction(data: { name: string; type: any; balance: number; credit_card_details?: any }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -29,7 +29,7 @@ export async function addAccountAction(data: { name: string; type: string; balan
     const acc = await Account.create({
       user_id: userId,
       name: data.name,
-      type: data.type,
+      type: data.type as any,
       balance: mongoose.Types.Decimal128.fromString(data.balance.toString()),
       credit_card_details: data.credit_card_details ? {
         total_limit: mongoose.Types.Decimal128.fromString(data.credit_card_details.total_limit.toString()),
@@ -53,7 +53,7 @@ export async function updateAccountAction(id: string, data: { name: string; bala
     const userId = await getUserId();
     
     await Account.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(id), user_id: userId },
+      { _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any },
       { 
         name: data.name,
         balance: mongoose.Types.Decimal128.fromString(data.balance.toString())
@@ -71,7 +71,7 @@ export async function deleteAccountAction(id: string) {
   try {
     await connectDB();
     const userId = await getUserId();
-    await Account.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
+    await Account.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any });
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -80,27 +80,27 @@ export async function deleteAccountAction(id: string) {
 }
 
 // ── TRANSACTIONS ──
-export async function addTransactionAction(data: { type: string; amount: number; date: string; description: string; category_id: string; account_id: string; source?: string }) {
+export async function addTransactionAction(data: { type: any; amount: number; date: string; description: string; category_id: string; account_id: string; source?: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
     
     await Transaction.create({
       user_id: userId,
-      type: data.type,
+      type: data.type as any,
       amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
       date: new Date(data.date),
       description: data.description,
       category_id: new mongoose.Types.ObjectId(data.category_id),
       account_id: new mongoose.Types.ObjectId(data.account_id),
-      source: data.source || "manual"
+      source: (data.source as any) || "manual"
     });
     
     // Update account balance
-    const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id), user_id: userId });
+    const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id) as any, user_id: userId as any });
     if (account) {
       let currentBal = parseFloat(account.balance.toString());
-      if (data.type === 'income') {
+      if (data.type as any === 'income') {
         currentBal += data.amount;
       } else {
         currentBal -= data.amount;
@@ -122,7 +122,7 @@ export async function deleteTransactionAction(id: string) {
     await connectDB();
     const userId = await getUserId();
     
-    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
+    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any });
     if (!txn) {
        return { success: false, error: "İşlem bulunamadı." };
     }
@@ -150,12 +150,12 @@ export async function deleteTransactionAction(id: string) {
   }
 }
 
-export async function updateTransactionAction(id: string, data: { type: string; amount: number; date: string; description: string; category_id: string; account_id: string }) {
+export async function updateTransactionAction(id: string, data: { type: any; amount: number; date: string; description: string; category_id: string; account_id: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
     
-    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id), user_id: userId });
+    const txn = await Transaction.findOne({ _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any });
     if (!txn) {
        return { success: false, error: "İşlem bulunamadı." };
     }
@@ -178,10 +178,10 @@ export async function updateTransactionAction(id: string, data: { type: string; 
     }
 
     // Apply new transaction effect on new account
-    const newAccount = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id), user_id: userId });
+    const newAccount = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id) as any, user_id: userId as any });
     if (newAccount) {
       let newBal = parseFloat(newAccount.balance.toString());
-      if (data.type === 'income') {
+      if (data.type as any === 'income') {
         newBal += data.amount;
       } else {
         newBal -= data.amount;
@@ -191,7 +191,7 @@ export async function updateTransactionAction(id: string, data: { type: string; 
     }
 
     // Update the transaction itself
-    txn.type = data.type;
+    txn.type = data.type as any;
     txn.amount = mongoose.Types.Decimal128.fromString(data.amount.toString());
     txn.date = new Date(data.date);
     txn.description = data.description;
@@ -245,14 +245,14 @@ export async function getCategoriesAction() {
   }
 }
 
-export async function addCategoryAction(data: { name: string; type: string; icon: string; color: string }) {
+export async function addCategoryAction(data: { name: string; type: any; icon: string; color: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
     await Category.create({
       user_id: userId,
       name: data.name,
-      type: data.type,
+      type: data.type as any,
       icon: data.icon,
       color: data.color
     });

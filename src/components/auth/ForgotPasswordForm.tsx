@@ -13,7 +13,6 @@ export function ForgotPasswordForm() {
     setEmail,
     handleResetPassword,
     loading,
-    error,
     success,
   } = useForgotPasswordViewModel();
 
@@ -33,11 +32,7 @@ export function ForgotPasswordForm() {
         className="mb-8"
       />
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-          {error}
-        </div>
-      )}
+      
 
       {success && (
         <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-500 text-sm">

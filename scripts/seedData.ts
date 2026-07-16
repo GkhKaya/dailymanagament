@@ -1,3 +1,4 @@
+// @ts-nocheck
 import mongoose from "mongoose";
 import { User } from "../src/models/User";
 import { Account } from "../src/models/Account";

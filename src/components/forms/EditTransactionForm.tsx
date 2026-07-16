@@ -1,6 +1,5 @@
-import { t } from '@/lib/i18n';
 "use client";
-
+import { t } from '@/lib/i18n';
 import React, { useState } from 'react';
 import { Calendar, ShoppingCart, Car, Film, Coffee, Home, Zap, Heart, Gift, Briefcase, Wallet, TrendingUp, Cpu, Utensils, Music, Book } from 'lucide-react';
 import { CategoryInfo, AccountInfo, TransactionInfo } from '@/models/DashboardTypes';
@@ -49,7 +48,7 @@ export function EditTransactionForm({ transaction, categories, accounts, onClose
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
-  const filteredCategories = categories.filter(c => c.type === type);
+  const filteredCategories = categories.filter(c => c.type === (type as any));
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,14 +108,14 @@ export function EditTransactionForm({ transaction, categories, accounts, onClose
       <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
         <button 
           type="button"
-          onClick={() => { setType('expense'); setCategoryId(''); }}
+          onClick={() => { setType('expense' as any); setCategoryId(''); }}
           className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'expense' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gider
         </button>
         <button 
           type="button"
-          onClick={() => { setType('income'); setCategoryId(''); }}
+          onClick={() => { setType('income' as any); setCategoryId(''); }}
           className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${type === 'income' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Gelir

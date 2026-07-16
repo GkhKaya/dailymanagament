@@ -17,7 +17,7 @@ export function useLoginViewModel() {
     
     
     try {
-      const { data: signInError } = await authClient.signIn.email({
+      const { data, error: signInError } = await authClient.signIn.email({
         email,
         password,
         rememberMe,

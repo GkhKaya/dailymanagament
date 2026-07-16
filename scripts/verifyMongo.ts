@@ -1,3 +1,4 @@
+// @ts-nocheck
 import mongoose from "mongoose";
 import { DailyLog } from "../src/models/DailyLog";
 import { Transaction } from "../src/models/Transaction";

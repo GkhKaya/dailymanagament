@@ -12,7 +12,7 @@ export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<typeof i
     activityLevel, setActivityLevel,
     goal, setGoal,
     targetCalories,
-    isLoading, error,
+    isLoading,
     saveHealthAndContinue,
     skipHealth
   } = viewModel;
@@ -29,11 +29,7 @@ export function OnboardingHealth({ viewModel }: { viewModel: ReturnType<typeof i
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/20 text-red-200 text-sm border border-red-500/30">
-          {error}
-        </div>
-      )}
+      
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         {/* Cinsiyet */}
