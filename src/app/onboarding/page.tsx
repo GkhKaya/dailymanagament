@@ -4,7 +4,6 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
-import mongoose from 'mongoose';
 
 export default async function OnboardingPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -12,7 +11,8 @@ export default async function OnboardingPage() {
 
   if (session?.user) {
     await connectDB();
-    const userDoc = await User.findById(new mongoose.Types.ObjectId(session.user.id)).lean();
+    // User._id is String — do NOT cast to ObjectId
+    const userDoc = await User.findById(session.user.id).lean();
     if (userDoc?.profile?.birth_date) {
       initialAge = new Date().getFullYear() - new Date(userDoc.profile.birth_date).getFullYear();
     }
