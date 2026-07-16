@@ -278,6 +278,47 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
             )}
           </div>
 
+          {/* Hızlı Seçim (Son Aratılanlar / Varsayılanlar) */}
+          {!foodName && activeTab === 'new' && (
+            <div className="flex flex-col gap-2 -mt-2 mb-2 animate-fade-in">
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                Hızlı Seçim (Son Eklenenler)
+              </label>
+              {(() => {
+                // Remove duplicates by food_name
+                const uniqueSaved = Array.from(new Map((savedFoods || []).map((sf: any) => [sf.food_name, sf])).values());
+                const mappedSaved = uniqueSaved.map((sf: any) => ({
+                  food_id: sf.fatsecret_food_id || sf._id,
+                  food_name: sf.food_name,
+                  food_description: `${sf.serving_description} - Calories: ${sf.calories}kcal | Fat: ${sf.fat_g}g | Carbs: ${sf.carbs_g}g | Protein: ${sf.protein_g}g`,
+                  food_type: "Brand",
+                  brand_name: "Kaydedilen"
+                }));
+                
+                const DEFAULT_RECENT_FOODS = [
+                  { food_id: "fallback_1", food_name: "Yumurta (Haşlanmış)", food_description: "1 adet - Kalori: 78kcal | Yağ: 5.3g | Karb: 0.6g | Protein: 6.3g", food_type: "Brand", brand_name: "DailyManagement" },
+                  { food_id: "fallback_2", food_name: "Beyaz Ekmek", food_description: "1 dilim - Kalori: 79kcal | Yağ: 0.8g | Karb: 14.7g | Protein: 2.7g", food_type: "Brand", brand_name: "DailyManagement" },
+                  { food_id: "fallback_4", food_name: "Tavuk Göğsü (Izgara)", food_description: "100g - Kalori: 165kcal | Yağ: 3.6g | Karb: 0g | Protein: 31g", food_type: "Brand", brand_name: "DailyManagement" }
+                ];
+
+                const finalRecent = [...mappedSaved, ...DEFAULT_RECENT_FOODS].slice(0, 3);
+
+                return finalRecent.map((food: any, idx: number) => (
+                  <div 
+                    key={idx}
+                    onClick={() => handleSearchResultSelect(food)}
+                    className="p-3 bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.05)] rounded-xl cursor-pointer flex justify-between items-center transition-colors"
+                  >
+                    <div>
+                      <div className="text-body font-medium text-white">{food.food_name}</div>
+                      <div className="text-caption text-[var(--on-surface-variant)] mt-0.5 line-clamp-1 opacity-75">{food.food_description}</div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kalori (kcal)</label>
