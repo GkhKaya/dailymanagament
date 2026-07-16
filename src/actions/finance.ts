@@ -327,3 +327,85 @@ export async function addSubscriptionAction(data: { name: string; amount: number
     return { success: false, error: err.message };
   }
 }
+
+export async function updateSubscriptionAction(id: string, data: { name: string; amount: number; billing_day: number }) {
+  try {
+    await connectDB();
+    const userIdStr = await getUserId();
+    
+    // Calculate new next_run_date
+    const now = new Date();
+    let nextRun = new Date(now.getFullYear(), now.getMonth(), data.billing_day);
+    if (nextRun < now) {
+      nextRun = new Date(now.getFullYear(), now.getMonth() + 1, data.billing_day);
+    }
+
+    const updated = await Subscription.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id), user_id: userIdStr },
+      { 
+        $set: { 
+          name: data.name, 
+          amount: mongoose.Types.Decimal128.fromString(data.amount.toString()), 
+          billing_day: data.billing_day,
+          next_run_date: nextRun
+        } 
+      }
+    );
+    if (!updated) return { success: false, error: "Abonelik bulunamadı" };
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteSubscriptionAction(id: string) {
+  try {
+    await connectDB();
+    const userIdStr = await getUserId();
+    const deleted = await Subscription.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id), user_id: userIdStr });
+    if (!deleted) return { success: false, error: "Abonelik bulunamadı" };
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateDebtAction(id: string, data: { person_name: string; amount: number; date: string; due_date?: string }) {
+  try {
+    await connectDB();
+    const userIdStr = await getUserId();
+    const updated = await Debt.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id), user_id: userIdStr },
+      { 
+        $set: { 
+          person_name: data.person_name,
+          original_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
+          remaining_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
+          date: new Date(data.date),
+          due_date: data.due_date ? new Date(data.due_date) : undefined
+        } 
+      }
+    );
+    if (!updated) return { success: false, error: "Borç bulunamadı" };
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteDebtAction(id: string) {
+  try {
+    await connectDB();
+    const userIdStr = await getUserId();
+    const deleted = await Debt.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id), user_id: userIdStr });
+    if (!deleted) return { success: false, error: "Borç bulunamadı" };
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+

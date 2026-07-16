@@ -5,9 +5,9 @@ import { useManageSubscriptionsViewModel } from '@/viewmodels/useManageSubscript
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function ManageSubscriptionsForm({ 
-  onClose, onSuccess, subscriptions, categories, accounts 
+  onClose, onSuccess, onOpenEdit, subscriptions, categories, accounts 
 }: { 
-  onClose: () => void, onSuccess: () => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon?: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean }[] 
+  onClose: () => void, onSuccess: () => void, onOpenEdit?: (id: string) => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon?: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean }[] 
 }) {
   const [isAdding, setIsAdding] = useState(false);
   
@@ -38,7 +38,7 @@ export function ManageSubscriptionsForm({
 
           <div className="flex flex-col gap-3">
             {subscriptions.map((sub) => (
-              <div key={sub.id} className="glass-item px-5 py-4 flex items-center justify-between">
+              <div key={sub.id} className="group relative glass-item px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => onOpenEdit && onOpenEdit(sub.id)}>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center text-[var(--on-surface-variant)]">
                     <PlaySquare size={18} />
@@ -50,9 +50,11 @@ export function ManageSubscriptionsForm({
                     </span>
                   </div>
                 </div>
-                <span className="text-body font-bold text-white">
-                  {fmt(sub.amount)}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-body font-bold text-white">
+                    {fmt(sub.amount)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

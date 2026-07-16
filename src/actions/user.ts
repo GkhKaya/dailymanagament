@@ -28,10 +28,9 @@ export async function updateUserHealthProfileAction(data: {
   try {
     await connectDB();
     const userIdStr = await getUserId();
-    const userId = new mongoose.Types.ObjectId(userIdStr);
 
     await User.updateOne(
-      { _id: userId },
+      { _id: userIdStr },
       {
         $set: {
           current_weight_kg: data.weight,

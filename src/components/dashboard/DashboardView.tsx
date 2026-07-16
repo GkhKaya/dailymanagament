@@ -215,6 +215,7 @@ export function DashboardView() {
           isLoadingFinance || !financeData ? <LoadingSpinner /> : (
             <FinanceSection 
               data={financeData} 
+              isOverview={false}
               onOpenSheet={handleOpenSheet} 
               onShowAnalysis={() => setMode('finance-analysis')} 
               currentDate={currentDate}

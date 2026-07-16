@@ -16,7 +16,7 @@ export default async function ProfilePage() {
 
   // Fetch full user profile
   await connectDB();
-  const userId = new mongoose.Types.ObjectId(session.user.id);
+  const userId = session.user.id;
   const userDoc = await User.findById(userId).lean();
 
   let age = 0;
