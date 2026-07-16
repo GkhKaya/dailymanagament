@@ -248,17 +248,17 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 placeholder="Yemek adını girin..." 
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
               />
-              {isSearching && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <LoadingSpinner size="sm" />
-                </div>
-              )}
             </div>
 
             {/* Dropdown Results */}
-            {showDropdown && (
+            {showDropdown && foodName.length > 2 && (
               <div className="absolute top-[100%] left-0 w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto hide-scrollbar z-50">
-                {apiError ? (
+                {isSearching ? (
+                  <div className="p-6 flex flex-col items-center justify-center gap-3 text-[var(--on-surface-variant)]">
+                    <LoadingSpinner size="md" />
+                    <span className="text-body animate-pulse">Sonuçlar aranıyor...</span>
+                  </div>
+                ) : apiError ? (
                   <div className="p-4 text-center text-red-400 text-[var(--font-body)]">{apiError}</div>
                 ) : searchResults.length > 0 ? (
                   searchResults.map((food: any) => (
@@ -271,7 +271,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                       <div className="text-caption text-[var(--on-surface-variant)] mt-1">{food.food_description}</div>
                     </div>
                   ))
-                ) : foodName.length > 2 && !isSearching && (
+                ) : !isSearching && (
                   <div className="p-4 text-center text-[var(--on-surface-variant)] text-[var(--font-body)]">Sonuç bulunamadı.</div>
                 )}
               </div>

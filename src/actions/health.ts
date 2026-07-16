@@ -317,19 +317,51 @@ export async function getSavedFoodsAction() {
     
     const saved = await SavedFood.find({ user_id: userId }).sort({ created_at: -1 }).lean();
     
+    // Also fetch last 7 days of logs to get recent meals
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentLogs = await DailyLog.find({ user_id: userId, date: { $gte: sevenDaysAgo } }).sort({ date: -1 }).lean();
+    
+    const recentMealsMap = new Map();
+    recentLogs.forEach((log: any) => {
+      const allMeals = [...log.meals.breakfast, ...log.meals.lunch, ...log.meals.dinner, ...log.meals.snack];
+      allMeals.forEach((m: any) => {
+        if (!recentMealsMap.has(m.food_name)) {
+          recentMealsMap.set(m.food_name, {
+            id: m.entry_id.toString(),
+            name: m.food_name,
+            calories: m.nutrition_snapshot.calories,
+            protein: m.nutrition_snapshot.protein_g,
+            carbs: m.nutrition_snapshot.carbs_g,
+            fat: m.nutrition_snapshot.fat_g,
+            quantity: m.quantity,
+            serving_description: m.serving_description,
+            fatsecret_food_id: m.fatsecret_food_id
+          });
+        }
+      });
+    });
+
+    const recentMealsArray = Array.from(recentMealsMap.values());
+    
+    // Combine saved foods and recent meals, removing duplicates by name
+    const combined = [...saved.map((s: any) => ({
+      id: s._id.toString(),
+      name: s.food_name,
+      calories: s.calories,
+      protein: s.protein_g,
+      carbs: s.carbs_g,
+      fat: s.fat_g,
+      quantity: s.quantity,
+      serving_description: s.serving_description,
+      fatsecret_food_id: s.fatsecret_food_id
+    })), ...recentMealsArray];
+
+    const uniqueCombined = Array.from(new Map(combined.map(item => [item.name, item])).values());
+
     return { 
       success: true, 
-      data: saved.map((s: any) => ({
-        id: s._id.toString(),
-        name: s.food_name,
-        calories: s.calories,
-        protein: s.protein_g,
-        carbs: s.carbs_g,
-        fat: s.fat_g,
-        quantity: s.quantity,
-        serving_description: s.serving_description,
-        fatsecret_food_id: s.fatsecret_food_id
-      }))
+      data: uniqueCombined
     };
   } catch (e: unknown) {
     const err = e as Error;
