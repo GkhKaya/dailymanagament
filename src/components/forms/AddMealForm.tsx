@@ -40,8 +40,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
           const res = await fetch(`/api/fatsecret/search?query=${encodeURIComponent(foodName)}`);
           if (res.ok) {
             const data = await res.json();
-            const foods = data.foods?.food || [];
-            setSearchResults(Array.isArray(foods) ? foods : [foods]);
+            const foodsArray = Array.isArray(data.foods) ? data.foods : (data.foods?.food || []);
+            setSearchResults(Array.isArray(foodsArray) ? foodsArray : [foodsArray]);
             setApiError(null);
           } else {
             const errData = await res.json();
