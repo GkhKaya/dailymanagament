@@ -59,7 +59,7 @@ export function DashboardView() {
       case 'edit-transaction': return <EditTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} transaction={sheetPayload} />;
       case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
-      case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} userWeight={healthData?.current_weight_kg || 70} />;
+      case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} userWeight={healthData?.currentWeight || 70} />;
       case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'addWeight': return <AddWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} currentWeight={sheetPayload?.currentWeight || 0} weightHistory={sheetPayload?.weightHistory || []} currentDate={currentDate.toISOString()} />;
       case 'manageAccounts': return (
