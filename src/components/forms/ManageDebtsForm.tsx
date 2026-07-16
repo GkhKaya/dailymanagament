@@ -5,7 +5,7 @@ import { DebtDirection } from '@/models/Enums';
 import { useManageDebtsViewModel } from '@/viewmodels/useManageDebtsViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => void, onSuccess: () => void, debts: { id: string, personName: string, amount: number, remainingAmount: number, direction: string, dueDate: string }[] }) {
+export function ManageDebtsForm({ onClose, onSuccess, onOpenEdit, debts }: { onClose: () => void, onSuccess: () => void, onOpenEdit?: (id: string) => void, debts: { id: string, personName: string, amount: number, remainingAmount: number, direction: string, dueDate: string }[] }) {
   const [isAdding, setIsAdding] = useState(false);
   
   const {
@@ -47,7 +47,7 @@ export function ManageDebtsForm({ onClose, onSuccess, debts }: { onClose: () => 
               const isLent = debt.direction === DebtDirection.GIVEN;
               const dDate = debt.dueDate ? new Date(debt.dueDate).toLocaleDateString('tr-TR') : 'Belirtilmedi';
               return (
-                <div key={debt.id} className="glass-item px-5 py-4 flex items-center justify-between">
+                <div key={debt.id} className="group relative glass-item px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => onOpenEdit && onOpenEdit(debt.id)}>
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-full bg-[rgba(255,255,255,0.05)] flex items-center justify-center ${isLent ? 'text-[#4ade80]' : 'text-orange-400'}`}>
                       {isLent ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}

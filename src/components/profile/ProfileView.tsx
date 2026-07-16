@@ -15,6 +15,9 @@ import { UpdatePasswordForm } from '@/components/forms/UpdatePasswordForm';
 import { UpdateWeightForm } from '@/components/forms/UpdateWeightForm';
 import { UpdateAgeForm } from '@/components/forms/UpdateAgeForm';
 import { ManageAccountsForm } from '@/components/forms/ManageAccountsForm';
+import { EditAccountForm } from '@/components/forms/EditAccountForm';
+import { EditSubscriptionForm } from '@/components/forms/EditSubscriptionForm';
+import { EditDebtForm } from '@/components/forms/EditDebtForm';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
 
 export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
@@ -24,19 +27,37 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   const handleSuccess = () => setActiveSheet(null);
 
   const renderSheetContent = () => {
+    if (activeSheet?.startsWith('editAccount_')) {
+      const id = activeSheet.replace('editAccount_', '');
+      const data = financeData?.accounts.find(a => a.id === id);
+      return <EditAccountForm onClose={() => setActiveSheet('manageAccounts')} onSuccess={handleSuccess} initialData={data} />;
+    }
+    if (activeSheet?.startsWith('editSubscription_')) {
+      const id = activeSheet.replace('editSubscription_', '');
+      const data = financeData?.subscriptions.find(s => s.id === id);
+      // Map properties for EditSubscriptionForm
+      const subData = data ? { id: data.id, name: data.name, amount: data.amount, billingDay: new Date(data.nextBillingDate).getDate() } : undefined;
+      return <EditSubscriptionForm onClose={() => setActiveSheet('subscriptions')} onSuccess={handleSuccess} initialData={subData} />;
+    }
+    if (activeSheet?.startsWith('editDebt_')) {
+      const id = activeSheet.replace('editDebt_', '');
+      const data = financeData?.debts.find(d => d.id === id);
+      return <EditDebtForm onClose={() => setActiveSheet('debts')} onSuccess={handleSuccess} initialData={data} />;
+    }
+
     switch (activeSheet) {
       case 'manageAccounts': return (
         <ManageAccountsForm 
           onClose={() => setActiveSheet(null)} 
           onOpenAdd={() => setActiveSheet('addAccount')}
-          onOpenEdit={(id) => { /* Later implementation for edit */ }}
+          onOpenEdit={(id) => { setActiveSheet(`editAccount_${id}`) }}
           accounts={financeData?.accounts || []} 
         />
       );
       case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet('manageAccounts')} onSuccess={handleSuccess} />;
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
-      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
-      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
+      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editDebt_${id}`) }} debts={financeData?.debts || []} />;
+      case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editSubscription_${id}`) }} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       case 'email': return <UpdateEmailForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialEmail={initialUser.email} />;
       case 'username': return <UpdateUsernameForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialUsername={initialUser.name} />;
       case 'password': return <UpdatePasswordForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
@@ -51,6 +72,10 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   };
 
   const getSheetTitle = () => {
+    if (activeSheet?.startsWith('editAccount_')) return 'Hesabı Düzenle';
+    if (activeSheet?.startsWith('editSubscription_')) return 'Aboneliği Düzenle';
+    if (activeSheet?.startsWith('editDebt_')) return 'Borç/Alacak Düzenle';
+
     switch (activeSheet) {
       case 'password': return 'Şifre Güncelle';
       case 'email': return 'E-posta Değiştir';
