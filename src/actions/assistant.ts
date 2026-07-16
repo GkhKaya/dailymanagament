@@ -152,7 +152,7 @@ Kullanıcının söylediği: "${text}"`;
         role: 'user',
         parts: [{ text: prompt }]
       }],
-      generationConfig: {
+      config: {
         responseMimeType: "application/json",
         responseSchema: schema
       }
