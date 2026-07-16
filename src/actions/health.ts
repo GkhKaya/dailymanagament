@@ -402,7 +402,7 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
           ...(data.note && { note: data.note })
         } 
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     // If today is the date (or past), update current user profile
