@@ -108,17 +108,11 @@ export async function updateEmailAction(newEmail: string) {
       return { success: false, error: "Bu e-posta adresi zaten kullanımda." };
     }
 
-    // Use better-auth to update email
-    const response = await auth.api.updateUser({
-      body: {
-        email: newEmail
-      },
-      headers: await headers()
-    });
-
-    if (!response || !response.user) {
-      return { success: false, error: "E-posta güncellenirken bir hata oluştu." };
-    }
+    // Update email in database
+    await User.updateOne(
+      { _id: userId },
+      { $set: { email: newEmail } }
+    );
 
     revalidatePath('/', 'layout');
     return { success: true };
