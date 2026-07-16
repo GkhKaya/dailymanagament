@@ -45,7 +45,17 @@ const FALLBACK_FOODS = [
   { id: "fallback_5", name: "Pirinç Pilavı", desc: "1 porsiyon (150g) - Kalori: 195kcal | Yağ: 4.5g | Karb: 34g | Protein: 3.5g", c: 195, p: 3.5, f: 4.5, cb: 34 },
   { id: "fallback_6", name: "Elma", desc: "1 orta boy - Kalori: 95kcal | Yağ: 0.3g | Karb: 25g | Protein: 0.5g", c: 95, p: 0.5, f: 0.3, cb: 25 },
   { id: "fallback_7", name: "Mercimek Çorbası", desc: "1 kase - Kalori: 138kcal | Yağ: 4g | Karb: 20g | Protein: 7g", c: 138, p: 7, f: 4, cb: 20 },
-  { id: "fallback_8", name: "Su", desc: "1 bardak - Kalori: 0kcal | Yağ: 0g | Karb: 0g | Protein: 0g", c: 0, p: 0, f: 0, cb: 0 }
+  { id: "fallback_8", name: "Su", desc: "1 bardak - Kalori: 0kcal | Yağ: 0g | Karb: 0g | Protein: 0g", c: 0, p: 0, f: 0, cb: 0 },
+  { id: "fallback_9", name: "Muz", desc: "1 adet - Kalori: 105kcal | Yağ: 0.3g | Karb: 27g | Protein: 1.3g", c: 105, p: 1.3, f: 0.3, cb: 27 },
+  { id: "fallback_10", name: "Salata (Zeytinyağlı)", desc: "1 porsiyon - Kalori: 150kcal | Yağ: 10g | Karb: 10g | Protein: 2g", c: 150, p: 2, f: 10, cb: 10 },
+  { id: "fallback_11", name: "Tam Buğday Ekmek", desc: "1 dilim - Kalori: 69kcal | Yağ: 1g | Karb: 12g | Protein: 3.6g", c: 69, p: 3.6, f: 1, cb: 12 },
+  { id: "fallback_12", name: "Peynir (Beyaz)", desc: "1 dilim (30g) - Kalori: 90kcal | Yağ: 7g | Karb: 1g | Protein: 5g", c: 90, p: 5, f: 7, cb: 1 },
+  { id: "fallback_13", name: "Yoğurt", desc: "1 kase (150g) - Kalori: 90kcal | Yağ: 3g | Karb: 7g | Protein: 5g", c: 90, p: 5, f: 3, cb: 7 },
+  { id: "fallback_14", name: "Köfte", desc: "1 porsiyon (150g) - Kalori: 250kcal | Yağ: 15g | Karb: 5g | Protein: 25g", c: 250, p: 25, f: 15, cb: 5 },
+  { id: "fallback_15", name: "Makarna", desc: "1 porsiyon (150g) - Kalori: 220kcal | Yağ: 1g | Karb: 43g | Protein: 8g", c: 220, p: 8, f: 1, cb: 43 },
+  { id: "fallback_16", name: "Simit", desc: "1 adet - Kalori: 275kcal | Yağ: 4g | Karb: 52g | Protein: 7g", c: 275, p: 7, f: 4, cb: 52 },
+  { id: "fallback_17", name: "Çay", desc: "1 bardak - Kalori: 0kcal", c: 0, p: 0, f: 0, cb: 0 },
+  { id: "fallback_18", name: "Kahve", desc: "1 fincan (sade) - Kalori: 2kcal", c: 2, p: 0, f: 0, cb: 0 }
 ];
 
 export async function GET(request: Request) {
@@ -81,8 +91,7 @@ export async function GET(request: Request) {
     detailsUrl.searchParams.append('method', 'food.get.v2');
     detailsUrl.searchParams.append('food_id', foodId);
     detailsUrl.searchParams.append('format', 'json');
-    detailsUrl.searchParams.append('region', 'TR');
-    detailsUrl.searchParams.append('language', 'tr');
+    // Removed region and language limits
 
     const response = await fetch(detailsUrl.toString(), {
       method: 'GET',
