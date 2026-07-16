@@ -170,10 +170,9 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       };
     });
 
-    // Fetch recent transactions (last 10)
+    // Fetch recent transactions (all, sorted newest to oldest)
     const txRaw = await Transaction.find({ user_id: userId })
       .sort({ date: -1 })
-      .limit(10)
       .populate("category_id")
       .populate("account_id")
       .lean();

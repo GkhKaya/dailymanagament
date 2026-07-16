@@ -87,3 +87,67 @@ export async function updateUsernameAction(newUsername: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function updateEmailAction(newEmail: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    await connectDB();
+    const userId = session.user.id;
+    
+    // Check uniqueness
+    const existing = await User.findOne({ email: newEmail });
+    if (existing && existing._id.toString() !== userId) {
+      return { success: false, error: "Bu e-posta adresi zaten kullanımda." };
+    }
+
+    // Use better-auth to update email
+    const response = await auth.api.updateUser({
+      body: {
+        email: newEmail
+      },
+      headers: await headers()
+    });
+
+    if (!response || !response.user) {
+      return { success: false, error: "E-posta güncellenirken bir hata oluştu." };
+    }
+
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error("updateEmailAction error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updatePasswordAction(currentPassword: string, newPassword: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Use better-auth to change password
+    const response = await auth.api.changePassword({
+      body: {
+        currentPassword,
+        newPassword
+      },
+      headers: await headers()
+    });
+
+    if (!response || !response.user) {
+      return { success: false, error: "Şifre güncellenirken bir hata oluştu." };
+    }
+
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error("updatePasswordAction error:", err);
+    return { success: false, error: err.message };
+  }
+}

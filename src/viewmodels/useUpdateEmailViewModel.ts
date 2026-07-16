@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { updateEmailAction } from '@/actions/profile';
 
 export function useUpdateEmailViewModel(onSuccess: () => void, initialEmail: string) {
   const [currentEmail, setCurrentEmail] = useState('');
@@ -17,16 +17,15 @@ export function useUpdateEmailViewModel(onSuccess: () => void, initialEmail: str
       if (!currentEmail) throw new Error("Mevcut e-posta adresi zorunludur.");
       if (currentEmail !== initialEmail) throw new Error("Girdiğiniz mevcut e-posta adresi hatalı.");
       if (!newEmail) throw new Error("Yeni e-posta adresi zorunludur.");
+      if (!newEmail.includes('@')) throw new Error("Geçerli bir e-posta adresi girin.");
       
-      const res = await authClient.changeEmail({
-        newEmail,
-        callbackURL: "/"
-      });
+      const res = await updateEmailAction(newEmail);
 
-      if (res.error) {
-        throw new Error(res.error.message || "E-posta güncellenirken bir hata oluştu.");
+      if (!res.success) {
+        throw new Error(res.error || "E-posta güncellenirken bir hata oluştu.");
       }
 
+      toast.success("E-posta başarıyla güncellendi!");
       onSuccess();
     } catch (e: unknown) {
       const err = e as Error;

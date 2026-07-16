@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { updatePasswordAction } from '@/actions/profile';
 
 export function useUpdatePasswordViewModel(onSuccess: () => void) {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -19,16 +19,13 @@ export function useUpdatePasswordViewModel(onSuccess: () => void) {
       if (newPassword.length < 6) throw new Error("Yeni şifreniz en az 6 karakter olmalıdır.");
       if (newPassword !== confirmPassword) throw new Error("Yeni şifreler eşleşmiyor.");
 
-      const res = await authClient.changePassword({
-        newPassword,
-        currentPassword,
-        revokeOtherSessions: true
-      });
+      const res = await updatePasswordAction(currentPassword, newPassword);
 
-      if (res.error) {
-        throw new Error(res.error.message || "Şifre güncellenirken bir hata oluştu.");
+      if (!res.success) {
+        throw new Error(res.error || "Şifre güncellenirken bir hata oluştu.");
       }
 
+      toast.success("Şifre başarıyla güncellendi!");
       onSuccess();
     } catch (e: unknown) {
       const err = e as Error;

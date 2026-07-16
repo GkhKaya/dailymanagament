@@ -15,6 +15,10 @@ export function useDashboardViewModel() {
           setModeState(hash);
         } else {
           setModeState('overview');
+          // Clear hash if invalid
+          if (window.location.hash) {
+            window.history.pushState(null, '', window.location.pathname);
+          }
         }
       }
     };

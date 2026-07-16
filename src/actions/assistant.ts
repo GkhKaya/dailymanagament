@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { User } from "@/models/User";
 import { Account } from "@/models/Account";
 import { Category } from "@/models/Category";
+import { SavedFood } from "@/models/SavedFood";
 import { addTransactionAction } from "@/actions/finance";
 import { addMealAction } from "@/actions/health";
 import mongoose from "mongoose";
@@ -93,6 +94,26 @@ export async function processAssistantVoiceAction(text: string) {
                   unit: {
                     type: Type.STRING,
                     description: "Birimi (Örn: 'gram', 'adet', 'tane', 'porsiyon', 'dilim', 'bardak')"
+                  },
+                  calories_per_serving: {
+                    type: Type.NUMBER,
+                    description: "Bir porsiyon/100g başına kalori"
+                  },
+                  protein_g_per_serving: {
+                    type: Type.NUMBER,
+                    description: "Bir porsiyon/100g başına protein (gram)"
+                  },
+                  carbs_g_per_serving: {
+                    type: Type.NUMBER,
+                    description: "Bir porsiyon/100g başına karbohidrat (gram)"
+                  },
+                  fat_g_per_serving: {
+                    type: Type.NUMBER,
+                    description: "Bir porsiyon/100g başına yağ (gram)"
+                  },
+                  serving_reference: {
+                    type: Type.STRING,
+                    description: "Besin bilgisinin referansı (örn: '100g' veya '1 adet')"
                   }
                 }
               }
@@ -106,16 +127,34 @@ export async function processAssistantVoiceAction(text: string) {
 Kullanıcının Türkçe metnindeki niyeti çıkarıp ya bir finans (harcama/gelir) işlemine ya da yemek günlüğüne çevir.
 Eğer işlem finans ise 'finance_data' objesini MUTLAKA oluştur. Miktarı, hesabı, kategoriyi ve kısa bir açıklamayı belirle. Açıklama 2-3 kelimeyi geçmesin (Örn: "otobüs parası", "kahve", "maaş"). 
 DİKKAT: Kullanıcının kayıtlı kategorileri şunlardır: [${categoryNames}]. Lütfen işlemi MUTLAKA bu kategorilerden en uygun olanına eşleştir. Bulduğun kategorinin adını birebir aynı yaz! Başka kelime uydurma.
-Eğer işlem yemek ise 'health_data' objesini MUTLAKA oluştur. Öğün türünü ve yenilen yemeklerin adını ve miktarını bul. Gramaj, adet, dilim, porsiyon gibi birimleri 'unit' alanına, sayıyı 'quantity' alanına yaz (ör: "4 tane yumurta" -> quantity: 4, unit: "tane"). Yemek isimlerini 'name_tr' (Türkçe) ve 'name_en' (İngilizce çevirisi) olarak ayırarak yaz.
+
+Eğer işlem yemek ise 'health_data' objesini MUTLAKA oluştur. Öğün türünü ve yenilen yemeklerin adını, miktarını ve BEY BİLGİSİNİ bul.
+ÖNEMLİ: Gramaj, adet, dilim, porsiyon gibi birimleri 'unit' alanına, sayıyı 'quantity' alanına yaz (ör: "4 tane yumurta" -> quantity: 4, unit: "tane").
+
+BESIN HESAPLAMA KÜLLİYATI:
+- Eğer kullanıcı gram belirtmişse: 100g olarak normalize et (100g başına kalori, protein, carbs, fat) ve serving_reference olarak "100g" belirt.
+- Eğer kullanıcı adet/porsiyon belirtmişse: 1 adet/porsiyon başına nutrient değerleri sağla ve serving_reference olarak "1 adet" veya "1 porsiyon" belirt.
+- Yemek isimlerini Türkçe yazıya göre standartlaştır (örn: "yumurta" yerine "tavuk yumurtası", "beyaz ekmek" yerine "beyaz buğday ekmeği").
+- Kalori ve besin bilgilerini EN DOĞRU ŞEKİLDE sağla (yanlış bilgi verme, emin olmadığında gerçekçi tahminler yap).
+
+Örnekler:
+- Kullanıcı: "3 tane yumurta yedim"
+  Çıktı: quantity: 3, unit: "tane", name: "tavuk yumurtası", calories_per_serving: 70, protein_g_per_serving: 6.3, carbs_g_per_serving: 0.4, fat_g_per_serving: 5, serving_reference: "1 adet"
+  
+- Kullanıcı: "200g çiçek broccoli yedim"
+  Çıktı: quantity: 2, unit: "gram", name: "brokkoli (çiçek)", calories_per_serving: 34, protein_g_per_serving: 2.8, carbs_g_per_serving: 7, fat_g_per_serving: 0.4, serving_reference: "100g"
+
 Kullanıcının söylediği: "${text}"`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
+      contents: [{
+        role: 'user',
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: schema as any,
-        temperature: 0.1,
+        responseSchema: schema
       }
     });
 
@@ -173,71 +212,75 @@ Kullanıcının söylediği: "${text}"`;
 
     if (result.type === "health" && result.health_data) {
       let addedFoods = [];
-      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
       
       for (const food of result.health_data.foods) {
-         // Kendi API'mizi kullanarak Türkçe arama yapıyoruz (Manuel ekleme ile aynı rota)
-         const searchRes = await fetch(`${baseUrl}/api/fatsecret/search?query=${encodeURIComponent(food.name)}`, {
-             headers: {
-                 cookie: `next-auth.session-token=mock`
-             }
-         });
-         
-         if (searchRes.ok) {
-             const searchData = await searchRes.json();
-             if (searchData.foods && searchData.foods.length > 0) {
-                 const bestMatch = searchData.foods[0];
-                 
-                 // Makro detaylarını getir
-                 const detailsRes = await fetch(`${baseUrl}/api/fatsecret/details?foodId=${bestMatch.food_id}`);
-                 if (detailsRes.ok) {
-                     const detailsData = await detailsRes.json();
-                     let targetServing = null;
-                     let ratio = 1;
-                     
-                     // `details` API route already returns the servings array or empty array
-                     const servings = Array.isArray(detailsData.servings) ? detailsData.servings : [];
+        try {
+          // 1. SavedFood'da yemeği ara (user_id ve normalized food_name'e göre)
+          const normalizedFoodName = food.name.toLowerCase().trim();
+          let existingFood = await SavedFood.findOne({
+            user_id: userId,
+            food_name: { $regex: `^${normalizedFoodName}$`, $options: 'i' }
+          }).lean();
 
-                     if (servings.length > 0) {
-                         const isUnit = food.unit.match(/adet|tane|dilim|porsiyon|bardak|kase|fincan/i);
-                         if (isUnit) {
-                             // Adet/Porsiyon bazlı serving bulmaya çalış (genellikle 100g dışındakiler)
-                             targetServing = servings.find((s: any) => s.measurement_description !== '100 g') || servings[0];
-                             ratio = food.quantity / parseFloat(targetServing.number_of_units || "1");
-                         } else {
-                             // Gram bazlı serving bul (varsayılan)
-                             targetServing = servings.find((s: any) => s.metric_serving_unit === 'g' && s.measurement_description === '100 g') || servings.find((s: any) => s.metric_serving_unit === 'g') || servings[0];
-                             ratio = food.quantity / parseFloat(targetServing.metric_serving_amount || "100");
-                         }
+          let caloriesPerServing = food.calories_per_serving;
+          let proteinPerServing = food.protein_g_per_serving;
+          let carbsPerServing = food.carbs_g_per_serving;
+          let fatPerServing = food.fat_g_per_serving;
 
-                         const cals = parseFloat(targetServing.calories || "0") * ratio;
-                         const carbs = parseFloat(targetServing.carbohydrate || "0") * ratio;
-                         const protein = parseFloat(targetServing.protein || "0") * ratio;
-                         const fat = parseFloat(targetServing.fat || "0") * ratio;
+          // 2. Eğer SavedFood'da yemek varsa, besin bilgilerini oradan al
+          if (existingFood) {
+            // Normalize etme: SavedFood'da 1 birim başına kayıtlı olduğunu varsayıyoruz
+            // Ama quantity farklı olabilir, yani SavedFood'un quantity'si ve referanstaki quantity'si eşleşmeyebilir
+            // Biz SavedFood'dan kalori, protein, carbs, fat'ı 1 birim başına normalize ederek alalım
+            caloriesPerServing = existingFood.calories / existingFood.quantity;
+            proteinPerServing = existingFood.protein_g / existingFood.quantity;
+            carbsPerServing = existingFood.carbs_g / existingFood.quantity;
+            fatPerServing = existingFood.fat_g / existingFood.quantity;
+          }
 
-                         await addMealAction({
-                             date: new Date().toISOString(),
-                             type: result.health_data.meal_type,
-                             food_name: bestMatch.food_name || food.name,
-                             serving_description: `${food.quantity} ${food.unit}`,
-                             quantity: food.quantity,
-                             calories: Math.round(cals),
-                             protein_g: Math.round(protein * 10) / 10,
-                             carbs_g: Math.round(carbs * 10) / 10,
-                             fat_g: Math.round(fat * 10) / 10,
-                             fatsecret_food_id: bestMatch.food_id
-                         });
-                         addedFoods.push(`${food.quantity} ${food.unit} ${bestMatch.food_name || food.name}`);
-                     }
-                 }
-             }
-         }
+          // 3. Total besin bilgisini hesapla (quantity'ye göre çarp)
+          const totalCalories = Math.round(caloriesPerServing * food.quantity);
+          const totalProtein = Math.round(proteinPerServing * food.quantity * 10) / 10;
+          const totalCarbs = Math.round(carbsPerServing * food.quantity * 10) / 10;
+          const totalFat = Math.round(fatPerServing * food.quantity * 10) / 10;
+
+          // 4. Eğer SavedFood'da yok ise, Gemini'nin verdiği bilgilere göre yeni SavedFood ekle
+          if (!existingFood) {
+            await SavedFood.create({
+              user_id: userId,
+              food_name: food.name,
+              serving_description: `${food.quantity} ${food.unit}`,
+              quantity: food.quantity,
+              calories: totalCalories,
+              protein_g: totalProtein,
+              carbs_g: totalCarbs,
+              fat_g: totalFat
+            });
+          }
+
+          // 5. addMealAction'a gönder
+          await addMealAction({
+            date: new Date().toISOString(),
+            type: result.health_data.meal_type,
+            food_name: food.name,
+            serving_description: `${food.quantity} ${food.unit}`,
+            quantity: food.quantity,
+            calories: totalCalories,
+            protein_g: totalProtein,
+            carbs_g: totalCarbs,
+            fat_g: totalFat
+          });
+
+          addedFoods.push(`${food.quantity} ${food.unit} ${food.name}`);
+        } catch (foodError) {
+          console.error(`Error processing food ${food.name}:`, foodError);
+        }
       }
 
       if (addedFoods.length > 0) {
         return { success: true, message: `✅ Öğüne eklendi: ${addedFoods.join(", ")}` };
       } else {
-        return { success: false, error: "Besinler FatSecret üzerinde bulunamadı." };
+        return { success: false, error: "Besinler işlenemedi." };
       }
     }
 
