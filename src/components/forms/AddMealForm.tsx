@@ -17,7 +17,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     fat, setFat,
     fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
-    savedFoods, isLoadingSaved,
+    savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
     isLoading, handleSubmit, handleMultiSubmit
   } = useAddMealViewModel(onSuccess);
@@ -281,31 +281,32 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                     Son Eklenenler (Hızlı Seçim)
                   </div>
                   {(() => {
-                    const uniqueSaved = Array.from(
-                      new Map(
-                        (savedFoods || [])
-                          .filter((sf: any) => sf.food_name && sf.food_name.trim())
-                          .map((sf: any) => [sf.food_name.toLowerCase().trim(), sf])
-                      ).values()
-                    );
+                    // Combine saved foods (favorites) + recent meals for this meal type
+                    const mealTypeRecent = (recentByType?.[mealType] || []).filter((f: any) => f.food_name && f.food_name.trim());
+                    const favoriteFoods = (savedFoods || []).filter((f: any) => f.food_name && f.food_name.trim());
                     
-                    const mappedSaved = uniqueSaved.slice(0, 8).map((sf: any) => ({
-                      food_id: sf.fatsecret_food_id || sf._id,
-                      food_name: sf.food_name,
-                      food_description: `${sf.serving_description} - Calories: ${sf.calories}kcal | Fat: ${sf.fat_g}g | Carbs: ${sf.carbs_g}g | Protein: ${sf.protein_g}g`,
+                    // Combine and deduplicate
+                    const combined = [...mealTypeRecent, ...favoriteFoods];
+                    const uniqueMap = new Map(combined.map((f: any) => [f.food_name.toLowerCase().trim(), f]));
+                    const uniqueFoods = Array.from(uniqueMap.values()).slice(0, 8);
+                    
+                    if (uniqueFoods.length === 0) {
+                      return (
+                        <div className="p-6 text-center text-[var(--on-surface-variant)] text-body">
+                          <div className="text-[var(--on-surface-variant)] opacity-75">Henüz yiyecek eklemediniz</div>
+                        </div>
+                      );
+                    }
+                    
+                    const mappedRecent = uniqueFoods.map((f: any) => ({
+                      food_id: f.fatsecret_food_id || f.id,
+                      food_name: f.food_name,
+                      food_description: `${f.serving_description} - Calories: ${f.calories}kcal | Fat: ${f.fat_g}g | Carbs: ${f.carbs_g}g | Protein: ${f.protein_g}g`,
                       food_type: "Brand",
                       brand_name: "Kaydedilen"
                     }));
-                    
-                    const DEFAULT_RECENT_FOODS = [
-                      { food_id: "fallback_1", food_name: "Yumurta (Haşlanmış)", food_description: "1 adet - Kalori: 78kcal | Yağ: 5.3g | Karb: 0.6g | Protein: 6.3g", food_type: "Brand", brand_name: "DailyManagement" },
-                      { food_id: "fallback_2", food_name: "Beyaz Ekmek", food_description: "1 dilim - Kalori: 79kcal | Yağ: 0.8g | Karb: 14.7g | Protein: 2.7g", food_type: "Brand", brand_name: "DailyManagement" },
-                      { food_id: "fallback_4", food_name: "Tavuk Göğsü (Izgara)", food_description: "100g - Kalori: 165kcal | Yağ: 3.6g | Karb: 0g | Protein: 31g", food_type: "Brand", brand_name: "DailyManagement" }
-                    ];
 
-                    const finalRecent = mappedSaved.length > 0 ? mappedSaved : DEFAULT_RECENT_FOODS;
-
-                    return finalRecent.map((food: any, idx: number) => (
+                    return mappedRecent.map((food: any, idx: number) => (
                       <div 
                         key={idx}
                         onClick={() => handleSearchResultSelect(food)}
@@ -402,7 +403,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                       {isSelected && <Check size={14} />}
                     </div>
                     <div className="flex flex-col">
-                        <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{(recipe.food_name || recipe.name) as string}</span>
+                        <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{recipe.food_name as string}</span>
                       <span className={`text-caption ${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}`}>{recipe.serving_description as string || `${recipe.quantity} gram`}</span>
                     </div>
                   </div>

@@ -18,6 +18,12 @@ export function useAddMealViewModel(onSuccess: () => void) {
   
 
   const [savedFoods, setSavedFoods] = useState<any[]>([]);
+  const [recentByType, setRecentByType] = useState<any>({
+    breakfast: [],
+    lunch: [],
+    dinner: [],
+    snack: []
+  });
   const [isLoadingSaved, setIsLoadingSaved] = useState(true);
   const [selectedSavedFoods, setSelectedSavedFoods] = useState<string[]>([]);
 
@@ -25,7 +31,10 @@ export function useAddMealViewModel(onSuccess: () => void) {
     const fetchSaved = async () => {
       try {
         const res = await getSavedFoodsAction();
-        if (res.success && res.data) setSavedFoods(res.data);
+        if (res.success && res.data) {
+          setSavedFoods(res.data.savedFoods || []);
+          setRecentByType(res.data.recentByType || { breakfast: [], lunch: [], dinner: [], snack: [] });
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -123,7 +132,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
     fat, setFat,
     fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
-    savedFoods, isLoadingSaved,
+    savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
     isLoading,
     handleSubmit, handleMultiSubmit
