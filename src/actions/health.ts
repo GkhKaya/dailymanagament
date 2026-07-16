@@ -83,6 +83,50 @@ export async function addMealAction(data: { date: string; type: string; food_nam
       });
     }
 
+    // Auto-cache the food to our DB if it came from FatSecret
+    if (data.fatsecret_food_id) {
+      try {
+        const { FoodCache } = require('@/models/FoodCache');
+        const qty = parseFloat(data.quantity.toString()) || 1;
+        const parts = data.serving_description.split(' ');
+        const unitName = parts.length > 1 ? parts.slice(1).join(' ') : 'gram';
+        
+        // Construct standard FatSecret format for description (e.g. "Per 100g", "1 adet")
+        const baseCalories = data.calories / qty;
+        const baseProtein = data.protein_g / qty;
+        const baseCarbs = data.carbs_g / qty;
+        const baseFat = data.fat_g / qty;
+        
+        let descString = `1 ${unitName}`;
+        if (unitName.toLowerCase() === 'gram') descString = 'Per 100g';
+        else if (unitName.toLowerCase() === 'adet') descString = '1 adet';
+        else if (unitName.toLowerCase() === 'porsiyon') descString = '1 porsiyon';
+        
+        descString += ` - Calories: ${Math.round(baseCalories)}kcal | Fat: ${baseFat.toFixed(2)}g | Carbs: ${baseCarbs.toFixed(2)}g | Protein: ${baseProtein.toFixed(2)}g`;
+
+        await FoodCache.updateOne(
+          { fatsecret_food_id: data.fatsecret_food_id },
+          {
+            $setOnInsert: {
+              food_name: data.food_name,
+              brand_name: null,
+              servings: [{
+                serving_id: `custom_${Date.now()}`,
+                description: descString,
+                calories: baseCalories,
+                protein_g: baseProtein,
+                carbs_g: baseCarbs,
+                fat_g: baseFat
+              }]
+            }
+          },
+          { upsert: true }
+        );
+      } catch (cacheErr) {
+        console.error("FoodCache upsert error:", cacheErr);
+      }
+    }
+
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;

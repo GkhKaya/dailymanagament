@@ -30,6 +30,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   
   // FatSecret serving tracking
   const [perGramMacros, setPerGramMacros] = useState({ cals: 0, protein: 0, carbs: 0, fat: 0 });
+  const [unitName, setUnitName] = useState('gram');
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -100,17 +101,44 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     const baseProtein = proteinMatch ? parseFloat(proteinMatch[1]) : 0;
 
     let multiplier = 1 / 100; // Default: assume the description is for 100g
-    if (desc.includes('100g') || desc.includes('100 g')) {
+    let unit = "gram";
+    
+    if (desc.match(/100\s*g/i)) {
       multiplier = 1 / 100;
-    } else if (desc.includes('1 oz')) {
+    } else if (desc.match(/1 oz/i)) {
       multiplier = 1 / 28.3495;
     } else {
-      // Try to extract any "Per Xg" or "Per X g"
       const gMatch = desc.match(/Per ([\d.]+)\s*g/i);
       if (gMatch) {
         multiplier = 1 / parseFloat(gMatch[1]);
+      } else {
+        // Adet veya Porsiyon tabanlı tespit
+        const eggMatch = desc.match(/1 egg/i);
+        const adetMatch = desc.match(/1 adet/i) || desc.match(/1 tane/i);
+        const sliceMatch = desc.match(/1 slice/i) || desc.match(/1 dilim/i);
+        const porsiyonMatch = desc.match(/1 porsiyon/i) || desc.match(/1 serving/i);
+        const kaseMatch = desc.match(/1 kase/i) || desc.match(/1 cup/i) || desc.match(/1 bardak/i);
+        
+        if (eggMatch || adetMatch) {
+           multiplier = 1;
+           unit = "adet";
+        } else if (sliceMatch) {
+           multiplier = 1;
+           unit = "dilim";
+        } else if (porsiyonMatch) {
+           multiplier = 1;
+           unit = "porsiyon";
+        } else if (kaseMatch) {
+           multiplier = 1;
+           unit = "kase";
+        } else if (desc.toLowerCase().startsWith('per 1') || desc.match(/^1\s/)) {
+           multiplier = 1;
+           unit = "adet";
+        }
       }
     }
+    
+    setUnitName(unit);
 
     const perGram = {
       cals: baseCals * multiplier,
@@ -122,13 +150,14 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     setPerGramMacros(perGram);
     
     // Set default quantity to 100 grams
-    setQuantity('100');
-    setServingDescription('100 gram');
+    const defaultQty = unit === 'gram' ? 100 : 1;
+    setQuantity(defaultQty.toString());
+    setServingDescription(unit === 'gram' ? '100 gram' : `1 ${unit}`);
     
-    setCalories(Math.round(perGram.cals * 100).toString());
-    setProtein(Math.round(perGram.protein * 100).toString());
-    setCarbs(Math.round(perGram.carbs * 100).toString());
-    setFat(Math.round(perGram.fat * 100).toString());
+    setCalories(Math.round(perGram.cals * defaultQty).toString());
+    setProtein(Math.round(perGram.protein * defaultQty).toString());
+    setCarbs(Math.round(perGram.carbs * defaultQty).toString());
+    setFat(Math.round(perGram.fat * defaultQty).toString());
 
     setShowDropdown(false);
   };
@@ -136,7 +165,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   // Re-calculate macros when quantity changes
   useEffect(() => {
     const qty = parseFloat(quantity) || 0;
-    setServingDescription(`${qty} gram`);
+    setServingDescription(`${qty} ${unitName}`);
     
     if (fatsecretFoodId) {
       setCalories(Math.round(perGramMacros.cals * qty).toString());

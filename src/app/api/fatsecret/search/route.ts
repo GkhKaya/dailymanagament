@@ -110,16 +110,43 @@ export async function GET(request: Request) {
 
     const foodData = data.foods?.food;
     const foodsArray = Array.isArray(foodData) ? foodData : (foodData ? [foodData] : []);
+    
+    // 1. Arama sorgusuna (query) göre kendi veritabanımızda (FoodCache) arama yap
+    let localCacheResults: any[] = [];
+    try {
+      const { connectDB } = require('@/lib/db');
+      await connectDB();
+      const { FoodCache } = require('@/models/FoodCache');
+      
+      const localFoods = await FoodCache.find({
+        food_name: { $regex: query, $options: 'i' }
+      }).limit(10);
+      
+      // Kendi DB formatımızı FatSecret formatına uyduruyoruz
+      localCacheResults = localFoods.map((f: any) => ({
+        food_id: f.fatsecret_food_id || f._id.toString(),
+        food_name: f.food_name,
+        food_description: f.servings?.[0]?.description || "Per 100g - Calories: 0kcal | Fat: 0g | Carbs: 0g | Protein: 0g",
+        food_type: "Brand", // Ayırt edici olması için Brand diyebiliriz
+        brand_name: f.brand_name || "DailyManagement" // Nereden geldiği belli olsun
+      }));
+    } catch (dbErr) {
+      console.error("FoodCache search error:", dbErr);
+    }
 
-    if (foodsArray.length === 0) {
-      console.log('FatSecret returned 0 results, using fallback for:', query);
+    if (foodsArray.length === 0 && localCacheResults.length === 0) {
+      console.log('FatSecret and Local DB returned 0 results, using fallback for:', query);
       const fallbackData = generateFallbackResponse(query);
       if (fallbackData.foods.length > 0) {
         return NextResponse.json(fallbackData);
       }
     }
 
-    return NextResponse.json({ foods: foodsArray });
+    // Combine local cache results and fatsecret results, removing duplicates by food_id
+    const combined = [...localCacheResults, ...foodsArray];
+    const uniqueFoods = Array.from(new Map(combined.map(item => [item.food_id, item])).values());
+    
+    return NextResponse.json({ foods: uniqueFoods });
   } catch (error: any) {
     console.error('FatSecret API Error, using fallback:', error.message);
     const fallbackData = generateFallbackResponse(query);

@@ -84,6 +84,37 @@ export async function GET(request: Request) {
     }
   }
 
+  // 1. Check local FoodCache database first
+  try {
+    const { connectDB } = require('@/lib/db');
+    await connectDB();
+    const { FoodCache } = require('@/models/FoodCache');
+    
+    // Search by fatsecret_food_id or our local _id
+    const query = foodId.length === 24 ? { $or: [{ _id: foodId }, { fatsecret_food_id: foodId }] } : { fatsecret_food_id: foodId };
+    const localFood = await FoodCache.findOne(query);
+    
+    if (localFood && localFood.servings && localFood.servings.length > 0) {
+      // Map local servings to FatSecret servings format
+      const formattedServings = localFood.servings.map((s: any) => {
+        // extract amount and unit from description (e.g. "1 adet", "Per 100g")
+        return {
+          metric_serving_unit: "g", // dummy for UI compatibility
+          metric_serving_amount: "100",
+          measurement_description: s.description,
+          calories: s.calories?.toString() || "0",
+          carbohydrate: s.carbs_g?.toString() || "0",
+          protein: s.protein_g?.toString() || "0",
+          fat: s.fat_g?.toString() || "0",
+          number_of_units: "1"
+        };
+      });
+      return NextResponse.json({ servings: formattedServings });
+    }
+  } catch (dbErr) {
+    console.error("FoodCache details check error:", dbErr);
+  }
+
   try {
     const token = await getFatSecretToken();
     
