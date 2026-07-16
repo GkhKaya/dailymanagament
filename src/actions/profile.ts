@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { User } from "@/models/User";
 
 async function getSession() {
@@ -27,6 +28,7 @@ export async function updateWeightAction(weightKg: number) {
       { $set: { current_weight_kg: weightKg } }
     );
     
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -52,6 +54,7 @@ export async function updateAgeAction(birthDateStr: string) {
       { $set: { "profile.birth_date": birthDate } }
     );
     
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -80,6 +83,7 @@ export async function updateUsernameAction(newUsername: string) {
       { $set: { name: newUsername } }
     );
 
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -116,6 +120,7 @@ export async function updateEmailAction(newEmail: string) {
       return { success: false, error: "E-posta güncellenirken bir hata oluştu." };
     }
 
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -144,6 +149,7 @@ export async function updatePasswordAction(currentPassword: string, newPassword:
       return { success: false, error: "Şifre güncellenirken bir hata oluştu." };
     }
 
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;

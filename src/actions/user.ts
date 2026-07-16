@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { User } from "@/models/User";
 
 async function getUserId() {
@@ -44,6 +45,7 @@ export async function updateUserHealthProfileAction(data: {
       }
     );
 
+    revalidatePath('/', 'layout');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
