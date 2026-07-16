@@ -70,14 +70,14 @@ export async function updateUsernameAction(newUsername: string) {
     const userId = session.user.id;
     
     // Check uniqueness
-    const existing = await User.findOne({ username: newUsername });
-    if (existing && existing._id !== userId) {
+    const existing = await User.findOne({ name: newUsername });
+    if (existing && existing._id.toString() !== userId) {
       return { success: false, error: "Bu kullanıcı adı zaten alınmış." };
     }
 
     await User.updateOne(
       { _id: userId },
-      { $set: { username: newUsername } }
+      { $set: { name: newUsername } }
     );
 
     return { success: true };

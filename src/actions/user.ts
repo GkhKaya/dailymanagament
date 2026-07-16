@@ -55,7 +55,7 @@ export async function updateUserHealthProfileAction(data: {
 export async function checkUsernameUniqueAction(username: string) {
   try {
     await connectDB();
-    const existing = await User.findOne({ username });
+    const existing = await User.findOne({ name: username });
     return { isUnique: !existing };
   } catch (e) {
     console.error("Check Username Error:", e);
