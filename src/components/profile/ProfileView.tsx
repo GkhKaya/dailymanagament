@@ -24,7 +24,10 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
 
-  const handleSuccess = () => setActiveSheet(null);
+  const handleSuccess = () => {
+    setActiveSheet(null);
+    router.refresh();
+  };
 
   const renderSheetContent = () => {
     if (activeSheet?.startsWith('editAccount_')) {
