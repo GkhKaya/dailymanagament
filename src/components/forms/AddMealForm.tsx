@@ -25,8 +25,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(true);
   
   // FatSecret serving tracking
   const [perGramMacros, setPerGramMacros] = useState({ cals: 0, protein: 0, carbs: 0, fat: 0 });
@@ -36,7 +36,6 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     const delayDebounceFn = setTimeout(async () => {
       if (foodName && foodName.length > 2 && activeTab === 'new' && !fatsecretFoodId) {
         setIsSearching(true);
-        setShowDropdown(true);
         try {
           const res = await fetch(`/api/fatsecret/search?query=${encodeURIComponent(foodName)}`);
           if (res.ok) {
@@ -58,7 +57,6 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         }
       } else {
         setSearchResults([]);
-        setShowDropdown(false);
       }
     }, 500);
 
@@ -220,9 +218,10 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         <div className="flex flex-col gap-4 animate-fade-in">
           {/* Yemek Arama / Adı */}
           <div className="flex flex-col gap-2 relative z-50">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.mealName')}</label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={20} />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <Search className="text-[var(--primary)] transition-transform group-focus-within:scale-110" size={22} />
+              </div>
               <input 
                 type="text" 
                 required
@@ -232,35 +231,36 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                   setFatsecretFoodId(null); // Clear ID when user edits the text
                 }}
                 onFocus={() => {
-                  if (searchResults.length > 0) setShowDropdown(true);
-                  // Check for first time FatSecret usage
+                  setShowDropdown(true);
                   const hasSeenAlert = localStorage.getItem('hasSeenFatSecretAlert');
                   if (!hasSeenAlert) {
-                    // Use standard alert as placeholder (or a toast if a toast system existed)
                     Alert.info("Bilgilendirme: FatSecret API'nin ücretsiz versiyonu yalnızca İngilizce çalışmaktadır. Lütfen yemekleri İngilizce (örn: chicken, egg) aratınız.");
                     localStorage.setItem('hasSeenFatSecretAlert', 'true');
                   }
                 }}
-                onBlur={() => {
-                  // Small delay to allow clicking on dropdown items
-                  setTimeout(() => setShowDropdown(false), 200);
-                }}
-                placeholder="Yemek adını girin..." 
-                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                placeholder="Veritabanında yemek arayın (Örn: Egg, Apple)..." 
+                className="w-full bg-[#16161F] border-2 border-[rgba(255,255,255,0.05)] rounded-2xl py-5 pl-14 pr-24 text-[1.05rem] font-medium text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.02)] focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] transition-all placeholder:text-[var(--on-surface-variant)] placeholder:font-normal"
               />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                <div className="bg-[var(--primary)] text-black text-[10px] uppercase font-bold px-2.5 py-1.5 rounded-lg opacity-80 shadow-sm">
+                  Ara
+                </div>
+              </div>
             </div>
 
-            {/* Dropdown Results */}
-            {showDropdown && foodName.length > 2 && (
-              <div className="absolute top-[100%] left-0 w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto hide-scrollbar z-50">
-                {isSearching ? (
-                  <div className="p-6 flex flex-col items-center justify-center gap-3 text-[var(--on-surface-variant)]">
-                    <LoadingSpinner size="md" />
-                    <span className="text-body animate-pulse">Sonuçlar aranıyor...</span>
-                  </div>
-                ) : apiError ? (
-                  <div className="p-4 text-center text-red-400 text-[var(--font-body)]">{apiError}</div>
-                ) : searchResults.length > 0 ? (
+            {/* Always Open Results List (Search Results or Recent Foods) */}
+            {showDropdown && (
+            <div className="w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-sm max-h-64 overflow-y-auto hide-scrollbar z-10">
+              {isSearching && foodName.length > 2 ? (
+                <div className="p-6 flex flex-col items-center justify-center gap-3 text-[var(--on-surface-variant)] h-32">
+                  <LoadingSpinner size="md" />
+                  <span className="text-body animate-pulse">Sonuçlar aranıyor...</span>
+                </div>
+              ) : apiError ? (
+                <div className="p-4 text-center text-red-400 text-[var(--font-body)]">{apiError}</div>
+              ) : foodName.length > 2 ? (
+                searchResults.length > 0 ? (
                   searchResults.map((food: any) => (
                     <div 
                       key={food.food_id}
@@ -271,53 +271,59 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                       <div className="text-caption text-[var(--on-surface-variant)] mt-1">{food.food_description}</div>
                     </div>
                   ))
-                ) : !isSearching && (
+                ) : (
                   <div className="p-4 text-center text-[var(--on-surface-variant)] text-[var(--font-body)]">Sonuç bulunamadı.</div>
-                )}
-              </div>
+                )
+              ) : (
+                /* Recent Foods / Defaults - Only show when not searching */
+                <div className="flex flex-col">
+                  <div className="p-3 bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)] text-caption text-[var(--on-surface-variant)] uppercase tracking-wider sticky top-0 backdrop-blur-md z-10">
+                    Son Eklenenler (Hızlı Seçim)
+                  </div>
+                  {(() => {
+                    const uniqueSaved = Array.from(
+                      new Map(
+                        (savedFoods || [])
+                          .filter((sf: any) => sf.food_name && sf.food_name.trim())
+                          .map((sf: any) => [sf.food_name.toLowerCase().trim(), sf])
+                      ).values()
+                    );
+                    
+                    const mappedSaved = uniqueSaved.slice(0, 8).map((sf: any) => ({
+                      food_id: sf.fatsecret_food_id || sf._id,
+                      food_name: sf.food_name,
+                      food_description: `${sf.serving_description} - Calories: ${sf.calories}kcal | Fat: ${sf.fat_g}g | Carbs: ${sf.carbs_g}g | Protein: ${sf.protein_g}g`,
+                      food_type: "Brand",
+                      brand_name: "Kaydedilen"
+                    }));
+                    
+                    const DEFAULT_RECENT_FOODS = [
+                      { food_id: "fallback_1", food_name: "Yumurta (Haşlanmış)", food_description: "1 adet - Kalori: 78kcal | Yağ: 5.3g | Karb: 0.6g | Protein: 6.3g", food_type: "Brand", brand_name: "DailyManagement" },
+                      { food_id: "fallback_2", food_name: "Beyaz Ekmek", food_description: "1 dilim - Kalori: 79kcal | Yağ: 0.8g | Karb: 14.7g | Protein: 2.7g", food_type: "Brand", brand_name: "DailyManagement" },
+                      { food_id: "fallback_4", food_name: "Tavuk Göğsü (Izgara)", food_description: "100g - Kalori: 165kcal | Yağ: 3.6g | Karb: 0g | Protein: 31g", food_type: "Brand", brand_name: "DailyManagement" }
+                    ];
+
+                    const finalRecent = mappedSaved.length > 0 ? mappedSaved : DEFAULT_RECENT_FOODS;
+
+                    return finalRecent.map((food: any, idx: number) => (
+                      <div 
+                        key={idx}
+                        onClick={() => handleSearchResultSelect(food)}
+                        className="p-4 hover:bg-[rgba(255,255,255,0.08)] cursor-pointer border-b border-[rgba(255,255,255,0.05)] last:border-0 transition-colors flex justify-between items-center"
+                      >
+                        <div>
+                          <div className="text-body font-medium text-white">{food.food_name}</div>
+                          <div className="text-caption text-[var(--on-surface-variant)] mt-1 opacity-75">{food.food_description}</div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
+            </div>
             )}
           </div>
 
-          {/* Hızlı Seçim (Son Aratılanlar / Varsayılanlar) */}
-          {!foodName && activeTab === 'new' && (
-            <div className="flex flex-col gap-2 -mt-2 mb-2 animate-fade-in">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Hızlı Seçim (Son Eklenenler)
-              </label>
-              {(() => {
-                // Remove duplicates by food_name
-                const uniqueSaved = Array.from(new Map((savedFoods || []).map((sf: any) => [sf.food_name, sf])).values());
-                const mappedSaved = uniqueSaved.map((sf: any) => ({
-                  food_id: sf.fatsecret_food_id || sf._id,
-                  food_name: sf.food_name,
-                  food_description: `${sf.serving_description} - Calories: ${sf.calories}kcal | Fat: ${sf.fat_g}g | Carbs: ${sf.carbs_g}g | Protein: ${sf.protein_g}g`,
-                  food_type: "Brand",
-                  brand_name: "Kaydedilen"
-                }));
-                
-                const DEFAULT_RECENT_FOODS = [
-                  { food_id: "fallback_1", food_name: "Yumurta (Haşlanmış)", food_description: "1 adet - Kalori: 78kcal | Yağ: 5.3g | Karb: 0.6g | Protein: 6.3g", food_type: "Brand", brand_name: "DailyManagement" },
-                  { food_id: "fallback_2", food_name: "Beyaz Ekmek", food_description: "1 dilim - Kalori: 79kcal | Yağ: 0.8g | Karb: 14.7g | Protein: 2.7g", food_type: "Brand", brand_name: "DailyManagement" },
-                  { food_id: "fallback_4", food_name: "Tavuk Göğsü (Izgara)", food_description: "100g - Kalori: 165kcal | Yağ: 3.6g | Karb: 0g | Protein: 31g", food_type: "Brand", brand_name: "DailyManagement" }
-                ];
-
-                const finalRecent = [...mappedSaved, ...DEFAULT_RECENT_FOODS].slice(0, 3);
-
-                return finalRecent.map((food: any, idx: number) => (
-                  <div 
-                    key={idx}
-                    onClick={() => handleSearchResultSelect(food)}
-                    className="p-3 bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.05)] rounded-xl cursor-pointer flex justify-between items-center transition-colors"
-                  >
-                    <div>
-                      <div className="text-body font-medium text-white">{food.food_name}</div>
-                      <div className="text-caption text-[var(--on-surface-variant)] mt-0.5 line-clamp-1 opacity-75">{food.food_description}</div>
-                    </div>
-                  </div>
-                ));
-              })()}
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
@@ -396,7 +402,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                       {isSelected && <Check size={14} />}
                     </div>
                     <div className="flex flex-col">
-                      <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{recipe.name as string}</span>
+                        <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{(recipe.food_name || recipe.name) as string}</span>
                       <span className={`text-caption ${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}`}>{recipe.serving_description as string || `${recipe.quantity} gram`}</span>
                     </div>
                   </div>

@@ -85,13 +85,13 @@ export function useAddMealViewModel(onSuccess: () => void) {
         return addMealAction({
           date: new Date().toISOString(),
           type,
-          food_name: food.name,
+          food_name: food.food_name,
           serving_description: food.serving_description || '1 porsiyon',
           quantity: parseFloat(food.quantity) || 1,
           calories: parseFloat(food.calories) || 0,
-          protein_g: parseFloat(food.protein) || 0,
-          carbs_g: parseFloat(food.carbs) || 0,
-          fat_g: parseFloat(food.fat) || 0,
+          protein_g: parseFloat(food.protein_g) || 0,
+          carbs_g: parseFloat(food.carbs_g) || 0,
+          fat_g: parseFloat(food.fat_g) || 0,
           fatsecret_food_id: food.fatsecret_food_id || undefined,
           save_as_recipe: false
         });
