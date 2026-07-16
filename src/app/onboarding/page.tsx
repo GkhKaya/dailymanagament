@@ -1,4 +1,9 @@
+import { Metadata } from 'next';
 import { getCategoriesAction } from '@/actions/finance';
+
+export const metadata: Metadata = {
+  title: "Kurulum",
+};
 import { OnboardingClient } from './OnboardingClient';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';

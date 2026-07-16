@@ -83,7 +83,7 @@ export async function updateUsernameAction(newUsername: string) {
       headers: await headers()
     });
 
-    if (!response || !response.user) {
+    if (!response || !response.status) {
       return { success: false, error: "Kullanıcı adı güncellenirken bir hata oluştu." };
     }
 
