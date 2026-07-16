@@ -28,11 +28,13 @@ import { CustomSelect } from '@/components/ui/CustomSelect';
 export function AddTransactionForm({ 
   onClose,
   onSuccess,
+  onOpenCategories,
   categories, 
   accounts 
 }: { 
   onClose: () => void,
   onSuccess: () => void,
+  onOpenCategories?: () => void,
   categories: { id: string; name: string; type: string }[],
   accounts: { id: string; name: string }[]
 }) {
@@ -164,6 +166,20 @@ export function AddTransactionForm({
                   </button>
                 );
               })}
+              {onOpenCategories && (
+                <button
+                  type="button"
+                  onClick={onOpenCategories}
+                  className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.05)] hover:text-white hover:border-[rgba(255,255,255,0.2)] transition-all"
+                >
+                  <div className="text-[var(--on-surface-variant)]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </div>
+                  <span className="text-[10px] text-center px-1 font-medium group-hover:text-white">
+                    Yeni Ekle
+                  </span>
+                </button>
+              )}
             </div>
           )}
         </div>

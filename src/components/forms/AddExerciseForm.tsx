@@ -4,13 +4,13 @@ import { Activity } from 'lucide-react';
 import { useAddExerciseViewModel } from '@/viewmodels/useAddExerciseViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function AddExerciseForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+export function AddExerciseForm({ onClose, onSuccess, userWeight = 70 }: { onClose: () => void, onSuccess: () => void, userWeight?: number }) {
   const {
     exerciseType, setExerciseType,
     durationMinutes, setDurationMinutes,
     burnedCalories, setBurnedCalories,
     isLoading, handleSubmit
-  } = useAddExerciseViewModel(onSuccess);
+  } = useAddExerciseViewModel(onSuccess, userWeight);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
@@ -61,7 +61,7 @@ export function AddExerciseForm({ onClose, onSuccess }: { onClose: () => void, o
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-[var(--font-headline)] font-semibold text-orange-400 focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
             />
           </div>
-          <span className="text-caption text-[var(--on-surface-variant)] mt-1 ml-2">Tahmini değer hesaplanmıştır, isterseniz değiştirebilirsiniz.</span>
+          <span className="text-caption text-[var(--on-surface-variant)] mt-1 ml-2">Bu bilgilerine göre tahmini bir kaloridir. Akıllı saat ile ölçtüğün veriyi girmen daha sağlıklı olacaktır.</span>
         </div>
       </div>
 

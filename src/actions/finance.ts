@@ -52,13 +52,23 @@ export async function updateAccountAction(id: string, data: { name: string; bala
     await connectDB();
     const userId = await getUserId();
     
-    await Account.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any },
-      { 
-        name: data.name,
-        balance: mongoose.Types.Decimal128.fromString(data.balance.toString())
+    const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any });
+    if (!account) {
+      return { success: false, error: "Hesap bulunamadı." };
+    }
+
+    account.name = data.name;
+    
+    if (account.type === 'credit_card') {
+      if (account.credit_card_details) {
+        account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(data.balance.toString());
       }
-    );
+    } else {
+      account.balance = mongoose.Types.Decimal128.fromString(data.balance.toString());
+    }
+
+    await account.save();
+    console.log("Account update result: Success");
     
     return { success: true };
   } catch (e: unknown) {

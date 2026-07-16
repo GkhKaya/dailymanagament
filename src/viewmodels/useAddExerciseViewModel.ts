@@ -1,14 +1,33 @@
 import toast from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { addExerciseAction } from '@/actions/health';
 
-export function useAddExerciseViewModel(onSuccess: () => void) {
+const MET_VALUES: Record<string, number> = {
+  "Koşu": 8.0,
+  "Yürüyüş": 3.8,
+  "Ağırlık Antrenmanı": 4.0,
+  "Bisiklet": 6.0,
+  "Yüzme": 7.0,
+  "Yoga": 3.0
+};
+
+export function useAddExerciseViewModel(onSuccess: () => void, userWeight: number = 70) {
   const [exerciseType, setExerciseType] = useState('Yürüyüş');
   const [durationMinutes, setDurationMinutes] = useState('');
   const [burnedCalories, setBurnedCalories] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
   
+  useEffect(() => {
+    if (durationMinutes && !isNaN(Number(durationMinutes))) {
+      const duration = Number(durationMinutes);
+      const met = MET_VALUES[exerciseType] || 4.0;
+      const estimatedCalories = Math.round((met * userWeight * duration) / 60);
+      setBurnedCalories(estimatedCalories.toString());
+    } else {
+      setBurnedCalories('');
+    }
+  }, [exerciseType, durationMinutes, userWeight]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
