@@ -13,9 +13,14 @@ export async function middleware(request: NextRequest) {
   // Better-Auth get-session API call
   let session = null;
   try {
-    const response = await fetch(`${request.nextUrl.origin}/api/auth/get-session`, {
+    const internalPort = process.env.PORT || 3000;
+    const baseUrl = process.env.NODE_ENV === 'production' ? `http://127.0.0.1:${internalPort}` : request.nextUrl.origin;
+    
+    const response = await fetch(`${baseUrl}/api/auth/get-session`, {
       headers: {
         cookie: request.headers.get("cookie") || "",
+        "x-forwarded-host": request.headers.get("host") || "",
+        host: request.headers.get("host") || "",
       },
     });
     if (response.ok) {
