@@ -78,10 +78,14 @@ export async function updateUsernameAction(newUsername: string) {
       return { success: false, error: "Bu kullanıcı adı zaten alınmış." };
     }
 
-    await User.updateOne(
-      { _id: userId },
-      { $set: { name: newUsername } }
-    );
+    const response = await auth.api.updateUser({
+      body: { name: newUsername },
+      headers: await headers()
+    });
+
+    if (!response || !response.user) {
+      return { success: false, error: "Kullanıcı adı güncellenirken bir hata oluştu." };
+    }
 
     revalidatePath('/', 'layout');
     return { success: true };
