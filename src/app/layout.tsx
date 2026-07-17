@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | TheGamePlan",
-    default: "TheGamePlan - Kişisel Yönetim Asistanınız",
+    template: "%s | DailyM",
+    default: "DailyM - Kişisel Yönetim Asistanınız",
   },
   description: "Kişisel hedeflerinizi, finansınızı ve sağlığınızı tek bir yerden yönetin.",
 };
