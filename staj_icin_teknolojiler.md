@@ -1,14 +1,14 @@
 # Mimari Rehber: MongoDB, Server Actions ve Better Auth Entegrasyonu
 
-Bu projede veritabanı olarak **MongoDB**, backend işlemleri için **Next.js Server Actions** ve kimlik doğrulama için **Better Auth** kullanıyoruz. Bu üç teknolojinin birbirine nasıl bağlandığını aşağıdaki kod örnekleriyle inceleyebilirsiniz.
+Bu projede veritabanı olarak **MongoDB**, backend işlemleri için **Next.js Server Actions** ve kimlik doğrulama için **Better Auth** kullanıyoruz. Bu belgede, projenin mimari yapısını, yerel yemek veritabanı (Food Cache) akışını ve bu teknolojilerin entegrasyon detaylarını inceleyebilirsiniz.
 
 ---
 
-## 1. Veritabanı (MongoDB / Mongoose)
+## 1. Veritabanı (MongoDB / Mongoose) & Hibrit Yemek Arama Mekanizması
 
-Projeye MongoDB bağlantısı `mongoose` kullanılarak sağlanıyor. Bağlantı nesnesi global olarak önbelleğe (cache) alınıyor ve uygulamanın performanslı çalışması sağlanıyor.
+Projeye MongoDB bağlantısı `mongoose` kullanılarak sağlanıyor. Bağlantı nesnesi global olarak önbelleğe (cache) alınarak sunucu performansı maksimize ediliyor.
 
-### Veritabanı Bağlantısı (`src/lib/db.ts`)
+### 1.1 Veritabanı Bağlantısı (`src/lib/db.ts`)
 ```typescript
 import mongoose from 'mongoose';
 
@@ -31,13 +31,40 @@ export const connectDB = async () => {
 };
 ```
 
+### 1.2 Hibrit Yemek Veritabanı Sorgulama ve Kullanıcı Veri Akışı
+Kullanıcıların beslenme takibini hızlandırmak ve harici API bağımlılıklarını (FatSecret) optimize etmek amacıyla projede hibrit bir arama ve yerel önbellekleme (caching) mekanizması uygulanmıştır.
+
+```mermaid
+graph TD
+    A[Kullanıcı Yemek Arar] --> B(Kendi MongoDB 'FoodCache' Koleksiyonunda Ara)
+    A --> C(FatSecret API üzerinden Ara)
+    B --> D[Sonuçları Birleştir ve Mükerrerleri Temizle]
+    C --> D
+    D --> E[Kullanıcıya Göster]
+    E --> F{Kullanıcı Yemek Ekler mi?}
+    F -- Evet, FatSecret ID'li Yemekse --> G[Yemek Bilgilerini MongoDB 'FoodCache'e Kaydet]
+    G --> H[Yerel Veritabanı Zenginleşir / Organik Büyür]
+```
+
+#### Arama ve Önbellek Akış Detayları:
+1. **Eşzamanlı Sorgulama:** Kullanıcı bir besin araması yaptığında sistem, hem yerel MongoDB veritabanımızdaki `FoodCache` koleksiyonunu tarar hem de paralel olarak FatSecret API'sine istek gönderir.
+2. **Kombinasyon & Benzersizleştirme:** Her iki kaynaktan gelen sonuçlar birleştirilir. `food_id` baz alınarak mükerrer olan kayıtlar ayıklanır. Böylelikle yerel veriler kullanıcıya anında ulaştırılırken, eksik veriler harici API'den tamamlanır.
+3. **Kullanıcı Kaynaklı Veri Akışı (Data Flow):** 
+   - Bir kullanıcı FatSecret API'sinden gelen (henüz yerel veritabanımızda bulunmayan) bir yemeği kendi günlüğüne eklediği anda, o yemeğin makro değerleri, kalori bilgisi ve porsiyon detayları arka planda otomatik olarak MongoDB'deki `FoodCache` koleksiyonumuza kaydedilir.
+   - Bu sayede kullanıcılar uygulamayı aktif olarak kullandıkça ve yeni yemekler kaydettikçe, yerel veritabanımız organik olarak büyür. Sonraki sorgulamalarda aynı yemekler dış API'ye istek atmaya gerek kalmadan doğrudan yerel MongoDB'mizden çok daha hızlı servis edilir.
+
 ---
 
-## 2. Kimlik Doğrulama (Better Auth)
+## 2. Kimlik Doğrulama (Better Auth) Entegrasyonu
 
-**Better Auth**, projenin yetkilendirme (authentication) mekanizmasını sağlıyor. MongoDB adaptörü ile mevcut veritabanımıza bağlanıyor ve kullanıcı session (oturum) yönetimini üstleniyor.
+**Better Auth**, projenin kimlik doğrulama (authentication) ve oturum (session) yönetimini üstlenen modern bir kütüphanedir.
 
-### Auth Tanımlaması (`src/lib/auth.ts`)
+### 2.1 Güvenlik, Oturum ve Çerez Yönetimi
+- **MongoDB Adaptörü:** `@better-auth/mongo-adapter` kullanılarak Better Auth doğrudan projenin ana MongoDB veritabanına bağlanır. Kullanıcılar, oturumlar ve hesaplar tek bir veri tabanında ilişkisel kurallarla yönetilir.
+- **Session Güvenliği:** Oturumlar tarayıcı tarafında HttpOnly ve güvenli çerezler (cookies) aracılığıyla takip edilir. Sunucu tarafında (Server Components & Actions) oturum doğrulaması `auth.api.getSession({ headers: await headers() })` çağrısı ile tamamen güvenli bir şekilde yapılır.
+- **Oturum ve Önbellek Güncellemesi:** Kullanıcı adı güncellemesi gibi profil değişikliklerinde doğrudan veritabanına yazmak yerine Better Auth'un `auth.api.updateUser` API'si tetiklenir. Bu sayede veritabanındaki kayıt güncellenirken Better Auth kullanıcının tarayıcıdaki session cache/çerez yapısını da otomatik olarak yeniler. Böylece kullanıcı sayfayı yenilemek zorunda kalmadan yeni bilgiler arayüzde anında güncellenir.
+
+### 2.2 Auth Tanımlaması (`src/lib/auth.ts`)
 ```typescript
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
@@ -59,16 +86,17 @@ export const auth = betterAuth({
 
 ---
 
-## 3. Server Actions ile İş Akışı
+## 3. Server Actions ile Güvenli ve Tip Güvenli İş Akışı
 
-Next.js Server Actions (`"use server";`) sayesinde client (tarayıcı) tarafında API yazmadan direkt backend fonksiyonlarını tetikleyebiliyoruz. Server Action'larımızın genel akışı şöyledir:
+Next.js Server Actions (`"use server";`) sayesinde istemci (client) tarafında API rotaları (REST API endpoints) yazmaya gerek kalmadan, doğrudan sunucu üzerinde çalışan fonksiyonlar tanımlayabiliyoruz.
 
-1. `auth.api.getSession()` ile aktif kullanıcı session'ı çekilir.
-2. `connectDB()` ile veritabanı bağlantısı sağlanır.
-3. İlgili `Mongoose` modeli (örn. `User`) kullanılarak veritabanında işlem yapılır.
+### 3.1 Server Actions'ın Sağladığı Avantajlar
+- **Azaltılmış API Saldırı Yüzeyi (Zero API Surface):** Klasik `/api/user/update` gibi harici URL'ler oluşturulmadığı için kötü niyetli kişilerin tarayabileceği API kapıları en aza indirgenir.
+- **Sunucu Tarafında Güvenli Çalışma:** Veritabanı şifreleri, API anahtarları gibi hassas çevre değişkenleri (environment variables) istemci tarafına hiç sızmadan tamamen güvenli sunucu ortamında kalır.
+- **Doğrudan Veritabanı Erişimi:** HTTP istek yükü (request payload) oluşturmadan doğrudan sunucu üzerinden Mongoose modelleri aracılığıyla MongoDB işlemleri gerçekleştirilir.
+- **TypeScript ile Uçtan Uca Tip Güvenliği:** İstemciden gönderilen veriler ve sunucudan dönen yanıtlar TypeScript arayüzleri ile doğrulanır, tip hataları derleme aşamasında yakalanır.
 
-### Örnek Bir Server Action (`src/actions/user.ts`)
-
+### 3.2 Örnek Bir Server Action (`src/actions/user.ts`)
 ```typescript
 "use server";
 
@@ -78,7 +106,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { User } from "@/models/User";
 
-// 1. Session ve Kullanıcı IDsini getiren yardımcı fonksiyon
+// 1. Session ve Kullanıcı ID'sini getiren yardımcı fonksiyon
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !session.user) {
@@ -96,9 +124,8 @@ export async function updateUserHealthProfileAction(data: {
     // Veritabanına bağlan
     await connectDB();
     
-    // Oturumdan user_id'yi al ve ObjectId'ye çevir
-    const userIdStr = await getUserId();
-    const userId = new mongoose.Types.ObjectId(userIdStr);
+    // Oturumdan user_id'yi al
+    const userId = await getUserId();
 
     // Mongoose kullanarak DB'yi güncelle
     await User.updateOne(
@@ -111,7 +138,6 @@ export async function updateUserHealthProfileAction(data: {
       }
     );
 
-    // Başarı durumunu dön
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -121,9 +147,8 @@ export async function updateUserHealthProfileAction(data: {
 }
 ```
 
-### Client Tarafından Kullanımı (ViewModel üzerinden)
-
-Client tarafında Server Action'lar asenkron bir fonksiyonmuş gibi çağrılır. Biz bu projede UI bileşenlerini temiz tutmak için mantığı *ViewModel* pattern'i kullanarak ayırıyoruz.
+### 3.3 Client Tarafından Kullanımı (ViewModel Modeli)
+Biz bu projede kullanıcı arayüzünü (UI) temiz tutmak ve iş mantığını (business logic) ayırmak için **ViewModel** yapısını kullanıyoruz. İstemci, Server Action'ı sıradan bir asenkron fonksiyon gibi çağırır:
 
 ```typescript
 // Örn: src/viewmodels/useOnboardingViewModel.ts
