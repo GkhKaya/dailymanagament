@@ -37,6 +37,26 @@ export function DashboardView() {
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [sheetPayload, setSheetPayload] = useState<any>(null);
 
+  React.useEffect(() => {
+    switch (mode) {
+      case 'overview':
+        document.title = "Gösterge Paneli | DailyM";
+        break;
+      case 'health':
+        document.title = "Beslenme | DailyM";
+        break;
+      case 'finance':
+        document.title = "Cüzdan | DailyM";
+        break;
+      case 'health-analysis':
+        document.title = "Sağlık Analizi | DailyM";
+        break;
+      case 'finance-analysis':
+        document.title = "Finans Analizi | DailyM";
+        break;
+    }
+  }, [mode]);
+
   const handleLogout = async () => {
     await logoutAction();
     router.push('/');
