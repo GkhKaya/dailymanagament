@@ -86,7 +86,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Macros */}
-      <div className="flex items-center gap-[var(--space-4)] mt-[var(--space-2)]">
+      <div className="flex flex-wrap items-center gap-[var(--space-4)] mt-[var(--space-2)]">
         <div className="flex flex-col">
           <span className="text-caption text-[var(--primary)]">KARB</span>
           <div className="flex items-baseline gap-2 mt-1">

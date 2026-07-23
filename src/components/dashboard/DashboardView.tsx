@@ -125,7 +125,7 @@ export function DashboardView() {
   };
 
   return (
-    <div className="min-h-screen relative w-full transition-colors duration-800 bg-[var(--background)]">
+    <div className="min-h-[100dvh] relative w-full transition-colors duration-800 bg-[var(--background)] pb-[env(safe-area-inset-bottom)]">
       
       {/* ── Header ── */}
       <header className="w-full pt-[var(--space-4)] pb-[var(--space-4)] px-[var(--space-6)] flex justify-between items-center animate-fade-in z-10 relative border-b border-[var(--outline)] mb-[var(--space-6)]">

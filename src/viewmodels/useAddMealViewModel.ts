@@ -11,12 +11,10 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [protein, setProtein] = useState('0');
   const [carbs, setCarbs] = useState('0');
   const [fat, setFat] = useState('0');
-  const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   
-
   const [savedFoods, setSavedFoods] = useState<any[]>([]);
   const [recentByType, setRecentByType] = useState<any>({
     breakfast: [],
@@ -63,7 +61,6 @@ export function useAddMealViewModel(onSuccess: () => void) {
         protein_g: parseFloat(protein) || 0,
         carbs_g: parseFloat(carbs) || 0,
         fat_g: parseFloat(fat),
-        fatsecret_food_id: fatsecretFoodId || undefined,
         save_as_recipe: saveAsRecipe
       });
 
@@ -84,7 +81,6 @@ export function useAddMealViewModel(onSuccess: () => void) {
     e.preventDefault();
     if (selectedSavedFoods.length === 0) return;
     
-    
     setIsLoading(true);
 
     try {
@@ -101,7 +97,6 @@ export function useAddMealViewModel(onSuccess: () => void) {
           protein_g: parseFloat(food.protein_g) || 0,
           carbs_g: parseFloat(food.carbs_g) || 0,
           fat_g: parseFloat(food.fat_g) || 0,
-          fatsecret_food_id: food.fatsecret_food_id || undefined,
           save_as_recipe: false
         });
       });
@@ -130,7 +125,6 @@ export function useAddMealViewModel(onSuccess: () => void) {
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
-    fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
