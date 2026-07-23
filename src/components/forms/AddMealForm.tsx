@@ -105,12 +105,12 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     // Set default quantity based on unit
     const defaultQty = unitData.unit_name === 'gram' ? 100 : 1;
     setQuantity(defaultQty.toString());
-    setServingDescription(unitData.unit_name === 'gram' ? '100 gram' : \`1 \${unitData.unit_name}\`);
+    setServingDescription(unitData.unit_name === 'gram' ? '100 gram' : `1 ${unitData.unit_name}`);
   };
 
   const fetchFromGemini = async (targetUnit: string) => {
     setIsFetchingGemini(true);
-    const toastId = toast.loading(\`Gemini yapay zeka ile 1 \${targetUnit} \${foodName} aranıyor...\`);
+    const toastId = toast.loading(`Gemini yapay zeka ile 1 ${targetUnit} ${foodName} aranıyor...`);
     try {
       const res = await fetchFromGeminiAction(foodName, targetUnit);
       if (res.success && res.unit) {
@@ -141,7 +141,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   // Re-calculate macros when quantity changes
   useEffect(() => {
     const qty = parseFloat(quantity) || 0;
-    setServingDescription(\`\${qty} \${unitName}\`);
+    setServingDescription(`${qty} ${unitName}`);
     
     if (selectedFood && perUnitMacros.calories > 0) {
       setCalories(Math.round(perUnitMacros.calories * qty).toString());
@@ -178,13 +178,13 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                     applyUnit(unitData);
                   }
                 }}
-                className={\`px-4 py-2 rounded-xl text-sm font-medium transition-all \${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                   isActive 
                     ? 'bg-[var(--primary)] text-black shadow-sm' 
                     : isAvailable 
                       ? 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
                       : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-dashed border-[rgba(255,255,255,0.2)] hover:border-[var(--primary)] hover:text-[var(--primary)]'
-                }\`}
+                }`}
               >
                 {unit} {!isAvailable && <span className="ml-1 text-[10px]">(Eksik)</span>}
               </button>
@@ -215,14 +215,14 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
         <button 
           type="button"
           onClick={() => setActiveTab('new')}
-          className={\`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all \${activeTab === 'new' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}\`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'new' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Yeni Öğün
         </button>
         <button 
           type="button"
           onClick={() => setActiveTab('saved')}
-          className={\`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all \${activeTab === 'saved' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}\`}
+          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'saved' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           Kaydedilenler
         </button>
@@ -240,7 +240,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
             key={m.id}
             type="button"
             onClick={() => setMealType(m.id as any)}
-            className={\`flex-1 min-w-[120px] py-3 text-center rounded-2xl text-body font-medium transition-all \${mealType === m.id ? 'bg-[rgba(255,255,255,0.1)] text-white shadow-sm ring-1 ring-[rgba(255,255,255,0.2)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}\`}
+            className={`flex-1 min-w-[120px] py-3 text-center rounded-2xl text-body font-medium transition-all ${mealType === m.id ? 'bg-[rgba(255,255,255,0.1)] text-white shadow-sm ring-1 ring-[rgba(255,255,255,0.2)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
           >
             {m.label}
           </button>
@@ -419,7 +419,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
           {/* Tarif Olarak Kaydet */}
           {parseFloat(calories) > 0 && (
             <label className="flex items-center gap-3 cursor-pointer mt-2 group" onClick={() => setSaveAsRecipe(!saveAsRecipe)}>
-              <div className={\`w-5 h-5 rounded border flex items-center justify-center transition-colors \${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--inverse-primary)]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[rgba(255,255,255,0.4)]'}\`}>
+              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--inverse-primary)]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[rgba(255,255,255,0.4)]'}`}>
                 {saveAsRecipe && <Check size={14} className="text-white" />}
               </div>
               <span className="text-body text-[var(--on-surface-variant)] group-hover:text-white transition-colors">Bu yemeği favorilerime/tariflerime kaydet</span>
@@ -439,22 +439,22 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
                 <div 
                   key={recipe.id as string} 
                   onClick={() => handleSavedRecipeClick(recipe)}
-                  className={\`p-4 flex items-center justify-between rounded-2xl cursor-pointer transition-colors border \${
+                  className={`p-4 flex items-center justify-between rounded-2xl cursor-pointer transition-colors border ${
                     isSelected ? 'bg-[var(--primary)] border-[var(--primary)] text-black' : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] border-transparent'
-                  }\`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={\`w-5 h-5 rounded flex items-center justify-center border transition-colors \${
+                    <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
                       isSelected ? 'bg-black/20 border-transparent text-black' : 'border-[rgba(255,255,255,0.2)]'
-                    }\`}>
+                    }`}>
                       {isSelected && <Check size={14} />}
                     </div>
                     <div className="flex flex-col">
-                        <span className={\`text-body font-medium \${isSelected ? 'text-black' : 'text-white'}\`}>{recipe.food_name as string}</span>
-                      <span className={\`text-caption \${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}\`}>{recipe.serving_description as string || \`\${recipe.quantity} gram\`}</span>
+                        <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{recipe.food_name as string}</span>
+                      <span className={`text-caption ${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}`}>{recipe.serving_description as string || `${recipe.quantity} gram`}</span>
                     </div>
                   </div>
-                  <span className={\`text-body font-bold \${isSelected ? 'text-black' : 'text-[var(--primary)]'}\`}>{recipe.calories as number} kcal</span>
+                  <span className={`text-body font-bold ${isSelected ? 'text-black' : 'text-[var(--primary)]'}`}>{recipe.calories as number} kcal</span>
                 </div>
               );
             })
@@ -472,7 +472,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
           İptal
         </button>
         <button type="submit" disabled={isLoading || (activeTab === 'saved' && selectedSavedFoods.length === 0) || (activeTab === 'new' && (!foodName || !calories))} className="w-full sm:flex-[2] py-4 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
-          {isLoading ? <LoadingSpinner size="sm" /> : (activeTab === 'saved' ? \`Seçilenleri Ekle (\${selectedSavedFoods.length})\` : "Öğünü Kaydet")}
+          {isLoading ? <LoadingSpinner size="sm" /> : (activeTab === 'saved' ? `Seçilenleri Ekle (${selectedSavedFoods.length})` : "Öğünü Kaydet")}
         </button>
       </div>
     </form>
