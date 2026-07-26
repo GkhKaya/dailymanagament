@@ -3,11 +3,13 @@ import { ExerciseSource } from './Enums';
 
 export interface IFoodEntry {
   entry_id: mongoose.Types.ObjectId;
-  fatsecret_food_id?: string;
+  food_cache_id?: string;       // Kendi FoodCache koleksiyonumuzdaki ID
+  fatsecret_food_id?: string;   // Eski kayıtlar için geriye uyumluluk
   food_name: string;
   brand_name?: string;
   serving_description: string;
   quantity: number;
+  unit_type?: 'gram' | 'adet';
   nutrition_snapshot: {
     calories: number;
     protein_g: number;
@@ -55,11 +57,13 @@ export interface IDailyLog extends Document {
 
 const FoodEntrySchema = new Schema({
   entry_id: { type: Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
-  fatsecret_food_id: { type: String },
+  food_cache_id: { type: String, default: null },    // Kendi FoodCache koleksiyonumuzdaki ID
+  fatsecret_food_id: { type: String, default: null }, // Eski kayıtlar için geriye uyumluluk
   food_name: { type: String, required: true },
   brand_name: { type: String, default: null },
   serving_description: { type: String, required: true },
   quantity: { type: Number, required: true },
+  unit_type: { type: String, enum: ['gram', 'adet'], default: 'gram' },
   nutrition_snapshot: {
     calories: { type: Number, required: true },
     protein_g: { type: Number, required: true },

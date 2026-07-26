@@ -6,29 +6,32 @@ import { LogOut, User } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { t } from "@/lib/i18n";
 import { useDashboardViewModel } from "@/viewmodels/useDashboardViewModel";
+import dynamic from 'next/dynamic';
 import { HealthSection } from "@/components/dashboard/HealthSection";
 import { FinanceSection } from "@/components/dashboard/FinanceSection";
 import { FABMenu } from "@/components/dashboard/FABMenu";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { AddTransactionForm } from "@/components/forms/AddTransactionForm";
-import { EditTransactionForm } from "@/components/forms/EditTransactionForm";
-import { AddMealForm } from "@/components/forms/AddMealForm";
-import { AddExerciseForm } from "@/components/forms/AddExerciseForm";
-import { AddAccountForm } from "@/components/forms/AddAccountForm";
-import { EditAccountForm } from "@/components/forms/EditAccountForm";
-import { ManageCategoriesForm } from "@/components/forms/ManageCategoriesForm";
-import { ManageDebtsForm } from "@/components/forms/ManageDebtsForm";
-import { ManageSubscriptionsForm } from "@/components/forms/ManageSubscriptionsForm";
-import { ManageAccountsForm } from "@/components/forms/ManageAccountsForm";
-import { EditMealForm } from "@/components/forms/EditMealForm";
-import { AddSleepForm } from "@/components/forms/AddSleepForm";
-import { AddWeightForm } from "@/components/forms/AddWeightForm";
-import { UpdateWeightForm } from '@/components/forms/UpdateWeightForm';
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { VoiceAssistantFAB } from '@/components/assistant/VoiceAssistantFAB';
 
-import { HealthAnalysis } from "@/components/dashboard/HealthAnalysis";
-import { FinanceAnalysis } from "@/components/dashboard/FinanceAnalysis";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+// Performans optimizasyonu: Ağır formları ve analiz sayfalarını sadece ihtiyaç anında (tıklandığında) yüklenecek şekilde (Lazy Load) ayırıyoruz.
+// Bu sayede uygulamanın ilk açılış süresi (ve geliştirme modunda derlenme süresi) devasa oranda hızlanır.
+const HealthAnalysis = dynamic(() => import("@/components/dashboard/HealthAnalysis").then(m => m.HealthAnalysis), { ssr: false });
+const FinanceAnalysis = dynamic(() => import("@/components/dashboard/FinanceAnalysis").then(m => m.FinanceAnalysis), { ssr: false });
+
+const AddTransactionForm = dynamic(() => import("@/components/forms/AddTransactionForm").then(m => m.AddTransactionForm), { ssr: false });
+const EditTransactionForm = dynamic(() => import("@/components/forms/EditTransactionForm").then(m => m.EditTransactionForm), { ssr: false });
+const AddMealForm = dynamic(() => import("@/components/forms/AddMealForm").then(m => m.AddMealForm), { ssr: false });
+const EditMealForm = dynamic(() => import("@/components/forms/EditMealForm").then(m => m.EditMealForm), { ssr: false });
+const AddExerciseForm = dynamic(() => import("@/components/forms/AddExerciseForm").then(m => m.AddExerciseForm), { ssr: false });
+const AddSleepForm = dynamic(() => import("@/components/forms/AddSleepForm").then(m => m.AddSleepForm), { ssr: false });
+const AddWeightForm = dynamic(() => import("@/components/forms/AddWeightForm").then(m => m.AddWeightForm), { ssr: false });
+const AddAccountForm = dynamic(() => import("@/components/forms/AddAccountForm").then(m => m.AddAccountForm), { ssr: false });
+const EditAccountForm = dynamic(() => import("@/components/forms/EditAccountForm").then(m => m.EditAccountForm), { ssr: false });
+const ManageCategoriesForm = dynamic(() => import("@/components/forms/ManageCategoriesForm").then(m => m.ManageCategoriesForm), { ssr: false });
+const ManageDebtsForm = dynamic(() => import("@/components/forms/ManageDebtsForm").then(m => m.ManageDebtsForm), { ssr: false });
+const ManageSubscriptionsForm = dynamic(() => import("@/components/forms/ManageSubscriptionsForm").then(m => m.ManageSubscriptionsForm), { ssr: false });
+const ManageAccountsForm = dynamic(() => import("@/components/forms/ManageAccountsForm").then(m => m.ManageAccountsForm), { ssr: false });
 
 export function DashboardView() {
   const router = useRouter();
@@ -77,7 +80,7 @@ export function DashboardView() {
     switch (activeSheet) {
       case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenCategories={() => setActiveSheet('categories')} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       case 'edit-transaction': return <EditTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} transaction={sheetPayload} />;
-      case 'meal': return <AddMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'meal': return <AddMealForm onClose={() => { setActiveSheet(null); setSheetPayload(null); refreshData(); }} onSuccess={refreshData} />;
       case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} userWeight={healthData?.currentWeight || 70} />;
       case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
@@ -125,7 +128,7 @@ export function DashboardView() {
   };
 
   return (
-    <div className="min-h-[100dvh] relative w-full transition-colors duration-800 bg-[var(--background)] pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-screen relative w-full transition-colors duration-800 bg-[var(--background)]">
       
       {/* ── Header ── */}
       <header className="w-full pt-[var(--space-4)] pb-[var(--space-4)] px-[var(--space-6)] flex justify-between items-center animate-fade-in z-10 relative border-b border-[var(--outline)] mb-[var(--space-6)]">

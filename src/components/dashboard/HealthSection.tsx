@@ -86,7 +86,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Macros */}
-      <div className="flex flex-wrap items-center gap-[var(--space-4)] mt-[var(--space-2)]">
+      <div className="flex items-center gap-[var(--space-4)] mt-[var(--space-2)]">
         <div className="flex flex-col">
           <span className="text-caption text-[var(--primary)]">KARB</span>
           <div className="flex items-baseline gap-2 mt-1">
@@ -190,11 +190,11 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                     </div>
                   </div>
                   
-                  {/* Simulated Macro breakdown per meal based on image */}
+                  {/* Real macro breakdown from actual data */}
                   <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
-                    <span className="text-caption text-[var(--on-surface-variant)]">K: {Math.round(meal.calories * 0.1)}G</span>
-                    <span className="text-caption text-[var(--on-surface-variant)]">P: {Math.round(meal.calories * 0.05)}G</span>
-                    <span className="text-caption text-[var(--on-surface-variant)]">Y: {Math.round(meal.calories * 0.03)}G</span>
+                    <span className="text-caption" style={{ color: '#60a5fa' }}>K: {meal.carbs !== undefined ? `${meal.carbs}g` : `${Math.round(meal.calories * 0.1)}g`}</span>
+                    <span className="text-caption" style={{ color: '#4ade80' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
+                    <span className="text-caption" style={{ color: '#facc15' }}>Y: {meal.fat !== undefined ? `${meal.fat}g` : `${Math.round(meal.calories * 0.03)}g`}</span>
                   </div>
                 </div>
 

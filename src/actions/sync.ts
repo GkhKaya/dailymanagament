@@ -20,7 +20,10 @@ import mongoose from "mongoose";
  */
 export async function syncSubscriptions(userId: string) {
   try {
+    const start = Date.now();
+    console.log(`[syncSubscriptions] Starting...`);
     await connectDB();
+    console.log(`[syncSubscriptions] DB connected. (${Date.now() - start}ms)`);
     const now = new Date();
 
     // Find all active subscriptions whose next run date has passed
@@ -29,6 +32,7 @@ export async function syncSubscriptions(userId: string) {
       is_active: true,
       next_run_date: { $lte: now }
     });
+    console.log(`[syncSubscriptions] Found ${dueSubscriptions.length} due subscriptions. (${Date.now() - start}ms)`);
 
     if (dueSubscriptions.length === 0) return { success: true, processed: 0 };
 

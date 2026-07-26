@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
 import { SavedFood } from "@/models/SavedFood";
+import { FoodCache } from "@/models/FoodCache";
 import { WeightLog } from "@/models/WeightLog";
 import { calculateTargetCalories } from "@/lib/calories";
 
@@ -20,7 +21,7 @@ async function getUserId() {
 }
 
 // ── MEALS ──
-export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; calories: number; protein_g: number; carbs_g: number; fat_g: number; save_as_recipe?: boolean }) {
+export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; food_cache_id?: string; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -45,6 +46,9 @@ export async function addMealAction(data: { date: string; type: string; food_nam
       food_name: data.food_name,
       serving_description: data.serving_description,
       quantity: data.quantity,
+      unit_type: data.unit_type || 'gram',
+      food_cache_id: data.food_cache_id || null,
+      fatsecret_food_id: data.fatsecret_food_id || null, // geriye uyumluluk
       nutrition_snapshot: {
         calories: data.calories,
         protein_g: data.protein_g,
@@ -74,6 +78,9 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         food_name: data.food_name,
         serving_description: data.serving_description,
         quantity: data.quantity,
+        unit_type: data.unit_type || 'gram',
+        food_cache_id: data.food_cache_id,
+        fatsecret_food_id: data.fatsecret_food_id,
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,
@@ -81,10 +88,14 @@ export async function addMealAction(data: { date: string; type: string; food_nam
       });
     }
 
-    return { success: true };
+    // NOT: Yeni sistemde Gemini API route'u zaten FoodCache'e kaydediyor.
+    // Burada eski FatSecret bazlı upsert kaldırıldı.
+    // food_cache_id zaten DailyLog'a kaydedildi, ilişki kuruldu.
+
+    return { success: true, entry_id: newFood.entry_id.toString() };
   } catch (e: unknown) {
     const err = e as Error;
-    console.error("Add Meal Error:", err);
+    console.error(err);
     return { success: false, error: err.message };
   }
 }
@@ -289,16 +300,19 @@ export async function getSavedFoodsAction() {
         const mealType = type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
         (log.meals[mealType] || []).forEach((m: any) => {
           if (!recentByType[mealType].has(m.food_name?.toLowerCase())) {
+            const detectedUnit = m.unit_type || (m.serving_description?.toLowerCase().includes('adet') || m.serving_description?.toLowerCase().includes('porsiyon') ? 'adet' : 'gram');
             recentByType[mealType].set(m.food_name?.toLowerCase(), {
               id: m.entry_id.toString(),
               food_name: m.food_name,
-              calories: m.nutrition_snapshot.calories,
-              protein_g: m.nutrition_snapshot.protein_g,
-              carbs_g: m.nutrition_snapshot.carbs_g,
-              fat_g: m.nutrition_snapshot.fat_g,
-              quantity: m.quantity,
+              calories: m.nutrition_snapshot?.calories ?? 0,
+              protein_g: m.nutrition_snapshot?.protein_g ?? 0,
+              carbs_g: m.nutrition_snapshot?.carbs_g ?? 0,
+              fat_g: m.nutrition_snapshot?.fat_g ?? 0,
+              quantity: m.quantity ?? 1,
+              unit_type: detectedUnit,
               serving_description: m.serving_description,
-              fatsecret_food_id: m.fatsecret_food_id
+              fatsecret_food_id: m.fatsecret_food_id,
+              food_cache_id: m.food_cache_id
             });
           }
         });
@@ -316,14 +330,57 @@ export async function getSavedFoodsAction() {
     const savedFoods = saved.map((s: any) => ({
       id: s._id.toString(),
       food_name: s.food_name,
-      calories: s.calories,
-      protein_g: s.protein_g,
-      carbs_g: s.carbs_g,
-      fat_g: s.fat_g,
-      quantity: s.quantity,
+      calories: s.calories ?? 0,
+      protein_g: s.protein_g ?? 0,
+      carbs_g: s.carbs_g ?? 0,
+      fat_g: s.fat_g ?? 0,
+      quantity: s.quantity ?? 1,
+      unit_type: s.unit_type || (s.serving_description?.toLowerCase().includes('adet') || s.serving_description?.toLowerCase().includes('porsiyon') ? 'adet' : 'gram'),
       serving_description: s.serving_description,
-      fatsecret_food_id: s.fatsecret_food_id
+      fatsecret_food_id: s.fatsecret_food_id,
+      food_cache_id: s.food_cache_id
     }));
+
+    // FoodCache koleksiyonumuz ile zenginleştir (özellikle eski veya eksik veriler için)
+    const allFoodNames: string[] = [];
+    ['breakfast', 'lunch', 'dinner', 'snack'].forEach((type) => {
+      recentByTypeArray[type as keyof typeof recentByTypeArray].forEach((item: any) => {
+        if (item.food_name) allFoodNames.push(item.food_name);
+      });
+    });
+    savedFoods.forEach((item: any) => {
+      if (item.food_name) allFoodNames.push(item.food_name);
+    });
+
+    if (allFoodNames.length > 0) {
+      try {
+        const uniqueNames = Array.from(new Set(allFoodNames));
+        const foodCaches = await FoodCache.find({
+          food_name: { $in: uniqueNames.map(n => new RegExp(`^${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')) }
+        }).lean();
+
+        const cacheMap = new Map();
+        foodCaches.forEach((fc: any) => {
+          cacheMap.set(fc.food_name.toLowerCase(), fc);
+        });
+
+        const enrichItem = (item: any) => {
+          const matched = cacheMap.get(item.food_name.toLowerCase());
+          if (matched) {
+            item.unit_type = matched.unit_type || item.unit_type;
+            item.food_cache_id = matched._id.toString();
+            item.per_unit = matched.per_unit;
+          }
+        };
+
+        ['breakfast', 'lunch', 'dinner', 'snack'].forEach((type) => {
+          recentByTypeArray[type as keyof typeof recentByTypeArray].forEach(enrichItem);
+        });
+        savedFoods.forEach(enrichItem);
+      } catch (e) {
+        console.error('FoodCache zenginleştirme hatası:', e);
+      }
+    }
 
     return { 
       success: true, 

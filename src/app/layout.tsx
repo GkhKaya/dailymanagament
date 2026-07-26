@@ -1,13 +1,5 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-};
 
 export const metadata: Metadata = {
   title: {
@@ -15,11 +7,6 @@ export const metadata: Metadata = {
     default: "DailyM - Kişisel Yönetim Asistanınız",
   },
   description: "Kişisel hedeflerinizi, finansınızı ve sağlığınızı tek bir yerden yönetin.",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "DailyM",
-  },
 };
 
 import { Toaster } from 'react-hot-toast';

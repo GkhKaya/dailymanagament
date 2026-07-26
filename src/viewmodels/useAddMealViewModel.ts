@@ -11,10 +11,13 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [protein, setProtein] = useState('0');
   const [carbs, setCarbs] = useState('0');
   const [fat, setFat] = useState('0');
+  const [unitType, setUnitType] = useState<'gram' | 'adet'>('gram');
+  const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   
+
   const [savedFoods, setSavedFoods] = useState<any[]>([]);
   const [recentByType, setRecentByType] = useState<any>({
     breakfast: [],
@@ -42,7 +45,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
     fetchSaved();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<{ success: boolean; item?: any }> => {
     e.preventDefault();
     
     setIsLoading(true);
@@ -51,35 +54,62 @@ export function useAddMealViewModel(onSuccess: () => void) {
       if (!foodName) throw new Error("Yemek adı zorunludur.");
       if (!calories) throw new Error("Kalori miktarı zorunludur.");
 
+      const addedName = foodName;
+      const parsedQty = parseFloat(quantity) || 1;
+      const parsedCal = parseFloat(calories) || 0;
+      const parsedProt = parseFloat(protein) || 0;
+      const parsedCarbs = parseFloat(carbs) || 0;
+      const parsedFat = parseFloat(fat) || 0;
+
       const res = await addMealAction({
         date: new Date().toISOString(),
         type,
         food_name: foodName,
         serving_description: servingDescription,
-        quantity: parseFloat(quantity),
-        calories: parseFloat(calories),
-        protein_g: parseFloat(protein) || 0,
-        carbs_g: parseFloat(carbs) || 0,
-        fat_g: parseFloat(fat),
+        quantity: parsedQty,
+        unit_type: unitType,
+        calories: parsedCal,
+        protein_g: parsedProt,
+        carbs_g: parsedCarbs,
+        fat_g: parsedFat,
+        food_cache_id: fatsecretFoodId || undefined,
         save_as_recipe: saveAsRecipe
       });
 
       if (res.success) {
+        toast.success(`"${addedName}" öğüne eklendi!`);
         onSuccess();
+        return {
+          success: true,
+          item: {
+            entry_id: res.entry_id,
+            food_name: addedName,
+            quantity: parsedQty,
+            unit_type: unitType,
+            serving_description: servingDescription,
+            calories: parsedCal,
+            protein_g: parsedProt,
+            carbs_g: parsedCarbs,
+            fat_g: parsedFat,
+            type
+          }
+        };
       } else {
         toast.error(res.error || "Öğün eklenirken hata oluştu.");
+        return { success: false };
       }
     } catch (e: unknown) {
       const err = e as Error;
       toast.error(err.message);
+      return { success: false };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMultiSubmit = async (e: React.FormEvent) => {
+  const handleMultiSubmit = async (e: React.FormEvent): Promise<boolean> => {
     e.preventDefault();
-    if (selectedSavedFoods.length === 0) return;
+    if (selectedSavedFoods.length === 0) return false;
     
     setIsLoading(true);
 
@@ -93,10 +123,12 @@ export function useAddMealViewModel(onSuccess: () => void) {
           food_name: food.food_name,
           serving_description: food.serving_description || '1 porsiyon',
           quantity: parseFloat(food.quantity) || 1,
+          unit_type: food.unit_type || 'gram',
           calories: parseFloat(food.calories) || 0,
           protein_g: parseFloat(food.protein_g) || 0,
           carbs_g: parseFloat(food.carbs_g) || 0,
           fat_g: parseFloat(food.fat_g) || 0,
+          food_cache_id: food.food_cache_id || food.fatsecret_food_id || undefined,
           save_as_recipe: false
         });
       });
@@ -105,12 +137,17 @@ export function useAddMealViewModel(onSuccess: () => void) {
       const hasError = results.some(r => !r.success);
       
       if (!hasError) {
+        toast.success(`${selected.length} öğün eklendi!`);
+        setSelectedSavedFoods([]);
         onSuccess();
+        return true;
       } else {
         toast.error("Bazı öğünler eklenirken hata oluştu.");
+        return false;
       }
     } catch (err: any) {
       toast.error(err.message);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -121,10 +158,12 @@ export function useAddMealViewModel(onSuccess: () => void) {
     foodName, setFoodName,
     servingDescription, setServingDescription,
     quantity, setQuantity,
+    unitType, setUnitType,
     calories, setCalories,
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,

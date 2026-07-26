@@ -1,23 +1,71 @@
-import { t } from '@/lib/i18n';
-import React, { useState, useEffect } from 'react';
-import { Search, Save, Check, Wand2 } from 'lucide-react';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2 } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { searchLocalFoodsAction, fetchFromGeminiAction } from '@/actions/foodDictionary';
+import { deleteMealAction } from '@/actions/health';
 import toast from 'react-hot-toast';
 
-const STANDARD_UNITS = ['gram', 'adet', 'tabak', 'porsiyon'];
+// Makro renk kodları
+const MACRO_COLORS = {
+  carbs: '#60a5fa',
+  protein: '#4ade80',
+  fat: '#facc15',
+  calories: '#fb923c'
+};
 
-export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading';
+
+interface DBFoodResult {
+  id: string;
+  food_name: string;
+  food_name_en: string | null;
+  unit_type: 'gram' | 'adet';
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g?: number };
+  brand_name: string | null;
+  source: string;
+}
+
+interface SelectedFood {
+  id: string | null;
+  name: string;
+  unit_type: 'gram' | 'adet';
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+}
+
+interface SessionAddedMeal {
+  entry_id: string;
+  food_name: string;
+  quantity: number;
+  unit_type: string;
+  serving_description: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  type: string;
+}
+const MEAL_OPTIONS: { id: MealType; label: string; icon: string }[] = [
+  { id: 'breakfast', label: 'Kahvaltı', icon: '🌅' },
+  { id: 'lunch', label: 'Öğle', icon: '☀️' },
+  { id: 'dinner', label: 'Akşam', icon: '🌙' },
+  { id: 'snack', label: 'Ara Öğün', icon: '🍎' }
+];
+
+export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const {
     type: mealType, setType: setMealType,
     foodName, setFoodName,
     servingDescription, setServingDescription,
     quantity, setQuantity,
+    unitType, setUnitType,
     calories, setCalories,
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    fatsecretFoodId: foodCacheId, setFatsecretFoodId: setFoodCacheId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
@@ -25,50 +73,242 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
   } = useAddMealViewModel(onSuccess);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  
-  // Selected food state
-  const [selectedFood, setSelectedFood] = useState<any | null>(null);
-  const [unitName, setUnitName] = useState('gram');
-  const [perUnitMacros, setPerUnitMacros] = useState({ calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
-  const [isFetchingGemini, setIsFetchingGemini] = useState(false);
+  const [searchStep, setSearchStep] = useState<SearchStep>('idle');
+  const [searchResults, setSearchResults] = useState<DBFoodResult[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFood, setSelectedFood] = useState<SelectedFood | null>(null);
+  const [amount, setAmount] = useState('100');
+  const [geminiResult, setGeminiResult] = useState<any>(null);
+  const [showDropdown, setShowDropdown] = useState(true);
+  const [manualBrand, setManualBrand] = useState('');
+  const [manualCalories, setManualCalories] = useState('');
+  const [manualProtein, setManualProtein] = useState('');
+  const [manualCarbs, setManualCarbs] = useState('');
+  const [manualFat, setManualFat] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (foodName && foodName.length > 1 && activeTab === 'new' && !selectedFood) {
-        setIsSearching(true);
-        setShowDropdown(true);
-        try {
-          const res = await searchLocalFoodsAction(foodName);
-          if (res.success) {
-            setSearchResults(res.foods);
-          } else {
-            setSearchResults([]);
-          }
-        } catch (err) {
-          console.error("Local search error:", err);
-          setSearchResults([]);
-        } finally {
-          setIsSearching(false);
-        }
-      } else if (!selectedFood) {
-        setSearchResults([]);
-        if (foodName.length === 0) setShowDropdown(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [foodName, activeTab, selectedFood]);
-
+  // Otomatik öğün seçimi
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setMealType('breakfast');
-    else if (hour < 16) setMealType('lunch');
-    else if (hour < 22) setMealType('dinner');
+    if (hour < 10) setMealType('breakfast');
+    else if (hour < 15) setMealType('lunch');
+    else if (hour < 21) setMealType('dinner');
     else setMealType('snack');
   }, [setMealType]);
+
+  // Arama debounce
+  useEffect(() => {
+    if (selectedFood) return;
+    
+    if (!searchQuery || searchQuery.length < 2) {
+      setSearchStep('idle');
+      setSearchResults([]);
+      return;
+    }
+
+    clearTimeout(searchTimer.current);
+    setSearchStep('searching');
+    setShowDropdown(true);
+
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/food/search?query=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        setSearchResults(data.foods || []);
+        setSearchStep('results');
+      } catch {
+        setSearchResults([]);
+        setSearchStep('results');
+      }
+    }, 400);
+
+    return () => clearTimeout(searchTimer.current);
+  }, [searchQuery, selectedFood]);
+
+  // Miktar değişince makroları yeniden hesapla
+  useEffect(() => {
+    if (!selectedFood) return;
+    const qty = parseFloat(amount) || 0;
+    const p = selectedFood.per_unit;
+    setCalories(Math.round(p.calories * qty).toString());
+    setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
+    setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
+    setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
+    setQuantity(qty.toString());
+    setServingDescription(`${qty} ${unitType}`);
+  }, [amount, selectedFood, unitType]);
+
+  const handleSelectFromDB = (food: DBFoodResult) => {
+    setSelectedFood({
+      id: food.id,
+      name: food.food_name,
+      unit_type: food.unit_type,
+      per_unit: food.per_unit || { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+    });
+    setFoodName(food.food_name);
+    setFoodCacheId(food.id);
+    setUnitType(food.unit_type);
+    setAmount(food.unit_type === 'gram' ? '100' : '1');
+    setShowDropdown(false);
+    setSearchStep('idle');
+  };
+
+  const handleSelectRecent = async (food: any) => {
+    let detectedUnit: 'gram' | 'adet' = food.unit_type || 'gram';
+    if (!food.unit_type && food.serving_description) {
+      const descLower = food.serving_description.toLowerCase();
+      if (descLower.includes('adet') || descLower.includes('porsiyon')) {
+        detectedUnit = 'adet';
+      }
+    }
+
+    let perUnit = food.per_unit;
+
+    // Eğer per_unit yoksa veya makrolar 0 gelmişse FoodCache'ten arama yapıp güncel verileri alalım
+    if (!perUnit || (perUnit.protein_g === 0 && perUnit.carbs_g === 0 && perUnit.fat_g === 0)) {
+      try {
+        const res = await fetch(`/api/food/search?query=${encodeURIComponent(food.food_name)}`);
+        const data = await res.json();
+        const match = data.foods?.find((f: any) => f.food_name.toLowerCase() === food.food_name.toLowerCase()) || data.foods?.[0];
+        if (match) {
+          detectedUnit = match.unit_type || detectedUnit;
+          perUnit = match.per_unit;
+        }
+      } catch (e) {
+        console.error('Besin verisi arama hatası:', e);
+      }
+    }
+
+    if (!perUnit) {
+      const qtyCalc = Number(food.quantity) > 0 ? Number(food.quantity) : (detectedUnit === 'gram' ? 100 : 1);
+      perUnit = {
+        calories: (Number(food.calories) || 0) / qtyCalc,
+        protein_g: (Number(food.protein_g) || 0) / qtyCalc,
+        carbs_g: (Number(food.carbs_g) || 0) / qtyCalc,
+        fat_g: (Number(food.fat_g) || 0) / qtyCalc
+      };
+    }
+
+    const qty = Number(food.quantity) > 0 ? Number(food.quantity) : (detectedUnit === 'gram' ? 100 : 1);
+
+    setSelectedFood({
+      id: food.food_cache_id || food.fatsecret_food_id || food.id || null,
+      name: food.food_name,
+      unit_type: detectedUnit,
+      per_unit: perUnit
+    });
+    setFoodName(food.food_name);
+    setFoodCacheId(food.food_cache_id || food.fatsecret_food_id || food.id || null);
+    setUnitType(detectedUnit);
+    setAmount(qty.toString());
+    setShowDropdown(false);
+  };
+
+  const handleGeminiSearch = async () => {
+    if (!searchQuery || !amount) return;
+    setSearchStep('gemini_loading');
+    setShowDropdown(false);
+
+    try {
+      const res = await fetch('/api/food/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ food_name: searchQuery, amount: parseFloat(amount), unit: unitType })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gemini hatası');
+
+      setGeminiResult(data);
+      setSelectedFood({
+        id: null,
+        name: data.food_name,
+        unit_type: data.unit_type,
+        per_unit: data.per_unit
+      });
+      setFoodName(data.food_name);
+      setFoodCacheId(null);
+      setCalories(data.calculated.calories.toString());
+      setProtein(data.calculated.protein_g.toString());
+      setCarbs(data.calculated.carbs_g.toString());
+      setFat(data.calculated.fat_g.toString());
+      setQuantity(amount);
+      setServingDescription(`${amount} ${unitType}`);
+      setSearchStep('gemini_result');
+    } catch (err: any) {
+      setSearchStep('gemini_form');
+    }
+  };
+
+  const handleManualSubmit = async () => {
+    if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat) return;
+    setSearchStep('manual_loading');
+    setShowDropdown(false);
+
+    try {
+      const res = await fetch('/api/food/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          food_name: searchQuery, 
+          brand_name: manualBrand,
+          unit_type: unitType,
+          calories: manualCalories,
+          protein_g: manualProtein,
+          carbs_g: manualCarbs,
+          fat_g: manualFat
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Manuel ekleme hatası');
+
+      setSelectedFood({
+        id: data.food.id,
+        name: data.food.food_name,
+        unit_type: data.food.unit_type,
+        per_unit: data.food.per_unit
+      });
+      setFoodName(data.food.food_name);
+      setFoodCacheId(data.food.id);
+      
+      const qty = parseFloat(amount) || (unitType === 'gram' ? 100 : 1);
+      const p = data.food.per_unit;
+      setCalories(Math.round(p.calories * qty).toString());
+      setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
+      setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
+      setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
+      setQuantity(qty.toString());
+      setServingDescription(`${qty} ${unitType}`);
+      setSearchStep('gemini_result');
+    } catch (err: any) {
+      console.error(err);
+      setSearchStep('manual_form');
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedFood(null);
+    setGeminiResult(null);
+    setFoodName('');
+    setSearchQuery('');
+    setFoodCacheId(null);
+    setCalories('');
+    setProtein('0');
+    setCarbs('0');
+    setFat('0');
+    setManualCalories('');
+    setManualProtein('');
+    setManualCarbs('');
+    setManualFat('');
+    setManualBrand('');
+    setSearchStep('idle');
+    setSearchResults([]);
+    setShowDropdown(true);
+    setTimeout(() => searchRef.current?.focus(), 100);
+  };
+
+  const [addedCount, setAddedCount] = useState(0);
+  const [sessionAddedMeals, setSessionAddedMeals] = useState<SessionAddedMeal[]>([]);
 
   const handleSavedRecipeClick = (recipe: Record<string, unknown>) => {
     const id = recipe.id as string;
@@ -79,400 +319,527 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void, onSuc
     }
   };
 
-  const selectLocalFood = (food: any) => {
-    setFoodName(food.name);
-    setSelectedFood(food);
-    setShowDropdown(false);
-    
-    // Automatically select the first available unit or 'gram'
-    const defaultUnit = food.units.length > 0 ? food.units[0] : null;
-    if (defaultUnit) {
-      applyUnit(defaultUnit);
+  const onFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === 'saved') {
+      const countToAdd = selectedSavedFoods.length;
+      const ok = await handleMultiSubmit(e);
+      if (ok) {
+        setAddedCount(prev => prev + countToAdd);
+      }
     } else {
-      setUnitName('gram');
+      const res = await handleSubmit(e);
+      if (res.success) {
+        setAddedCount(prev => prev + 1);
+        if (res.item) {
+          setSessionAddedMeals(prev => [res.item, ...prev]);
+        }
+        handleClearSelection();
+      }
     }
   };
 
-  const applyUnit = (unitData: any) => {
-    setUnitName(unitData.unit_name);
-    setPerUnitMacros({
-      calories: unitData.calories,
-      protein_g: unitData.protein_g,
-      carbs_g: unitData.carbs_g,
-      fat_g: unitData.fat_g
-    });
-    
-    // Set default quantity based on unit
-    const defaultQty = unitData.unit_name === 'gram' ? 100 : 1;
-    setQuantity(defaultQty.toString());
-    setServingDescription(unitData.unit_name === 'gram' ? '100 gram' : `1 ${unitData.unit_name}`);
-  };
-
-  const fetchFromGemini = async (targetUnit: string) => {
-    setIsFetchingGemini(true);
-    const toastId = toast.loading(`Gemini yapay zeka ile 1 ${targetUnit} ${foodName} aranıyor...`);
+  const handleRemoveSessionMeal = async (item: SessionAddedMeal) => {
     try {
-      const res = await fetchFromGeminiAction(foodName, targetUnit);
-      if (res.success && res.unit) {
-        toast.success("Besin değerleri bulundu ve kaydedildi!", { id: toastId });
-        applyUnit(res.unit);
-        
-        // Update selectedFood to include the new unit
-        if (selectedFood) {
-          const updatedUnits = [...selectedFood.units.filter((u: any) => u.unit_name !== targetUnit), res.unit];
-          setSelectedFood({ ...selectedFood, units: updatedUnits });
-        } else {
-          // It was a completely new food
-          setSelectedFood({
-            name: foodName,
-            units: [res.unit]
-          });
-        }
+      const res = await deleteMealAction({
+        date: new Date().toISOString(),
+        entry_id: item.entry_id,
+        type: item.type || mealType
+      });
+      if (res.success) {
+        setSessionAddedMeals(prev => prev.filter(i => i.entry_id !== item.entry_id));
+        setAddedCount(prev => Math.max(0, prev - 1));
+        toast.success(`"${item.food_name}" kaldırıldı`);
+        onSuccess();
       } else {
-        toast.error(res.error || "Değerler bulunamadı.", { id: toastId });
+        toast.error(res.error || "Silinirken hata oluştu.");
       }
     } catch (e: any) {
-      toast.error(e.message || "Hata oluştu.", { id: toastId });
-    } finally {
-      setIsFetchingGemini(false);
+      toast.error(e.message);
     }
   };
 
-  // Re-calculate macros when quantity changes
-  useEffect(() => {
-    const qty = parseFloat(quantity) || 0;
-    setServingDescription(`${qty} ${unitName}`);
-    
-    if (selectedFood && perUnitMacros.calories > 0) {
-      setCalories(Math.round(perUnitMacros.calories * qty).toString());
-      setProtein(Math.round(perUnitMacros.protein_g * qty).toString());
-      setCarbs(Math.round(perUnitMacros.carbs_g * qty).toString());
-      setFat(Math.round(perUnitMacros.fat_g * qty).toString());
-    }
-  }, [quantity, perUnitMacros, unitName, selectedFood]);
-
-  const renderUnitButtons = () => {
-    // Determine which units we have and which we are missing
-    const availableUnits = selectedFood?.units || [];
-    const availableUnitNames = availableUnits.map((u: any) => u.unit_name);
-    
-    // Combine standard units with any custom units that might be in the DB
-    const allUnits = Array.from(new Set([...STANDARD_UNITS, ...availableUnitNames]));
-
-    return (
-      <div className="flex flex-col gap-2 mt-4 animate-fade-in">
-        <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar Türü Seçin</label>
-        <div className="flex flex-wrap gap-2">
-          {allUnits.map(unit => {
-            const isAvailable = availableUnitNames.includes(unit);
-            const isActive = unitName === unit;
-            
-            return (
-              <button
-                key={unit}
-                type="button"
-                onClick={() => {
-                  setUnitName(unit);
-                  if (isAvailable) {
-                    const unitData = availableUnits.find((u: any) => u.unit_name === unit);
-                    applyUnit(unitData);
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  isActive 
-                    ? 'bg-[var(--primary)] text-black shadow-sm' 
-                    : isAvailable 
-                      ? 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
-                      : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-dashed border-[rgba(255,255,255,0.2)] hover:border-[var(--primary)] hover:text-[var(--primary)]'
-                }`}
-              >
-                {unit} {!isAvailable && <span className="ml-1 text-[10px]">(Eksik)</span>}
-              </button>
-            );
-          })}
-        </div>
-        
-        {/* If selected unit is missing, show Gemini fetch button */}
-        {!availableUnitNames.includes(unitName) && foodName && (
-          <button
-            type="button"
-            onClick={() => fetchFromGemini(unitName)}
-            disabled={isFetchingGemini}
-            className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-medium shadow-md transition-all disabled:opacity-50"
-          >
-            {isFetchingGemini ? <LoadingSpinner size="sm" /> : <Wand2 size={18} />}
-            {foodName} için 1 {unitName} değerini Gemini ile Bul
-          </button>
-        )}
-      </div>
-    );
+  const calcNutrients = () => {
+    const c = parseFloat(calories) || 0;
+    const p = parseFloat(protein) || 0;
+    const cb = parseFloat(carbs) || 0;
+    const f = parseFloat(fat) || 0;
+    const total = p * 4 + cb * 4 + f * 9;
+    return {
+      calories: c,
+      protein: p,
+      carbs: cb,
+      fat: f,
+      proteinPct: total > 0 ? Math.round((p * 4 / total) * 100) : 0,
+      carbsPct: total > 0 ? Math.round((cb * 4 / total) * 100) : 0,
+      fatPct: total > 0 ? Math.round((f * 9 / total) * 100) : 0
+    };
   };
+
+  const nutrients = calcNutrients();
 
   return (
-    <form onSubmit={activeTab === 'saved' ? handleMultiSubmit : handleSubmit} className="flex flex-col gap-6">
-      {/* Top Tabs: Yeni vs Kaydedilenler */}
-      <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
-        <button 
-          type="button"
-          onClick={() => setActiveTab('new')}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'new' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
-        >
-          Yeni Öğün
-        </button>
-        <button 
-          type="button"
-          onClick={() => setActiveTab('saved')}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all ${activeTab === 'saved' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
-        >
-          Kaydedilenler
-        </button>
+    <form
+      onSubmit={onFormSubmit}
+      className="flex flex-col gap-5"
+    >
+      {/* ── TABS ── */}
+      <div className="flex p-1 bg-[rgba(255,255,255,0.04)] rounded-2xl">
+        {(['new', 'saved'] as const).map(tab => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
+              activeTab === tab
+                ? 'bg-[var(--primary)] text-black shadow-sm'
+                : 'text-[var(--on-surface-variant)] hover:text-white'
+            }`}
+          >
+            {tab === 'new' ? 'Yeni Öğün' : 'Kaydedilenler'}
+          </button>
+        ))}
       </div>
 
-      {/* Öğün Seçimi (Ortak) */}
-      <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap">
-        {[
-          { id: 'breakfast', label: 'Kahvaltı' },
-          { id: 'lunch', label: 'Öğle' },
-          { id: 'dinner', label: 'Akşam' },
-          { id: 'snack', label: 'Atıştırmalık' }
-        ].map(m => (
-          <button 
+      {/* ── ÖĞÜN SEÇİMİ ── */}
+      <div className="flex gap-2">
+        {MEAL_OPTIONS.map(m => (
+          <button
             key={m.id}
             type="button"
-            onClick={() => setMealType(m.id as any)}
-            className={`flex-1 min-w-[120px] py-3 text-center rounded-2xl text-body font-medium transition-all ${mealType === m.id ? 'bg-[rgba(255,255,255,0.1)] text-white shadow-sm ring-1 ring-[rgba(255,255,255,0.2)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+            onClick={() => { setMealType(m.id); setShowDropdown(true); }}
+            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-all ${
+              mealType === m.id
+                ? 'bg-[rgba(255,255,255,0.12)] text-white ring-1 ring-[rgba(255,255,255,0.2)]'
+                : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'
+            }`}
           >
-            {m.label}
+            <span className="text-base">{m.icon}</span>
+            <span>{m.label}</span>
           </button>
         ))}
       </div>
 
       {activeTab === 'new' ? (
-        <div className="flex flex-col gap-4 animate-fade-in">
-          {/* Yemek Arama / Adı */}
-          <div className="flex flex-col gap-2 relative z-50">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <Search className="text-[var(--primary)] transition-transform group-focus-within:scale-110" size={22} />
-              </div>
-              <input 
-                type="text" 
-                required
-                value={foodName}
-                onChange={(e) => {
-                  setFoodName(e.target.value);
-                  setSelectedFood(null); // Clear selected food when typing
-                  setShowDropdown(true);
-                }}
-                onFocus={() => {
-                  if (foodName.length > 0 && !selectedFood) setShowDropdown(true);
-                }}
-                placeholder="Yemek arayın (Örn: Kıyma, Muz)..." 
-                className="w-full bg-[#16161F] border-2 border-[rgba(255,255,255,0.05)] rounded-2xl py-5 pl-14 pr-24 text-[1.05rem] font-medium text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.02)] focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] transition-all placeholder:text-[var(--on-surface-variant)] placeholder:font-normal"
-              />
-              <div className="absolute inset-y-0 right-3 flex items-center">
-                <button type="button" onClick={() => setShowDropdown(false)} className="bg-[var(--primary)] text-black text-[10px] uppercase font-bold px-3 py-2 rounded-lg opacity-90 shadow-sm hover:opacity-100 transition-opacity">
-                  Kapat
-                </button>
-              </div>
-            </div>
+        <div className="flex flex-col gap-4">
 
-            {/* Always Open Results List (Search Results or Recent Foods) */}
-            {showDropdown && !selectedFood && (
-            <div className="absolute top-[100%] mt-2 left-0 right-0 bg-[#1A1A24] border border-[rgba(255,255,255,0.1)] rounded-2xl overflow-hidden shadow-xl max-h-64 overflow-y-auto hide-scrollbar z-50">
-              {isSearching ? (
-                <div className="p-6 flex flex-col items-center justify-center gap-3 text-[var(--on-surface-variant)] h-32">
-                  <LoadingSpinner size="md" />
-                  <span className="text-body animate-pulse">Lokal sözlükte aranıyor...</span>
-                </div>
-              ) : foodName.length > 1 ? (
-                searchResults.length > 0 ? (
-                  searchResults.map((food: any) => (
-                    <div 
-                      key={food.id}
-                      onClick={() => selectLocalFood(food)}
-                      className="p-4 hover:bg-[rgba(255,255,255,0.08)] cursor-pointer border-b border-[rgba(255,255,255,0.05)] last:border-0 transition-colors flex justify-between items-center"
-                    >
-                      <div className="text-body font-medium text-white">{food.name}</div>
-                      <div className="flex gap-1">
-                        {food.units.map((u: any) => (
-                          <span key={u.unit_name} className="text-[10px] bg-[rgba(255,255,255,0.1)] px-2 py-1 rounded text-[var(--on-surface-variant)]">{u.unit_name}</span>
-                        ))}
-                      </div>
+          {/* ── BU OTURUMDA EKLENEN ÖĞÜNLER LİSTESİ ── */}
+          {sessionAddedMeals.length > 0 && (
+            <div className="flex flex-col gap-2 p-3.5 bg-[rgba(74,222,128,0.06)] border border-[rgba(74,222,128,0.2)] rounded-2xl animate-fade-in">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[12px] font-semibold text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 size={15} /> Bu Oturumda Eklenenler ({sessionAddedMeals.length})
+                </span>
+                <span className="text-[12px] font-bold text-emerald-300">
+                  Toplam: {sessionAddedMeals.reduce((sum, item) => sum + item.calories, 0)} kcal
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+                {sessionAddedMeals.map((item) => (
+                  <div key={item.entry_id} className="flex items-center justify-between p-2.5 bg-[#161622] rounded-xl border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors">
+                    <div className="flex flex-col min-w-0 pr-2">
+                      <span className="text-[13px] font-semibold text-white truncate">{item.food_name}</span>
+                      <span className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
+                        {item.serving_description || `${item.quantity} ${item.unit_type}`} — <strong className="text-emerald-400">{item.calories} kcal</strong> (P:{item.protein_g}g, K:{item.carbs_g}g, Y:{item.fat_g}g)
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <div className="p-4 text-center flex flex-col gap-2">
-                    <span className="text-[var(--on-surface-variant)] text-[var(--font-body)]">Lokal veritabanında bulunamadı.</span>
-                    <button 
+                    <button
                       type="button"
-                      onClick={() => {
-                        setShowDropdown(false);
-                        // The UI below will render Gemini buttons for missing units
-                      }}
-                      className="text-[var(--primary)] text-sm font-medium hover:underline"
+                      onClick={() => handleRemoveSessionMeal(item)}
+                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded-lg transition-colors shrink-0"
+                      title="Öğünlerden Çıkar"
                     >
-                      Yeni Ekle / Gemini ile Arat
+                      <Trash2 size={15} />
                     </button>
                   </div>
-                )
-              ) : (
-                /* Recent Foods / Defaults - Only show when not searching */
-                <div className="flex flex-col">
-                  <div className="p-3 bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)] text-caption text-[var(--on-surface-variant)] uppercase tracking-wider sticky top-0 backdrop-blur-md z-10">
-                    Son Eklenenler (Hızlı Seçim)
-                  </div>
-                  {(() => {
-                    const mealTypeRecent = (recentByType?.[mealType] || []).filter((f: any) => f.food_name && f.food_name.trim());
-                    const favoriteFoods = (savedFoods || []).filter((f: any) => f.food_name && f.food_name.trim());
-                    
-                    const combined = [...mealTypeRecent, ...favoriteFoods];
-                    const uniqueMap = new Map(combined.map((f: any) => [f.food_name.toLowerCase().trim(), f]));
-                    const uniqueFoods = Array.from(uniqueMap.values()).slice(0, 8);
-                    
-                    if (uniqueFoods.length === 0) {
-                      return (
-                        <div className="p-6 text-center text-[var(--on-surface-variant)] text-body">
-                          <div className="text-[var(--on-surface-variant)] opacity-75">Henüz yiyecek eklemediniz</div>
-                        </div>
-                      );
-                    }
+                ))}
+              </div>
+            </div>
+          )}
 
-                    return uniqueFoods.map((food: any, idx: number) => (
-                      <div 
-                        key={idx}
-                        onClick={() => {
-                          setFoodName(food.food_name);
-                          setServingDescription(food.serving_description || '1 porsiyon');
-                          setQuantity((food.quantity || 1).toString());
-                          setCalories((food.calories || 0).toString());
-                          setProtein((food.protein_g || 0).toString());
-                          setCarbs((food.carbs_g || 0).toString());
-                          setFat((food.fat_g || 0).toString());
-                          setShowDropdown(false);
-                        }}
-                        className="p-4 hover:bg-[rgba(255,255,255,0.08)] cursor-pointer border-b border-[rgba(255,255,255,0.05)] last:border-0 transition-colors flex justify-between items-center"
-                      >
-                        <div>
-                          <div className="text-body font-medium text-white">{food.food_name}</div>
-                          <div className="text-caption text-[var(--on-surface-variant)] mt-1 opacity-75">{food.serving_description} - {food.calories} kcal</div>
+          {/* ── ARAMA ALANI ── */}
+          {!selectedFood ? (
+            <div className="flex flex-col gap-2 relative">
+              {/* Input */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  {searchStep === 'searching' || searchStep === 'gemini_loading'
+                    ? <Loader2 className="text-[var(--primary)] animate-spin" size={20} />
+                    : <Search className="text-[var(--primary)]" size={20} />
+                  }
+                </div>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); setSelectedFood(null); setShowDropdown(true); }}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Türkçe yemek arayın (Örn: Bulgur, Tavuk...)"
+                  className="w-full bg-[#16161F] border-2 border-[rgba(255,255,255,0.06)] rounded-2xl py-4 pl-12 pr-4 text-[15px] font-medium text-white focus:outline-none focus:border-[var(--primary)] focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] transition-all placeholder:text-[var(--on-surface-variant)] placeholder:font-normal"
+                />
+              </div>
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div className="w-full bg-[#1A1A26] border border-[rgba(255,255,255,0.08)] rounded-2xl overflow-hidden shadow-2xl max-h-72 overflow-y-auto">
+                  {searchStep === 'searching' ? (
+                    <div className="p-8 flex items-center justify-center gap-3 text-[var(--on-surface-variant)]">
+                      <Loader2 size={18} className="animate-spin" />
+                      <span className="text-sm">Aranıyor...</span>
+                    </div>
+                  ) : searchQuery.length >= 2 && searchResults.length > 0 ? (
+                    <>
+                      {/* DB Sonuçları */}
+                      <div className="p-2.5 pb-1 text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold px-4">
+                        Veritabanı Sonuçları
+                      </div>
+                      {searchResults.map(food => (
+                        <div
+                          key={food.id}
+                          onMouseDown={(e) => { e.preventDefault(); handleSelectFromDB(food); }}
+                          className="px-4 py-3 hover:bg-[rgba(255,255,255,0.06)] cursor-pointer border-b border-[rgba(255,255,255,0.04)] last:border-0 transition-colors flex items-center justify-between gap-3"
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <div className="text-[13px] font-semibold text-white truncate">
+                              {food.food_name}
+                              {food.brand_name && <span className="text-[var(--primary)] ml-1.5 font-normal text-[11px]">({food.brand_name})</span>}
+                            </div>
+                            <div className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
+                              {food.unit_type === 'gram' ? '100g' : '1 adet'} — {Math.round((food.per_unit?.calories || 0) * (food.unit_type === 'gram' ? 100 : 1))} kcal
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 shrink-0">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(96,165,250,0.15)', color: MACRO_COLORS.carbs }}>K{Math.round((food.per_unit?.carbs_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(74,222,128,0.15)', color: MACRO_COLORS.protein }}>P{Math.round((food.per_unit?.protein_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(250,204,21,0.15)', color: MACRO_COLORS.fat }}>Y{Math.round((food.per_unit?.fat_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Gemini ile ara butonu */}
+                      <div className="flex border-t border-[rgba(255,255,255,0.05)]">
+                        <div
+                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('gemini_form'); setShowDropdown(false); }}
+                          className="flex-1 px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-[rgba(139,92,246,0.08)] transition-colors border-r border-[rgba(255,255,255,0.05)]"
+                        >
+                          <Sparkles size={16} className="text-purple-400 shrink-0" />
+                          <span className="text-[12px] text-purple-300 font-medium">Gemini ile Bul</span>
+                        </div>
+                        <div
+                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
+                          className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
+                        >
+                          <span className="text-[16px] shrink-0">✍️</span>
+                          <span className="text-[12px] font-medium">Manuel Ekle</span>
                         </div>
                       </div>
-                    ));
-                  })()}
+                    </>
+                  ) : searchQuery.length >= 2 ? (
+                    <>
+                      <div className="px-4 py-4 text-center text-[13px] text-[var(--on-surface-variant)]">
+                        "{searchQuery}" bulunamadı.
+                      </div>
+                      <div className="flex border-t border-[rgba(255,255,255,0.05)]">
+                        <div
+                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('gemini_form'); setShowDropdown(false); }}
+                          className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(139,92,246,0.08)] transition-colors border-r border-[rgba(255,255,255,0.05)]"
+                        >
+                          <Sparkles size={16} className="text-purple-400 shrink-0" />
+                          <span className="text-[12px] text-purple-300 font-medium">Gemini ile Bul</span>
+                        </div>
+                        <div
+                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
+                          className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
+                        >
+                          <span className="text-[16px] shrink-0">✍️</span>
+                          <span className="text-[12px] font-medium">Manuel Ekle</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Son Yemekler */
+                    <div className="flex flex-col">
+                      <div className="px-4 py-2 text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)]">
+                        Son Eklenenler
+                      </div>
+                      {(() => {
+                        const recent = (recentByType?.[mealType] || []).filter((f: any) => f.food_name?.trim());
+                        const favs = (savedFoods || []).filter((f: any) => f.food_name?.trim());
+                        const combined = [...recent, ...favs];
+                        const unique = Array.from(new Map(combined.map((f: any) => [f.food_name.toLowerCase(), f])).values()).slice(0, 8);
+
+                        if (unique.length === 0) {
+                          return <div className="px-4 py-6 text-center text-[13px] text-[var(--on-surface-variant)]">Henüz eklenen yemek yok</div>;
+                        }
+                        return unique.map((f: any, idx: number) => (
+                          <div
+                            key={idx}
+                            onMouseDown={(e) => { e.preventDefault(); handleSelectRecent(f); }}
+                            className="px-4 py-3 hover:bg-[rgba(255,255,255,0.05)] cursor-pointer border-b border-[rgba(255,255,255,0.04)] last:border-0 transition-colors flex items-center justify-between"
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-medium text-white">{f.food_name}</span>
+                              <span className="text-[11px] text-[var(--on-surface-variant)]">{f.serving_description || `${f.quantity}g`}</span>
+                            </div>
+                            <span className="text-[13px] font-semibold text-[var(--primary)]">{f.calories} kcal</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Manuel Ekleme Formu */}
+              {searchStep === 'manual_form' && (
+                <div className="flex flex-col gap-3 p-4 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl animate-fade-in">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[16px]">✍️</span>
+                    <span className="text-[13px] font-semibold text-white">Yemeği Manuel Olarak Ekle</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      readOnly
+                      className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-[var(--on-surface-variant)] focus:outline-none cursor-not-allowed"
+                    />
+                    <input
+                      type="text"
+                      value={manualBrand}
+                      onChange={e => setManualBrand(e.target.value)}
+                      placeholder="Marka (İsteğe bağlı)"
+                      className="bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-[var(--primary)] transition-all"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div className="flex bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl overflow-hidden flex-1">
+                      {(['gram', 'adet'] as const).map(u => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => setUnitType(u)}
+                          className={`flex-1 py-2 text-xs font-medium transition-all ${unitType === u ? 'bg-[var(--primary)] text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="py-2 px-3 text-xs text-[var(--on-surface-variant)] flex items-center bg-[rgba(255,255,255,0.03)] rounded-xl border border-[rgba(255,255,255,0.05)]">
+                      Değerleri {unitType === 'gram' ? '100g' : '1 adet'} için girin
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 mt-1">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-orange-400 font-semibold pl-1">Kalori</label>
+                      <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => setManualCalories(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-blue-400 font-semibold pl-1">Karb (g)</label>
+                      <input type="number" min="0" step="0.1" value={manualCarbs} onChange={e => setManualCarbs(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-blue-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-green-400 font-semibold pl-1">Protein (g)</label>
+                      <input type="number" min="0" step="0.1" value={manualProtein} onChange={e => setManualProtein(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-green-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-green-500" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-yellow-400 font-semibold pl-1">Yağ (g)</label>
+                      <input type="number" min="0" step="0.1" value={manualFat} onChange={e => setManualFat(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleManualSubmit}
+                    disabled={!manualCalories || !manualProtein || !manualCarbs || !manualFat}
+                    className="w-full mt-2 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Veritabanına Kaydet ve Seç
+                  </button>
+                </div>
+              )}
+
+              {/* Yükleniyor (Manuel/Gemini) */}
+              {(searchStep === 'gemini_loading' || searchStep === 'manual_loading') && (
+                <div className="flex flex-col items-center gap-3 py-6 animate-fade-in">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${searchStep === 'gemini_loading' ? 'bg-[rgba(139,92,246,0.15)]' : 'bg-[rgba(var(--primary-rgb),0.15)]'}`}>
+                    {searchStep === 'gemini_loading' ? <Sparkles size={18} className="text-purple-400 animate-pulse" /> : <Loader2 size={18} className="text-[var(--primary)] animate-spin" />}
+                  </div>
+                  <span className={`text-[13px] animate-pulse ${searchStep === 'gemini_loading' ? 'text-purple-300' : 'text-[var(--primary)]'}`}>
+                    {searchStep === 'gemini_loading' ? 'Gemini besin değerlerini hesaplıyor...' : 'Veritabanına kaydediliyor...'}
+                  </span>
                 </div>
               )}
             </div>
-            )}
-          </div>
-
-          {/* Unit / Gemini Options */}
-          {foodName.length > 0 && !showDropdown && renderUnitButtons()}
-
-          {/* SADECE GEMINI ILE VERILER BULUNDUKTAN VEYA LOCAL'DEN SEÇILDİKTEN SONRA GÖSTERILECEK ALAN */}
-          {((selectedFood && selectedFood.units.find((u:any) => u.unit_name === unitName)) || parseFloat(calories) > 0) && (
-            <div className="grid grid-cols-2 gap-4 mt-2 md:flex md:flex-col">
-              <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Miktar ({unitName})</label>
-                <input 
-                  type="number" 
-                  step="0.1"
-                  required
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="Örn: 100" 
-                  className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
-                />
+          ) : (
+            /* ── SEÇİLEN YEMEK + MİKTAR ── */
+            <div className="flex flex-col gap-4 animate-fade-in">
+              {/* Seçilen yemek başlığı */}
+              <div className="flex items-center gap-3 p-3 bg-[rgba(255,255,255,0.04)] rounded-2xl border border-[rgba(255,255,255,0.08)]">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-white truncate">{selectedFood.name}</div>
+                  <div className="text-[11px] text-[var(--primary)] mt-0.5">
+                    {geminiResult ? '✨ Gemini ile hesaplandı' : '✅ Veritabanından'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="w-7 h-7 rounded-full bg-[rgba(255,255,255,0.06)] flex items-center justify-center hover:bg-[rgba(255,255,255,0.12)] transition-colors text-[var(--on-surface-variant)]"
+                >
+                  <X size={14} />
+                </button>
               </div>
-              
-              <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Toplam Kalori (kcal)</label>
-                <input 
-                  type="number" 
-                  required
-                  value={calories}
-                  onChange={(e) => setCalories(e.target.value)}
-                  className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
-                />
+
+              {/* Miktar + Birim */}
+              <div className="flex gap-2 items-end">
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
+                    {selectedFood.unit_type === 'gram' ? 'Miktar (gram)' : 'Adet'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    className="w-full bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl py-3.5 px-4 text-[16px] font-bold text-white focus:outline-none focus:border-[var(--primary)] transition-all"
+                  />
+                </div>
+                <div className="py-3.5 px-4 bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl text-[13px] text-[var(--on-surface-variant)] font-medium min-w-[64px] text-center">
+                  {selectedFood.unit_type === 'gram' ? 'gram' : 'adet'}
+                </div>
               </div>
+
+              {/* Makro Önizleme */}
+              {parseFloat(calories) > 0 && (
+                <div className="p-4 bg-[rgba(255,255,255,0.03)] rounded-2xl border border-[rgba(255,255,255,0.06)] animate-fade-in">
+                  {/* Kalori büyük gösterim */}
+                  <div className="flex items-baseline gap-1.5 mb-3">
+                    <span className="text-[28px] font-bold text-white">{nutrients.calories}</span>
+                    <span className="text-[13px] text-[var(--on-surface-variant)]">kcal</span>
+                  </div>
+
+                  {/* Makro bar */}
+                  <div className="flex rounded-full overflow-hidden h-2 mb-3 gap-0.5">
+                    {nutrients.carbsPct > 0 && (
+                      <div style={{ width: `${nutrients.carbsPct}%`, background: MACRO_COLORS.carbs }} className="rounded-full" />
+                    )}
+                    {nutrients.proteinPct > 0 && (
+                      <div style={{ width: `${nutrients.proteinPct}%`, background: MACRO_COLORS.protein }} className="rounded-full" />
+                    )}
+                    {nutrients.fatPct > 0 && (
+                      <div style={{ width: `${nutrients.fatPct}%`, background: MACRO_COLORS.fat }} className="rounded-full" />
+                    )}
+                  </div>
+
+                  {/* Makro değerler */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: 'Karb', value: nutrients.carbs, pct: nutrients.carbsPct, color: MACRO_COLORS.carbs, bg: 'rgba(96,165,250,0.1)' },
+                      { label: 'Protein', value: nutrients.protein, pct: nutrients.proteinPct, color: MACRO_COLORS.protein, bg: 'rgba(74,222,128,0.1)' },
+                      { label: 'Yağ', value: nutrients.fat, pct: nutrients.fatPct, color: MACRO_COLORS.fat, bg: 'rgba(250,204,21,0.1)' }
+                    ].map(m => (
+                      <div key={m.label} className="flex flex-col items-center py-2 rounded-xl" style={{ background: m.bg }}>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: m.color }}>{m.label}</span>
+                        <span className="text-[15px] font-bold text-white mt-0.5">{m.value}g</span>
+                        <span className="text-[10px]" style={{ color: m.color }}>%{m.pct}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Favorilere kaydet */}
+              <button
+                type="button"
+                onClick={() => setSaveAsRecipe(!saveAsRecipe)}
+                className={`flex items-center gap-2.5 py-2.5 px-3 rounded-xl transition-all text-[13px] font-medium border ${
+                  saveAsRecipe
+                    ? 'bg-[rgba(var(--primary-rgb),0.12)] border-[var(--primary)] text-[var(--primary)]'
+                    : 'bg-transparent border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:border-[rgba(255,255,255,0.15)] hover:text-white'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[rgba(255,255,255,0.3)]'}`}>
+                  {saveAsRecipe && <Check size={10} className="text-black" />}
+                </div>
+                Favorilerime ekle
+              </button>
             </div>
-          )}
-          
-          {/* Makro Önizleme */}
-          {parseFloat(calories) > 0 && (parseFloat(protein) > 0 || parseFloat(carbs) > 0 || parseFloat(fat) > 0) && (
-            <div className="flex gap-4 p-3 bg-[rgba(255,255,255,0.02)] rounded-xl border border-[rgba(255,255,255,0.05)] justify-center flex-wrap">
-              <div className="text-center px-4">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.carbs')}</div>
-                <div className="font-medium text-[#60a5fa]">{carbs}g</div>
-              </div>
-              <div className="text-center px-4 border-l border-r border-[rgba(255,255,255,0.1)]">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.protein')}</div>
-                <div className="font-medium text-[#4ade80]">{protein}g</div>
-              </div>
-              <div className="text-center px-4">
-                <div className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.fat')}</div>
-                <div className="font-medium text-[#facc15]">{fat}g</div>
-              </div>
-            </div>
-          )}
-
-          {/* Tarif Olarak Kaydet */}
-          {parseFloat(calories) > 0 && (
-            <label className="flex items-center gap-3 cursor-pointer mt-2 group" onClick={() => setSaveAsRecipe(!saveAsRecipe)}>
-              <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--inverse-primary)]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[rgba(255,255,255,0.4)]'}`}>
-                {saveAsRecipe && <Check size={14} className="text-white" />}
-              </div>
-              <span className="text-body text-[var(--on-surface-variant)] group-hover:text-white transition-colors">Bu yemeği favorilerime/tariflerime kaydet</span>
-            </label>
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 animate-fade-in">
+        /* ── KAYDEDİLENLER SEKMESI ── */
+        <div className="flex flex-col gap-2.5">
           {isLoadingSaved ? (
-            <div className="flex justify-center py-4">
-              <LoadingSpinner size="sm" />
-            </div>
+            <div className="flex justify-center py-6"><LoadingSpinner size="sm" /></div>
           ) : savedFoods.length > 0 ? (
             savedFoods.map((recipe: Record<string, unknown>) => {
               const isSelected = selectedSavedFoods.includes(recipe.id as string);
               return (
-                <div 
-                  key={recipe.id as string} 
+                <div
+                  key={recipe.id as string}
                   onClick={() => handleSavedRecipeClick(recipe)}
-                  className={`p-4 flex items-center justify-between rounded-2xl cursor-pointer transition-colors border ${
-                    isSelected ? 'bg-[var(--primary)] border-[var(--primary)] text-black' : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] border-transparent'
+                  className={`p-3.5 flex items-center justify-between rounded-2xl cursor-pointer transition-all border ${
+                    isSelected
+                      ? 'bg-[rgba(var(--primary-rgb),0.12)] border-[var(--primary)]'
+                      : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] border-transparent hover:border-[rgba(255,255,255,0.08)]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
-                      isSelected ? 'bg-black/20 border-transparent text-black' : 'border-[rgba(255,255,255,0.2)]'
-                    }`}>
-                      {isSelected && <Check size={14} />}
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[rgba(255,255,255,0.2)]'}`}>
+                      {isSelected && <Check size={12} className="text-black" />}
                     </div>
                     <div className="flex flex-col">
-                        <span className={`text-body font-medium ${isSelected ? 'text-black' : 'text-white'}`}>{recipe.food_name as string}</span>
-                      <span className={`text-caption ${isSelected ? 'text-black/70' : 'text-[var(--on-surface-variant)]'}`}>{recipe.serving_description as string || `${recipe.quantity} gram`}</span>
+                      <span className="text-[13px] font-semibold text-white">{recipe.food_name as string}</span>
+                      <span className="text-[11px] text-[var(--on-surface-variant)]">{recipe.serving_description as string || `${recipe.quantity}g`}</span>
                     </div>
                   </div>
-                  <span className={`text-body font-bold ${isSelected ? 'text-black' : 'text-[var(--primary)]'}`}>{recipe.calories as number} kcal</span>
+                  <span className="text-[14px] font-bold text-[var(--primary)]">{recipe.calories as number} kcal</span>
                 </div>
               );
             })
           ) : (
-            <div className="text-center text-[var(--font-body)] text-[var(--on-surface-variant)] py-4">
-              Henüz kaydedilmiş bir yemeğiniz bulunmuyor. Yeni bir yemek eklerken "Kaydet" seçeneğini işaretleyebilirsiniz.
+            <div className="text-center text-[13px] text-[var(--on-surface-variant)] py-8">
+              <div className="text-3xl mb-2">🥗</div>
+              Henüz kaydedilmiş yemeğiniz yok.
+              <br />Yeni öğün eklerken "Favorilerime ekle" seçeneğini işaretleyebilirsiniz.
             </div>
           )}
         </div>
       )}
 
-      {/* Actions */}
-      <div className="mt-4 flex gap-3 flex-col sm:flex-row">
-        <button type="button" onClick={onClose} className="w-full sm:flex-1 py-4 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-          İptal
+      {/* ── AKSIYONLAR ── */}
+      <div className="flex gap-3 mt-1">
+        <button
+          type="button"
+          onClick={onClose}
+          className={`flex-1 py-3.5 rounded-2xl text-[13px] font-semibold transition-all ${
+            addedCount > 0
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+              : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.09)] text-white'
+          }`}
+        >
+          {addedCount > 0 ? `Tamam (${addedCount} eklendi)` : 'İptal'}
         </button>
-        <button type="submit" disabled={isLoading || (activeTab === 'saved' && selectedSavedFoods.length === 0) || (activeTab === 'new' && (!foodName || !calories))} className="w-full sm:flex-[2] py-4 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
-          {isLoading ? <LoadingSpinner size="sm" /> : (activeTab === 'saved' ? `Seçilenleri Ekle (${selectedSavedFoods.length})` : "Öğünü Kaydet")}
+        <button
+          type="submit"
+          disabled={
+            isLoading
+            || (activeTab === 'new' && (!selectedFood || !calories))
+            || (activeTab === 'saved' && selectedSavedFoods.length === 0)
+          }
+          className="flex-[2] py-3.5 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-[13px] font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {isLoading
+            ? <LoadingSpinner size="sm" />
+            : activeTab === 'saved'
+              ? `Seçilenleri Ekle (${selectedSavedFoods.length})`
+              : 'Öğüne Ekle'
+          }
         </button>
       </div>
     </form>

@@ -84,8 +84,10 @@ export function useDashboardViewModel() {
   }, []);
 
   const refreshData = useCallback(async () => {
-    await fetchHealthData(currentDate);
-    await fetchFinanceData();
+    await Promise.all([
+      fetchHealthData(currentDate),
+      fetchFinanceData()
+    ]);
   }, [currentDate, fetchHealthData, fetchFinanceData]);
 
   useEffect(() => {

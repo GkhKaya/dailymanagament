@@ -23,38 +23,39 @@ async function getSession() {
 
 export async function getHealthDataAction(dateString: string): Promise<{ success: boolean; data?: HealthDataDTO; error?: string }> {
   try {
+    const start = Date.now();
+    console.log(`[getHealthDataAction] Starting for date: ${dateString}`);
     const session = await getSession();
     if (!session || !session.user) {
       return { success: false, error: "Unauthorized" };
     }
 
+    console.log(`[getHealthDataAction] Session retrieved. Connecting to DB... (${Date.now() - start}ms)`);
     await connectDB();
+    console.log(`[getHealthDataAction] DB Connected. Starting queries... (${Date.now() - start}ms)`);
     const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
     
     // Parse target date and set boundaries
     const targetDate = new Date(dateString);
     targetDate.setUTCHours(0, 0, 0, 0);
 
-    // Get user goals
-    const user = await User.findById(userId).lean();
-    const targetCalories = user?.settings?.daily_calorie_goal || 2400;
-
-    // Get DailyLog for specific date
-    const dailyLog = await DailyLog.findOne({
-      user_id: userId,
-      date: targetDate
-    }).lean();
-
-    // Get Weight History (Last 30 days)
     const thirtyDaysAgo = new Date(targetDate);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const weightLogs = await WeightLog.find({
-      user_id: session.user.id as any,
-      date: { $gte: thirtyDaysAgo, $lte: targetDate }
-    }).sort({ date: 1 }).lean();
 
-    const weightHistory = weightLogs.map(log => ({
+    // Fetch user, dailyLog, and weightLogs in parallel
+    const [user, dailyLog, weightLogs] = await Promise.all([
+      User.findById(userId).lean(),
+      DailyLog.findOne({ user_id: userId, date: targetDate }).lean(),
+      WeightLog.find({
+        user_id: session.user.id as any,
+        date: { $gte: thirtyDaysAgo, $lte: targetDate }
+      }).sort({ date: 1 }).lean()
+    ]);
+    console.log(`[getHealthDataAction] DB queries finished. (${Date.now() - start}ms)`);
+
+    const targetCalories = user?.settings?.daily_calorie_goal || 2400;
+
+    const weightHistory = (weightLogs || []).map(log => ({
       date: log.date.toISOString(),
       weight: log.weight_kg
     }));
@@ -88,16 +89,22 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     for (const [mealType, foods] of Object.entries(dailyLog.meals)) {
       if (Array.isArray(foods) && foods.length > 0) {
         let mealCalories = 0;
+        let mealProtein = 0;
+        let mealCarbs = 0;
+        let mealFat = 0;
         const mappedFoods = foods.map((f: any) => {
           mealCalories += f.nutrition_snapshot.calories;
+          mealProtein += f.nutrition_snapshot.protein_g || 0;
+          mealCarbs += f.nutrition_snapshot.carbs_g || 0;
+          mealFat += f.nutrition_snapshot.fat_g || 0;
           return {
             id: f.entry_id ? f.entry_id.toString() : new mongoose.Types.ObjectId().toString(),
             name: f.food_name,
             amount: f.serving_description,
             calories: f.nutrition_snapshot.calories,
-            protein: f.nutrition_snapshot.protein_g || 0,
-            carbs: f.nutrition_snapshot.carbs_g || 0,
-            fat: f.nutrition_snapshot.fat_g || 0
+            protein_g: f.nutrition_snapshot.protein_g || 0,
+            carbs_g: f.nutrition_snapshot.carbs_g || 0,
+            fat_g: f.nutrition_snapshot.fat_g || 0
           };
         });
 
@@ -106,6 +113,9 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           type: mealType as any,
           foodName: mappedFoods.map(f => f.name).join(" & "),
           calories: mealCalories,
+          protein: Math.round(mealProtein * 10) / 10,
+          carbs: Math.round(mealCarbs * 10) / 10,
+          fat: Math.round(mealFat * 10) / 10,
           foods: mappedFoods
         });
       }
@@ -142,21 +152,43 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
 
 export async function getFinanceDataAction(): Promise<{ success: boolean; data?: FinanceDataDTO; error?: string }> {
   try {
+    const start = Date.now();
+    console.log(`[getFinanceDataAction] Starting...`);
     const session = await getSession();
     if (!session || !session.user) {
       return { success: false, error: "Unauthorized" };
     }
 
+    console.log(`[getFinanceDataAction] Session retrieved. Connecting to DB... (${Date.now() - start}ms)`);
     await connectDB();
+    console.log(`[getFinanceDataAction] DB Connected. Starting queries... (${Date.now() - start}ms)`);
     const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
 
-    // Sync subscriptions before fetching data
-    await syncSubscriptions(session.user.id);
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
 
-    // Fetch accounts
-    const accountsRaw = await Account.find({ user_id: userId }).lean();
+    // Fetch all finance data in parallel for maximum performance
+    const [_, accountsRaw, txRaw, categoriesRaw, subsRaw, debtsRaw, monthlyStats] = await Promise.all([
+      syncSubscriptions(session.user.id),
+      Account.find({ user_id: userId }).lean(),
+      Transaction.find({ user_id: userId })
+        .sort({ date: -1 })
+        .limit(50)
+        .populate("category_id")
+        .populate("account_id")
+        .lean(),
+      Category.find({ $or: [{ user_id: userId }, { is_default: true }] }).lean(),
+      Subscription.find({ user_id: userId, is_active: true }).lean(),
+      Debt.find({ user_id: userId, status: { $ne: 'closed' } }).lean(),
+      Transaction.aggregate([
+        { $match: { user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+        { $group: { _id: "$type", total: { $sum: "$amount" } } }
+      ])
+    ]);
+    console.log(`[getFinanceDataAction] DB queries finished. (${Date.now() - start}ms)`);
+
     let totalBalance = 0;
-    const accounts = accountsRaw.map((acc: any) => {
+    const accounts = (accountsRaw || []).map((acc: any) => {
       const bal = parseFloat(acc.balance.toString());
       if (acc.include_in_total_balance) {
         totalBalance += bal;
@@ -170,14 +202,7 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       };
     });
 
-    // Fetch recent transactions (all, sorted newest to oldest)
-    const txRaw = await Transaction.find({ user_id: userId })
-      .sort({ date: -1 })
-      .populate("category_id")
-      .populate("account_id")
-      .lean();
-
-    const recentTransactions = txRaw.map((tx: any) => {
+    const recentTransactions = (txRaw || []).map((tx: any) => {
       // Date formatting for UI (e.g. "Bugün, 14:30")
       const txDate = new Date(tx.date);
       const isToday = new Date().setHours(0,0,0,0) === new Date(txDate).setHours(0,0,0,0);
@@ -199,27 +224,21 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       };
     });
 
-    // Fetch categories
-    const categoriesRaw = await Category.find({ $or: [{ user_id: userId }, { is_default: true }] }).lean();
-    const categories = categoriesRaw.map((cat: any) => ({
+    const categories = (categoriesRaw || []).map((cat: any) => ({
       id: cat._id.toString(),
       name: cat.name,
       type: cat.type,
       icon: cat.icon
     }));
 
-    // Fetch subscriptions
-    const subsRaw = await Subscription.find({ user_id: userId, is_active: true }).lean();
-    const subscriptions = subsRaw.map((sub: any) => ({
+    const subscriptions = (subsRaw || []).map((sub: any) => ({
       id: sub._id.toString(),
       name: sub.name,
       amount: parseFloat(sub.amount.toString()),
       nextBillingDate: new Date(sub.next_run_date).toISOString().split("T")[0]
     }));
 
-    // Fetch open debts
-    const debtsRaw = await Debt.find({ user_id: userId, status: { $ne: 'closed' } }).lean();
-    const debts = debtsRaw.map((debt: any) => ({
+    const debts = (debtsRaw || []).map((debt: any) => ({
       id: debt._id.toString(),
       personName: debt.person_name,
       direction: debt.direction,
@@ -228,19 +247,10 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       dueDate: debt.due_date ? new Date(debt.due_date).toISOString().split("T")[0] : ""
     }));
 
-    // Monthly Income and Expense
-    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
-    
-    const monthlyStats = await Transaction.aggregate([
-      { $match: { user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } } },
-      { $group: { _id: "$type", total: { $sum: "$amount" } } }
-    ]);
-    
     let monthlyIncome = 0;
     let monthlyExpense = 0;
     
-    monthlyStats.forEach((stat: any) => {
+    (monthlyStats || []).forEach((stat: any) => {
       if (stat._id === 'income') monthlyIncome = parseFloat(stat.total.toString());
       if (stat._id === 'expense') monthlyExpense = parseFloat(stat.total.toString());
     });

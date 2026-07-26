@@ -92,7 +92,7 @@ Eğer birim "adet" veya "tabak" ise, standart bir adetin veya tabağın ortalama
         }
     });
 
-    const text = response.text();
+    const text = (response as any).text;
     if (!text) throw new Error("Gemini empty response");
 
     const parsed = JSON.parse(text);

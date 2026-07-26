@@ -44,7 +44,7 @@ export function AddWeightForm({
               <Tooltip 
                 contentStyle={{ backgroundColor: 'rgba(20,20,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                 itemStyle={{ color: '#4ade80' }}
-                labelFormatter={(val) => new Date(val).toLocaleDateString('tr-TR')}
+                labelFormatter={(val) => val ? new Date(String(val)).toLocaleDateString('tr-TR') : ''}
               />
               <Line 
                 type="monotone" 

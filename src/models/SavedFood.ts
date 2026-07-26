@@ -5,6 +5,8 @@ export interface ISavedFood extends Document {
   food_name: string;
   serving_description: string;
   quantity: number;
+  unit_type?: 'gram' | 'adet';
+  food_cache_id?: string;
   fatsecret_food_id?: string;
   calories: number;
   protein_g: number;
@@ -18,6 +20,8 @@ const SavedFoodSchema: Schema = new Schema({
   food_name: { type: String, required: true },
   serving_description: { type: String, required: true },
   quantity: { type: Number, required: true },
+  unit_type: { type: String, enum: ['gram', 'adet'], default: 'gram' },
+  food_cache_id: { type: String },
   fatsecret_food_id: { type: String },
   calories: { type: Number, required: true },
   protein_g: { type: Number, required: true },
