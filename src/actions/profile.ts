@@ -13,7 +13,7 @@ async function getSession() {
   });
 }
 
-export async function updateWeightAction(weightKg: number) {
+export async function updateWeightAction(data: { currentWeight?: number; targetWeight?: number; targetDate?: string }) {
   try {
     const session = await getSession();
     if (!session || !session.user) {
@@ -23,10 +23,17 @@ export async function updateWeightAction(weightKg: number) {
     await connectDB();
     const userId = session.user.id;
     
-    await User.updateOne(
-      { _id: userId },
-      { $set: { current_weight_kg: weightKg } }
-    );
+    const updateFields: any = {};
+    if (data.currentWeight !== undefined) updateFields.current_weight_kg = data.currentWeight;
+    if (data.targetWeight !== undefined) updateFields.target_weight_kg = data.targetWeight;
+    if (data.targetDate) updateFields.target_weight_date = new Date(data.targetDate);
+
+    if (Object.keys(updateFields).length > 0) {
+      await User.updateOne(
+        { _id: userId },
+        { $set: updateFields }
+      );
+    }
     
     revalidatePath('/', 'layout');
     return { success: true };

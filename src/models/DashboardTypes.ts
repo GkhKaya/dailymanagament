@@ -25,6 +25,8 @@ export interface HealthDataDTO {
   targetCalories: number;
   consumedCalories: number;
   burnedCalories: number;
+  caloriesBurnedBmr: number;
+  bmrAdded: boolean;
   sleepMinutes: number;
   sleepCalories?: number;
   exerciseMinutes: number;

@@ -35,6 +35,7 @@ export default async function ProfilePage() {
     email: session.user.email || '',
     current_weight_kg: userDoc?.current_weight_kg || 0,
     target_weight_kg: userDoc?.target_weight_kg || 0,
+    target_weight_date: userDoc?.target_weight_date ? userDoc.target_weight_date.toISOString() : undefined,
     height_cm: userDoc?.profile?.height_cm || 0,
     age
   };

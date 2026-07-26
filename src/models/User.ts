@@ -15,6 +15,7 @@ export interface IUser extends Document {
   };
   current_weight_kg?: number;
   target_weight_kg?: number;
+  target_weight_date?: Date;
   settings: {
     daily_calorie_goal?: number;
     currency: string;
@@ -38,6 +39,7 @@ const UserSchema: Schema = new Schema({
   },
   current_weight_kg: { type: Number },
   target_weight_kg: { type: Number },
+  target_weight_date: { type: Date },
   settings: {
     daily_calorie_goal: { type: Number, default: null },
     currency: { type: String, default: 'TRY' },

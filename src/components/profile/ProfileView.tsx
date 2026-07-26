@@ -22,7 +22,7 @@ import { ManageWorkoutRoutineForm } from '@/components/forms/ManageWorkoutRoutin
 import { getWorkoutRoutineAction } from '@/actions/workout';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
 
-export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
+export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, target_weight_date?: string, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [workoutDays, setWorkoutDays] = useState<any[]>([]);
@@ -88,7 +88,14 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
       case 'email': return <UpdateEmailForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialEmail={initialUser.email} />;
       case 'username': return <UpdateUsernameForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialUsername={initialUser.name} />;
       case 'password': return <UpdatePasswordForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
-      case 'weight': return <UpdateWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialWeight={initialUser.current_weight_kg} />;
+      case 'weight':
+        return <UpdateWeightForm 
+          onClose={() => setActiveSheet(null)} 
+          onSuccess={() => { setActiveSheet(null); window.location.reload(); }} 
+          initialWeight={initialUser.current_weight_kg}
+          initialTargetWeight={initialUser.target_weight_kg}
+          initialTargetDate={initialUser.target_weight_date as any}
+        />;
       case 'age': return <UpdateAgeForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'manageWorkoutRoutine': return <ManageWorkoutRoutineForm onClose={() => { setActiveSheet(null); setSelectedWorkoutDay(null); }} onSuccess={handleSuccess} initialData={selectedWorkoutDay} />;
       default: return (
@@ -236,8 +243,15 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                 {/* Target Weight Placeholder */}
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold text-[var(--on-surface-variant)] uppercase tracking-widest">HEDEF KİLO</span>
-                  <div className="text-3xl font-extrabold text-white">
-                    {initialUser.target_weight_kg || '-'}<span className="text-base text-white/50 font-medium ml-1">kg</span>
+                  <div className="flex flex-col">
+                    <div className="text-3xl font-extrabold text-white">
+                      {initialUser.target_weight_kg || '-'}<span className="text-base text-white/50 font-medium ml-1">kg</span>
+                    </div>
+                    {initialUser.target_weight_date && (
+                      <span className="text-[10px] text-[var(--on-surface-variant)] mt-1">
+                        Hedef: {new Date(initialUser.target_weight_date).toLocaleDateString('tr-TR')}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

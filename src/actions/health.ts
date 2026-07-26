@@ -200,6 +200,24 @@ export async function addExerciseAction(data: { date: string; name: string; dura
     const targetDate = new Date(data.date);
     targetDate.setUTCHours(0, 0, 0, 0);
     
+    const user = await User.findById(userId);
+    let restingCalories = 0;
+    
+    if (user?.current_weight_kg && user?.profile?.height_cm && user?.profile?.birth_date) {
+      const currentWeight = user.current_weight_kg;
+      let age = 0;
+      const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
+      age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+      let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
+      bmr += user.profile.gender === 'erkek' ? 5 : -161;
+      
+      const bmrPerMinute = bmr / (24 * 60);
+      restingCalories = bmrPerMinute * data.duration_minutes;
+    }
+    
+    // Net exercise calories
+    const netCalories = Math.max(0, Math.round(data.calories_burned - restingCalories));
+
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
     if (!log) {
       log = new DailyLog({
@@ -208,23 +226,78 @@ export async function addExerciseAction(data: { date: string; name: string; dura
         meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         sleep: { duration_minutes: 0, calories_burned: 0 },
         exercises: [],
-        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
       });
     }
 
     log.exercises.push({
       name: data.name,
       duration_minutes: data.duration_minutes,
-      calories_burned: data.calories_burned,
+      calories_burned: netCalories,
       source: "manual"
     });
 
-    log.totals.calories_burned_exercise += data.calories_burned;
+    log.totals.calories_burned_exercise += netCalories;
     
     await log.save();
-    return { success: true };
+    return { success: true, netCalories, restingSubtracted: Math.round(restingCalories) };
   } catch (e: unknown) {
     const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+// ── BMR ──
+export async function addBMRAction(dateString: string) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const targetDate = new Date(dateString);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    const user = await User.findById(userId);
+    if (!user) return { success: false, error: "User not found" };
+
+    if (!user.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date || !user.profile?.gender) {
+      return { success: false, error: "BMR hesaplamak için boy, kilo, doğum tarihi ve cinsiyet bilgileri eksiksiz olmalıdır." };
+    }
+
+    const currentWeight = user.current_weight_kg;
+    let age = 0;
+    const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
+    age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+    
+    let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
+    bmr += user.profile.gender === 'erkek' ? 5 : -161;
+    bmr = Math.round(bmr);
+
+    let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
+    if (!log) {
+      log = new DailyLog({
+        user_id: userId,
+        date: targetDate,
+        meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
+        sleep: { duration_minutes: 0, calories_burned: 0 },
+        exercises: [],
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+      });
+    }
+
+    if (log.bmr_added) {
+      return { success: false, error: "BMR zaten eklenmiş." };
+    }
+
+    log.bmr_added = true;
+    if (!log.totals) {
+      log.totals = { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+    }
+    log.totals.calories_burned_bmr = bmr;
+    
+    await log.save();
+    return { success: true, bmr };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error(err);
     return { success: false, error: err.message };
   }
 }

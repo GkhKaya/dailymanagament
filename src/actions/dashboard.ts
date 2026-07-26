@@ -53,7 +53,37 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     ]);
     console.log(`[getHealthDataAction] DB queries finished. (${Date.now() - start}ms)`);
 
-    const targetCalories = user?.settings?.daily_calorie_goal || 2400;
+    // Calculate Dynamic Target Calories
+    let targetCalories = user?.settings?.daily_calorie_goal || 2400;
+    
+    if (user?.current_weight_kg && user?.target_weight_kg && user?.target_weight_date) {
+      const currentWeight = user.current_weight_kg;
+      const targetWeight = user.target_weight_kg;
+      const targetDateEnd = new Date(user.target_weight_date);
+      targetDateEnd.setUTCHours(0, 0, 0, 0);
+      
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      
+      const daysRemaining = Math.max(1, Math.ceil((targetDateEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+      
+      const weightDiff = currentWeight - targetWeight; // positive if losing weight
+      const totalCalorieDeficit = weightDiff * 7700; // 1 kg = ~7700 kcal
+      const dailyDeficit = totalCalorieDeficit / daysRemaining;
+      
+      // Calculate basic TDEE
+      let tdee = 2400;
+      if (user.profile?.height_cm && user.profile?.birth_date) {
+        let age = 0;
+        const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
+        age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+        let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
+        bmr += user.profile.gender === 'erkek' ? 5 : -161;
+        tdee = bmr * 1.2; // Sedentary multiplier as base
+      }
+      
+      targetCalories = Math.max(1200, Math.round(tdee - dailyDeficit)); // Don't go below 1200
+    }
 
     const weightHistory = (weightLogs || []).map(log => ({
       date: log.date.toISOString(),
@@ -69,6 +99,8 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           targetCalories,
           consumedCalories: 0,
           burnedCalories: 0,
+          caloriesBurnedBmr: 0,
+          bmrAdded: false,
           sleepMinutes: 0,
           sleepCalories: 0,
           exerciseMinutes: 0,
@@ -123,28 +155,30 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         });
       }
     }
+    let exerciseMinutes = 0;
+    if (dailyLog.exercises) {
+      exerciseMinutes = dailyLog.exercises.reduce((acc: number, ex: any) => acc + (ex.duration_minutes || 0), 0);
+    }
 
-    const data: HealthDataDTO = {
-      date: dailyLog.date.toISOString(),
-      targetCalories,
-      consumedCalories: dailyLog.totals.calories_consumed,
-      burnedCalories: dailyLog.totals.calories_burned_exercise,
-      sleepMinutes: dailyLog.sleep?.duration_minutes || 0,
-      sleepCalories: dailyLog.totals.calories_burned_sleep || 0,
-      exerciseMinutes: dailyLog.exercises?.reduce((acc: number, ex: any) => acc + ex.duration_minutes, 0) || 0,
-      protein: Math.round(dailyLog.totals.protein_g || 0),
-      carbs: Math.round(dailyLog.totals.carbs_g || 0),
-      fat: Math.round(dailyLog.totals.fat_g || 0),
-      meals
-    };
-
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
-        ...data,
+        date: dateString,
+        targetCalories,
+        consumedCalories: Math.round(dailyLog.totals.calories_consumed),
+        burnedCalories: Math.round(dailyLog.totals.calories_burned_exercise + (dailyLog.totals.calories_burned_sleep || 0) + (dailyLog.totals.calories_burned_bmr || 0)),
+        caloriesBurnedBmr: Math.round(dailyLog.totals.calories_burned_bmr || 0),
+        bmrAdded: !!(dailyLog as any).bmr_added,
+        sleepMinutes: dailyLog.sleep?.duration_minutes || 0,
+        sleepCalories: dailyLog.totals.calories_burned_sleep || 0,
+        exerciseMinutes,
+        protein: Math.round(dailyLog.totals.protein_g || 0),
+        carbs: Math.round(dailyLog.totals.carbs_g || 0),
+        fat: Math.round(dailyLog.totals.fat_g || 0),
+        meals,
         currentWeight: user?.current_weight_kg || 0,
         weightHistory
-      } 
+      }
     };
   } catch (e: unknown) {
     const err = e as Error;

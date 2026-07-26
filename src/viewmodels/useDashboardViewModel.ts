@@ -106,16 +106,33 @@ export function useDashboardViewModel() {
     setCurrentDate(next);
   };
 
+  const handleAddBmr = async () => {
+    try {
+      const { addBMRAction } = await import('@/actions/health');
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}T00:00:00.000Z`;
+      
+      const res = await addBMRAction(dateString);
+      if (res.success) {
+        toast.success(`BMR eklendi: ${res.bmr} kcal`);
+        await fetchHealthData(currentDate);
+      } else {
+        toast.error(res.error || "BMR eklenirken bir hata oluştu.");
+      }
+    } catch (e) {
+      toast.error("Beklenmedik bir hata oluştu.");
+    }
+  };
+
   return {
-    mode,
-    setMode,
+    mode, setMode,
     currentDate,
-    handlePrevDay,
-    handleNextDay,
-    healthData,
-    financeData,
-    isLoadingHealth,
-    isLoadingFinance,
-    refreshData,
+    healthData, financeData,
+    isLoadingHealth, isLoadingFinance,
+    handlePrevDay, handleNextDay,
+    handleAddBmr,
+    refreshData
   };
 }

@@ -11,9 +11,10 @@ interface HealthSectionProps {
   onNextDay?: () => void;
   onShowAnalysis?: () => void;
   onOpenSheet?: (type: string, payload?: unknown) => void;
+  onAddBmr?: () => void;
 }
 
-export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet }: HealthSectionProps) {
+export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
 
   const totalBurned = data.burnedCalories + (data.sleepCalories || 0);
@@ -69,8 +70,19 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
 
         {/* YAKILAN */}
-        <div className="glass-card p-[var(--space-3)] flex flex-col justify-center">
-          <span className="text-caption text-[var(--on-surface-variant)]">YAKILAN</span>
+        <div className="glass-card p-[var(--space-3)] flex flex-col justify-center relative">
+          <div className="flex justify-between items-center w-full">
+            <span className="text-caption text-[var(--on-surface-variant)]">YAKILAN</span>
+            {!data.bmrAdded && onAddBmr && (
+              <button 
+                onClick={onAddBmr}
+                className="text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-2 py-0.5 rounded-full transition-colors border border-[rgba(255,255,255,0.1)]"
+                title="Günlük Bazal Metabolizma (BMR) kalorinizi ekleyin"
+              >
+                + BMR Ekle
+              </button>
+            )}
+          </div>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-metric text-white">{totalBurned}</span>
             <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
@@ -88,7 +100,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Macros */}
-      <div className="flex items-center gap-[var(--space-4)] mt-[var(--space-2)]">
+      <div className="flex flex-wrap items-center gap-y-[var(--space-4)] gap-x-[var(--space-4)] mt-[var(--space-2)]">
         <div className="flex flex-col">
           <span className="text-caption text-[var(--primary)]">KARB</span>
           <div className="flex items-baseline gap-2 mt-1">
@@ -112,7 +124,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
         
         {/* Right Aligned Health Blocks */}
-        <div className="flex items-center gap-[var(--space-4)] ml-auto">
+        <div className="flex items-center gap-[var(--space-4)] md:ml-auto w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[rgba(255,255,255,0.1)]">
           {/* Minimalist Sleep block */}
           <div 
             className="flex flex-col border-l border-[rgba(255,255,255,0.1)] pl-[var(--space-4)] cursor-pointer hover:opacity-80 transition-opacity" 

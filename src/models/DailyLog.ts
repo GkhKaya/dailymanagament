@@ -43,10 +43,12 @@ export interface IDailyLog extends Document {
     calories_burned: number;
     source: ExerciseSource;
   }[];
+  bmr_added: boolean;
   totals: {
     calories_consumed: number;
     calories_burned_exercise: number;
     calories_burned_sleep: number;
+    calories_burned_bmr: number;
     protein_g: number;
     carbs_g: number;
     fat_g: number;
@@ -98,10 +100,12 @@ const DailyLogSchema: Schema = new Schema({
     calories_burned: { type: Number, required: true },
     source: { type: String, enum: Object.values(ExerciseSource), required: true }
   }],
+  bmr_added: { type: Boolean, default: false },
   totals: {
     calories_consumed: { type: Number, default: 0 },
     calories_burned_exercise: { type: Number, default: 0 },
     calories_burned_sleep: { type: Number, default: 0 },
+    calories_burned_bmr: { type: Number, default: 0 },
     protein_g: { type: Number, default: 0 },
     carbs_g: { type: Number, default: 0 },
     fat_g: { type: Number, default: 0 }

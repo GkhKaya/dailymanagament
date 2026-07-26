@@ -4,8 +4,25 @@ import { useUpdateWeightViewModel } from '@/viewmodels/useUpdateWeightViewModel'
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { t } from '@/lib/i18n';
 
-export function UpdateWeightForm({ onClose, onSuccess, initialWeight }: { onClose: () => void, onSuccess: () => void, initialWeight?: number }) {
-  const { weight, setWeight, isLoading, handleSubmit } = useUpdateWeightViewModel(onSuccess, initialWeight);
+export function UpdateWeightForm({ 
+  onClose, 
+  onSuccess, 
+  initialWeight,
+  initialTargetWeight,
+  initialTargetDate
+}: { 
+  onClose: () => void, 
+  onSuccess: () => void, 
+  initialWeight?: number,
+  initialTargetWeight?: number,
+  initialTargetDate?: string
+}) {
+  const { 
+    weight, setWeight, 
+    targetWeight, setTargetWeight,
+    targetDate, setTargetDate,
+    isLoading, handleSubmit 
+  } = useUpdateWeightViewModel(onSuccess, initialWeight, initialTargetWeight, initialTargetDate);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -17,7 +34,7 @@ export function UpdateWeightForm({ onClose, onSuccess, initialWeight }: { onClos
       
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-          {t("profile.updateWeight.weightLabel")}
+          {t("profile.updateWeight.weightLabel") || "Mevcut Kilo"}
         </label>
         <div className="relative">
           <Scale className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -33,6 +50,40 @@ export function UpdateWeightForm({ onClose, onSuccess, initialWeight }: { onClos
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+          Hedef Kilo
+        </label>
+        <div className="relative">
+          <Scale className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
+          <input 
+            type="number" 
+            step="0.1"
+            min="30"
+            max="300"
+            value={targetWeight}
+            onChange={(e) => setTargetWeight(e.target.value)}
+            placeholder={"Örn: 65.0"}
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+          Hedef Tarih
+        </label>
+        <input 
+          type="date" 
+          value={targetDate}
+          onChange={(e) => setTargetDate(e.target.value)}
+          className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+        />
+        <span className="text-[10px] text-[var(--on-surface-variant)]">
+          Hedef tarihinizi belirlediğinizde, günlük kalori ihtiyacınız bu tarihe kadar hedefinize ulaşacak şekilde dinamik olarak hesaplanır.
+        </span>
       </div>
 
       <div className="mt-2 flex gap-3">

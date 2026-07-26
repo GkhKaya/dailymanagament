@@ -2,8 +2,15 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { updateWeightAction } from '@/actions/profile';
 
-export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: number) {
-  const [weight, setWeight] = useState('');
+export function useUpdateWeightViewModel(
+  onSuccess: () => void, 
+  initialWeight?: number,
+  initialTargetWeight?: number,
+  initialTargetDate?: string
+) {
+  const [weight, setWeight] = useState(initialWeight ? initialWeight.toString() : '');
+  const [targetWeight, setTargetWeight] = useState(initialTargetWeight ? initialTargetWeight.toString() : '');
+  const [targetDate, setTargetDate] = useState(initialTargetDate ? new Date(initialTargetDate).toISOString().split('T')[0] : '');
   const [isLoading, setIsLoading] = useState(false);
   
 
@@ -13,9 +20,13 @@ export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: 
     setIsLoading(true);
 
     try {
-      if (!weight) throw new Error("Kilo bilginizi girmelisiniz.");
+      if (!weight) throw new Error("Mevcut kilonuzu girmelisiniz.");
       
-      const res = await updateWeightAction(parseFloat(weight));
+      const payload: any = { currentWeight: parseFloat(weight) };
+      if (targetWeight) payload.targetWeight = parseFloat(targetWeight);
+      if (targetDate) payload.targetDate = targetDate;
+      
+      const res = await updateWeightAction(payload);
 
       if (!res.success) {
         throw new Error(res.error || "Kilo güncellenirken bir hata oluştu.");
@@ -32,6 +43,8 @@ export function useUpdateWeightViewModel(onSuccess: () => void, initialWeight?: 
 
   return {
     weight, setWeight,
+    targetWeight, setTargetWeight,
+    targetDate, setTargetDate,
     isLoading, handleSubmit
   };
 }

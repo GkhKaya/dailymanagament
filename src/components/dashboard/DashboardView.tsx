@@ -36,7 +36,7 @@ const ManageWorkoutRoutineForm = dynamic(() => import("@/components/forms/Manage
 
 export function DashboardView() {
   const router = useRouter();
-  const { mode, setMode, currentDate, handlePrevDay, handleNextDay, healthData, financeData, isLoadingHealth, isLoadingFinance, refreshData } = useDashboardViewModel();
+  const { mode, setMode, currentDate, handlePrevDay, handleNextDay, handleAddBmr, healthData, financeData, isLoadingHealth, isLoadingFinance, refreshData } = useDashboardViewModel();
   
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [sheetPayload, setSheetPayload] = useState<any>(null);
@@ -215,7 +215,7 @@ export function DashboardView() {
           <div className="flex flex-col xl:flex-row gap-[var(--space-8)] w-full max-w-[1600px] mx-auto animate-fade-in">
             {/* Split Screen for Overview */}
             <div className="flex-1 relative">
-              {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} />}
+              {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} onAddBmr={handleAddBmr} />}
             </div>
             <div className="flex-1 relative">
               {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} currentDate={currentDate} />}
@@ -233,6 +233,7 @@ export function DashboardView() {
               onNextDay={handleNextDay} 
               onShowAnalysis={() => setMode('health-analysis')}
               onOpenSheet={handleOpenSheet}
+              onAddBmr={handleAddBmr}
             />
           )
         )}
