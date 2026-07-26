@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Dumbbell, Edit2 } from "lucide-react";
+import { getWorkoutRoutineAction } from "@/actions/workout";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -15,13 +16,31 @@ interface HealthSectionProps {
 
 export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
-  
+  const [workoutDays, setWorkoutDays] = useState<any[]>([]);
+  const [expandedWorkoutDays, setExpandedWorkoutDays] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getWorkoutRoutineAction().then(res => {
+      if (isMounted && res.success && res.days) {
+        setWorkoutDays(res.days);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [data]);
+
   const totalBurned = data.burnedCalories + (data.sleepCalories || 0);
   const remaining = data.targetCalories - data.consumedCalories + totalBurned;
 
   const toggleMeal = (mealId: string) => {
     setExpandedMeals(prev => 
       prev.includes(mealId) ? prev.filter(id => id !== mealId) : [...prev, mealId]
+    );
+  };
+
+  const toggleWorkoutDay = (dayId: string) => {
+    setExpandedWorkoutDays(prev =>
+      prev.includes(dayId) ? prev.filter(id => id !== dayId) : [...prev, dayId]
     );
   };
 
@@ -228,6 +247,109 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             );
           })}
         </div>
+      </div>
+
+      {/* ── ANTRENMAN PROGRAMIM ── */}
+      <div className="glass-card flex flex-col p-5 gap-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12121A]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="text-[var(--primary)]" size={18} />
+            <h3 className="text-caption text-[var(--on-surface-variant)] uppercase font-bold tracking-wider">
+              ANTRENMAN PROGRAMIM
+            </h3>
+          </div>
+          <button
+            onClick={() => onOpenSheet && onOpenSheet('manageWorkoutRoutine')}
+            className="px-3 py-1.5 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-[11px] font-bold flex items-center gap-1 hover:bg-[var(--primary)] hover:text-black transition-colors"
+          >
+            <Plus size={14} /> + Gün / Program Ekle
+          </button>
+        </div>
+
+        {workoutDays.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-6 border border-dashed border-[rgba(255,255,255,0.1)] rounded-2xl gap-3 text-center bg-[rgba(255,255,255,0.01)]">
+            <Dumbbell size={28} className="text-[var(--on-surface-variant)] opacity-40" />
+            <div className="flex flex-col gap-1">
+              <span className="text-[13px] font-semibold text-white">Henüz antrenman programı girilmedi</span>
+              <span className="text-[11px] text-[var(--on-surface-variant)]">
+                Günlerinizi (Pazartesi, Bacak Günü vb.) ve hareketlerin set sayılarını kaydedebilirsiniz.
+              </span>
+            </div>
+            <button
+              onClick={() => onOpenSheet && onOpenSheet('manageWorkoutRoutine')}
+              className="mt-1 px-4 py-2 bg-[var(--primary)] text-black font-bold text-[12px] rounded-xl hover:bg-[var(--primary-hover)] transition-all"
+            >
+              + Antrenman Programı Ekle
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {workoutDays.map((day) => {
+              const isExpanded = expandedWorkoutDays.includes(day.id);
+              const totalSets = (day.exercises || []).reduce((acc: number, ex: any) => acc + (Number(ex.sets) || 0), 0);
+
+              return (
+                <div key={day.id} className="flex flex-col bg-[#1A1A28] border border-[rgba(255,255,255,0.06)] rounded-2xl overflow-hidden hover:border-[rgba(255,255,255,0.12)] transition-all">
+                  {/* Day Header */}
+                  <div
+                    className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                    onClick={() => toggleWorkoutDay(day.id)}
+                  >
+                    <div className="flex flex-col min-w-0 pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[14px] font-bold text-white truncate">{day.day_name}</span>
+                        {isExpanded ? <ChevronUp size={16} className="text-[var(--on-surface-variant)]" /> : <ChevronDown size={16} className="text-[var(--on-surface-variant)]" />}
+                      </div>
+                      <span className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
+                        {day.exercises?.length || 0} Hareket — <strong className="text-emerald-400">{totalSets} Toplam Set</strong>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenSheet && onOpenSheet('manageWorkoutRoutine', day);
+                        }}
+                        className="p-1.5 text-[var(--on-surface-variant)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] rounded-lg transition-colors"
+                        title="Günü Düzenle"
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded Exercises */}
+                  {isExpanded && day.exercises && day.exercises.length > 0 && (
+                    <div className="flex flex-col border-t border-[rgba(255,255,255,0.06)] bg-[#141420] p-3 gap-2">
+                      {day.exercises.map((ex: any, idx: number) => (
+                        <div key={ex.id || idx} className="flex items-center justify-between p-2.5 bg-[#1C1C2D] rounded-xl border border-[rgba(255,255,255,0.04)]">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-[var(--primary)]/15 text-[var(--primary)] text-[11px] font-bold flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="text-[13px] font-semibold text-white">{ex.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-[12px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                              {ex.sets} Set {ex.reps ? `x ${ex.reps}` : ''}
+                            </span>
+                            {ex.weight_kg ? (
+                              <span className="text-[11px] text-[var(--on-surface-variant)] font-medium">
+                                ({ex.weight_kg} kg)
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {!isOverview && <div className="h-24"></div>}

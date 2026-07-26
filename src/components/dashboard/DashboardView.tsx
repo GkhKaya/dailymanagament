@@ -32,6 +32,7 @@ const ManageCategoriesForm = dynamic(() => import("@/components/forms/ManageCate
 const ManageDebtsForm = dynamic(() => import("@/components/forms/ManageDebtsForm").then(m => m.ManageDebtsForm), { ssr: false });
 const ManageSubscriptionsForm = dynamic(() => import("@/components/forms/ManageSubscriptionsForm").then(m => m.ManageSubscriptionsForm), { ssr: false });
 const ManageAccountsForm = dynamic(() => import("@/components/forms/ManageAccountsForm").then(m => m.ManageAccountsForm), { ssr: false });
+const ManageWorkoutRoutineForm = dynamic(() => import("@/components/forms/ManageWorkoutRoutineForm").then(m => m.ManageWorkoutRoutineForm), { ssr: false });
 
 export function DashboardView() {
   const router = useRouter();
@@ -85,6 +86,7 @@ export function DashboardView() {
       case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} userWeight={healthData?.currentWeight || 70} />;
       case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'addWeight': return <AddWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} currentWeight={sheetPayload?.currentWeight || 0} weightHistory={sheetPayload?.weightHistory || []} currentDate={currentDate.toISOString()} />;
+      case 'manageWorkoutRoutine': return <ManageWorkoutRoutineForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'manageAccounts': return (
         <ManageAccountsForm 
           onClose={() => setActiveSheet(null)} 
@@ -117,6 +119,7 @@ export function DashboardView() {
       case 'exercise': return 'Egzersiz Ekle';
       case 'addSleep': return 'Uyku Verisi Ekle';
       case 'addWeight': return 'Kilo Güncelle';
+      case 'manageWorkoutRoutine': return sheetPayload?.id ? 'Antrenman Gününü Düzenle' : 'Antrenman Programı Ekle';
       case 'manageAccounts': return 'Hesapları Yönet';
       case 'addAccount': return 'Hesap Oluştur';
       case 'editAccount': return 'Hesabı Düzenle';
