@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
@@ -18,14 +18,39 @@ import { ManageAccountsForm } from '@/components/forms/ManageAccountsForm';
 import { EditAccountForm } from '@/components/forms/EditAccountForm';
 import { EditSubscriptionForm } from '@/components/forms/EditSubscriptionForm';
 import { EditDebtForm } from '@/components/forms/EditDebtForm';
+import { ManageWorkoutRoutineForm } from '@/components/forms/ManageWorkoutRoutineForm';
+import { getWorkoutRoutineAction } from '@/actions/workout';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
 
 export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  const [workoutDays, setWorkoutDays] = useState<any[]>([]);
+  const [expandedWorkoutDays, setExpandedWorkoutDays] = useState<string[]>([]);
+  const [selectedWorkoutDay, setSelectedWorkoutDay] = useState<any>(null);
+
+  const fetchWorkoutRoutine = () => {
+    getWorkoutRoutineAction().then(res => {
+      if (res.success && res.days) {
+        setWorkoutDays(res.days);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchWorkoutRoutine();
+  }, [activeSheet]);
+
+  const toggleWorkoutDay = (dayId: string) => {
+    setExpandedWorkoutDays(prev =>
+      prev.includes(dayId) ? prev.filter(id => id !== dayId) : [...prev, dayId]
+    );
+  };
 
   const handleSuccess = () => {
     setActiveSheet(null);
+    setSelectedWorkoutDay(null);
+    fetchWorkoutRoutine();
     router.refresh();
   };
 
@@ -38,7 +63,6 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
     if (activeSheet?.startsWith('editSubscription_')) {
       const id = activeSheet.replace('editSubscription_', '');
       const data = financeData?.subscriptions.find(s => s.id === id);
-      // Map properties for EditSubscriptionForm
       const subData = data ? { id: data.id, name: data.name, amount: data.amount, billingDay: new Date(data.nextBillingDate).getDate() } : undefined;
       return <EditSubscriptionForm onClose={() => setActiveSheet('subscriptions')} onSuccess={handleSuccess} initialData={subData} />;
     }
@@ -66,6 +90,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
       case 'password': return <UpdatePasswordForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
       case 'weight': return <UpdateWeightForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialWeight={initialUser.current_weight_kg} />;
       case 'age': return <UpdateAgeForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'manageWorkoutRoutine': return <ManageWorkoutRoutineForm onClose={() => { setActiveSheet(null); setSelectedWorkoutDay(null); }} onSuccess={handleSuccess} initialData={selectedWorkoutDay} />;
       default: return (
         <div className="p-8 text-center text-[var(--on-surface-variant)]">
           Bu form yapım aşamasındadır.
@@ -89,6 +114,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
       case 'addAccount': return 'Hesap Oluştur';
       case 'debts': return 'Borç Yönetimi';
       case 'subscriptions': return 'Abonelik Yönetimi';
+      case 'manageWorkoutRoutine': return selectedWorkoutDay?.id ? 'Antrenman Gününü Düzenle' : 'Antrenman Programı Ekle';
       default: return 'Yönetim';
     }
   };
@@ -215,6 +241,108 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Antrenman Programım Card */}
+            <div className="bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-xl p-6 shadow-xl flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Dumbbell className="text-[var(--primary)]" size={20} />
+                  <h3 className="text-lg font-bold text-white">Antrenman Programım</h3>
+                </div>
+                <button
+                  onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
+                  className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-black transition-colors flex items-center gap-1.5"
+                >
+                  <Plus size={14} /> + Gün / Program Ekle
+                </button>
+              </div>
+
+              {workoutDays.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-6 border border-dashed border-[rgba(255,255,255,0.1)] rounded-xl gap-3 text-center bg-[rgba(255,255,255,0.01)]">
+                  <Dumbbell size={32} className="text-[var(--on-surface-variant)] opacity-40" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-bold text-white">Henüz antrenman programı girilmedi</span>
+                    <span className="text-xs text-[var(--on-surface-variant)]">
+                      Günlerinizi (Pazartesi, Bacak Günü vb.) ve hareketlerin set sayılarını buradan kaydedip yönetebilirsiniz.
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
+                    className="mt-1 px-4 py-2 bg-[var(--primary)] text-black font-bold text-xs rounded-lg hover:bg-[var(--primary-hover)] transition-all"
+                  >
+                    + Antrenman Programı Ekle
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {workoutDays.map((day) => {
+                    const isExpanded = expandedWorkoutDays.includes(day.id);
+                    const totalSets = (day.exercises || []).reduce((acc: number, ex: any) => acc + (Number(ex.sets) || 0), 0);
+
+                    return (
+                      <div key={day.id} className="flex flex-col bg-[var(--surface-container)] border border-[rgba(255,255,255,0.06)] rounded-xl overflow-hidden hover:border-[rgba(255,255,255,0.12)] transition-all">
+                        {/* Day Header */}
+                        <div
+                          className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-[rgba(255,255,255,0.03)] transition-colors"
+                          onClick={() => toggleWorkoutDay(day.id)}
+                        >
+                          <div className="flex flex-col min-w-0 pr-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white truncate">{day.day_name}</span>
+                              {isExpanded ? <ChevronUp size={16} className="text-[var(--on-surface-variant)]" /> : <ChevronDown size={16} className="text-[var(--on-surface-variant)]" />}
+                            </div>
+                            <span className="text-xs text-[var(--on-surface-variant)] mt-0.5">
+                              {day.exercises?.length || 0} Hareket — <strong className="text-emerald-400">{totalSets} Toplam Set</strong>
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedWorkoutDay(day);
+                                setActiveSheet('manageWorkoutRoutine');
+                              }}
+                              className="p-1.5 text-[var(--on-surface-variant)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] rounded-lg transition-colors"
+                              title="Günü Düzenle"
+                            >
+                              <Edit2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expanded Exercises */}
+                        {isExpanded && day.exercises && day.exercises.length > 0 && (
+                          <div className="flex flex-col border-t border-[rgba(255,255,255,0.06)] bg-[#12121D] p-3 gap-2">
+                            {day.exercises.map((ex: any, idx: number) => (
+                              <div key={ex.id || idx} className="flex items-center justify-between p-2.5 bg-[#181826] rounded-lg border border-[rgba(255,255,255,0.04)]">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="w-6 h-6 rounded-md bg-[var(--primary)]/15 text-[var(--primary)] text-xs font-bold flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="text-xs font-semibold text-white">{ex.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2.5">
+                                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                                    {ex.sets} Set {ex.reps ? `x ${ex.reps}` : ''}
+                                  </span>
+                                  {ex.weight_kg ? (
+                                    <span className="text-[11px] text-[var(--on-surface-variant)] font-medium">
+                                      ({ex.weight_kg} kg)
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Hedefler & Tercihler Card */}
