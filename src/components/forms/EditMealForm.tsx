@@ -11,6 +11,9 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
     quantity, setQuantity,
     unit, setUnit,
     calories, setCalories,
+    protein, setProtein,
+    carbs, setCarbs,
+    fat, setFat,
     getServingDesc,
     isLoading,
     handleUpdate, handleDelete
@@ -78,15 +81,71 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
           </div>
         </div>
 
-        {/* Kalori */}
-        <div className="flex flex-col gap-2 mt-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.calories')}</label>
-          <input 
-            type="number" 
-            value={calories}
-            onChange={(e) => setCalories(e.target.value)}
-            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body font-bold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
-          />
+        {/* Kalori & Makrolar */}
+        <div className="flex flex-col gap-3 mt-1">
+          <div className="flex flex-col gap-2">
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.calories')}</label>
+            <div className="relative">
+              <input 
+                type="number" 
+                value={calories}
+                onChange={(e) => setCalories(e.target.value)}
+                className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body font-bold text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--on-surface-variant)]">kcal</span>
+            </div>
+          </div>
+
+          {/* Canlı Makro Kartları (Protein, Karbonhidrat, Yağ) */}
+          <div className="flex flex-col gap-2">
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Makro Besin Değerleri</label>
+            <div className="grid grid-cols-3 gap-2">
+              {/* Protein */}
+              <div className="flex flex-col p-3 bg-[#161622] border border-[#4ade80]/25 rounded-xl">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#4ade80]">Protein</span>
+                <div className="flex items-center justify-between mt-1">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={protein}
+                    onChange={(e) => setProtein(e.target.value)}
+                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                  />
+                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                </div>
+              </div>
+
+              {/* Karbonhidrat */}
+              <div className="flex flex-col p-3 bg-[#161622] border border-[#60a5fa]/25 rounded-xl">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#60a5fa]">Karb</span>
+                <div className="flex items-center justify-between mt-1">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={carbs}
+                    onChange={(e) => setCarbs(e.target.value)}
+                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                  />
+                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                </div>
+              </div>
+
+              {/* Yağ */}
+              <div className="flex flex-col p-3 bg-[#161622] border border-[#facc15]/25 rounded-xl">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#facc15]">Yağ</span>
+                <div className="flex items-center justify-between mt-1">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={fat}
+                    onChange={(e) => setFat(e.target.value)}
+                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                  />
+                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

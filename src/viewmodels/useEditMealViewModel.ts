@@ -28,26 +28,30 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
   const [unit, setUnit] = useState(parsed.unit);
   const [calories, setCalories] = useState(initialData?.calories?.toString() || '0');
   
-  const [protein, setProtein] = useState((initialData?.protein || 0).toString());
-  const [carbs, setCarbs] = useState((initialData?.carbs || 0).toString());
-  const [fat, setFat] = useState((initialData?.fat || 0).toString());
+  const initProtein = initialData?.protein_g ?? initialData?.protein ?? 0;
+  const initCarbs = initialData?.carbs_g ?? initialData?.carbs ?? 0;
+  const initFat = initialData?.fat_g ?? initialData?.fat ?? 0;
+
+  const [protein, setProtein] = useState(initProtein.toString());
+  const [carbs, setCarbs] = useState(initCarbs.toString());
+  const [fat, setFat] = useState(initFat.toString());
 
   const [baseMacros] = useState(() => {
     const bq = parsed.qty || 1;
     return {
       c: (initialData?.calories || 0) / bq,
-      p: (initialData?.protein || 0) / bq,
-      cb: (initialData?.carbs || 0) / bq,
-      f: (initialData?.fat || 0) / bq
+      p: initProtein / bq,
+      cb: initCarbs / bq,
+      f: initFat / bq
     };
   });
 
   useEffect(() => {
     const q = quantity || 0;
     setCalories(Math.round(baseMacros.c * q).toString());
-    setProtein(Math.round(baseMacros.p * q).toString());
-    setCarbs(Math.round(baseMacros.cb * q).toString());
-    setFat(Math.round(baseMacros.f * q).toString());
+    setProtein((Math.round(baseMacros.p * q * 10) / 10).toString());
+    setCarbs((Math.round(baseMacros.cb * q * 10) / 10).toString());
+    setFat((Math.round(baseMacros.f * q * 10) / 10).toString());
   }, [quantity, baseMacros]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -129,7 +133,9 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     quantity, setQuantity,
     unit, setUnit,
     calories, setCalories,
-    protein, carbs, fat,
+    protein, setProtein,
+    carbs, setCarbs,
+    fat, setFat,
     getServingDesc,
     isLoading,
     handleUpdate, handleDelete

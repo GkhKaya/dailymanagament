@@ -102,6 +102,9 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
             name: f.food_name,
             amount: f.serving_description,
             calories: f.nutrition_snapshot.calories,
+            protein: f.nutrition_snapshot.protein_g || 0,
+            carbs: f.nutrition_snapshot.carbs_g || 0,
+            fat: f.nutrition_snapshot.fat_g || 0,
             protein_g: f.nutrition_snapshot.protein_g || 0,
             carbs_g: f.nutrition_snapshot.carbs_g || 0,
             fat_g: f.nutrition_snapshot.fat_g || 0

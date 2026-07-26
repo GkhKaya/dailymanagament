@@ -208,8 +208,13 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                         onClick={() => onOpenSheet && onOpenSheet('editMeal', { ...food, type: meal.type, date: data.date })}
                       >
                         <div className="flex flex-col">
-                          <span className="text-body text-white">{food.name}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)]">{food.amount}</span>
+                          <span className="text-body font-medium text-white">{food.name}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
+                            <span>{food.amount}</span>
+                            <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
+                            <span className="text-[11px]" style={{ color: '#4ade80' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
+                            <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
+                          </span>
                         </div>
                         <div className="flex items-baseline gap-1">
                           <span className="text-body font-medium text-[var(--primary)]">{food.calories}</span>
