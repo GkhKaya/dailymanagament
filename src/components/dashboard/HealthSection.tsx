@@ -17,7 +17,7 @@ interface HealthSectionProps {
 export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
 
-  const totalBurned = data.burnedCalories + (data.sleepCalories || 0);
+  const totalBurned = data.burnedCalories;
   const remaining = data.targetCalories - data.consumedCalories + totalBurned;
 
   const toggleMeal = (mealId: string) => {
@@ -71,22 +71,22 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
 
         {/* YAKILAN */}
         <div className="glass-card p-[var(--space-3)] flex flex-col justify-center relative">
-          <div className="flex justify-between items-center w-full">
-            <span className="text-caption text-[var(--on-surface-variant)]">YAKILAN</span>
-            {!data.bmrAdded && onAddBmr && (
-              <button 
-                onClick={onAddBmr}
-                className="text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-2 py-0.5 rounded-full transition-colors border border-[rgba(255,255,255,0.1)]"
-                title="Günlük Bazal Metabolizma (BMR) kalorinizi ekleyin"
-              >
-                + BMR Ekle
-              </button>
-            )}
-          </div>
+          <span className="text-caption text-[var(--on-surface-variant)]">YAKILAN</span>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-metric text-white">{totalBurned}</span>
             <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
+          {!data.bmrAdded && onAddBmr && (
+            <div className="mt-2">
+              <button 
+                onClick={onAddBmr}
+                className="w-full text-center text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-2 py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)]"
+                title="Günlük Bazal Metabolizma (BMR) kalorinizi ekleyin"
+              >
+                + BMR Ekle
+              </button>
+            </div>
+          )}
         </div>
 
         {/* KALAN */}
