@@ -21,13 +21,12 @@ async function getUserId() {
 }
 
 // ── MEALS ──
-export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; food_cache_id?: string; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
+export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; food_cache_id?: string; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
   try {
     await connectDB();
     const userId = await getUserId();
     const targetDate = new Date(data.date);
     targetDate.setUTCHours(0, 0, 0, 0);
-    const sugarVal = data.sugar_g || 0;
     
     // Find or create DailyLog
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
@@ -38,7 +37,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         sleep: { duration_minutes: 0, calories_burned: 0 },
         exercises: [],
-        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0, sugar_g: 0 }
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
       });
     }
 
@@ -54,8 +53,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,
-        fat_g: data.fat_g,
-        sugar_g: sugarVal
+        fat_g: data.fat_g
       }
     };
 
@@ -70,7 +68,6 @@ export async function addMealAction(data: { date: string; type: string; food_nam
     log.totals.protein_g += data.protein_g;
     log.totals.carbs_g += data.carbs_g;
     log.totals.fat_g += data.fat_g;
-    log.totals.sugar_g = (log.totals.sugar_g || 0) + sugarVal;
     
     await log.save();
 
@@ -87,8 +84,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,
-        fat_g: data.fat_g,
-        sugar_g: sugarVal
+        fat_g: data.fat_g
       });
     }
 
@@ -100,7 +96,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
   }
 }
 
-export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; }) {
+export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -111,8 +107,7 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     if (!log) return { success: false, error: "Günlük kayıt bulunamadı." };
 
     let foundFood = null;
-    let oldCal = 0, oldProt = 0, oldCarb = 0, oldFat = 0, oldSugar = 0;
-    const sugarVal = data.sugar_g || 0;
+    let oldCal = 0, oldProt = 0, oldCarb = 0, oldFat = 0;
 
     // Find and remove from old type array
     const oldType = data.old_type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -124,7 +119,6 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
         oldProt = foundFood.nutrition_snapshot.protein_g;
         oldCarb = foundFood.nutrition_snapshot.carbs_g;
         oldFat = foundFood.nutrition_snapshot.fat_g;
-        oldSugar = foundFood.nutrition_snapshot.sugar_g || 0;
         log.meals[oldType].splice(idx, 1);
       }
     }
@@ -138,7 +132,6 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     foundFood.nutrition_snapshot.protein_g = data.protein_g;
     foundFood.nutrition_snapshot.carbs_g = data.carbs_g;
     foundFood.nutrition_snapshot.fat_g = data.fat_g;
-    foundFood.nutrition_snapshot.sugar_g = sugarVal;
 
     // Push to new type array
     const newType = data.type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -149,7 +142,6 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     log.totals.protein_g += (data.protein_g - oldProt);
     log.totals.carbs_g += (data.carbs_g - oldCarb);
     log.totals.fat_g += (data.fat_g - oldFat);
-    log.totals.sugar_g = (log.totals.sugar_g || 0) + (sugarVal - oldSugar);
 
     await log.save();
     return { success: true };

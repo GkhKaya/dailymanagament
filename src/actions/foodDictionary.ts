@@ -48,8 +48,7 @@ export async function searchLocalFoodsAction(query: string) {
           calories: u.calories,
           protein_g: u.protein_g,
           carbs_g: u.carbs_g,
-          fat_g: u.fat_g,
-          sugar_g: u.sugar_g || 0
+          fat_g: u.fat_g
         }))
       }))
     };
@@ -72,15 +71,14 @@ export async function fetchFromGeminiAction(foodName: string, unit: string) {
     const ai = new GoogleGenAI({ apiKey });
     
     const prompt = `
-Lütfen "${foodName}" isimli yiyeceğin 1 "${unit}" (örneğin 1 gram, 1 adet, 1 tabak) miktarı için tahmini besin değerlerini (kalori, protein, karbonhidrat, şeker, yağ) ver.
+Lütfen "${foodName}" isimli yiyeceğin 1 "${unit}" (örneğin 1 gram, 1 adet, 1 tabak) miktarı için tahmini besin değerlerini (kalori, protein, karbonhidrat, yağ) ver.
 Yanıtın sadece geçerli bir JSON objesi olmalı ve markdown veya açıklama içermemeli.
 Format şu şekilde olmalı:
 {
   "calories": sayi,
   "protein_g": sayi,
   "carbs_g": sayi,
-  "fat_g": sayi,
-  "sugar_g": sayi
+  "fat_g": sayi
 }
 Eğer birim "gram" ise, lütfen tam olarak 1 gramının değerini ver (100 gramın değil, 1 gramın!).
 Eğer birim "adet" veya "tabak" ise, standart bir adetin veya tabağın ortalama değerini ver.

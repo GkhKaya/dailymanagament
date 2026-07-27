@@ -154,11 +154,9 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
             protein: f.nutrition_snapshot.protein_g || 0,
             carbs: f.nutrition_snapshot.carbs_g || 0,
             fat: f.nutrition_snapshot.fat_g || 0,
-            sugar: f.nutrition_snapshot.sugar_g || 0,
             protein_g: f.nutrition_snapshot.protein_g || 0,
             carbs_g: f.nutrition_snapshot.carbs_g || 0,
-            fat_g: f.nutrition_snapshot.fat_g || 0,
-            sugar_g: f.nutrition_snapshot.sugar_g || 0
+            fat_g: f.nutrition_snapshot.fat_g || 0
           };
         });
 

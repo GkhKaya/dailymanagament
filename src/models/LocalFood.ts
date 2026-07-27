@@ -6,7 +6,6 @@ export interface ILocalFoodUnit {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
-  sugar_g?: number;
 }
 
 export interface ILocalFood extends Document {
@@ -21,8 +20,7 @@ const LocalFoodUnitSchema = new Schema({
   calories: { type: Number, required: true },
   protein_g: { type: Number, required: true },
   carbs_g: { type: Number, required: true },
-  fat_g: { type: Number, required: true },
-  sugar_g: { type: Number, default: 0 }
+  fat_g: { type: Number, required: true }
 });
 
 const LocalFoodSchema: Schema = new Schema({

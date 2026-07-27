@@ -36,20 +36,18 @@ interface NutritionResult {
     carbs_g: number;
     fat_g: number;
     fiber_g: number;
-    sugar_g: number;
   };
   calculated: {
     calories: number;
     protein_g: number;
     carbs_g: number;
     fat_g: number;
-    sugar_g: number;
   };
 }
 
 async function performWebSearch(query: string): Promise<string> {
   try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' kalori besin değerleri şeker oranı')}`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' kalori besin değerleri')}`;
     
     // 3 Saniyelik zaman aşımı (timeout) ekle
     const controller = new AbortController();
@@ -58,45 +56,42 @@ async function performWebSearch(query: string): Promise<string> {
     const response = await fetch(searchUrl, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
-
     clearTimeout(timeoutId);
 
     if (!response.ok) return '';
-
     const html = await response.text();
-    const snippetRegex = /class="result__snippet[^>]*>([\s\S]*?)<\/a>/g;
-    let match;
-    const snippets = [];
-    while ((match = snippetRegex.exec(html)) !== null) {
-      // İçindeki HTML etiketlerini temizle (<b>, vs.)
-      const text = match[1].replace(/<\/?[^>]+(>|$)/g, "").trim();
-      if (text) snippets.push(text);
-      if (snippets.length >= 3) break; // İlk 3 sonucu al
-    }
+    
+    // Basit regex ile arama snippet'lerini çek
+    const snippetMatches = html.match(/<a class="result__snippet[^>]*>(.*?)<\/a>/g);
+    if (!snippetMatches) return '';
 
-    return snippets.join('\n');
+    // İlk 3 arama sonucunun metnini birleştir (HTML tag'lerini temizle)
+    const textSnippets = snippetMatches
+      .slice(0, 3)
+      .map(s => s.replace(/<[^>]+>/g, '').trim())
+      .join(' ');
+
+    return textSnippets.slice(0, 800); // Max 800 karakter
   } catch (err) {
-    console.error('Web search error:', err);
+    console.warn('[Web Search] DuckDuckGo arama zaman aşımına uğradı veya hata verdi:', err);
     return '';
   }
 }
 
 async function queryOpenRouter(foodName: string, amount: number, unit: 'gram' | 'adet'): Promise<NutritionResult> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY eksik');
-
-  // Enforce rate limiting before making the request
   await waitInQueue();
 
-  const unitLabel = unit === 'gram' ? 'gram' : 'adet';
-  const perUnitLabel = unit === 'gram' ? '1 gram' : '1 adet';
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY ortam değişkeni tanımlı değil');
+  }
 
-  // Arka planda web araması yap
+  const perUnitLabel = unit === 'gram' ? '1 gram' : '1 adet';
+  const unitLabel = unit === 'gram' ? 'gram' : 'adet';
+
   console.log(`[Web Search] Aranıyor: ${foodName}...`);
   const searchResults = await performWebSearch(foodName);
   const searchContext = searchResults ? `\nİNTERNET ARAMA SONUÇLARI (REFERANS OLARAK KULLAN):\n${searchResults}\n` : '';
@@ -119,8 +114,7 @@ JSON formatı (kesinlikle bu formatta):
   "per_unit_protein_g": 0.0,
   "per_unit_carbs_g": 0.0,
   "per_unit_fat_g": 0.0,
-  "per_unit_fiber_g": 0.0,
-  "per_unit_sugar_g": 0.0
+  "per_unit_fiber_g": 0.0
 }
 
 Yemek: ${foodName}
@@ -173,8 +167,7 @@ Miktar: ${amount} ${unitLabel}`;
     protein_g: Math.max(0, parseFloat(parsed.per_unit_protein_g) || 0),
     carbs_g: Math.max(0, parseFloat(parsed.per_unit_carbs_g) || 0),
     fat_g: Math.max(0, parseFloat(parsed.per_unit_fat_g) || 0),
-    fiber_g: Math.max(0, parseFloat(parsed.per_unit_fiber_g) || 0),
-    sugar_g: Math.max(0, parseFloat(parsed.per_unit_sugar_g) || 0)
+    fiber_g: Math.max(0, parseFloat(parsed.per_unit_fiber_g) || 0)
   };
 
   return {
@@ -186,8 +179,7 @@ Miktar: ${amount} ${unitLabel}`;
       calories: Math.round(perUnit.calories * amount),
       protein_g: Math.round(perUnit.protein_g * amount * 10) / 10,
       carbs_g: Math.round(perUnit.carbs_g * amount * 10) / 10,
-      fat_g: Math.round(perUnit.fat_g * amount * 10) / 10,
-      sugar_g: Math.round(perUnit.sugar_g * amount * 10) / 10
+      fat_g: Math.round(perUnit.fat_g * amount * 10) / 10
     }
   };
 }
@@ -205,7 +197,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Geçersiz miktar' }, { status: 400 });
     }
 
-    // 1. Önce FoodCache'de ara — zaten var mı ve şeker bilgisi içeriyor mu?
+    // 1. Önce FoodCache'de ara — zaten var mı?
     await connectDB();
     const existing = await FoodCache.findOne({
       $or: [
@@ -217,10 +209,7 @@ export async function POST(request: Request) {
 
     let result: NutritionResult;
 
-    // Eğer veri daha önceden kalma ise ve per_unit.sugar_g yoksa Gemini'ye sorup güncelleyelim
-    const hasSugarInDb = existing && existing.per_unit && typeof existing.per_unit.sugar_g === 'number';
-
-    if (existing && hasSugarInDb) {
+    if (existing) {
       // DB'den hesapla
       result = {
         food_name: existing.food_name,
@@ -231,15 +220,14 @@ export async function POST(request: Request) {
           calories: Math.round(existing.per_unit.calories * amount),
           protein_g: Math.round(existing.per_unit.protein_g * amount * 10) / 10,
           carbs_g: Math.round(existing.per_unit.carbs_g * amount * 10) / 10,
-          fat_g: Math.round(existing.per_unit.fat_g * amount * 10) / 10,
-          sugar_g: Math.round((existing.per_unit.sugar_g || 0) * amount * 10) / 10
+          fat_g: Math.round(existing.per_unit.fat_g * amount * 10) / 10
         }
       };
     } else {
       // OpenRouter / Gemini'ye sor
       result = await queryOpenRouter(food_name, amount, unit);
 
-      // FoodCache'e kaydet veya var olan eski kaydı güncelle ($set per_unit)
+      // FoodCache'e kaydet
       try {
         await FoodCache.updateOne(
           {
@@ -247,22 +235,20 @@ export async function POST(request: Request) {
             unit_type: unit
           },
           {
-            $set: {
+            $setOnInsert: {
               food_name: result.food_name,
               food_name_en: result.food_name_en,
               unit_type: result.unit_type,
               per_unit: result.per_unit,
-              source: 'gemini'
-            },
-            $setOnInsert: {
               brand_name: null,
+              source: 'gemini',
               search_tags: [food_name.toLowerCase()]
             }
           },
           { upsert: true }
         );
       } catch (cacheErr) {
-        console.error('FoodCache update hatası (devam ediliyor):', cacheErr);
+        console.error('FoodCache upsert hatası (devam ediliyor):', cacheErr);
       }
     }
 

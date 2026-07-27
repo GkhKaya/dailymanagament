@@ -135,26 +135,24 @@ function renderDayPage(
         `${f.calories} kcal`,
         `${f.protein}g`,
         `${f.carbs}g`,
-        `${f.sugar || 0}g`,
         `${f.fat}g`
       ]);
 
       autoTable(doc, {
         startY: currentY,
-        head: [[tr('Besin Urunu'), tr('Miktar'), tr('Kalori'), tr('Protein'), tr('Karb'), tr('Seker'), tr('Yag')]],
+        head: [[tr('Besin Urunu'), tr('Miktar'), tr('Kalori'), tr('Protein'), tr('Karb'), tr('Yag')]],
         body: tableData,
         theme: 'striped',
         margin: { left: marginX, right: marginX },
         styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
         headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
         columnStyles: {
-          0: { cellWidth: 62 },
-          1: { cellWidth: 32 },
-          2: { cellWidth: 20, halign: 'right' },
-          3: { cellWidth: 17, halign: 'right' },
-          4: { cellWidth: 17, halign: 'right' },
-          5: { cellWidth: 17, halign: 'right' },
-          6: { cellWidth: 17, halign: 'right' },
+          0: { cellWidth: 70 },
+          1: { cellWidth: 36 },
+          2: { cellWidth: 22, halign: 'right' },
+          3: { cellWidth: 18, halign: 'right' },
+          4: { cellWidth: 18, halign: 'right' },
+          5: { cellWidth: 18, halign: 'right' },
         }
       });
 
@@ -248,7 +246,7 @@ function renderDayPage(
   doc.text(tr(`Net Kalori Denge: ${netCals > 0 ? '+' : ''}${netCals} kcal`), marginX + 120, currentY + 12);
 
   doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Protein: ${day.totals.protein_g}g  |  Karb: ${day.totals.carbs_g}g  |  Seker: ${day.totals.sugar_g || 0}g  |  Yag: ${day.totals.fat_g}g`), marginX + 4, currentY + 19);
+  doc.text(tr(`Protein: ${day.totals.protein_g}g  |  Karb: ${day.totals.carbs_g}g  |  Yag: ${day.totals.fat_g}g`), marginX + 4, currentY + 19);
 
   // Footer / Page Number
   doc.setFontSize(8);
