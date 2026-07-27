@@ -59,31 +59,31 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Main Metric Cards */}
-      <div className="grid grid-cols-3 gap-[var(--space-2)]">
+      <div className="grid grid-cols-3 gap-2 md:gap-[var(--space-2)]">
         {/* ALINAN */}
-        <div className="glass-card p-[var(--space-3)] flex flex-col justify-center">
-          <span className="text-caption text-[var(--primary)]">ALINAN</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-metric text-white">{data.consumedCalories}</span>
-            <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center overflow-hidden">
+          <span className="text-[10px] md:text-caption text-[var(--primary)] truncate">ALINAN</span>
+          <div className="flex items-baseline gap-1 mt-1 truncate">
+            <span className="text-xl md:text-metric text-white font-bold">{data.consumedCalories}</span>
+            <span className="text-[10px] md:text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
-          <div className="mt-1">
-            <span className="text-[10px] text-[var(--on-surface-variant)] opacity-70">Alınabilecek: {data.targetCalories} kcal</span>
+          <div className="mt-1 truncate">
+            <span className="text-[9px] md:text-[10px] text-[var(--on-surface-variant)] opacity-70" title={`Alınabilecek: ${data.targetCalories} kcal`}>Alınabilecek: {data.targetCalories}</span>
           </div>
         </div>
 
         {/* YAKILAN */}
-        <div className="glass-card p-[var(--space-3)] flex flex-col justify-center relative">
-          <span className="text-caption text-[var(--on-surface-variant)]">YAKILAN</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-metric text-white">{totalBurned}</span>
-            <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center relative overflow-hidden">
+          <span className="text-[10px] md:text-caption text-[var(--on-surface-variant)] truncate">YAKILAN</span>
+          <div className="flex items-baseline gap-1 mt-1 truncate">
+            <span className="text-xl md:text-metric text-white font-bold">{totalBurned}</span>
+            <span className="text-[10px] md:text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
           {!data.bmrAdded && onAddBmr && (
-            <div className="mt-2">
+            <div className="mt-1 md:mt-2">
               <button 
                 onClick={onAddBmr}
-                className="w-full text-center text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-2 py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)]"
+                className="w-full text-center text-[9px] md:text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-1 md:px-2 py-1 md:py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)] truncate"
                 title="Günlük Bazal Metabolizma (BMR) kalorinizi ekleyin"
               >
                 + BMR Ekle
@@ -93,11 +93,11 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
 
         {/* NET (TOPLAM) */}
-        <div className="glass-card p-[var(--space-3)] flex flex-col justify-center">
-          <span className="text-caption text-[var(--on-surface-variant)]">NET (TOPLAM)</span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-metric text-[var(--primary)]">{netCalories}</span>
-            <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center overflow-hidden">
+          <span className="text-[10px] md:text-caption text-[var(--on-surface-variant)] truncate">NET</span>
+          <div className="flex items-baseline gap-1 mt-1 truncate">
+            <span className="text-xl md:text-metric text-[var(--primary)] font-bold">{netCalories}</span>
+            <span className="text-[10px] md:text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
         </div>
       </div>

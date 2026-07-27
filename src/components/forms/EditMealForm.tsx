@@ -77,6 +77,8 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
               <option value="gram">Gram</option>
               <option value="piece">Adet</option>
               <option value="ml">Mililitre</option>
+              <option value="bardak">Bardak</option>
+              <option value="tabak">Tabak</option>
             </select>
           </div>
         </div>

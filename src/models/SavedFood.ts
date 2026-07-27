@@ -20,7 +20,7 @@ const SavedFoodSchema: Schema = new Schema({
   food_name: { type: String, required: true },
   serving_description: { type: String, required: true },
   quantity: { type: Number, required: true },
-  unit_type: { type: String, enum: ['gram', 'adet'], default: 'gram' },
+  unit_type: { type: String, enum: ['gram', 'adet', 'bardak'], default: 'gram' },
   food_cache_id: { type: String },
   fatsecret_food_id: { type: String },
   calories: { type: Number, required: true },

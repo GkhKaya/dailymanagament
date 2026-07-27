@@ -16,7 +16,7 @@ export interface ILocalFood extends Document {
 }
 
 const LocalFoodUnitSchema = new Schema({
-  unit_name: { type: String, required: true, enum: ['gram', 'adet', 'tabak', 'porsiyon'] },
+  unit_name: { type: String, required: true, enum: ['gram', 'adet', 'tabak', 'porsiyon', 'bardak'] },
   calories: { type: Number, required: true },
   protein_g: { type: Number, required: true },
   carbs_g: { type: Number, required: true },
