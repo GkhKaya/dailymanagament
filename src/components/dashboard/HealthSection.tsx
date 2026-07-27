@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -16,6 +17,7 @@ interface HealthSectionProps {
 
 export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const totalBurned = data.burnedCalories;
   const netCalories = data.consumedCalories - totalBurned;
@@ -42,20 +44,29 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       <div className="flex items-center justify-between">
         <h2 className="text-hero text-white tracking-tight">Bugünkü Beslenme</h2>
         
-        {!isOverview && currentDate && (
-          <div className="flex items-center gap-[var(--space-2)]">
-            <button onClick={onPrevDay} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white">
-              <ChevronLeft size={20} />
-            </button>
-            <span className="text-body font-medium text-white">{formatDate(currentDate)}</span>
-            <button onClick={onNextDay} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white">
-              <ChevronRight size={20} />
-            </button>
-            <button onClick={onShowAnalysis} className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
-              <Activity size={18} />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-[var(--space-2)]">
+          {!isOverview && currentDate && (
+            <>
+              <button onClick={onPrevDay} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white">
+                <ChevronLeft size={20} />
+              </button>
+              <span className="text-body font-medium text-white">{formatDate(currentDate)}</span>
+              <button onClick={onNextDay} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white">
+                <ChevronRight size={20} />
+              </button>
+              <button onClick={onShowAnalysis} className="ml-1 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]" title="Detaylı Analiz">
+                <Activity size={18} />
+              </button>
+            </>
+          )}
+          <button 
+            onClick={() => setIsPdfModalOpen(true)} 
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors" 
+            title="PDF Raporu İndir"
+          >
+            <Download size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Main Metric Cards */}
@@ -248,6 +259,12 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {!isOverview && <div className="h-24"></div>}
+
+      <ExportPdfModal 
+        isOpen={isPdfModalOpen} 
+        onClose={() => setIsPdfModalOpen(false)} 
+        currentDate={currentDate} 
+      />
     </div>
   );
 }

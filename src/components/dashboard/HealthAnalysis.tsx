@@ -1,9 +1,11 @@
-import React from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend, CartesianGrid, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useHealthAnalysisViewModel } from '@/viewmodels/useHealthAnalysisViewModel';
+import { ExportPdfModal } from '@/components/ui/ExportPdfModal';
 
 export function HealthAnalysis({ onBack }: { onBack: () => void }) {
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const {
     timeFilter,
     setTimeFilter,
@@ -48,19 +50,29 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
             <h2 className="text-2xl font-bold text-white">Detaylı Sağlık Analizi</h2>
           </div>
           
-          <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
-            {[
-              { id: 'week', label: 'Haftalık' },
-              { id: 'month', label: 'Aylık' }
-            ].map(f => (
-              <button
-                key={f.id}
-                onClick={() => setTimeFilter(f.id as any)}
-                className={`px-4 py-2 rounded-lg text-caption font-medium transition-colors ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
-              >
-                {f.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsPdfModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition-all border border-emerald-500/20"
+              title="PDF Raporu Al"
+            >
+              <Download size={15} />
+              <span>PDF Raporu</span>
+            </button>
+            <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
+              {[
+                { id: 'week', label: 'Haftalık' },
+                { id: 'month', label: 'Aylık' }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setTimeFilter(f.id as any)}
+                  className={`px-4 py-2 rounded-lg text-caption font-medium transition-colors ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -169,6 +181,11 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
         </div>
       </div>
       )}
+
+      <ExportPdfModal 
+        isOpen={isPdfModalOpen} 
+        onClose={() => setIsPdfModalOpen(false)} 
+      />
     </div>
   );
 }
