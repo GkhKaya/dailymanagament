@@ -67,22 +67,39 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       
       const daysRemaining = Math.max(1, Math.ceil((targetDateEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
       
-      const weightDiff = currentWeight - targetWeight; // positive if losing weight
-      const totalCalorieDeficit = weightDiff * 7700; // 1 kg = ~7700 kcal
-      const dailyDeficit = totalCalorieDeficit / daysRemaining;
-      
-      // Calculate basic TDEE
       let tdee = 2400;
+      let bmr = 2000;
       if (user.profile?.height_cm && user.profile?.birth_date) {
         let age = 0;
         const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
         age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
-        let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
-        bmr += user.profile.gender === 'erkek' ? 5 : -161;
-        tdee = bmr * 1.2; // Sedentary multiplier as base
+        bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
+        bmr += (user.profile.gender === 'erkek' || user.profile.gender === 'male') ? 5 : -161;
+        
+        let activityMultiplier = 1.2;
+        switch (user.profile?.activity_level) {
+          case 'light': activityMultiplier = 1.375; break;
+          case 'moderate': activityMultiplier = 1.55; break;
+          case 'active': activityMultiplier = 1.725; break;
+          case 'very_active': activityMultiplier = 1.9; break;
+          default: activityMultiplier = 1.2; break; // sedentary
+        }
+        tdee = bmr * activityMultiplier;
       }
       
-      targetCalories = Math.max(1200, Math.round(tdee - dailyDeficit)); // Don't go below 1200
+      const weightDiff = currentWeight - targetWeight; // positive if losing weight
+      const totalCalorieDeficit = weightDiff * 7700; // 1 kg = ~7700 kcal
+      let dailyDeficit = totalCalorieDeficit / daysRemaining;
+      
+      // Bilimsel limitler: Haftada en fazla vücut ağırlığının %1'i kadar kilo kaybı önerilir.
+      if (dailyDeficit > 0) {
+        const maxWeeklyLossKg = currentWeight * 0.01;
+        const maxDailyDeficit = (maxWeeklyLossKg / 7) * 7700;
+        dailyDeficit = Math.min(dailyDeficit, maxDailyDeficit);
+      }
+      
+      const minSafeCalories = (user.profile?.gender === 'erkek' || user.profile?.gender === 'male') ? 1500 : 1200;
+      targetCalories = Math.max(minSafeCalories, Math.round(tdee - dailyDeficit));
     }
 
     const weightHistory = (weightLogs || []).map(log => ({

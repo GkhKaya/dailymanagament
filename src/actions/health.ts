@@ -310,8 +310,23 @@ export async function addSleepAction(data: { date: string; duration_minutes: num
         date: targetDate,
         meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         exercises: [],
-        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
       });
+    }
+
+    // Automatically add BMR if not added yet
+    if (!log.bmr_added && user?.current_weight_kg && user?.profile?.height_cm && user?.profile?.birth_date) {
+      const currentWeight = user.current_weight_kg;
+      const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
+      const age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
+      
+      let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
+      bmr += (user.profile.gender === 'erkek' || user.profile.gender === 'male') ? 5 : -161;
+      bmr = Math.round(bmr);
+      
+      log.bmr_added = true;
+      if (!log.totals) log.totals = { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+      log.totals.calories_burned_bmr = bmr;
     }
 
     // Subtract old sleep calories if exists
