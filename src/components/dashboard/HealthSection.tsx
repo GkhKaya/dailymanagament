@@ -18,7 +18,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
 
   const totalBurned = data.burnedCalories;
-  const remaining = data.targetCalories - data.consumedCalories + totalBurned;
+  const netCalories = data.consumedCalories - totalBurned;
 
   const toggleMeal = (mealId: string) => {
     setExpandedMeals(prev => 
@@ -89,12 +89,15 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           )}
         </div>
 
-        {/* KALAN */}
+        {/* NET (TOPLAM) */}
         <div className="glass-card p-[var(--space-3)] flex flex-col justify-center">
-          <span className="text-caption text-[var(--on-surface-variant)]">KALAN</span>
+          <span className="text-caption text-[var(--on-surface-variant)]">NET (TOPLAM)</span>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-metric text-[var(--primary)]">{remaining}</span>
+            <span className="text-metric text-[var(--primary)]">{netCalories}</span>
             <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
+          </div>
+          <div className="mt-1">
+            <span className="text-[10px] text-[var(--on-surface-variant)] opacity-70">Hedef: {data.targetCalories} kcal</span>
           </div>
         </div>
       </div>
