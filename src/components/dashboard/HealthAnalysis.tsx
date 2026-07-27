@@ -42,24 +42,24 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-2">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <button onClick={onBack} className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors">
               <ArrowLeft size={20} className="text-white" />
             </button>
-            <h2 className="text-2xl font-bold text-white">Detaylı Sağlık Analizi</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">Detaylı Sağlık Analizi</h2>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
             <button
               onClick={() => setIsPdfModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition-all border border-emerald-500/20"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition-all border border-emerald-500/20 shrink-0"
               title="PDF Raporu Al"
             >
               <Download size={15} />
               <span>PDF Raporu</span>
             </button>
-            <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
+            <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl shrink-0">
               {[
                 { id: 'week', label: 'Haftalık' },
                 { id: 'month', label: 'Aylık' }
@@ -67,7 +67,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
                 <button
                   key={f.id}
                   onClick={() => setTimeFilter(f.id as any)}
-                  className={`px-4 py-2 rounded-lg text-caption font-medium transition-colors ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-caption font-medium transition-colors ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
                 >
                   {f.label}
                 </button>
