@@ -48,7 +48,14 @@ export async function GET(request: Request) {
       food_name: f.food_name,
       food_name_en: f.food_name_en || null,
       unit_type: f.unit_type || 'gram',
-      per_unit: f.per_unit || { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+      per_unit: {
+        calories: f.per_unit?.calories || 0,
+        protein_g: f.per_unit?.protein_g || 0,
+        carbs_g: f.per_unit?.carbs_g || 0,
+        fat_g: f.per_unit?.fat_g || 0,
+        sugar_g: f.per_unit?.sugar_g || 0,
+        fiber_g: f.per_unit?.fiber_g || 0
+      },
       brand_name: f.brand_name || null,
       source: f.source
     }));
