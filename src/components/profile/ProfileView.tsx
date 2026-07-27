@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
@@ -19,8 +19,9 @@ import { EditAccountForm } from '@/components/forms/EditAccountForm';
 import { EditSubscriptionForm } from '@/components/forms/EditSubscriptionForm';
 import { EditDebtForm } from '@/components/forms/EditDebtForm';
 import { ManageWorkoutRoutineForm } from '@/components/forms/ManageWorkoutRoutineForm';
-import { getWorkoutRoutineAction } from '@/actions/workout';
+import { getWorkoutRoutineAction, importWorkoutRoutineAction } from '@/actions/workout';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
+import toast from 'react-hot-toast';
 
 export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, target_weight_date?: string, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
@@ -35,6 +36,56 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
         setWorkoutDays(res.days);
       }
     });
+  };
+
+  const handleDownloadTemplate = () => {
+    const template = [
+      {
+        day_name: "Pazartesi - Göğüs",
+        exercises: [
+          { name: "Bench Press", sets: 4, reps: "10-12", weight_kg: 60 },
+          { name: "Incline Dumbbell Press", sets: 3, reps: "12", weight_kg: 20 }
+        ]
+      },
+      {
+        day_name: "Çarşamba - Sırt",
+        exercises: [
+          { name: "Pull Up", sets: 3, reps: "Max", weight_kg: 0 }
+        ]
+      }
+    ];
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'antrenman_sablonu.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const data = JSON.parse(text);
+        
+        const res = await importWorkoutRoutineAction(data);
+        if (res.success) {
+          toast.success("Antrenman programı başarıyla içe aktarıldı!");
+          fetchWorkoutRoutine();
+        } else {
+          toast.error(res.error || "İçe aktarılırken hata oluştu.");
+        }
+      } catch (err) {
+        toast.error("Geçersiz JSON dosyası. Lütfen şablonu inceleyin.");
+      }
+      e.target.value = ''; // reset input
+    };
+    reader.readAsText(file);
   };
 
   useEffect(() => {
@@ -264,12 +315,25 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   <Dumbbell className="text-[var(--primary)]" size={20} />
                   <h3 className="text-lg font-bold text-white">Antrenman Programım</h3>
                 </div>
-                <button
-                  onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
-                  className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-black transition-colors flex items-center gap-1.5"
-                >
-                  <Plus size={14} /> + Gün / Program Ekle
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors"
+                    title="Örnek Şablon İndir"
+                  >
+                    <Download size={14} />
+                  </button>
+                  <label className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors cursor-pointer" title="JSON İçeri Aktar">
+                    <Upload size={14} />
+                    <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
+                  </label>
+                  <button
+                    onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
+                    className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-black transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus size={14} /> + Gün / Program Ekle
+                  </button>
+                </div>
               </div>
 
               {workoutDays.length === 0 ? (

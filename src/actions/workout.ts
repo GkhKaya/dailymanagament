@@ -122,3 +122,43 @@ export async function deleteWorkoutDayAction(dayId: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function importWorkoutRoutineAction(days: any[]) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+
+    if (!Array.isArray(days)) {
+      return { success: false, error: "Geçersiz format. Lütfen örnek şablonu kullanın." };
+    }
+
+    const cleanedDays = days.map((day: any) => {
+      const dayName = day.day_name || day.name || "İsimsiz Gün";
+      const exercises = Array.isArray(day.exercises) ? day.exercises.map((e: any) => ({
+        name: String(e.name || "").trim(),
+        sets: Number(e.sets) || 3,
+        reps: String(e.reps || "10").trim(),
+        weight_kg: Number(e.weight_kg) || 0
+      })).filter((e: any) => e.name !== "") : [];
+      return { day_name: dayName, exercises };
+    }).filter((day: any) => day.exercises.length > 0);
+
+    if (cleanedDays.length === 0) {
+      return { success: false, error: "İçe aktarılacak geçerli hareket bulunamadı." };
+    }
+
+    let routine = await WorkoutRoutine.findOne({ user_id: userId });
+    if (!routine) {
+      routine = new WorkoutRoutine({ user_id: userId, days: cleanedDays });
+    } else {
+      routine.days = cleanedDays as any;
+    }
+
+    await routine.save();
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error("importWorkoutRoutineAction error:", err);
+    return { success: false, error: err.message };
+  }
+}
