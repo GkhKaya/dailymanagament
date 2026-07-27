@@ -205,7 +205,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Geçersiz miktar' }, { status: 400 });
     }
 
-    // 1. Önce FoodCache'de ara — zaten var mı?
+    // 1. Önce FoodCache'de ara — zaten var mı ve şeker bilgisi içeriyor mu?
     await connectDB();
     const existing = await FoodCache.findOne({
       $or: [
@@ -217,16 +217,16 @@ export async function POST(request: Request) {
 
     let result: NutritionResult;
 
-    if (existing) {
+    // Eğer veri daha önceden kalma ise ve per_unit.sugar_g yoksa Gemini'ye sorup güncelleyelim
+    const hasSugarInDb = existing && existing.per_unit && typeof existing.per_unit.sugar_g === 'number';
+
+    if (existing && hasSugarInDb) {
       // DB'den hesapla
       result = {
         food_name: existing.food_name,
         food_name_en: existing.food_name_en,
         unit_type: existing.unit_type,
-        per_unit: {
-          ...existing.per_unit,
-          sugar_g: existing.per_unit?.sugar_g || 0
-        },
+        per_unit: existing.per_unit,
         calculated: {
           calories: Math.round(existing.per_unit.calories * amount),
           protein_g: Math.round(existing.per_unit.protein_g * amount * 10) / 10,
@@ -236,10 +236,10 @@ export async function POST(request: Request) {
         }
       };
     } else {
-      // OpenRouter'a sor
+      // OpenRouter / Gemini'ye sor
       result = await queryOpenRouter(food_name, amount, unit);
 
-      // FoodCache'e kaydet (öğrenen yapı)
+      // FoodCache'e kaydet veya var olan eski kaydı güncelle ($set per_unit)
       try {
         await FoodCache.updateOne(
           {
@@ -247,20 +247,22 @@ export async function POST(request: Request) {
             unit_type: unit
           },
           {
-            $setOnInsert: {
+            $set: {
               food_name: result.food_name,
               food_name_en: result.food_name_en,
               unit_type: result.unit_type,
               per_unit: result.per_unit,
+              source: 'gemini'
+            },
+            $setOnInsert: {
               brand_name: null,
-              source: 'gemini',
               search_tags: [food_name.toLowerCase()]
             }
           },
           { upsert: true }
         );
       } catch (cacheErr) {
-        console.error('FoodCache upsert hatası (devam ediliyor):', cacheErr);
+        console.error('FoodCache update hatası (devam ediliyor):', cacheErr);
       }
     }
 
