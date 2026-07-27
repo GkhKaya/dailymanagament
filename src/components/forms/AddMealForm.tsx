@@ -23,7 +23,7 @@ interface DBFoodResult {
   food_name: string;
   food_name_en: string | null;
   unit_type: 'gram' | 'adet';
-  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g?: number };
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; fiber_g?: number };
   brand_name: string | null;
   source: string;
 }
@@ -32,7 +32,7 @@ interface SelectedFood {
   id: string | null;
   name: string;
   unit_type: 'gram' | 'adet';
-  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number };
 }
 
 interface SessionAddedMeal {
@@ -136,6 +136,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
     setCalories(Math.round(p.calories * qty).toString());
     setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
     setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
+    setSugar((Math.round((p.sugar_g || 0) * qty * 10) / 10).toString());
     setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
     setQuantity(qty.toString());
     setServingDescription(`${qty} ${unitType}`);
@@ -146,7 +147,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
       id: food.id,
       name: food.food_name,
       unit_type: food.unit_type,
-      per_unit: food.per_unit || { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+      per_unit: food.per_unit || { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, sugar_g: 0 }
     });
     setFoodName(food.food_name);
     setFoodCacheId(food.id);
@@ -188,7 +189,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
         calories: (Number(food.calories) || 0) / qtyCalc,
         protein_g: (Number(food.protein_g) || 0) / qtyCalc,
         carbs_g: (Number(food.carbs_g) || 0) / qtyCalc,
-        fat_g: (Number(food.fat_g) || 0) / qtyCalc
+        fat_g: (Number(food.fat_g) || 0) / qtyCalc,
+        sugar_g: (Number(food.sugar_g || food.sugar) || 0) / qtyCalc
       };
     }
 
@@ -520,6 +522,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                           </div>
                           <div className="flex gap-1.5 shrink-0">
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(96,165,250,0.15)', color: MACRO_COLORS.carbs }}>K{Math.round((food.per_unit?.carbs_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(244,114,182,0.15)', color: '#f472b6' }}>Ş{Math.round((food.per_unit?.sugar_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(74,222,128,0.15)', color: MACRO_COLORS.protein }}>P{Math.round((food.per_unit?.protein_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium" style={{ background: 'rgba(250,204,21,0.15)', color: MACRO_COLORS.fat }}>Y{Math.round((food.per_unit?.fat_g || 0) * (food.unit_type === 'gram' ? 100 : 1))}g</span>
                           </div>
