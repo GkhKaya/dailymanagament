@@ -22,25 +22,20 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
   if (!render) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex justify-center items-end pointer-events-none">
+    <div className="fixed inset-0 z-[100] flex justify-center items-center pointer-events-none p-4 sm:p-6">
       {/* Backdrop */}
       <div 
-        className={`absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
       
-      {/* Sheet */}
+      {/* Modal */}
       <div 
-        className={`relative w-full max-w-2xl bg-[var(--surface-container)] rounded-t-3xl border-t border-[rgba(255,255,255,0.05)] shadow-[0_-8px_32px_rgba(0,0,0,0.4)] pointer-events-auto transition-transform duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[var(--surface-container)] rounded-2xl border border-[rgba(255,255,255,0.08)] shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
         onTransitionEnd={onAnimationEnd}
       >
-        {/* Handle bar */}
-        <div className="w-full flex justify-center pt-4 pb-2" onClick={onClose} style={{cursor: 'pointer'}}>
-          <div className="w-12 h-1.5 rounded-full bg-[rgba(255,255,255,0.2)]" />
-        </div>
-
         {/* Header */}
-        <div className="px-6 pb-4 flex items-center justify-between">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.05)] shrink-0">
           <h2 className="text-title font-semibold">{title}</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-[rgba(255,255,255,0.05)] transition-colors">
             <X size={20} className="text-[var(--on-surface-variant)]" />
@@ -48,7 +43,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <div className="p-6 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </div>
