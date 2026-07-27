@@ -12,6 +12,7 @@ export interface ISavedFood extends Document {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  sugar_g?: number;
   created_at: Date;
 }
 
@@ -26,7 +27,8 @@ const SavedFoodSchema: Schema = new Schema({
   calories: { type: Number, required: true },
   protein_g: { type: Number, required: true },
   carbs_g: { type: Number, required: true },
-  fat_g: { type: Number, required: true }
+  fat_g: { type: Number, required: true },
+  sugar_g: { type: Number, default: 0 }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: false }
 });

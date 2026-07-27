@@ -31,10 +31,12 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
   const initProtein = initialData?.protein_g ?? initialData?.protein ?? 0;
   const initCarbs = initialData?.carbs_g ?? initialData?.carbs ?? 0;
   const initFat = initialData?.fat_g ?? initialData?.fat ?? 0;
+  const initSugar = initialData?.sugar_g ?? initialData?.sugar ?? 0;
 
   const [protein, setProtein] = useState(initProtein.toString());
   const [carbs, setCarbs] = useState(initCarbs.toString());
   const [fat, setFat] = useState(initFat.toString());
+  const [sugar, setSugar] = useState(initSugar.toString());
 
   const [baseMacros] = useState(() => {
     const bq = parsed.qty || 1;
@@ -42,7 +44,8 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
       c: (initialData?.calories || 0) / bq,
       p: initProtein / bq,
       cb: initCarbs / bq,
-      f: initFat / bq
+      f: initFat / bq,
+      s: initSugar / bq
     };
   });
 
@@ -52,6 +55,7 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     setProtein((Math.round(baseMacros.p * q * 10) / 10).toString());
     setCarbs((Math.round(baseMacros.cb * q * 10) / 10).toString());
     setFat((Math.round(baseMacros.f * q * 10) / 10).toString());
+    setSugar((Math.round(baseMacros.s * q * 10) / 10).toString());
   }, [quantity, baseMacros]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +88,8 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
         calories: parseInt(calories, 10),
         protein_g: parseFloat(protein) || 0,
         carbs_g: parseFloat(carbs) || 0,
-        fat_g: parseFloat(fat) || 0
+        fat_g: parseFloat(fat) || 0,
+        sugar_g: parseFloat(sugar) || 0
       };
       
       const res = await updateMealAction(payload);
@@ -136,6 +141,7 @@ export function useEditMealViewModel(initialData: any, onSuccess?: () => void) {
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    sugar, setSugar,
     getServingDesc,
     isLoading,
     handleUpdate, handleDelete

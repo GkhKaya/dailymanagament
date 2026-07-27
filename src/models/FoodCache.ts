@@ -11,6 +11,7 @@ export interface IFoodCache extends Document {
     carbs_g: number;
     fat_g: number;
     fiber_g?: number;
+    sugar_g?: number;
   };
   brand_name?: string;        // Markalı ürünler için
   source: 'gemini' | 'manual' | 'seed'; // Verinin kaynağı
@@ -28,7 +29,8 @@ const FoodCacheSchema: Schema = new Schema({
     protein_g: { type: Number, required: true },
     carbs_g: { type: Number, required: true },
     fat_g: { type: Number, required: true },
-    fiber_g: { type: Number, default: null }
+    fiber_g: { type: Number, default: null },
+    sugar_g: { type: Number, default: null }
   },
   brand_name: { type: String, default: null },
   source: { type: String, enum: ['gemini', 'manual', 'seed'], default: 'manual' },

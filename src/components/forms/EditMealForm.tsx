@@ -14,6 +14,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    sugar, setSugar,
     getServingDesc,
     isLoading,
     handleUpdate, handleDelete
@@ -98,12 +99,12 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
             </div>
           </div>
 
-          {/* Canlı Makro Kartları (Protein, Karbonhidrat, Yağ) */}
+          {/* Canlı Makro Kartları (Protein, Karbonhidrat, Şeker, Yağ) */}
           <div className="flex flex-col gap-2">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Makro Besin Değerleri</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {/* Protein */}
-              <div className="flex flex-col p-3 bg-[#161622] border border-[#4ade80]/25 rounded-xl">
+              <div className="flex flex-col p-2.5 bg-[#161622] border border-[#4ade80]/25 rounded-xl">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#4ade80]">Protein</span>
                 <div className="flex items-center justify-between mt-1">
                   <input
@@ -111,14 +112,14 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
                     step="0.1"
                     value={protein}
                     onChange={(e) => setProtein(e.target.value)}
-                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                    className="w-full bg-transparent text-[13px] font-bold text-white focus:outline-none"
                   />
-                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] ml-1">g</span>
                 </div>
               </div>
 
               {/* Karbonhidrat */}
-              <div className="flex flex-col p-3 bg-[#161622] border border-[#60a5fa]/25 rounded-xl">
+              <div className="flex flex-col p-2.5 bg-[#161622] border border-[#60a5fa]/25 rounded-xl">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#60a5fa]">Karb</span>
                 <div className="flex items-center justify-between mt-1">
                   <input
@@ -126,14 +127,29 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
                     step="0.1"
                     value={carbs}
                     onChange={(e) => setCarbs(e.target.value)}
-                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                    className="w-full bg-transparent text-[13px] font-bold text-white focus:outline-none"
                   />
-                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] ml-1">g</span>
+                </div>
+              </div>
+
+              {/* Şeker */}
+              <div className="flex flex-col p-2.5 bg-[#161622] border border-[#f472b6]/25 rounded-xl">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#f472b6]">Şeker</span>
+                <div className="flex items-center justify-between mt-1">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={sugar}
+                    onChange={(e) => setSugar(e.target.value)}
+                    className="w-full bg-transparent text-[13px] font-bold text-white focus:outline-none"
+                  />
+                  <span className="text-[10px] text-[var(--on-surface-variant)] ml-1">g</span>
                 </div>
               </div>
 
               {/* Yağ */}
-              <div className="flex flex-col p-3 bg-[#161622] border border-[#facc15]/25 rounded-xl">
+              <div className="flex flex-col p-2.5 bg-[#161622] border border-[#facc15]/25 rounded-xl">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#facc15]">Yağ</span>
                 <div className="flex items-center justify-between mt-1">
                   <input
@@ -141,9 +157,9 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
                     step="0.1"
                     value={fat}
                     onChange={(e) => setFat(e.target.value)}
-                    className="w-full bg-transparent text-[14px] font-bold text-white focus:outline-none"
+                    className="w-full bg-transparent text-[13px] font-bold text-white focus:outline-none"
                   />
-                  <span className="text-[11px] text-[var(--on-surface-variant)] ml-1">g</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] ml-1">g</span>
                 </div>
               </div>
             </div>

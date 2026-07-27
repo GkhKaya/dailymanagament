@@ -11,6 +11,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [protein, setProtein] = useState('0');
   const [carbs, setCarbs] = useState('0');
   const [fat, setFat] = useState('0');
+  const [sugar, setSugar] = useState('0');
   const [unitType, setUnitType] = useState<'gram' | 'adet'>('gram');
   const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
@@ -60,6 +61,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
       const parsedProt = parseFloat(protein) || 0;
       const parsedCarbs = parseFloat(carbs) || 0;
       const parsedFat = parseFloat(fat) || 0;
+      const parsedSugar = parseFloat(sugar) || 0;
 
       const res = await addMealAction({
         date: new Date().toISOString(),
@@ -72,6 +74,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
         protein_g: parsedProt,
         carbs_g: parsedCarbs,
         fat_g: parsedFat,
+        sugar_g: parsedSugar,
         food_cache_id: fatsecretFoodId || undefined,
         save_as_recipe: saveAsRecipe
       });
@@ -91,6 +94,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
             protein_g: parsedProt,
             carbs_g: parsedCarbs,
             fat_g: parsedFat,
+            sugar_g: parsedSugar,
             type
           }
         };
@@ -128,6 +132,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
           protein_g: parseFloat(food.protein_g) || 0,
           carbs_g: parseFloat(food.carbs_g) || 0,
           fat_g: parseFloat(food.fat_g) || 0,
+          sugar_g: parseFloat(food.sugar_g) || 0,
           food_cache_id: food.food_cache_id || food.fatsecret_food_id || undefined,
           save_as_recipe: false
         });
@@ -163,11 +168,14 @@ export function useAddMealViewModel(onSuccess: () => void) {
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    sugar, setSugar,
     fatsecretFoodId, setFatsecretFoodId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
     isLoading,
+    handleSubmit, handleMultiSubmit
+  };
     handleSubmit, handleMultiSubmit
   };
 }

@@ -22,6 +22,7 @@ export interface ExportFoodItem {
   protein: number;
   carbs: number;
   fat: number;
+  sugar: number;
 }
 
 export interface ExportDayData {
@@ -284,6 +285,7 @@ function mapDailyLogToExportDay(log: any, dateObj: Date): ExportDayData {
       protein: Math.round(f.nutrition_snapshot?.protein_g || 0),
       carbs: Math.round(f.nutrition_snapshot?.carbs_g || 0),
       fat: Math.round(f.nutrition_snapshot?.fat_g || 0),
+      sugar: Math.round(f.nutrition_snapshot?.sugar_g || 0),
     }));
   };
 

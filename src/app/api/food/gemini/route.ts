@@ -36,18 +36,20 @@ interface NutritionResult {
     carbs_g: number;
     fat_g: number;
     fiber_g: number;
+    sugar_g: number;
   };
   calculated: {
     calories: number;
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
   };
 }
 
 async function performWebSearch(query: string): Promise<string> {
   try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' kalori besin değerleri')}`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' kalori besin değerleri şeker oranı')}`;
     
     // 3 Saniyelik zaman aşımı (timeout) ekle
     const controller = new AbortController();
@@ -117,7 +119,8 @@ JSON formatı (kesinlikle bu formatta):
   "per_unit_protein_g": 0.0,
   "per_unit_carbs_g": 0.0,
   "per_unit_fat_g": 0.0,
-  "per_unit_fiber_g": 0.0
+  "per_unit_fiber_g": 0.0,
+  "per_unit_sugar_g": 0.0
 }
 
 Yemek: ${foodName}
@@ -170,7 +173,8 @@ Miktar: ${amount} ${unitLabel}`;
     protein_g: Math.max(0, parseFloat(parsed.per_unit_protein_g) || 0),
     carbs_g: Math.max(0, parseFloat(parsed.per_unit_carbs_g) || 0),
     fat_g: Math.max(0, parseFloat(parsed.per_unit_fat_g) || 0),
-    fiber_g: Math.max(0, parseFloat(parsed.per_unit_fiber_g) || 0)
+    fiber_g: Math.max(0, parseFloat(parsed.per_unit_fiber_g) || 0),
+    sugar_g: Math.max(0, parseFloat(parsed.per_unit_sugar_g) || 0)
   };
 
   return {
@@ -182,7 +186,8 @@ Miktar: ${amount} ${unitLabel}`;
       calories: Math.round(perUnit.calories * amount),
       protein_g: Math.round(perUnit.protein_g * amount * 10) / 10,
       carbs_g: Math.round(perUnit.carbs_g * amount * 10) / 10,
-      fat_g: Math.round(perUnit.fat_g * amount * 10) / 10
+      fat_g: Math.round(perUnit.fat_g * amount * 10) / 10,
+      sugar_g: Math.round(perUnit.sugar_g * amount * 10) / 10
     }
   };
 }
@@ -218,12 +223,16 @@ export async function POST(request: Request) {
         food_name: existing.food_name,
         food_name_en: existing.food_name_en,
         unit_type: existing.unit_type,
-        per_unit: existing.per_unit,
+        per_unit: {
+          ...existing.per_unit,
+          sugar_g: existing.per_unit?.sugar_g || 0
+        },
         calculated: {
           calories: Math.round(existing.per_unit.calories * amount),
           protein_g: Math.round(existing.per_unit.protein_g * amount * 10) / 10,
           carbs_g: Math.round(existing.per_unit.carbs_g * amount * 10) / 10,
-          fat_g: Math.round(existing.per_unit.fat_g * amount * 10) / 10
+          fat_g: Math.round(existing.per_unit.fat_g * amount * 10) / 10,
+          sugar_g: Math.round((existing.per_unit.sugar_g || 0) * amount * 10) / 10
         }
       };
     } else {

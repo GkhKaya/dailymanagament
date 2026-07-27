@@ -65,6 +65,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    sugar, setSugar,
     fatsecretFoodId: foodCacheId, setFatsecretFoodId: setFoodCacheId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
@@ -85,6 +86,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
   const [manualProtein, setManualProtein] = useState('');
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
+  const [manualSugar, setManualSugar] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -232,6 +234,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
       setProtein(data.calculated.protein_g.toString());
       setCarbs(data.calculated.carbs_g.toString());
       setFat(data.calculated.fat_g.toString());
+      setSugar((data.calculated.sugar_g || 0).toString());
       setQuantity(amount);
       setServingDescription(`${amount} ${unitType}`);
       setSearchStep('gemini_result');
@@ -241,7 +244,10 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
   };
 
   const handleManualSubmit = async () => {
-    if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat) return;
+    if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat) {
+      toast.error('Lütfen kalori, karp, protein ve yağ alanlarını doldurun.');
+      return;
+    }
     setSearchStep('manual_loading');
     setShowDropdown(false);
 
@@ -256,7 +262,8 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
           calories: manualCalories,
           protein_g: manualProtein,
           carbs_g: manualCarbs,
-          fat_g: manualFat
+          fat_g: manualFat,
+          sugar_g: manualSugar || '0'
         })
       });
       const data = await res.json();
@@ -277,11 +284,13 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
       setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
       setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
       setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
+      setSugar((Math.round((p.sugar_g || 0) * qty * 10) / 10).toString());
       setQuantity(qty.toString());
       setServingDescription(`${qty} ${unitType}`);
       setSearchStep('gemini_result');
     } catch (err: any) {
       console.error(err);
+      toast.error(err.message || 'Manuel ekleme başarısız oldu.');
       setSearchStep('manual_form');
     }
   };
@@ -632,22 +641,26 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 mt-1">
+                  <div className="grid grid-cols-5 gap-1.5 mt-1">
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-orange-400 font-semibold pl-1">Kalori</label>
-                      <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => setManualCalories(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+                      <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => setManualCalories(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-1.5 text-xs text-white focus:outline-none focus:border-orange-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-blue-400 font-semibold pl-1">Karb (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualCarbs} onChange={e => setManualCarbs(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-blue-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                      <input type="number" min="0" step="0.1" value={manualCarbs} onChange={e => setManualCarbs(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-blue-500/30 rounded-xl py-2 px-1.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-pink-400 font-semibold pl-1">Şeker (g)</label>
+                      <input type="number" min="0" step="0.1" value={manualSugar} onChange={e => setManualSugar(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-pink-500/30 rounded-xl py-2 px-1.5 text-xs text-white focus:outline-none focus:border-pink-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-green-400 font-semibold pl-1">Protein (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualProtein} onChange={e => setManualProtein(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-green-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-green-500" />
+                      <input type="number" min="0" step="0.1" value={manualProtein} onChange={e => setManualProtein(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-green-500/30 rounded-xl py-2 px-1.5 text-xs text-white focus:outline-none focus:border-green-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-yellow-400 font-semibold pl-1">Yağ (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualFat} onChange={e => setManualFat(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
+                      <input type="number" min="0" step="0.1" value={manualFat} onChange={e => setManualFat(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-1.5 text-xs text-white focus:outline-none focus:border-yellow-500" />
                     </div>
                   </div>
 
@@ -737,16 +750,17 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                   </div>
 
                   {/* Makro değerler */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
                       { label: 'Karb', value: nutrients.carbs, pct: nutrients.carbsPct, color: MACRO_COLORS.carbs, bg: 'rgba(96,165,250,0.1)' },
+                      { label: 'Şeker', value: parseFloat(sugar) || 0, pct: null, color: '#f472b6', bg: 'rgba(244,114,182,0.1)' },
                       { label: 'Protein', value: nutrients.protein, pct: nutrients.proteinPct, color: MACRO_COLORS.protein, bg: 'rgba(74,222,128,0.1)' },
                       { label: 'Yağ', value: nutrients.fat, pct: nutrients.fatPct, color: MACRO_COLORS.fat, bg: 'rgba(250,204,21,0.1)' }
                     ].map(m => (
                       <div key={m.label} className="flex flex-col items-center py-2 rounded-xl" style={{ background: m.bg }}>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: m.color }}>{m.label}</span>
-                        <span className="text-[15px] font-bold text-white mt-0.5">{m.value}g</span>
-                        <span className="text-[10px]" style={{ color: m.color }}>%{m.pct}</span>
+                        <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: m.color }}>{m.label}</span>
+                        <span className="text-[14px] font-bold text-white mt-0.5">{m.value}g</span>
+                        {m.pct !== null && <span className="text-[9px]" style={{ color: m.color }}>%{m.pct}</span>}
                       </div>
                     ))}
                   </div>

@@ -240,6 +240,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                           <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
                             <span>{food.amount}</span>
                             <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
+                            <span className="text-[11px]" style={{ color: '#f472b6' }}>Ş:{food.sugar_g ?? (food as any).sugar_g ?? (food as any).sugar ?? 0}g</span>
                             <span className="text-[11px]" style={{ color: '#4ade80' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
                             <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
                           </span>
