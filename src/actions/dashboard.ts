@@ -160,14 +160,20 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       exerciseMinutes = dailyLog.exercises.reduce((acc: number, ex: any) => acc + (ex.duration_minutes || 0), 0);
     }
 
-    return {
+        const bmrCal = dailyLog.totals.calories_burned_bmr || 0;
+        const sleepCal = dailyLog.totals.calories_burned_sleep || 0;
+        // Bilimsel olarak: 24 saatlik BMR hesaplaması zaten uyku süresindeki metabolik tüketimi içerir.
+        // Çifte sayımı (double counting) önlemek için BMR eklendiyse uyku kalorisini ana toplama ekleme.
+        const netSleepToAddToTotal = bmrCal > 0 ? 0 : sleepCal;
+
+        return {
       success: true,
       data: {
         date: dateString,
         targetCalories,
         consumedCalories: Math.round(dailyLog.totals.calories_consumed),
-        burnedCalories: Math.round(dailyLog.totals.calories_burned_exercise + (dailyLog.totals.calories_burned_sleep || 0) + (dailyLog.totals.calories_burned_bmr || 0)),
-        caloriesBurnedBmr: Math.round(dailyLog.totals.calories_burned_bmr || 0),
+        burnedCalories: Math.round(dailyLog.totals.calories_burned_exercise + netSleepToAddToTotal + bmrCal),
+        caloriesBurnedBmr: Math.round(bmrCal),
         bmrAdded: !!(dailyLog as any).bmr_added,
         sleepMinutes: dailyLog.sleep?.duration_minutes || 0,
         sleepCalories: dailyLog.totals.calories_burned_sleep || 0,

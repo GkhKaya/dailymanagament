@@ -201,22 +201,9 @@ export async function addExerciseAction(data: { date: string; name: string; dura
     targetDate.setUTCHours(0, 0, 0, 0);
     
     const user = await User.findById(userId);
-    let restingCalories = 0;
     
-    if (user?.current_weight_kg && user?.profile?.height_cm && user?.profile?.birth_date) {
-      const currentWeight = user.current_weight_kg;
-      let age = 0;
-      const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
-      age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
-      let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
-      bmr += user.profile.gender === 'erkek' ? 5 : -161;
-      
-      const bmrPerMinute = bmr / (24 * 60);
-      restingCalories = bmrPerMinute * data.duration_minutes;
-    }
-    
-    // Net exercise calories
-    const netCalories = Math.max(0, Math.round(data.calories_burned - restingCalories));
+    // Use the exact calories provided by the user
+    const netCalories = data.calories_burned;
 
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
     if (!log) {
@@ -240,7 +227,7 @@ export async function addExerciseAction(data: { date: string; name: string; dura
     log.totals.calories_burned_exercise += netCalories;
     
     await log.save();
-    return { success: true, netCalories, restingSubtracted: Math.round(restingCalories) };
+    return { success: true, netCalories };
   } catch (e: unknown) {
     const err = e as Error;
     return { success: false, error: err.message };
