@@ -49,7 +49,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <div className="flex items-center gap-4">
             <button onClick={onBack} className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors">
               <ArrowLeft size={20} className="text-white" />
