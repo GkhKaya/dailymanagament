@@ -67,6 +67,9 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <span className="text-metric text-white">{data.consumedCalories}</span>
             <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
+          <div className="mt-1">
+            <span className="text-[10px] text-[var(--on-surface-variant)] opacity-70">Alınabilecek: {data.targetCalories} kcal</span>
+          </div>
         </div>
 
         {/* YAKILAN */}
@@ -95,9 +98,6 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-metric text-[var(--primary)]">{netCalories}</span>
             <span className="text-body text-[var(--on-surface-variant)]">kcal</span>
-          </div>
-          <div className="mt-1">
-            <span className="text-[10px] text-[var(--on-surface-variant)] opacity-70">Hedef: {data.targetCalories} kcal</span>
           </div>
         </div>
       </div>
