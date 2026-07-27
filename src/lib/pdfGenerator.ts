@@ -146,7 +146,7 @@ function renderDayPage(
         theme: 'striped',
         margin: { left: marginX, right: marginX },
         styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
-        headStyles: { fillStyle: 'F', fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+        headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
         columnStyles: {
           0: { cellWidth: 62 },
           1: { cellWidth: 32 },

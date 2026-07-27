@@ -176,6 +176,4 @@ export function useAddMealViewModel(onSuccess: () => void) {
     isLoading,
     handleSubmit, handleMultiSubmit
   };
-    handleSubmit, handleMultiSubmit
-  };
 }

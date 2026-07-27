@@ -53,6 +53,7 @@ export interface ExportDayData {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
   };
 }
 
@@ -320,6 +321,7 @@ function mapDailyLogToExportDay(log: any, dateObj: Date): ExportDayData {
   const protein_g = Math.round(log?.totals?.protein_g || 0);
   const carbs_g = Math.round(log?.totals?.carbs_g || 0);
   const fat_g = Math.round(log?.totals?.fat_g || 0);
+  const sugar_g = Math.round(log?.totals?.sugar_g || 0);
 
   return {
     date: dateStr,
@@ -336,7 +338,8 @@ function mapDailyLogToExportDay(log: any, dateObj: Date): ExportDayData {
       total_burned,
       protein_g,
       carbs_g,
-      fat_g
+      fat_g,
+      sugar_g
     }
   };
 }
