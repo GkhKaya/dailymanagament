@@ -45,11 +45,11 @@ export function AddWeightForm({
                 contentStyle={{ backgroundColor: 'rgba(20,20,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                 itemStyle={{ color: '#4ade80' }}
                 formatter={(value: any) => [`${value} kg`, 'Kilo']}
-                labelFormatter={(val) => {
-                  if (!val) return '';
-                  const d = new Date(String(val));
-                  return `${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
-                }}
+  labelFormatter={(val) => {
+    if (!val) return '';
+    const d = new Date(String(val));
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+  }}
               />
               <Line 
                 type="monotone" 

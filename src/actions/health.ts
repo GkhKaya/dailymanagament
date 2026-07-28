@@ -480,11 +480,7 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
     }
 
     const logDate = data.date ? new Date(data.date) : new Date();
-    // If date was passed as midnight (00:00:00), attach current time so logs on the same day are distinct & ordered
-    if (logDate.getHours() === 0 && logDate.getMinutes() === 0 && logDate.getSeconds() === 0) {
-      const now = new Date();
-      logDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
-    }
+    logDate.setUTCHours(0, 0, 0, 0);
 
     const weightLog = new WeightLog({
       user_id: userId,
