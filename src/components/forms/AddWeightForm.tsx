@@ -3,6 +3,22 @@ import { useAddWeightViewModel } from '@/viewmodels/useAddWeightViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    const d = new Date(item.date);
+    const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    const timeStr = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    return (
+      <div className="bg-[#161622] border border-[#4ade80]/30 rounded-xl p-2 shadow-2xl">
+        <div className="text-[10px] text-gray-400 font-medium">{dateStr} {timeStr !== '00:00' ? timeStr : ''}</div>
+        <div className="text-sm font-bold text-[#4ade80] mt-0.5">{item.weight} kg</div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AddWeightForm({
   onClose,
   onSuccess,
@@ -21,9 +37,9 @@ export function AddWeightForm({
   return (
     <div className="flex flex-col gap-6 pt-2">
       {weightHistory && weightHistory.length > 0 ? (
-        <div className="w-full h-36 -ml-2 mb-2">
+        <div className="w-full h-40 -ml-2 mb-2">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={weightHistory}>
+            <LineChart data={weightHistory} margin={{ top: 18, right: 10, left: -10, bottom: 0 }}>
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(val) => new Date(val).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} 
@@ -41,23 +57,15 @@ export function AddWeightForm({
                 tickLine={false}
                 width={28}
               />
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(20,20,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                itemStyle={{ color: '#4ade80' }}
-                formatter={(value: any) => [`${value} kg`, 'Kilo']}
-  labelFormatter={(val) => {
-    if (!val) return '';
-    const d = new Date(String(val));
-    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
-  }}
-              />
+              <Tooltip content={<CustomTooltip />} />
               <Line 
                 type="monotone" 
                 dataKey="weight" 
                 stroke="#4ade80" 
                 strokeWidth={2}
-                dot={{ r: 3, fill: '#4ade80', strokeWidth: 0 }}
-                activeDot={{ r: 5 }}
+                dot={{ r: 4, fill: '#4ade80', strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
+                label={{ fill: '#4ade80', fontSize: 10, position: 'top', dy: -6 }}
               />
             </LineChart>
           </ResponsiveContainer>

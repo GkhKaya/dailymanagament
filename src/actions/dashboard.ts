@@ -105,12 +105,21 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       targetCalories = Math.max(minSafeCalories, Math.round(tdee - dailyDeficit));
     }
 
-    const weightHistory = (weightLogs || []).map(log => ({
-      id: log._id.toString(),
-      date: log.date.toISOString(),
-      weight: log.weight_kg,
-      note: log.note || undefined
-    }));
+    const seenTimes = new Set<number>();
+    const weightHistory = (weightLogs || []).map(log => {
+      let d = log.date ? new Date(log.date) : new Date();
+      let timeMs = d.getTime();
+      while (seenTimes.has(timeMs)) {
+        timeMs += 1000; // add 1s offset if identical timestamp
+      }
+      seenTimes.add(timeMs);
+      return {
+        id: log._id.toString(),
+        date: new Date(timeMs).toISOString(),
+        weight: log.weight_kg,
+        note: log.note || undefined
+      };
+    });
 
     if (!dailyLog) {
       // Return empty DTO if no data exists for this day

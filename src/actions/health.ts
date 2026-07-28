@@ -479,8 +479,7 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
       // Index already dropped or doesn't exist
     }
 
-    const logDate = data.date ? new Date(data.date) : new Date();
-    logDate.setUTCHours(0, 0, 0, 0);
+    const logDate = new Date();
 
     const weightLog = new WeightLog({
       user_id: userId,
