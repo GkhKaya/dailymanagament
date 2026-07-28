@@ -70,9 +70,9 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Main Metric Cards */}
-      <div className="grid grid-cols-3 gap-2 md:gap-[var(--space-2)]">
+      <div className="grid grid-cols-3 gap-2 md:gap-[var(--space-2)] items-stretch">
         {/* ALINAN */}
-        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center overflow-hidden">
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start overflow-hidden h-full">
           <span className="text-[10px] md:text-caption text-[var(--primary)] truncate">ALINAN</span>
           <div className="flex items-baseline gap-1 mt-1 truncate">
             <span className="text-xl md:text-metric text-white font-bold">{data.consumedCalories}</span>
@@ -84,7 +84,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
 
         {/* YAKILAN */}
-        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center relative overflow-hidden">
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start relative overflow-hidden h-full">
           <span className="text-[10px] md:text-caption text-[var(--on-surface-variant)] truncate">YAKILAN</span>
           <div className="flex items-baseline gap-1 mt-1 truncate">
             <span className="text-xl md:text-metric text-white font-bold">{totalBurned}</span>
@@ -104,7 +104,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
 
         {/* NET (TOPLAM) */}
-        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-center overflow-hidden">
+        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start overflow-hidden h-full">
           <span className="text-[10px] md:text-caption text-[var(--on-surface-variant)] truncate">NET</span>
           <div className="flex items-baseline gap-1 mt-1 truncate">
             <span className="text-xl md:text-metric text-[var(--primary)] font-bold">{netCalories}</span>
