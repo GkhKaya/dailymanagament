@@ -30,19 +30,19 @@ const AccountSchema: Schema = new Schema({
   credit_card_details: {
     total_limit: { 
       type: Schema.Types.Decimal128,
-      required: function(this: any) { return this.type === AccountType.CREDIT_CARD; }
+      required: function(this: IAccount) { return this.type === AccountType.CREDIT_CARD; }
     },
     current_debt: { 
       type: Schema.Types.Decimal128,
-      required: function(this: any) { return this.type === AccountType.CREDIT_CARD; }
+      required: function(this: IAccount) { return this.type === AccountType.CREDIT_CARD; }
     },
     statement_day: { 
       type: Number, min: 1, max: 31,
-      required: function(this: any) { return this.type === AccountType.CREDIT_CARD; }
+      required: function(this: IAccount) { return this.type === AccountType.CREDIT_CARD; }
     },
     payment_due_day: { 
       type: Number, min: 1, max: 31,
-      required: function(this: any) { return this.type === AccountType.CREDIT_CARD; }
+      required: function(this: IAccount) { return this.type === AccountType.CREDIT_CARD; }
     }
   }
 }, {

@@ -260,9 +260,10 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
     }
 
     return { success: false, error: "Geçersiz filtre" };
-  } catch (e: any) {
-    console.error("getExportDataAction error:", e);
-    return { success: false, error: e.message || "Veri alınırken hata oluştu" };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Export Error:", err);
+    return { success: false, error: err.message || "Veri alınırken hata oluştu" };
   }
 }
 

@@ -52,9 +52,10 @@ export async function searchLocalFoodsAction(query: string) {
         }))
       }))
     };
-  } catch (error: any) {
-    console.error("Local Food Search Error:", error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Local Food Search Error:", err);
+    return { success: false, error: err.message };
   }
 }
 

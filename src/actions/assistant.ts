@@ -294,15 +294,16 @@ Kullanıcının söylediği: "${text}"`;
 
     return { success: false, error: "İşlem anlaşılamadı. Lütfen 'Nakit hesabımdan 100 TL market harcaması yaptım' veya 'Kahvaltıda 1 elma yedim' gibi net ifadeler kullanın." };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Assistant Error:", error);
     
     // Rate limit / Quota / Overloaded hatası kontrolü
-    const errorMsg = error?.message?.toLowerCase() || "";
+    const err = error as Error;
+    const errorMsg = err?.message?.toLowerCase() || "";
     if (errorMsg.includes("429") || errorMsg.includes("rate limit") || errorMsg.includes("quota") || errorMsg.includes("too many requests") || errorMsg.includes("resource has been exhausted") || errorMsg.includes("503") || errorMsg.includes("overloaded") || errorMsg.includes("service unavailable")) {
       return { success: false, error: "Şuan sesli asistanımız çok yoğun, lütfen daha sonra tekrar deneyin." };
     }
 
-    return { success: false, error: error.message };
+    return { success: false, error: err.message || "Bilinmeyen bir hata oluştu." };
   }
 }

@@ -124,7 +124,7 @@ DailyLogSchema.pre('findOneAndUpdate', function() {
   if (query.date && query.date instanceof Date) {
     query.date.setUTCHours(0, 0, 0, 0);
   }
-  const update: any = this.getUpdate();
+  const update = this.getUpdate() as mongoose.UpdateQuery<IDailyLog>;
   if (update) {
     if (update.date && update.date instanceof Date) update.date.setUTCHours(0, 0, 0, 0);
     if (update.$set && update.$set.date && update.$set.date instanceof Date) update.$set.date.setUTCHours(0, 0, 0, 0);
