@@ -14,6 +14,7 @@ import { User } from "@/models/User";
 import { WeightLog } from "@/models/WeightLog";
 import { HealthDataDTO, FinanceDataDTO } from "@/models/DashboardTypes";
 import { syncSubscriptions } from "./sync";
+import { calculateBMR, calculateAge } from "@/lib/calories";
 
 async function getSession() {
   return await auth.api.getSession({
@@ -73,11 +74,8 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       let tdee = 2400;
       let bmr = 2000;
       if (user.profile?.height_cm && user.profile?.birth_date) {
-        let age = 0;
-        const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
-        age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
-        bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
-        bmr += (user.profile.gender === 'erkek' || user.profile.gender === 'male') ? 5 : -161;
+        const age = calculateAge(user.profile.birth_date);
+        bmr = calculateBMR(currentWeight, user.profile.height_cm, age, user.profile.gender);
         
         let activityMultiplier = 1.2;
         switch (user.profile?.activity_level) {

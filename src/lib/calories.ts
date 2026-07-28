@@ -1,3 +1,34 @@
+export function isMale(gender?: string | null): boolean {
+  if (!gender) return true;
+  const g = String(gender).trim().toLowerCase();
+  return g === 'male' || g === 'erkek' || g === 'm';
+}
+
+export function calculateAge(birthDate?: Date | string | null): number {
+  if (!birthDate) return 25;
+  const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return 25;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return Math.max(1, age);
+}
+
+export function calculateBMR(
+  weight: number,
+  height: number,
+  age: number,
+  gender?: string | null
+): number {
+  if (!weight || !height || !age || isNaN(weight) || isNaN(height) || isNaN(age)) return 0;
+  const male = isMale(gender);
+  const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (male ? 5 : -161);
+  return Math.round(bmr);
+}
+
 export function calculateTargetCalories(
   weight: number,
   height: number,
@@ -6,12 +37,8 @@ export function calculateTargetCalories(
   activityLevel: string,
   goal: string
 ): number {
-  if (!weight || !height || !age) return 0;
-  if (isNaN(weight) || isNaN(height) || isNaN(age)) return 0;
-
-  // Mifflin-St Jeor Equation
-  let bmr = (10 * weight) + (6.25 * height) - (5 * age);
-  bmr += gender === 'Male' ? 5 : -161;
+  const bmr = calculateBMR(weight, height, age, gender);
+  if (!bmr) return 0;
 
   // Activity Multiplier
   const multipliers: Record<string, number> = {

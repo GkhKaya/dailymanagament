@@ -9,7 +9,7 @@ import { User } from "@/models/User";
 import { SavedFood } from "@/models/SavedFood";
 import { FoodCache } from "@/models/FoodCache";
 import { WeightLog } from "@/models/WeightLog";
-import { calculateTargetCalories } from "@/lib/calories";
+import { calculateTargetCalories, calculateBMR, calculateAge, isMale } from "@/lib/calories";
 
 // Helper to check session
 async function getUserId() {
@@ -241,18 +241,13 @@ export async function addBMRAction(dateString: string) {
     const user = await User.findById(userId);
     if (!user) return { success: false, error: "User not found" };
 
-    if (!user.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date || !user.profile?.gender) {
-      return { success: false, error: "BMR hesaplamak için boy, kilo, doğum tarihi ve cinsiyet bilgileri eksiksiz olmalıdır." };
+    if (!user.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date) {
+      return { success: false, error: "BMR hesaplamak için boy, kilo, doğum tarihi bilgileri eksiksiz olmalıdır." };
     }
 
     const currentWeight = user.current_weight_kg;
-    let age = 0;
-    const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
-    age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
-    
-    let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
-    bmr += user.profile.gender === 'erkek' ? 5 : -161;
-    bmr = Math.round(bmr);
+    const age = calculateAge(user.profile.birth_date);
+    const bmr = calculateBMR(currentWeight, user.profile.height_cm, age, user.profile.gender);
 
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
     if (!log) {
@@ -313,12 +308,8 @@ export async function addSleepAction(data: { date: string; duration_minutes: num
     // Automatically add BMR if not added yet
     if (!log.bmr_added && user?.current_weight_kg && user?.profile?.height_cm && user?.profile?.birth_date) {
       const currentWeight = user.current_weight_kg;
-      const diffMs = Date.now() - new Date(user.profile.birth_date).getTime();
-      const age = Math.abs(new Date(diffMs).getUTCFullYear() - 1970);
-      
-      let bmr = (10 * currentWeight) + (6.25 * user.profile.height_cm) - (5 * age);
-      bmr += (user.profile.gender === 'erkek' || user.profile.gender === 'male') ? 5 : -161;
-      bmr = Math.round(bmr);
+      const age = calculateAge(user.profile.birth_date);
+      const bmr = calculateBMR(currentWeight, user.profile.height_cm, age, user.profile.gender);
       
       log.bmr_added = true;
       if (!log.totals) log.totals = { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, calories_burned_bmr: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
@@ -493,20 +484,17 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
     const user = await User.findById(userId).lean();
     
     if (user && user.profile) {
-      // Calculate age
-      let age = 25;
-      if (user.profile.birth_date) {
-        age = new Date().getFullYear() - new Date(user.profile.birth_date).getFullYear();
-      }
+      const age = calculateAge(user.profile.birth_date);
+      const height = user.profile.height_cm || 170;
 
       const oldWeight = user.current_weight_kg || data.weight;
-      const oldBmr = (10 * oldWeight) + (6.25 * (user.profile.height_cm || 170)) - (5 * age) + (user.profile.gender === 'Male' ? 5 : -161);
+      const oldBmr = calculateBMR(oldWeight, height, age, user.profile.gender);
       const multipliers: Record<string, number> = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
       const oldTdee = Math.round(oldBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
       const oldTarget = user.settings?.daily_calorie_goal || oldTdee;
       const deficit = oldTarget - oldTdee;
 
-      const newBmr = (10 * data.weight) + (6.25 * (user.profile.height_cm || 170)) - (5 * age) + (user.profile.gender === 'Male' ? 5 : -161);
+      const newBmr = calculateBMR(data.weight, height, age, user.profile.gender);
       const newTdee = Math.round(newBmr * (multipliers[user.profile.activity_level || 'sedentary'] || 1.2));
       const newTarget = Math.max(1200, newTdee + deficit);
       
