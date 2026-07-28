@@ -471,7 +471,14 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
   try {
     const userId = await getUserId();
     await connectDB();
-    
+
+    // Safely drop old unique index on MongoDB if it still exists in the database
+    try {
+      await WeightLog.collection.dropIndex('user_id_1_date_1');
+    } catch (e) {
+      // Index already dropped or doesn't exist
+    }
+
     const logDate = data.date ? new Date(data.date) : new Date();
     // If date was passed as midnight (00:00:00), attach current time so logs on the same day are distinct & ordered
     if (logDate.getHours() === 0 && logDate.getMinutes() === 0 && logDate.getSeconds() === 0) {
