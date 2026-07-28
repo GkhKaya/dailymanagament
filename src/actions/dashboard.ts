@@ -42,13 +42,16 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     const thirtyDaysAgo = new Date(targetDate);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const targetDateEnd = new Date(targetDate);
+    targetDateEnd.setUTCHours(23, 59, 59, 999);
+
     // Fetch user, dailyLog, and weightLogs in parallel
     const [user, dailyLog, weightLogs] = await Promise.all([
       User.findById(userId).lean(),
       DailyLog.findOne({ user_id: userId, date: targetDate }).lean(),
       WeightLog.find({
         user_id: session.user.id as any,
-        date: { $gte: thirtyDaysAgo, $lte: targetDate }
+        date: { $gte: thirtyDaysAgo, $lte: targetDateEnd }
       }).sort({ date: 1 }).lean()
     ]);
     console.log(`[getHealthDataAction] DB queries finished. (${Date.now() - start}ms)`);
@@ -103,8 +106,10 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
     }
 
     const weightHistory = (weightLogs || []).map(log => ({
+      id: log._id.toString(),
       date: log.date.toISOString(),
-      weight: log.weight_kg
+      weight: log.weight_kg,
+      note: log.note || undefined
     }));
 
     if (!dailyLog) {

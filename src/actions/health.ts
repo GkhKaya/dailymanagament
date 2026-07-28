@@ -472,26 +472,22 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
     const userId = await getUserId();
     await connectDB();
     
-    const targetDate = new Date(data.date);
-    targetDate.setUTCHours(0, 0, 0, 0);
+    const logDate = data.date ? new Date(data.date) : new Date();
+    // If date was passed as midnight (00:00:00), attach current time so logs on the same day are distinct & ordered
+    if (logDate.getHours() === 0 && logDate.getMinutes() === 0 && logDate.getSeconds() === 0) {
+      const now = new Date();
+      logDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    }
 
-    // Update or insert WeightLog for this day
-    await WeightLog.findOneAndUpdate(
-      { user_id: userId, date: targetDate },
-      { 
-        $set: { 
-          weight_kg: data.weight,
-          ...(data.note && { note: data.note })
-        } 
-      },
-      { upsert: true, returnDocument: 'after' }
-    );
+    const weightLog = new WeightLog({
+      user_id: userId,
+      date: logDate,
+      weight_kg: data.weight,
+      note: data.note || null
+    });
+    await weightLog.save();
 
-    // If today is the date (or past), update current user profile
-    const today = new Date();
-    today.setUTCHours(0,0,0,0);
-    
-    // User._id is String — do NOT cast to ObjectId
+    // Update current user profile with latest weight & recalculated target calories
     const user = await User.findById(userId).lean();
     
     if (user && user.profile) {
@@ -528,6 +524,25 @@ export async function addWeightLogAction(data: { date: string; weight: number; n
       );
     }
 
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteWeightLogAction(id: string) {
+  try {
+    const userId = await getUserId();
+    await connectDB();
+    await WeightLog.deleteOne({ _id: id, user_id: userId });
+
+    // Update user current_weight_kg to the latest remaining weight log if available
+    const latestLog = await WeightLog.findOne({ user_id: userId }).sort({ date: -1 }).lean();
+    if (latestLog) {
+      await User.updateOne({ _id: userId }, { $set: { current_weight_kg: latestLog.weight_kg } });
+    }
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;

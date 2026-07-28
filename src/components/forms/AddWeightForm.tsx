@@ -14,19 +14,19 @@ export function AddWeightForm({
   onSuccess: () => void;
   currentWeight: number;
   currentDate: string;
-  weightHistory: { date: string; weight: number }[];
+  weightHistory: { id?: string; date: string; weight: number; note?: string }[];
 }) {
   const viewModel = useAddWeightViewModel(currentWeight, currentDate, onSuccess);
 
   return (
     <div className="flex flex-col gap-6 pt-2">
       {weightHistory && weightHistory.length > 0 ? (
-        <div className="w-full h-32 -ml-2 mb-2">
+        <div className="w-full h-36 -ml-2 mb-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={weightHistory}>
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(val) => new Date(val).getDate().toString()} 
+                tickFormatter={(val) => new Date(val).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} 
                 stroke="rgba(255,255,255,0.2)" 
                 fontSize={10}
                 tickMargin={8}
@@ -39,12 +39,17 @@ export function AddWeightForm({
                 fontSize={10}
                 axisLine={false}
                 tickLine={false}
-                width={25}
+                width={28}
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'rgba(20,20,20,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                 itemStyle={{ color: '#4ade80' }}
-                labelFormatter={(val) => val ? new Date(String(val)).toLocaleDateString('tr-TR') : ''}
+                formatter={(value: any) => [`${value} kg`, 'Kilo']}
+                labelFormatter={(val) => {
+                  if (!val) return '';
+                  const d = new Date(String(val));
+                  return `${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+                }}
               />
               <Line 
                 type="monotone" 

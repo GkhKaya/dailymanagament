@@ -35,7 +35,7 @@ export interface HealthDataDTO {
   fat: number;
   meals: MealInfo[];
   currentWeight?: number;
-  weightHistory?: { date: string; weight: number }[];
+  weightHistory?: { id?: string; date: string; weight: number; note?: string }[];
 }
 
 // ── Finance Data Models ──
