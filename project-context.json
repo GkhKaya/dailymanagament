@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "dailymanagament",
+  "version": "0.1.0",
+  "description": "Kapsamlı günlük kişisel yönetim uygulaması. Sağlık (kilo, uyku, kalori, egzersiz/antrenman), Finans (hesaplar, işlemler, borçlar, abonelikler), AI Sesli/Yazılı Asistan ve Raporlama (PDF Dışa Aktarma) özelliklerini içerir.",
+  "architecture": {
+    "pattern": "MVVM (Model-View-ViewModel)",
+    "framework": "Next.js 16 (App Router) + Server Actions",
+    "guidelines": {
+      "models": "src/models/ dizininde yer alır. Mongoose şemaları, TypeScript arayüzleri ve enum tanımları bulunur.",
+      "viewmodels": "src/viewmodels/ dizininde yer alır. Özel React hook'ları (use*ViewModel.ts) UI durumunu yönetir, iş mantığını ve Server Action çağrılarını içerir.",
+      "views": "src/components/ ve src/app/ dizinlerinde yer alır. Yalnızca UI render etmekten sorumludur, iş mantığı içermez.",
+      "serverActions": "src/actions/ dizininde yer alır. Veritabanı sorguları ve sunucu taraflı işlemler 'use server' direktifi ile yazılır.",
+      "localization": "Tüm UI metinleri src/locales/tr.json dosyasına eklenmeli ve src/lib/i18n.ts yardımcı fonksiyonu ile çağrılmalıdır.",
+      "styling": "TailwindCSS v4 ve src/app/globals.css içerisindeki CSS değişkenleri (design tokens, clamp() akışkan tipografi) kullanılmalıdır."
+    }
+  },
+  "techStack": {
+    "core": ["Next.js 16", "React 19", "TypeScript", "TailwindCSS v4"],
+    "database": ["MongoDB", "Mongoose ORM"],
+    "authentication": ["Better-Auth (MongoDB Adapter)"],
+    "aiIntegration": ["@google/genai (Gemini AI SDK)"],
+    "exportAndReporting": ["jsPDF", "jsPDF-AutoTable"],
+    "chartsAndIcons": ["Recharts", "Lucide React"]
+  },
+  "directoryStructure": {
+    "src/actions": {
+      "description": "Next.js Server Actions (Veritabanı ve Sunucu Mantığı)",
+      "files": {
+        "analysis.ts": "Sağlık ve finans analiz verilerini hesaplar.",
+        "assistant.ts": "Gemini AI asistan entegrasyonu ve komut işleme.",
+        "auth.ts": "Giriş, kayıt ve şifre sıfırlama işlemleri.",
+        "dashboard.ts": "Ana sayfa dashboard özet verilerini getirir.",
+        "export.ts": "Finansal ve sağlık verilerini PDF raporu için hazırlar.",
+        "finance.ts": "Hesap, işlem, borç ve abonelik CRUD işlemleri.",
+        "health.ts": "Kilo, öğün, uyku ve kalori takibi eylemleri.",
+        "profile.ts": "Kullanıcı profili ve yaş/boy güncellemeleri.",
+        "sync.ts": "Aboneliklerin otomatik işlem senkronizasyonu.",
+        "user.ts": "Kullanıcı hesabı ve tercih yönetimi.",
+        "workout.ts": "Egzersiz ve antrenman rutini yönetimi."
+      }
+    },
+    "src/models": {
+      "description": "Mongoose Veritabanı Modelleri ve Enum Tanımları",
+      "entities": ["User", "WeightLog", "DailyLog", "FoodCache", "Transaction", "Subscription", "Debt", "Account", "Category", "WorkoutRoutine", "Enums", "DashboardTypes"]
+    },
+    "src/viewmodels": {
+      "description": "React View Model Hook'ları (İş Mantığı & Durum Yönetimi)",
+      "examples": ["useDashboardViewModel", "useAddMealViewModel", "useAddTransactionViewModel", "useHealthAnalysisViewModel", "useFinanceAnalysisViewModel"]
+    },
+    "src/components": {
+      "description": "React UI Bileşenleri (Views)",
+      "subdirectories": {
+        "auth": "Giriş, kayıt ve şifre işlemleri UI bileşenleri.",
+        "dashboard": "Ana sayfa özet panelleri, grafikler ve analizler.",
+        "forms": "Öğün ekleme, borç, işlem ve hesap formları.",
+        "profile": "Profil ve ayarlar bileşenleri.",
+        "onboarding": "Yeni kullanıcı karşılama adımları.",
+        "assistant": "AI Sesli Asistan arayüzü.",
+        "ui": "Buton, TextInput, Modal, BottomSheet gibi ortak UI elemanları."
+      }
+    },
+    "src/lib": {
+      "description": "Ortak Yardımcı Modüller",
+      "files": {
+        "db.ts": "MongoDB bağlantı yönetimi.",
+        "auth.ts": "Better-Auth sunucu yapılandırması.",
+        "auth-client.ts": "Better-Auth istemci bağlantısı.",
+        "i18n.ts": "Çeviri ve dil destek fonksiyonu.",
+        "calories.ts": "BMR, TDEE ve besin makro hesaplamaları.",
+        "pdfGenerator.ts": "jsPDF ile PDF rapor oluşturma."
+      }
+    },
+    "src/app": {
+      "description": "Next.js App Router Sayfaları ve API Rotaları",
+      "pages": ["/dashboard", "/login", "/register", "/profile", "/onboarding", "/forgot-password", "/reset-password"]
+    }
+  },
+  "scripts": {
+    "dev": "next dev -p 3005 (Port 3005 üzerinde geliştirme sunucusu)",
+    "build": "next build (Üretim derlemesi)",
+    "start": "next start (Üretim sunucusunu başlat)",
+    "lint": "eslint (Kod kalitesi denetimi)",
+    "typecheck": "npx tsc --noEmit (TypeScript tip denetimi)"
+  }
+}
