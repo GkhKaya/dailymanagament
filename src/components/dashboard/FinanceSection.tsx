@@ -36,7 +36,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
     <div className={`flex flex-col gap-[var(--space-6)] w-full max-w-2xl mx-auto animate-slide-up`}>
       
       {/* Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-hero text-white tracking-tight">Finansal Durum</h2>
         {!isOverview && (
           <button onClick={onShowAnalysis} className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">

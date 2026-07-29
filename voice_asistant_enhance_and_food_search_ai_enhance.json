@@ -1,0 +1,310 @@
+{
+  "title": "Voice Assistant and AI Food Search Enhancement",
+  "status": "approved",
+  "scope": {
+    "voice_assistant": [
+      "Turkish speech-to-text command flow",
+      "Gemini intent extraction for finance and meal logging",
+      "Finance and meal confirmation before persistence"
+    ],
+    "food_search": [
+      "FoodCache-first search",
+      "AI fallback when no suitable food result exists",
+      "Manual food-entry fallback"
+    ]
+  },
+  "current_architecture": {
+    "voice": {
+      "ui": "src/components/assistant/VoiceAssistantFAB.tsx",
+      "ai": "Gemini 2.5 Flash via src/actions/assistant.ts",
+      "current_behavior": "Speech/text command is parsed then immediately persisted."
+    },
+    "food_search": {
+      "ui": "src/components/forms/AddMealForm.tsx",
+      "cache_search": "src/app/api/food/search/route.ts",
+      "ai_fallback": "src/app/api/food/gemini/route.ts",
+      "actual_provider": "OpenRouter free model, optionally fed DuckDuckGo snippets",
+      "current_behavior": "FoodCache search runs first. User can request AI result or manually enter nutrition when no result exists."
+    }
+  },
+  "findings": [
+    {
+      "id": "VA-01",
+      "severity": "critical",
+      "area": "voice_finance",
+      "finding": "AI-parsed financial transactions persist without an explicit user confirmation step.",
+      "risk": "Incorrect amount, category, account, or date changes real financial records and account balances."
+    },
+    {
+      "id": "VA-02",
+      "severity": "critical",
+      "area": "voice_finance",
+      "finding": "Unmatched account and category fall back to first available record.",
+      "risk": "A transaction can be written to an unrelated account or category."
+    },
+    {
+      "id": "VA-03",
+      "severity": "high",
+      "area": "voice_finance",
+      "finding": "Voice-created transactions are saved with source manual.",
+      "risk": "Audit trail and UI source indicator are incorrect."
+    },
+    {
+      "id": "VA-04",
+      "severity": "high",
+      "area": "voice_finance",
+      "finding": "Schema does not require or validate amount, transaction type, date, account match, or category match before persistence.",
+      "risk": "Malformed or ambiguous AI output can create invalid data."
+    },
+    {
+      "id": "VA-05",
+      "severity": "high",
+      "area": "voice_meals",
+      "finding": "AI meal results persist immediately and can partially save when one food in a multi-food command fails.",
+      "risk": "Daily nutrition totals become incomplete or inconsistent."
+    },
+    {
+      "id": "VA-06",
+      "severity": "critical",
+      "area": "voice_meals",
+      "finding": "Prompt defines gram nutrition values per 100g, but persistence multiplies values directly by gram quantity.",
+      "risk": "Example: 200g food with 34 kcal per 100g can be stored as 6800 kcal instead of 68 kcal."
+    },
+    {
+      "id": "FS-01",
+      "severity": "critical",
+      "area": "ai_food_search",
+      "finding": "AI food fallback is labelled Gemini in UI and route naming but uses OpenRouter free model.",
+      "risk": "User-facing provider disclosure and operational debugging are inaccurate."
+    },
+    {
+      "id": "FS-02",
+      "severity": "high",
+      "area": "ai_food_search",
+      "finding": "AI-generated nutrition is cached permanently as FoodCache data without source URL, model, timestamp, confidence, or verification state.",
+      "risk": "Hallucinated or stale results become future database results."
+    },
+    {
+      "id": "FS-03",
+      "severity": "high",
+      "area": "ai_food_search",
+      "finding": "DuckDuckGo HTML snippets are scraped with brittle parsing and supplied to the model without trusted-source filtering.",
+      "risk": "Incorrect, stale, manipulated, or brand-mismatched nutrition data can be used."
+    },
+    {
+      "id": "FS-04",
+      "severity": "high",
+      "area": "ai_food_search",
+      "finding": "OpenRouter 429 handling recursively retries without an attempt limit; external request has no timeout.",
+      "risk": "Long-running requests, repeated cost, and unavailable UI."
+    },
+    {
+      "id": "FS-05",
+      "severity": "medium",
+      "area": "ai_food_search",
+      "finding": "AI fallback errors are swallowed in UI and user is returned to form without actionable error feedback.",
+      "risk": "User cannot distinguish no result, quota issue, network failure, or invalid AI response."
+    },
+    {
+      "id": "FS-06",
+      "severity": "medium",
+      "area": "food_search",
+      "finding": "Search queries are interpolated into MongoDB regex without escaping and have no maximum length or rate limit.",
+      "risk": "Unexpected matching, expensive regex work, and endpoint abuse."
+    },
+    {
+      "id": "FS-07",
+      "severity": "medium",
+      "area": "food_search_ui",
+      "finding": "AI nutrition result has no editable review state or visible uncertainty/source warning before meal save.",
+      "risk": "Users may treat an estimate as verified nutrition data."
+    }
+  ],
+  "tasks": [
+    {
+      "order": 1,
+      "id": "DATA-01",
+      "priority": "P0",
+      "status": "in_progress",
+      "title": "Create shared nutrition unit normalization",
+      "work": [
+        "Define explicit nutrition basis: per_gram, per_100g, or per_unit.",
+        "Convert all AI and cache results to one canonical storage basis.",
+        "Fix voice meal calculation for 100g responses.",
+        "Validate calories and macros are finite, non-negative, and plausibly bounded.",
+        "Add focused tests for 100g, gram, piece, and serving calculations."
+      ],
+      "addresses": ["VA-06", "VA-05", "FS-02"]
+    },
+    {
+      "order": 2,
+      "id": "VOICE-01",
+      "priority": "P0",
+      "status": "completed",
+      "title": "Split voice parsing from persistence",
+      "work": [
+        "Change server action from parse-and-save to parse-only preview response.",
+        "Return typed, validated finance or meal draft.",
+        "Create separate confirmed persistence action.",
+        "Reject ambiguous, incomplete, or unmatched fields instead of guessing."
+      ],
+      "addresses": ["VA-01", "VA-02", "VA-04", "VA-05"]
+    },
+    {
+      "order": 3,
+      "id": "VOICE-02",
+      "priority": "P0",
+      "status": "completed",
+      "title": "Build voice confirmation and edit UI",
+      "work": [
+        "Show parsed finance draft: type, amount, account, category, description, date.",
+        "Show parsed meal draft: meal type, food rows, quantity, unit, calories, macros.",
+        "Provide confirm, cancel, and edit actions.",
+        "Keep current transcript visible while user reviews draft.",
+        "Prevent duplicate confirmation while persistence is in progress."
+      ],
+      "addresses": ["VA-01", "VA-05"]
+    },
+    {
+      "order": 4,
+      "id": "VOICE-03",
+      "priority": "P1",
+      "status": "in_progress",
+      "title": "Make voice finance matching deterministic",
+      "work": [
+        "Use normalized exact matching before controlled aliases.",
+        "Return unresolved account/category as a required user choice.",
+        "Use source voice for confirmed voice transactions.",
+        "Support explicit spoken dates when present; otherwise preview today as default."
+      ],
+      "addresses": ["VA-02", "VA-03", "VA-04"]
+    },
+    {
+      "order": 5,
+      "id": "VOICE-04",
+      "priority": "P1",
+      "status": "completed",
+      "title": "Make multi-food meal saves atomic",
+      "work": [
+        "Validate every parsed food before save.",
+        "Persist all foods in one transaction or save none.",
+        "Return per-food validation messages before confirmation."
+      ],
+      "addresses": ["VA-05"]
+    },
+    {
+      "order": 6,
+      "id": "FOOD-01",
+      "priority": "P0",
+      "status": "completed",
+      "title": "Correct provider naming and response contract",
+      "work": [
+        "Rename AI fallback UI text from Gemini to provider-neutral AI nutrition estimate, or switch implementation to Gemini.",
+        "Rename route and state identifiers where safe, preserving backward compatibility where needed.",
+        "Define typed response schema with source, provider, nutrition basis, verification state, and warnings."
+      ],
+      "addresses": ["FS-01", "FS-07"]
+    },
+    {
+      "order": 7,
+      "id": "FOOD-02",
+      "priority": "P0",
+      "status": "completed",
+      "title": "Add AI result review before meal save",
+      "work": [
+        "Show source and estimate warning.",
+        "Allow editing name, quantity, unit, calories, protein, carbs, and fat.",
+        "Require explicit Add Meal confirmation after review.",
+        "Keep manual entry as an immediate alternative."
+      ],
+      "addresses": ["FS-05", "FS-07"]
+    },
+    {
+      "order": 8,
+      "id": "FOOD-03",
+      "priority": "P1",
+      "status": "in_progress",
+      "title": "Harden AI fallback and cache policy",
+      "work": [
+        "Add request timeout and limited exponential retry for rate limits.",
+        "Do not scrape arbitrary search snippets by default; use trusted data source or mark result unverified.",
+        "Store AI source, provider, model, generated_at, verification status, and nutrition basis.",
+        "Do not promote unverified AI result to normal cache search result until user verifies it."
+      ],
+      "addresses": ["FS-02", "FS-03", "FS-04"]
+    },
+    {
+      "order": 9,
+      "id": "FOOD-04",
+      "priority": "P1",
+      "status": "in_progress",
+      "title": "Secure and stabilize search endpoints",
+      "work": [
+        "Require authenticated user where product policy requires it.",
+        "Escape user input before MongoDB regex queries.",
+        "Add query length limits and per-user/IP throttling.",
+        "Return consistent actionable error codes for empty result, quota, timeout, and provider failure."
+      ],
+      "addresses": ["FS-06", "FS-05"]
+    },
+    {
+      "order": 10,
+      "id": "TEST-01",
+      "priority": "P1",
+      "status": "pending",
+      "title": "Add regression coverage and observability",
+      "work": [
+        "Unit test nutrition normalization and AI response validation.",
+        "Integration test voice parse, confirmation, cancellation, and persistence.",
+        "Integration test local result, AI fallback, provider failure, and manual fallback.",
+        "Add structured error logging without transcript or API credential leakage."
+      ],
+      "addresses": ["VA-01", "VA-05", "VA-06", "FS-02", "FS-04", "FS-05"]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "AI food fallback provider should be which option?",
+      "answer": "Try Gemini first. Fall back to OpenRouter only for Gemini high-request, quota, rate-limit, overload, or service-unavailable failures.",
+      "status": "resolved",
+      "impact": "Gemini becomes primary provider. OpenRouter remains resilience fallback."
+    },
+    {
+      "id": "Q2",
+      "question": "Can unverified AI food results enter shared FoodCache automatically?",
+      "answer": "Yes. This is a single-user PWA, so AI and non-AI food entries can be cached directly.",
+      "status": "resolved",
+      "impact": "Keep source/provider metadata so cached AI entries remain traceable and editable."
+    },
+    {
+      "id": "Q3",
+      "question": "Voice confirmation scope should be what?",
+      "answer": "Confirm finance only. Save voice meals after validation without a confirmation step.",
+      "status": "resolved",
+      "impact": "Financial records stay protected while meal logging stays fast."
+    },
+    {
+      "id": "Q4",
+      "question": "When voice command account/category does not match, should user choose it or should system use defaults?",
+      "answer": "Use only an unambiguous spoken match or existing default category. Otherwise require user choice. Never use first-record fallback.",
+      "status": "resolved",
+      "decision_owner": "Codex recommendation accepted for single-user PWA",
+      "impact": "Avoids unrelated account/category records without adding a new account-settings migration."
+    },
+    {
+      "id": "Q5",
+      "question": "For gram-based nutrition, should canonical FoodCache storage be per gram or per 100g?",
+      "answer": "Store gram-based nutrition per 1 gram. Convert AI and manual 100g input at API boundary.",
+      "status": "resolved",
+      "decision_owner": "Codex recommendation accepted for single-user PWA",
+      "impact": "Matches current calculation path and avoids repeated /100 conversion bugs."
+    }
+  ],
+  "implementation_gate": "resolved",
+  "implementation_notes": [
+    "Preserve direct cache writes for single-user workflow.",
+    "Keep provider/source metadata even when caching directly.",
+    "Finance confirmation must block any balance-changing write until user confirms."
+  ]
+}

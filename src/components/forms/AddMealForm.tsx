@@ -26,6 +26,7 @@ interface DBFoodResult {
   per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g?: number };
   brand_name: string | null;
   source: string;
+  provider?: 'gemini' | 'openrouter' | null;
 }
 
 interface SelectedFood {
@@ -153,6 +154,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
     });
     setFoodName(food.food_name);
     setFoodCacheId(food.id);
+    setGeminiResult(food.provider ? { provider: food.provider, cached: true } : null);
     setUnitType(food.unit_type);
     setAmount(food.unit_type === 'gram' ? '100' : '1');
     setShowDropdown(false);
@@ -222,7 +224,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
         body: JSON.stringify({ food_name: searchQuery, amount: parseFloat(amount), unit: unitType })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gemini hatası');
+      if (!res.ok) throw new Error(data.error || 'AI besin araması başarısız oldu.');
 
       setGeminiResult(data);
       setSelectedFood({
@@ -241,6 +243,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
       setServingDescription(`${amount} ${unitType}`);
       setSearchStep('gemini_result');
     } catch (err: any) {
+      toast.error(err.message || 'AI besin değeri alınamadı. Manuel giriş yapabilirsiniz.');
       setSearchStep('gemini_form');
     }
   };
@@ -525,14 +528,14 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                           </div>
                         </div>
                       ))}
-                      {/* Gemini ile ara butonu */}
+                      {/* AI ile ara butonu */}
                       <div className="flex border-t border-[rgba(255,255,255,0.05)]">
                         <div
                           onMouseDown={(e) => { e.preventDefault(); setSearchStep('gemini_form'); setShowDropdown(false); }}
                           className="flex-1 px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-[rgba(139,92,246,0.08)] transition-colors border-r border-[rgba(255,255,255,0.05)]"
                         >
                           <Sparkles size={16} className="text-purple-400 shrink-0" />
-                          <span className="text-[12px] text-purple-300 font-medium">Gemini ile Bul</span>
+                          <span className="text-[12px] text-purple-300 font-medium">AI ile Bul</span>
                         </div>
                         <div
                           onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
@@ -554,7 +557,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(139,92,246,0.08)] transition-colors border-r border-[rgba(255,255,255,0.05)]"
                         >
                           <Sparkles size={16} className="text-purple-400 shrink-0" />
-                          <span className="text-[12px] text-purple-300 font-medium">Gemini ile Bul</span>
+                          <span className="text-[12px] text-purple-300 font-medium">AI ile Bul</span>
                         </div>
                         <div
                           onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
@@ -678,7 +681,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                     {searchStep === 'gemini_loading' ? <Sparkles size={18} className="text-purple-400 animate-pulse" /> : <Loader2 size={18} className="text-[var(--primary)] animate-spin" />}
                   </div>
                   <span className={`text-[13px] animate-pulse ${searchStep === 'gemini_loading' ? 'text-purple-300' : 'text-[var(--primary)]'}`}>
-                    {searchStep === 'gemini_loading' ? 'Gemini besin değerlerini hesaplıyor...' : 'Veritabanına kaydediliyor...'}
+                    {searchStep === 'gemini_loading' ? 'AI besin değerlerini hesaplıyor...' : 'Veritabanına kaydediliyor...'}
                   </span>
                 </div>
               )}
@@ -691,7 +694,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-semibold text-white truncate">{selectedFood.name}</div>
                   <div className="text-[11px] text-[var(--primary)] mt-0.5">
-                    {geminiResult ? '✨ Gemini ile hesaplandı' : '✅ Veritabanından'}
+                    {geminiResult ? `AI tahmini${geminiResult.provider ? `: ${geminiResult.provider}` : ''}. Değerleri kontrol edin.` : 'Veritabanından'}
                   </div>
                 </div>
                 <button

@@ -2,14 +2,26 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Loader2, Bot, X } from 'lucide-react';
-import { processAssistantVoiceAction } from '@/actions/assistant';
+import { confirmAssistantFinanceAction, processAssistantVoiceAction } from '@/actions/assistant';
 import toast from 'react-hot-toast';
+
+interface FinanceDraft {
+  transaction_type: 'expense' | 'income';
+  amount: number;
+  description: string;
+  date: string;
+  account_id: string | null;
+  category_id: string | null;
+  accounts: Array<{ id: string; name: string }>;
+  categories: Array<{ id: string; name: string }>;
+}
 
 export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [financeDraft, setFinanceDraft] = useState<FinanceDraft | null>(null);
   
   const recognitionRef = useRef<any>(null);
 
@@ -31,6 +43,7 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
     }
 
     setTranscript('');
+    setFinanceDraft(null);
     setIsOpen(true);
     setIsListening(true);
 
@@ -78,14 +91,36 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
     try {
       const result = await processAssistantVoiceAction(text);
       if (result.success) {
-        toast.success(result.message || "İşlem başarılı");
-        if (onSuccess) onSuccess();
-        setTimeout(() => setIsOpen(false), 3000); // Auto close after success
+        if (result.action === 'finance_preview') {
+          setFinanceDraft(result.draft);
+        } else {
+          toast.success(result.message || "Öğün eklendi.");
+          onSuccess?.();
+          setTimeout(() => setIsOpen(false), 3000);
+        }
       } else {
         toast.error(result.error || "İşlem başarısız oldu.");
       }
     } catch (error) {
       toast.error("Bir hata oluştu.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmFinance = async () => {
+    if (!financeDraft) return;
+    setIsProcessing(true);
+    try {
+      const result = await confirmAssistantFinanceAction(financeDraft);
+      if (!result.success) {
+        toast.error(result.error || 'Finans işlemi kaydedilemedi.');
+        return;
+      }
+      toast.success('Finans işlemi eklendi.');
+      setFinanceDraft(null);
+      onSuccess?.();
+      setTimeout(() => setIsOpen(false), 1500);
     } finally {
       setIsProcessing(false);
     }
@@ -108,26 +143,55 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
               <X size={18} />
             </button>
           </div>
-          
-          <div className="bg-[rgba(0,0,0,0.3)] rounded-lg p-3 min-h-[60px] flex items-center justify-center text-sm text-[var(--on-surface-variant)] text-center">
-            {isListening ? (
+          {financeDraft ? (
+            <div className="flex flex-col gap-3">
+              <div className="bg-[rgba(0,0,0,0.3)] rounded-lg p-3 text-sm text-white">
+                <div className="font-semibold">{financeDraft.transaction_type === 'income' ? 'Gelir' : 'Gider'} onayı</div>
+                <div className="text-[var(--on-surface-variant)] mt-1">Sesli komut: &ldquo;{transcript}&rdquo;</div>
+              </div>
+              <label className="text-xs text-[var(--on-surface-variant)]">Tutar
+                <input type="number" min="0.01" step="0.01" value={financeDraft.amount} onChange={(event) => setFinanceDraft({ ...financeDraft, amount: Number(event.target.value) })} className="mt-1 w-full bg-[rgba(255,255,255,0.05)] border border-[var(--outline)] rounded-lg px-3 py-2 text-white" />
+              </label>
+              <label className="text-xs text-[var(--on-surface-variant)]">Hesap
+                <select value={financeDraft.account_id || ''} onChange={(event) => setFinanceDraft({ ...financeDraft, account_id: event.target.value || null })} className="mt-1 w-full bg-[var(--surface-container)] border border-[var(--outline)] rounded-lg px-3 py-2 text-white">
+                  <option value="">Hesap seçin</option>
+                  {financeDraft.accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs text-[var(--on-surface-variant)]">Kategori
+                <select value={financeDraft.category_id || ''} onChange={(event) => setFinanceDraft({ ...financeDraft, category_id: event.target.value || null })} className="mt-1 w-full bg-[var(--surface-container)] border border-[var(--outline)] rounded-lg px-3 py-2 text-white">
+                  <option value="">Kategori seçin</option>
+                  {financeDraft.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs text-[var(--on-surface-variant)]">Açıklama
+                <input value={financeDraft.description} onChange={(event) => setFinanceDraft({ ...financeDraft, description: event.target.value })} className="mt-1 w-full bg-[rgba(255,255,255,0.05)] border border-[var(--outline)] rounded-lg px-3 py-2 text-white" />
+              </label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setFinanceDraft(null)} className="flex-1 py-2 rounded-lg bg-white/5 text-white">İptal</button>
+                <button type="button" disabled={isProcessing || !financeDraft.account_id || !financeDraft.category_id || financeDraft.amount <= 0} onClick={handleConfirmFinance} className="flex-1 py-2 rounded-lg bg-[var(--primary)] text-black font-semibold disabled:opacity-40">Onayla</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-[rgba(0,0,0,0.3)] rounded-lg p-3 min-h-[60px] flex items-center justify-center text-sm text-[var(--on-surface-variant)] text-center">
+                {isListening ? (
               <div className="flex flex-col items-center gap-2">
                 <span className="animate-pulse text-[var(--primary)]">Dinliyorum...</span>
-                <span className="text-white font-medium">"{transcript}"</span>
+                <span className="text-white font-medium">&ldquo;{transcript}&rdquo;</span>
               </div>
             ) : isProcessing ? (
               <div className="flex flex-col items-center gap-2 text-white">
                 <Loader2 size={18} className="animate-spin text-[var(--primary)]" />
-                İşleniyor: "{transcript}"
+                İşleniyor: &ldquo;{transcript}&rdquo;
               </div>
             ) : transcript ? (
-              <span className="text-white">"{transcript}"</span>
+              <span className="text-white">&ldquo;{transcript}&rdquo;</span>
             ) : (
               "Nakit hesabından 100 TL market harcaması yaptım diyebilirsiniz."
-            )}
-          </div>
-          
-          <div className="mt-3 flex items-center gap-2">
+                )}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
             <input 
               type="text" 
               placeholder="Veya komutunuzu yazın..." 
@@ -141,7 +205,9 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
                 }
               }}
             />
-          </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

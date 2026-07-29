@@ -16,7 +16,7 @@ export function Checkbox({
 
   return (
     <div className={`relative flex items-center ${className}`}>
-      <label htmlFor={inputId} className="flex items-center cursor-pointer select-none">
+      <label htmlFor={inputId} className="flex min-h-11 items-center cursor-pointer select-none">
         <input
           type="checkbox"
           id={inputId}

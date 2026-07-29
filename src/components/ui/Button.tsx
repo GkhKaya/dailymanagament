@@ -13,7 +13,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`btn-primary flex justify-center items-center gap-2 group rounded-full py-4 px-8 text-[14px] font-semibold w-full ${className}`}
+      className={`btn-primary min-h-12 flex justify-center items-center gap-2 group rounded-full py-4 px-8 text-[14px] font-semibold w-full focus-visible:outline ${className}`}
       {...props}
     >
       <span>{children}</span>

@@ -47,7 +47,9 @@ export function CustomSelect({ value, onChange, options, placeholder = "Seçiniz
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-[rgba(255,255,255,0.03)] border rounded-xl py-4 px-4 text-left flex justify-between items-center transition-all focus:outline-none ${
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className={`w-full min-h-11 bg-[rgba(255,255,255,0.03)] border rounded-xl py-4 px-4 text-left flex justify-between items-center transition-all ${
           isOpen ? 'border-[var(--inverse-primary)] shadow-[0_0_15px_rgba(33,196,93,0.15)]' : 'border-[rgba(255,255,255,0.1)]'
         } ${value ? 'text-white text-body font-medium' : 'text-[var(--on-surface-variant)] text-body'}`}
       >
@@ -60,6 +62,8 @@ export function CustomSelect({ value, onChange, options, placeholder = "Seçiniz
 
       {/* Dropdown Menu */}
       <div 
+        role="listbox"
+        aria-hidden={!isOpen}
         className={`absolute z-50 w-full mt-2 bg-[#1A1A24] border border-[rgba(255,255,255,0.08)] rounded-xl shadow-2xl overflow-hidden transition-all duration-200 transform origin-top ${
           isOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-95 pointer-events-none'
         }`}
@@ -74,6 +78,8 @@ export function CustomSelect({ value, onChange, options, placeholder = "Seçiniz
               <button
                 key={option.value}
                 type="button"
+                role="option"
+                aria-selected={value === option.value}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);

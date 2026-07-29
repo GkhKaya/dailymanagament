@@ -36,9 +36,6 @@ export function HeroPanel() {
   return (
     <div className="hidden md:flex flex-col justify-between flex-1 px-[var(--space-8)] py-[var(--space-8)] relative overflow-hidden">
       
-      {/* Background Graphic Effect (Optional faint neon glow) */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--primary)] rounded-full blur-[120px] opacity-[0.03] pointer-events-none -z-10"></div>
-
       {/* Logo — top */}
       <h1 className="text-logo text-[var(--primary)] animate-slide-up z-10">
         {t("home.logo")}

@@ -1,35 +1,20 @@
+import { GoogleGenAI, Type } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_MODEL = 'openrouter/free'; // OpenRouter'daki her zaman aktif ücretsiz model havuzu
+const GEMINI_MODEL = 'gemini-2.5-flash';
+const OPENROUTER_MODEL = 'openrouter/free';
+const REQUEST_TIMEOUT_MS = 12_000;
 
-// Global Queue for OpenRouter Rate Limiting (Kuyruğu koruyoruz, ancak limiti biraz daha esnek yapabiliriz)
-let nextAvailableTime = 0;
-const MIN_DELAY_MS = 3000; // OpenRouter'da ücretsiz modeller için 3 saniye yeterli
-
-async function waitInQueue() {
-  const now = Date.now();
-  let waitTime = 0;
-  
-  if (now < nextAvailableTime) {
-    waitTime = nextAvailableTime - now;
-    nextAvailableTime += MIN_DELAY_MS;
-  } else {
-    nextAvailableTime = now + MIN_DELAY_MS;
-  }
-
-  if (waitTime > 0) {
-    console.log(`[OpenRouter Queue] Waiting ${Math.round(waitTime/1000)}s...`);
-    await new Promise(resolve => setTimeout(resolve, waitTime));
-  }
-}
+type UnitType = 'gram' | 'adet';
+type Provider = 'gemini' | 'openrouter';
 
 interface NutritionResult {
   food_name: string;
   food_name_en: string;
-  unit_type: 'gram' | 'adet';
+  unit_type: UnitType;
   per_unit: {
     calories: number;
     protein_g: number;
@@ -45,225 +30,225 @@ interface NutritionResult {
   };
 }
 
-async function performWebSearch(query: string): Promise<string> {
-  try {
-    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' kalori besin değerleri')}`;
-    
-    // 3 Saniyelik zaman aşımı (timeout) ekle
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(searchUrl, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return '';
-    const html = await response.text();
-    
-    // Basit regex ile arama snippet'lerini çek
-    const snippetMatches = html.match(/<a class="result__snippet[^>]*>(.*?)<\/a>/g);
-    if (!snippetMatches) return '';
-
-    // İlk 3 arama sonucunun metnini birleştir (HTML tag'lerini temizle)
-    const textSnippets = snippetMatches
-      .slice(0, 3)
-      .map(s => s.replace(/<[^>]+>/g, '').trim())
-      .join(' ');
-
-    return textSnippets.slice(0, 800); // Max 800 karakter
-  } catch (err) {
-    console.warn('[Web Search] DuckDuckGo arama zaman aşımına uğradı veya hata verdi:', err);
-    return '';
-  }
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function queryOpenRouter(foodName: string, amount: number, unit: 'gram' | 'adet'): Promise<NutritionResult> {
-  await waitInQueue();
-
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY ortam değişkeni tanımlı değil');
-  }
-
-  const perUnitLabel = unit === 'gram' ? '1 gram' : '1 adet';
-  const unitLabel = unit === 'gram' ? 'gram' : 'adet';
-
-  console.log(`[Web Search] Aranıyor: ${foodName}...`);
-  const searchResults = await performWebSearch(foodName);
-  const searchContext = searchResults ? `\nİNTERNET ARAMA SONUÇLARI (REFERANS OLARAK KULLAN):\n${searchResults}\n` : '';
-
-  const prompt = `Sen bir beslenme uzmanısın. "${foodName}" için besin değerlerini ver.${searchContext}
-  
-ÖNEMLİ KURALLAR:
-- Eğer internet arama sonuçlarında (veya hafızanda) spesifik markalı ürün (örn: Carrefour, Eti, Ülker) geçiyorsa o değerleri KESİNLİKLE kullan.
-- Eğer ölçü birimi "gram" ise: ${perUnitLabel} başına değerleri ver (çiğ/ham hali varsayılan).
-- Eğer ölçü birimi "adet" (paket, kutu, vb.) ise: Ürünün standart 1 paketinin/kutusunun KAÇ GRAM olduğunu internet sonuçlarından veya hafızandan bul. Ardından, 100 gram besin değerini o paketin gramajına göre oranla ve SADECE 1 PAKET (adet) için geçerli olan toplam değerleri yaz. (Örnek: Ürün 1 paket 56 gramsa ve 100 gramı 90 kalori ise, 1 adet kalorisi ~50 kalori olmalıdır).
-- Sadece JSON formatında yanıt ver, başka hiçbir şey yazma.
-- Tüm sayılar ondalık (float) olabilir, negatif olamaz.
-
-JSON formatı (kesinlikle bu formatta):
-{
-  "food_name_tr": "Türkçe yemek adı",
-  "food_name_en": "English food name",
-  "unit_type": "${unit}",
-  "per_unit_calories": 0.0,
-  "per_unit_protein_g": 0.0,
-  "per_unit_carbs_g": 0.0,
-  "per_unit_fat_g": 0.0,
-  "per_unit_fiber_g": 0.0
+function normalizeNumber(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : 0;
 }
 
-Yemek: ${foodName}
-Miktar: ${amount} ${unitLabel}`;
+function calculateNutrition(perUnit: NutritionResult['per_unit'], amount: number): NutritionResult['calculated'] {
+  return {
+    calories: Math.round(perUnit.calories * amount),
+    protein_g: Math.round(perUnit.protein_g * amount * 10) / 10,
+    carbs_g: Math.round(perUnit.carbs_g * amount * 10) / 10,
+    fat_g: Math.round(perUnit.fat_g * amount * 10) / 10
+  };
+}
 
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: { 
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
-      'X-Title': 'DailyManagement',
-      'Content-Type': 'application/json' 
-    },
-    body: JSON.stringify({
-      model: DEFAULT_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      temperature: 0.1
-    })
-  });
-
-  if (response.status === 429) {
-    console.warn('[OpenRouter API] 429 Too Many Requests hit, retrying in 5s...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    return queryOpenRouter(foodName, amount, unit);
-  }
-
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error(`[OpenRouter API] Error response: ${response.status}`, errText);
-    throw new Error(`OpenRouter API hatası: ${response.status} — ${errText}`);
-  }
-
-  const data = await response.json();
-  const rawText = data.choices?.[0]?.message?.content || '';
-  console.log(`[OpenRouter API] Response received successfully. Content length: ${rawText.length}`);
-
-  // JSON bloğunu çıkar
-  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    console.error(`[OpenRouter API] Failed to parse JSON from response. Raw text:`, rawText);
-    throw new Error('Yapay Zeka geçerli JSON döndürmedi');
-  }
-
-  const parsed = JSON.parse(jsonMatch[0]);
-  console.log(`[OpenRouter API] Successfully parsed nutrition data for: ${parsed.food_name_tr || foodName}`);
-
+function buildResult(payload: Record<string, unknown>, foodName: string, amount: number, unit: UnitType): NutritionResult {
   const perUnit = {
-    calories: Math.max(0, parseFloat(parsed.per_unit_calories) || 0),
-    protein_g: Math.max(0, parseFloat(parsed.per_unit_protein_g) || 0),
-    carbs_g: Math.max(0, parseFloat(parsed.per_unit_carbs_g) || 0),
-    fat_g: Math.max(0, parseFloat(parsed.per_unit_fat_g) || 0),
-    fiber_g: Math.max(0, parseFloat(parsed.per_unit_fiber_g) || 0)
+    calories: normalizeNumber(payload.per_unit_calories),
+    protein_g: normalizeNumber(payload.per_unit_protein_g),
+    carbs_g: normalizeNumber(payload.per_unit_carbs_g),
+    fat_g: normalizeNumber(payload.per_unit_fat_g),
+    fiber_g: normalizeNumber(payload.per_unit_fiber_g)
   };
 
   return {
-    food_name: parsed.food_name_tr || foodName,
-    food_name_en: parsed.food_name_en || foodName,
+    food_name: typeof payload.food_name_tr === 'string' && payload.food_name_tr.trim() ? payload.food_name_tr.trim() : foodName,
+    food_name_en: typeof payload.food_name_en === 'string' && payload.food_name_en.trim() ? payload.food_name_en.trim() : foodName,
     unit_type: unit,
     per_unit: perUnit,
-    calculated: {
-      calories: Math.round(perUnit.calories * amount),
-      protein_g: Math.round(perUnit.protein_g * amount * 10) / 10,
-      carbs_g: Math.round(perUnit.carbs_g * amount * 10) / 10,
-      fat_g: Math.round(perUnit.fat_g * amount * 10) / 10
-    }
+    calculated: calculateNutrition(perUnit, amount)
   };
+}
+
+function foodSchema(unit: UnitType) {
+  return {
+    type: Type.OBJECT,
+    properties: {
+      food_name_tr: { type: Type.STRING },
+      food_name_en: { type: Type.STRING },
+      per_unit_calories: { type: Type.NUMBER, minimum: 0 },
+      per_unit_protein_g: { type: Type.NUMBER, minimum: 0 },
+      per_unit_carbs_g: { type: Type.NUMBER, minimum: 0 },
+      per_unit_fat_g: { type: Type.NUMBER, minimum: 0 },
+      per_unit_fiber_g: { type: Type.NUMBER, minimum: 0 }
+    },
+    required: [
+      'food_name_tr',
+      'food_name_en',
+      'per_unit_calories',
+      'per_unit_protein_g',
+      'per_unit_carbs_g',
+      'per_unit_fat_g',
+      'per_unit_fiber_g'
+    ],
+    propertyOrdering: [
+      'food_name_tr',
+      'food_name_en',
+      'per_unit_calories',
+      'per_unit_protein_g',
+      'per_unit_carbs_g',
+      'per_unit_fat_g',
+      'per_unit_fiber_g'
+    ],
+    description: unit === 'gram' ? 'All nutrition values must be per 1 gram.' : 'All nutrition values must be per 1 piece.'
+  };
+}
+
+function foodPrompt(foodName: string, unit: UnitType) {
+  const basis = unit === 'gram' ? '1 gram' : '1 adet';
+  return `Türkçe besin değerleri üret. Yemek: "${foodName}".
+Sadece JSON döndür. Değerler ${basis} için olmalı. Negatif değer kullanma.
+Marka veya paket gramajı belirsizse tahmin üretmek yerine genel ürün değerini kullan.`;
+}
+
+function isGeminiBusy(error: unknown) {
+  const candidate = error as { status?: number; message?: string };
+  const message = candidate.message?.toLowerCase() || '';
+  return candidate.status === 429 || candidate.status === 503 || ['429', 'quota', 'rate limit', 'resource exhausted', 'overloaded', 'service unavailable'].some((term) => message.includes(term));
+}
+
+async function queryGemini(foodName: string, amount: number, unit: UnitType) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY tanımlı değil');
+
+  const ai = new GoogleGenAI({ apiKey });
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: foodPrompt(foodName, unit),
+    config: {
+      responseMimeType: 'application/json',
+      responseSchema: foodSchema(unit),
+      temperature: 0.1
+    }
+  });
+
+  if (!response.text) throw new Error('Gemini boş yanıt döndürdü');
+  return buildResult(JSON.parse(response.text) as Record<string, unknown>, foodName, amount, unit);
+}
+
+async function queryOpenRouter(foodName: string, amount: number, unit: UnitType) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY tanımlı değil');
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005',
+        'X-Title': 'DailyManagement',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [{ role: 'user', content: `${foodPrompt(foodName, unit)}\n${JSON.stringify(foodSchema(unit))}` }],
+        response_format: { type: 'json_object' },
+        temperature: 0.1
+      })
+    });
+    if (!response.ok) throw new Error(`OpenRouter API hatası: ${response.status}`);
+
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('OpenRouter boş yanıt döndürdü');
+    return buildResult(JSON.parse(text) as Record<string, unknown>, foodName, amount, unit);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { food_name, amount, unit } = body as { food_name: string; amount: number; unit: 'gram' | 'adet' };
+    const body = await request.json() as { food_name?: string; amount?: number; unit?: UnitType };
+    const foodName = body.food_name?.trim();
+    const amount = Number(body.amount);
+    const unit = body.unit;
 
-    if (!food_name || !amount || !unit) {
-      return NextResponse.json({ error: 'food_name, amount ve unit gerekli' }, { status: 400 });
+    if (!foodName || foodName.length > 120 || !Number.isFinite(amount) || amount <= 0 || amount > 10_000 || (unit !== 'gram' && unit !== 'adet')) {
+      return NextResponse.json({ error: 'Geçerli yemek adı, miktar ve birim gerekli.' }, { status: 400 });
     }
 
-    if (amount <= 0 || amount > 10000) {
-      return NextResponse.json({ error: 'Geçersiz miktar' }, { status: 400 });
-    }
-
-    // 1. Önce FoodCache'de ara — zaten var mı?
     await connectDB();
+    const exactName = escapeRegex(foodName);
     const existing = await FoodCache.findOne({
       $or: [
-        { food_name: { $regex: `^${food_name}$`, $options: 'i' } },
-        { food_name_en: { $regex: `^${food_name}$`, $options: 'i' } }
+        { food_name: { $regex: `^${exactName}$`, $options: 'i' } },
+        { food_name_en: { $regex: `^${exactName}$`, $options: 'i' } }
       ],
       unit_type: unit
-    }).lean() as any;
-
-    let result: NutritionResult;
+    }).lean();
 
     if (existing) {
-      // DB'den hesapla
-      result = {
-        food_name: existing.food_name,
-        food_name_en: existing.food_name_en,
-        unit_type: existing.unit_type,
-        per_unit: existing.per_unit,
-        calculated: {
-          calories: Math.round(existing.per_unit.calories * amount),
-          protein_g: Math.round(existing.per_unit.protein_g * amount * 10) / 10,
-          carbs_g: Math.round(existing.per_unit.carbs_g * amount * 10) / 10,
-          fat_g: Math.round(existing.per_unit.fat_g * amount * 10) / 10
-        }
+      const perUnit = {
+        calories: existing.per_unit.calories,
+        protein_g: existing.per_unit.protein_g,
+        carbs_g: existing.per_unit.carbs_g,
+        fat_g: existing.per_unit.fat_g,
+        fiber_g: existing.per_unit.fiber_g || 0
       };
-    } else {
-      // OpenRouter / Gemini'ye sor
-      result = await queryOpenRouter(food_name, amount, unit);
-
-      // FoodCache'e kaydet
-      try {
-        await FoodCache.updateOne(
-          {
-            food_name: { $regex: `^${result.food_name}$`, $options: 'i' },
-            unit_type: unit
-          },
-          {
-            $setOnInsert: {
-              food_name: result.food_name,
-              food_name_en: result.food_name_en,
-              unit_type: result.unit_type,
-              per_unit: result.per_unit,
-              brand_name: null,
-              source: 'gemini',
-              search_tags: [food_name.toLowerCase()]
-            }
-          },
-          { upsert: true }
-        );
-      } catch (cacheErr) {
-        console.error('FoodCache upsert hatası (devam ediliyor):', cacheErr);
-      }
+      return NextResponse.json({
+        success: true,
+        food_name: existing.food_name,
+        food_name_en: existing.food_name_en || foodName,
+        unit_type: existing.unit_type,
+        per_unit: perUnit,
+        amount,
+        calculated: calculateNutrition(perUnit, amount),
+        source: 'db',
+        provider: existing.ai_provider || null,
+        nutrition_basis: existing.unit_type === 'gram' ? 'per_gram' : 'per_unit',
+        warning: existing.ai_provider ? 'AI tahmini cache kaydı. Değerleri kontrol edin.' : null
+      });
     }
+
+    let result: NutritionResult;
+    let provider: Provider;
+    try {
+      result = await queryGemini(foodName, amount, unit);
+      provider = 'gemini';
+    } catch (geminiError) {
+      if (!isGeminiBusy(geminiError) && process.env.GEMINI_API_KEY) throw geminiError;
+      result = await queryOpenRouter(foodName, amount, unit);
+      provider = 'openrouter';
+    }
+
+    await FoodCache.updateOne(
+      { food_name: result.food_name, brand_name: null },
+      {
+        $set: {
+          food_name_en: result.food_name_en,
+          unit_type: result.unit_type,
+          per_unit: result.per_unit,
+          source: 'gemini',
+          ai_provider: provider,
+          nutrition_basis: unit === 'gram' ? 'per_gram' : 'per_unit',
+          generated_at: new Date(),
+          search_tags: [foodName.toLocaleLowerCase('tr-TR')]
+        }
+      },
+      { upsert: true }
+    );
 
     return NextResponse.json({
       success: true,
-      food_name: result.food_name,
-      food_name_en: result.food_name_en,
-      unit_type: result.unit_type,
-      per_unit: result.per_unit,
+      ...result,
       amount,
-      calculated: result.calculated,
-      source: existing ? 'db' : 'gemini'
+      source: 'ai',
+      provider,
+      nutrition_basis: unit === 'gram' ? 'per_gram' : 'per_unit',
+      warning: 'AI tahmini. Öğüne eklemeden önce değerleri kontrol edin.'
     });
-  } catch (error: any) {
-    console.error('OpenRouter food query error:', error);
-    return NextResponse.json({ error: error.message || 'Besin değeri alınamadı' }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Besin değeri alınamadı.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

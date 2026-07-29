@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="tr"
       className={`h-full antialiased ${inter.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >

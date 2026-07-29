@@ -11,14 +11,10 @@ export function OnboardingClient({ initialCategories, initialAge = 25 }: { initi
   
   return (
     <div className="min-h-screen bg-[var(--background)] relative overflow-x-hidden flex flex-col">
-      {/* Background glow effects */}
-      <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--primary)] opacity-10 blur-[120px] pointer-events-none z-0" />
-      <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-green-500 opacity-10 blur-[120px] pointer-events-none z-0" />
-      
       {/* Progress bar (Fixed at top) */}
       <div className="h-1 w-full bg-white/5 sticky top-0 z-20">
         <div 
-          className="h-full bg-gradient-to-r from-[var(--inverse-primary)] to-green-400 transition-all duration-500 ease-out"
+          className="h-full bg-[var(--primary)] transition-all duration-500 ease-out"
           style={{ 
             width: viewModel.currentStep === 'welcome' ? '0%' : 
                    viewModel.currentStep === 'health' ? '33%' : 

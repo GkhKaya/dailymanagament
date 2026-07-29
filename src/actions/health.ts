@@ -96,6 +96,60 @@ export async function addMealAction(data: { date: string; type: string; food_nam
   }
 }
 
+export async function addMealsAction(items: Array<{ date: string; type: 'breakfast' | 'lunch' | 'dinner' | 'snack'; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; food_cache_id?: string }>) {
+  try {
+    if (items.length === 0) return { success: false, error: 'Eklenecek besin bulunamadı.' };
+    await connectDB();
+    const userId = await getUserId();
+    const date = new Date(items[0].date);
+    date.setUTCHours(0, 0, 0, 0);
+
+    if (items.some((item) => item.date.slice(0, 10) !== items[0].date.slice(0, 10) || item.type !== items[0].type || !Number.isFinite(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.calories) || item.calories < 0 || !Number.isFinite(item.protein_g) || item.protein_g < 0 || !Number.isFinite(item.carbs_g) || item.carbs_g < 0 || !Number.isFinite(item.fat_g) || item.fat_g < 0)) {
+      return { success: false, error: 'Öğün verilerinden biri geçersiz.' };
+    }
+
+    let log = await DailyLog.findOne({ user_id: userId, date });
+    if (!log) {
+      log = new DailyLog({
+        user_id: userId,
+        date,
+        meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
+        sleep: { duration_minutes: 0, calories_burned: 0 },
+        exercises: [],
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+      });
+    }
+
+    const foods = items.map((item) => ({
+      entry_id: new mongoose.Types.ObjectId(),
+      food_name: item.food_name,
+      serving_description: item.serving_description,
+      quantity: item.quantity,
+      unit_type: item.unit_type || 'gram',
+      food_cache_id: item.food_cache_id || null,
+      fatsecret_food_id: null,
+      nutrition_snapshot: {
+        calories: item.calories,
+        protein_g: item.protein_g,
+        carbs_g: item.carbs_g,
+        fat_g: item.fat_g
+      }
+    }));
+
+    log.meals[items[0].type].push(...foods);
+    log.totals.calories_consumed += items.reduce((sum, item) => sum + item.calories, 0);
+    log.totals.protein_g += items.reduce((sum, item) => sum + item.protein_g, 0);
+    log.totals.carbs_g += items.reduce((sum, item) => sum + item.carbs_g, 0);
+    log.totals.fat_g += items.reduce((sum, item) => sum + item.fat_g, 0);
+    await log.save();
+
+    return { success: true, entry_ids: foods.map((food) => food.entry_id.toString()) };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
 export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; }) {
   try {
     await connectDB();

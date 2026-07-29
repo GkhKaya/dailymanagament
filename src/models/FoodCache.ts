@@ -14,6 +14,9 @@ export interface IFoodCache extends Document {
   };
   brand_name?: string;        // Markalı ürünler için
   source: 'gemini' | 'manual' | 'seed'; // Verinin kaynağı
+  ai_provider?: 'gemini' | 'openrouter';
+  nutrition_basis?: 'per_gram' | 'per_unit';
+  generated_at?: Date;
   search_tags?: string[];     // Ek arama etiketleri
   created_at: Date;
   updated_at: Date;
@@ -32,6 +35,9 @@ const FoodCacheSchema: Schema = new Schema({
   },
   brand_name: { type: String, default: null },
   source: { type: String, enum: ['gemini', 'manual', 'seed'], default: 'manual' },
+  ai_provider: { type: String, enum: ['gemini', 'openrouter'], default: null },
+  nutrition_basis: { type: String, enum: ['per_gram', 'per_unit'], default: null },
+  generated_at: { type: Date, default: null },
   search_tags: [{ type: String }]
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

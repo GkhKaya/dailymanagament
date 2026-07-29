@@ -72,13 +72,14 @@ export function DashboardView() {
   return (
     <PullToRefresh onRefresh={handlePullRefresh}>
       <div className="min-h-screen bg-[var(--background)] text-[var(--on-surface)] flex flex-col font-sans relative selection:bg-[var(--primary)] selection:text-black">
+        <a className="skip-link" href="#main-content">Ana içeriğe geç</a>
         {/* ── Top App Bar / Header ── */}
-        <header className="w-full px-[var(--space-6)] py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] bg-[rgba(20,20,20,0.6)] backdrop-blur-xl sticky top-0 z-30">
+        <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0)] bg-[rgba(20,20,20,0.6)] backdrop-blur-xl sticky top-0 z-30">
           <div className="flex items-center gap-[var(--space-6)]">
             {/* Logo & Brand */}
-            <div className="flex items-center gap-[var(--space-2)] cursor-pointer" onClick={() => setMode('overview')}>
+            <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-[var(--space-2)] cursor-pointer" onClick={() => setMode('overview')}>
               <span className="text-xl font-bold tracking-tight text-white">Daily<span className="text-[var(--primary)]">M</span></span>
-            </div>
+            </button>
 
             {/* Navigation Tabs (Overview, Health, Finance) */}
             <nav className="hidden sm:flex items-center gap-[var(--space-4)]">
@@ -114,13 +115,15 @@ export function DashboardView() {
 
             <button 
               onClick={() => router.push('/profile')}
-              className="w-8 h-8 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-black transition-colors"
+              aria-label="Profil ve ayarlar"
+              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-black transition-colors"
             >
               <User size={16} />
             </button>
             <button 
               onClick={handleLogout}
-              className="w-8 h-8 rounded bg-[var(--outline)] flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-red-500 hover:text-white transition-colors"
+              aria-label="Oturumu kapat"
+              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-red-500 hover:text-white transition-colors"
             >
               <LogOut size={16} />
             </button>
@@ -128,21 +131,32 @@ export function DashboardView() {
         </header>
 
         {/* Mobile Mode Switcher (shows below header on small screens) */}
-        <div className="w-full px-8 pb-4 sm:hidden flex justify-center relative z-10">
+        <div className="w-full px-4 pb-4 sm:hidden flex justify-center relative z-10">
           {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
             <div className="flex w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
               <button
+                aria-pressed={mode === 'overview'}
+                onClick={() => setMode('overview')}
+                className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
+                  mode === 'overview' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                }`}
+              >
+                Genel bakış
+              </button>
+              <button
+                aria-pressed={mode === 'health'}
                 onClick={() => setMode('health')}
                 className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
-                  mode === 'health' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                  mode === 'health' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
                 Sağlık
               </button>
               <button
+                aria-pressed={mode === 'finance'}
                 onClick={() => setMode('finance')}
                 className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
-                  mode === 'finance' ? 'bg-white text-[var(--background)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                  mode === 'finance' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
                 Finans
@@ -152,7 +166,8 @@ export function DashboardView() {
         </div>
 
         {/* ── Main Content Area ── */}
-        <main className="w-full px-[var(--space-6)] pb-[var(--space-10)] relative z-0">
+        <main id="main-content" className="w-full px-4 pt-8 sm:px-[var(--space-6)] sm:pt-10 pb-[var(--space-10)] relative z-0" tabIndex={-1}>
+          <h1 className="sr-only">DailyM kişisel yönetim paneli</h1>
           {mode === 'overview' && (
             <div className="flex flex-col xl:flex-row gap-[var(--space-8)] w-full max-w-[1600px] mx-auto animate-fade-in">
               {/* Split Screen for Overview */}

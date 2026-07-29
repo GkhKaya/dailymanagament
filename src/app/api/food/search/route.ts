@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('query');
@@ -10,10 +14,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ foods: [] });
   }
 
+  if (query.trim().length > 120) {
+    return NextResponse.json({ foods: [], error: 'Arama metni çok uzun.' }, { status: 400 });
+  }
+
   try {
     await connectDB();
 
     const trimmed = query.trim();
+    const safeRegex = escapeRegex(trimmed);
 
     // 1. Text search (Türkçe/İngilizce)
     let foods = await FoodCache.find(
@@ -28,10 +37,10 @@ export async function GET(request: Request) {
     if (foods.length < 5) {
       const regexResults = await FoodCache.find({
         $or: [
-          { food_name: { $regex: trimmed, $options: 'i' } },
-          { food_name_en: { $regex: trimmed, $options: 'i' } },
-          { search_tags: { $regex: trimmed, $options: 'i' } },
-          { brand_name: { $regex: trimmed, $options: 'i' } }
+          { food_name: { $regex: safeRegex, $options: 'i' } },
+          { food_name_en: { $regex: safeRegex, $options: 'i' } },
+          { search_tags: { $regex: safeRegex, $options: 'i' } },
+          { brand_name: { $regex: safeRegex, $options: 'i' } }
         ]
       })
         .limit(15)
@@ -56,7 +65,9 @@ export async function GET(request: Request) {
         fiber_g: f.per_unit?.fiber_g || 0
       },
       brand_name: f.brand_name || null,
-      source: f.source
+      source: f.source,
+      provider: f.ai_provider || null,
+      nutrition_basis: f.nutrition_basis || (f.unit_type === 'gram' ? 'per_gram' : 'per_unit')
     }));
 
     return NextResponse.json({ foods: formatted });
