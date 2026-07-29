@@ -19,6 +19,7 @@
     "signIn": "Giriş Yap"
   },
   "dashboard": {
+    "tabOverview": "Genel Bakış",
     "tabHealth": "Beslenme",
     "tabFinance": "Cüzdan",
     "tabProfile": "Profil",
@@ -30,7 +31,7 @@
       "breakfast": "Kahvaltı",
       "lunch": "Öğle Yemeği",
       "dinner": "Akşam Yemeği",
-      "snacks": "Atıştırmalıklar"
+      "snack": "Ara Öğün"
     },
     "finance": {
       "totalBalance": "Toplam Bakiye",
