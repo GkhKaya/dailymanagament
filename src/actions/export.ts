@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
+import { Transaction } from "@/models/Transaction";
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -84,6 +85,107 @@ export interface ExportWeekSummary {
   }[];
 }
 
+export interface FinanceExportTransaction {
+  date: string;
+  description: string;
+  accountName: string;
+  categoryName: string;
+  type: string;
+  amount: number;
+}
+
+export interface FinanceExportData {
+  startDate: string;
+  endDate: string;
+  income: number;
+  expense: number;
+  transactions: FinanceExportTransaction[];
+}
+
+function getDateRange(startDateStr: string, endDateStr: string) {
+  const startDate = new Date(`${startDateStr}T00:00:00.000Z`);
+  const endDate = new Date(`${endDateStr}T23:59:59.999Z`);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || startDate > endDate) {
+    throw new Error('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+  }
+  return { startDate, endDate };
+}
+
+export async function getExportRangeDataAction(startDateStr: string, endDateStr: string) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const { startDate, endDate } = getDateRange(startDateStr, endDateStr);
+    const user = await User.findById(userId).lean();
+    const logs = await DailyLog.find({ user_id: userId, date: { $gte: startDate, $lte: endDate } }).lean();
+    const logsMap = new Map(logs.map((log: any) => [new Date(log.date).toISOString().slice(0, 10), log]));
+    const days: ExportDayData[] = [];
+
+    for (let current = new Date(startDate); current <= endDate; current.setUTCDate(current.getUTCDate() + 1)) {
+      const date = new Date(current);
+      days.push(mapDailyLogToExportDay(logsMap.get(date.toISOString().slice(0, 10)), date));
+    }
+
+    return {
+      success: true,
+      userName: user?.profile?.name || user?.name || 'Kullanıcı',
+      startDateStr: startDate.toLocaleDateString('tr-TR', { timeZone: 'UTC' }),
+      endDateStr: endDate.toLocaleDateString('tr-TR', { timeZone: 'UTC' }),
+      days
+    };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return { success: false, error: err.message || 'Veri alınırken hata oluştu.' };
+  }
+}
+
+export async function getFinanceExportDataAction(startDateStr: string, endDateStr: string) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const { startDate, endDate } = getDateRange(startDateStr, endDateStr);
+    const [user, transactions] = await Promise.all([
+      User.findById(userId).lean(),
+      Transaction.find({ user_id: userId, is_deleted: false, date: { $gte: startDate, $lte: endDate } })
+        .sort({ date: -1 })
+        .populate('account_id', 'name')
+        .populate('category_id', 'name')
+        .lean()
+    ]);
+
+    let income = 0;
+    let expense = 0;
+    const mapped = transactions.map((transaction: any) => {
+      const amount = parseFloat(transaction.amount.toString());
+      if (transaction.type === 'income') income += amount;
+      if (transaction.type === 'expense') expense += amount;
+      return {
+        date: new Date(transaction.date).toLocaleDateString('tr-TR'),
+        description: transaction.description,
+        accountName: transaction.account_id?.name || 'Dış ödeme',
+        categoryName: transaction.category_id?.name || (transaction.type === 'credit_card_payment' ? 'Kart borcu ödemesi' : '-'),
+        type: transaction.type,
+        amount
+      };
+    });
+
+    return {
+      success: true,
+      userName: user?.profile?.name || user?.name || 'Kullanıcı',
+      data: {
+        startDate: startDate.toLocaleDateString('tr-TR'),
+        endDate: endDate.toLocaleDateString('tr-TR'),
+        income,
+        expense,
+        transactions: mapped
+      } satisfies FinanceExportData
+    };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return { success: false, error: err.message || 'Veri alınırken hata oluştu.' };
+  }
+}
+
 export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly', dateStr: string) {
   try {
     await connectDB();
@@ -153,12 +255,11 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
     }
 
     if (filter === 'monthly') {
-      // 4 weeks (28 days) ending at current month
-      const startOfMonth = new Date(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), 1);
-      startOfMonth.setUTCHours(0, 0, 0, 0);
+      const year = baseDate.getUTCFullYear();
+      const month = baseDate.getUTCMonth();
 
-      const endOfMonth = new Date(baseDate.getUTCFullYear(), baseDate.getUTCMonth() + 1, 0);
-      endOfMonth.setUTCHours(23, 59, 59, 999);
+      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
 
       const logs = await DailyLog.find({
         user_id: userId,
@@ -171,7 +272,7 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
         logsMap.set(dStr, l);
       });
 
-      // Split month into 4 weeks (7 days each)
+      // Split month into 4 weeks (7 days each, 4th week includes remaining days up to end of month)
       const weeks: ExportWeekSummary[] = [];
 
       for (let w = 0; w < 4; w++) {
@@ -181,7 +282,7 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
         const wEnd = new Date(wStart);
         wEnd.setUTCDate(wStart.getUTCDate() + 6);
         if (w === 3) {
-          // 4th week goes until end of month
+          // 4th week goes until end of month (e.g. 31st)
           wEnd.setTime(endOfMonth.getTime());
         }
 
@@ -197,7 +298,7 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
         for (let d = new Date(wStart); d <= wEnd; d.setUTCDate(d.getUTCDate() + 1)) {
           const dStr = d.toISOString().split('T')[0];
           const log = logsMap.get(dStr);
-          const dayName = d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'short' });
+          const dayName = d.toLocaleDateString('tr-TR', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
 
           const consumed = log?.totals?.calories_consumed || 0;
           const exerciseBurned = log?.totals?.calories_burned_exercise || 0;
@@ -230,8 +331,8 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
         const validDays = Math.max(1, dayCount);
         weeks.push({
           weekName: `${w + 1}. Hafta`,
-          startDate: wStart.toLocaleDateString('tr-TR'),
-          endDate: wEnd.toLocaleDateString('tr-TR'),
+          startDate: wStart.toLocaleDateString('tr-TR', { timeZone: 'UTC' }),
+          endDate: wEnd.toLocaleDateString('tr-TR', { timeZone: 'UTC' }),
           totals: {
             calories_consumed: Math.round(totalConsumed),
             calories_burned: Math.round(totalBurned),
@@ -254,7 +355,7 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
         success: true,
         userName,
         type: 'monthly' as const,
-        monthName: startOfMonth.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+        monthName: startOfMonth.toLocaleDateString('tr-TR', { timeZone: 'UTC', month: 'long', year: 'numeric' }),
         weeks
       };
     }
@@ -270,6 +371,7 @@ export async function getExportDataAction(filter: 'daily' | 'weekly' | 'monthly'
 function mapDailyLogToExportDay(log: any, dateObj: Date): ExportDayData {
   const dateStr = dateObj.toISOString().split('T')[0];
   const dateFormatted = dateObj.toLocaleDateString('tr-TR', {
+    timeZone: 'UTC',
     weekday: 'long',
     day: 'numeric',
     month: 'long',

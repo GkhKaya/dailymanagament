@@ -45,6 +45,12 @@ export interface AccountInfo {
   balance: number;
   type: AccountType;
   include_in_total_balance?: boolean;
+  credit_card_details?: {
+    total_limit: number;
+    current_debt: number;
+    statement_day: number;
+    payment_due_day: number;
+  };
 }
 
 export interface TransactionInfo {

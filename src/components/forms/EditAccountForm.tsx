@@ -1,9 +1,13 @@
 import React from 'react';
-import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon } from 'lucide-react';
+import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText } from 'lucide-react';
 import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean } }) {
+type AccountOption = { id: string; name: string; balance: number; type: string };
+type CreditCardDetails = { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number };
+type EditableAccount = AccountOption & { include_in_total_balance?: boolean; credit_card_details?: CreditCardDetails };
+
+export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onSuccess?: () => void, initialData?: EditableAccount, accounts?: AccountOption[] }) {
   const {
     accountName, setAccountName,
     accountType, setAccountType,
@@ -12,9 +16,14 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
     creditDebt, setCreditDebt,
     cutoffDay, setCutoffDay,
     dueDay, setDueDay,
+    paymentAmount, setPaymentAmount,
+    paymentAccountId, setPaymentAccountId,
+    isExternalPayment, setIsExternalPayment,
     isLoading,
-    handleUpdate, handleDelete
+    handleUpdate, handleDelete, handlePayment
   } = useEditAccountViewModel(initialData, onSuccess);
+  const isCreditCard = accountType === 'credit';
+  const paymentAccounts = accounts.filter(account => account.id !== initialData?.id && ['cash', 'bank_account', 'debit_card'].includes(account.type));
   
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +68,7 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
         </div>
 
         {/* Dynamic Fields */}
-        {accountType === 'credit' ? (
+        {isCreditCard ? (
           <div className="flex flex-col gap-4 animate-fade-in">
             <div className="grid grid-cols-2 gap-4">
               {/* Kart Limiti */}
@@ -136,6 +145,52 @@ export function EditAccountForm({ onClose, onSuccess, initialData }: { onClose: 
               />
             </div>
           </div>
+        )}
+
+        {isCreditCard && (
+          <section className="flex flex-col gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 sm:p-5">
+            <div className="flex items-center gap-2 text-emerald-300">
+              <ReceiptText size={18} />
+              <h3 className="text-sm font-bold">Kart Borcu Öde</h3>
+            </div>
+            <p className="text-xs leading-5 text-[var(--on-surface-variant)]">Nakit/banka hesabı seçilirse bakiyesi düşer. Dış ödeme yalnızca kart borcunu azaltır.</p>
+            <div className="flex flex-col gap-2">
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Ödeme Tutarı</label>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputMode="decimal"
+                value={paymentAmount}
+                onChange={(event) => setPaymentAmount(event.target.value)}
+                placeholder="0,00"
+                className="min-h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-4 text-body text-white focus:border-emerald-400 focus:outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setIsExternalPayment(false)} className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors ${!isExternalPayment ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
+                Hesaptan Öde
+              </button>
+              <button type="button" onClick={() => setIsExternalPayment(true)} className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors ${isExternalPayment ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
+                Dış Ödeme
+              </button>
+            </div>
+            {!isExternalPayment && (
+              <div className="flex flex-col gap-2">
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Ödeme Hesabı</label>
+                <div className="relative">
+                  <Landmark className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={17} />
+                  <select value={paymentAccountId} onChange={(event) => setPaymentAccountId(event.target.value)} className="min-h-11 w-full appearance-none rounded-xl border border-[rgba(255,255,255,0.1)] bg-[var(--surface-container)] py-2 pl-10 pr-3 text-sm text-white focus:border-emerald-400 focus:outline-none">
+                    <option value="">Nakit veya banka hesabı seçin</option>
+                    {paymentAccounts.map(account => <option key={account.id} value={account.id}>{account.name}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+            <button type="button" disabled={isLoading || !paymentAmount || (!isExternalPayment && !paymentAccountId)} onClick={handlePayment} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+              Borcu Öde
+            </button>
+          </section>
         )}
       </div>
 

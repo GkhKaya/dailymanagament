@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { FinanceDataDTO } from "@/models/DashboardTypes";
-import { t } from "@/lib/i18n";
-import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Building2, Wallet, Activity, Tag, Repeat } from "lucide-react";
+import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download } from "lucide-react";
+import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 
 interface FinanceSectionProps {
   data: FinanceDataDTO;
@@ -22,6 +22,7 @@ const TxnIcon = ({ title }: { title: string }) => {
 
 export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAnalysis, currentDate }: FinanceSectionProps) {
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(val);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Group transactions by date
   const grouped = data.recentTransactions.reduce((acc, txn) => {
@@ -38,11 +39,16 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
       {/* Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-hero text-white tracking-tight">Finansal Durum</h2>
-        {!isOverview && (
-          <button onClick={onShowAnalysis} className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
-            <Activity size={18} />
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setIsPdfModalOpen(true)} aria-label="Finans raporunu PDF olarak indir" title="PDF raporu indir" className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 transition-colors hover:bg-emerald-500/20">
+            <Download size={17} />
           </button>
-        )}
+          {!isOverview && (
+            <button type="button" onClick={onShowAnalysis} aria-label="Detaylı finans analizi" className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
+              <Activity size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Metrics & Management */}
@@ -74,17 +80,17 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
 
         {/* Right Side: Management Buttons */}
         {!isOverview && (
-          <div className="flex flex-col gap-2 w-full md:w-48">
-            <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card p-3 flex items-center justify-between hover:bg-white/5 transition-colors text-sm font-medium text-white flex-1">
+          <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-48 md:flex-col">
+            <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
               Hesaplar <Wallet size={16} className="text-[var(--on-surface-variant)]" />
             </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card p-3 flex items-center justify-between hover:bg-white/5 transition-colors text-sm font-medium text-white flex-1">
+            <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
               Kategoriler <Tag size={16} className="text-[var(--on-surface-variant)]" />
             </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card p-3 flex items-center justify-between hover:bg-white/5 transition-colors text-sm font-medium text-white flex-1">
+            <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
               Borçlar <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
             </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card p-3 flex items-center justify-between hover:bg-white/5 transition-colors text-sm font-medium text-white flex-1">
+            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
               Abonelikler <Repeat size={16} className="text-[var(--on-surface-variant)]" />
             </button>
           </div>
@@ -164,6 +170,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
       </div>
 
       {!isOverview && <div className="h-24"></div>}
+      <ExportPdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} currentDate={currentDate} reportType="finance" />
     </div>
   );
 }

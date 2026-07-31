@@ -8,8 +8,9 @@ import { Account } from "@/models/Account";
 import { Transaction } from "@/models/Transaction";
 import { Category } from "@/models/Category";
 import { Debt } from "@/models/Debt";
-import { DebtStatus } from "@/models/Enums";
+import { DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
+import { revalidatePath } from "next/cache";
 
 // Helper to check session
 async function getUserId() {
@@ -47,7 +48,7 @@ export async function addAccountAction(data: { name: string; type: any; balance:
   }
 }
 
-export async function updateAccountAction(id: string, data: { name: string; balance: number }) {
+export async function updateAccountAction(id: string, data: { name: string; balance: number; credit_card_details?: { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number } }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -59,17 +60,87 @@ export async function updateAccountAction(id: string, data: { name: string; bala
 
     account.name = data.name;
     
-    if (account.type === 'credit_card') {
-      if (account.credit_card_details) {
-        account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(data.balance.toString());
-      }
+    if (account.type === 'credit_card' && account.credit_card_details) {
+      const debt = data.credit_card_details?.current_debt ?? data.balance;
+      account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(debt.toString());
+      account.credit_card_details.total_limit = mongoose.Types.Decimal128.fromString((data.credit_card_details?.total_limit ?? parseFloat(account.credit_card_details.total_limit.toString())).toString());
+      account.credit_card_details.statement_day = data.credit_card_details?.statement_day ?? account.credit_card_details.statement_day;
+      account.credit_card_details.payment_due_day = data.credit_card_details?.payment_due_day ?? account.credit_card_details.payment_due_day;
+      account.balance = mongoose.Types.Decimal128.fromString((-debt).toString());
     } else {
       account.balance = mongoose.Types.Decimal128.fromString(data.balance.toString());
     }
 
     await account.save();
+    revalidatePath('/dashboard');
     console.log("Account update result: Success");
     
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+export async function payCreditCardDebtAction(data: { creditCardId: string; amount: number; paymentAccountId?: string; isExternalPayment: boolean; date?: string }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const amount = Number(data.amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { success: false, error: 'Ödeme tutarı 0’dan büyük olmalıdır.' };
+    }
+
+    const creditCard = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.creditCardId), user_id: userId, type: 'credit_card' });
+    if (!creditCard?.credit_card_details) {
+      return { success: false, error: 'Kredi kartı bulunamadı.' };
+    }
+
+    const currentDebt = parseFloat(creditCard.credit_card_details.current_debt.toString());
+    if (amount > currentDebt) {
+      return { success: false, error: 'Ödeme tutarı güncel borçtan büyük olamaz.' };
+    }
+
+    let paymentAccount: typeof creditCard | null = null;
+    if (!data.isExternalPayment) {
+      if (!data.paymentAccountId) {
+        return { success: false, error: 'Ödeme yapılacak hesap seçilmelidir.' };
+      }
+      paymentAccount = await Account.findOne({
+        _id: new mongoose.Types.ObjectId(data.paymentAccountId),
+        user_id: userId,
+        type: { $in: ['cash', 'bank_account', 'debit_card'] }
+      });
+      if (!paymentAccount) {
+        return { success: false, error: 'Geçerli bir nakit veya banka hesabı seçin.' };
+      }
+      const paymentBalance = parseFloat(paymentAccount.balance.toString());
+      paymentAccount.balance = mongoose.Types.Decimal128.fromString((paymentBalance - amount).toString());
+      await paymentAccount.save();
+    }
+
+    const newDebt = currentDebt - amount;
+    creditCard.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(newDebt.toString());
+    const cardBalance = parseFloat(creditCard.balance.toString());
+    creditCard.balance = mongoose.Types.Decimal128.fromString((cardBalance + amount).toString());
+    await creditCard.save();
+
+    await Transaction.create({
+      user_id: userId,
+      type: TransactionType.CREDIT_CARD_PAYMENT,
+      amount: mongoose.Types.Decimal128.fromString(amount.toString()),
+      date: data.date ? new Date(data.date) : new Date(),
+      description: `${creditCard.name} kart borcu ödemesi`,
+      account_id: data.isExternalPayment ? creditCard._id : paymentAccount!._id,
+      related_account_id: data.isExternalPayment ? null : creditCard._id,
+      is_external_payment: data.isExternalPayment,
+      show_as_expense: false,
+      affects_account_balance: !data.isExternalPayment,
+      source: TransactionSource.MANUAL
+    });
+
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -418,4 +489,3 @@ export async function deleteDebtAction(id: string) {
     return { success: false, error: err.message };
   }
 }
-

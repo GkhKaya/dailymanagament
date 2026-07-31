@@ -1,6 +1,5 @@
 import React from 'react';
 import { Wallet, CreditCard, Building2, Plus, Edit2 } from 'lucide-react';
-import { t } from '@/lib/i18n';
 
 const AccountIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -46,18 +45,20 @@ export function ManageAccountsForm({
           </div>
         ) : (
           accounts.map((acc) => (
-            <div key={acc.id} className="group relative flex items-center justify-between glass-item px-5 py-4">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center text-[var(--on-surface-variant)]">
+            <div key={acc.id} className="group relative flex min-h-[72px] items-center justify-between gap-3 glass-item px-3 py-3 sm:px-5 sm:py-4">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-[rgba(255,255,255,0.08)] flex items-center justify-center text-[var(--on-surface-variant)]">
                   <AccountIcon type={acc.type} />
                 </div>
-                <span className="text-body font-medium">{acc.name}</span>
+                <span className="truncate text-sm font-medium sm:text-body">{acc.name}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-body font-bold">{fmt(acc.balance)}</span>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                <span className="text-sm font-bold sm:text-body">{fmt(acc.balance)}</span>
                 <button 
+                  type="button"
+                  aria-label={`${acc.name} hesabını düzenle`}
                   onClick={() => onOpenEdit(acc.id)}
-                  className="opacity-0 group-hover:opacity-100 p-2 rounded-full bg-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.2)] transition-all text-white"
+                  className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.2)] transition-colors text-white sm:opacity-0 sm:group-hover:opacity-100 sm:min-h-0 sm:min-w-0 sm:p-2"
                 >
                   <Edit2 size={14} />
                 </button>

@@ -1,9 +1,11 @@
-import React from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from 'recharts';
 import { useFinanceAnalysisViewModel } from '@/viewmodels/useFinanceAnalysisViewModel';
+import { ExportPdfModal } from '@/components/ui/ExportPdfModal';
 
 export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const {
     timeFilter,
     setTimeFilter,
@@ -57,6 +59,10 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
             <h2 className="text-2xl font-bold text-white">Detaylı Finans Analizi</h2>
           </div>
           
+          <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
+            <button type="button" onClick={() => setIsPdfModalOpen(true)} className="min-h-11 shrink-0 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20" title="PDF raporu al">
+              <Download className="inline-block mr-1.5" size={15} />PDF
+            </button>
           <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
             {[
               { id: 'week', label: 'Haftalık' },
@@ -71,6 +77,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                 {f.label}
               </button>
             ))}
+          </div>
           </div>
         </div>
 
@@ -198,6 +205,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
       </div>
       </>
       )}
+      <ExportPdfModal isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)} reportType="finance" />
     </div>
   );
 }

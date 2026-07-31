@@ -270,7 +270,13 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         name: acc.name,
         balance: bal,
         type: acc.type,
-        include_in_total_balance: acc.include_in_total_balance
+        include_in_total_balance: acc.include_in_total_balance,
+        credit_card_details: acc.credit_card_details ? {
+          total_limit: parseFloat(acc.credit_card_details.total_limit.toString()),
+          current_debt: parseFloat(acc.credit_card_details.current_debt.toString()),
+          statement_day: acc.credit_card_details.statement_day,
+          payment_due_day: acc.credit_card_details.payment_due_day
+        } : undefined
       };
     });
 

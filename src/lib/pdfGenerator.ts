@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { ExportDayData, ExportWeekSummary } from '@/actions/export';
+import { ExportDayData, ExportWeekSummary, FinanceExportData } from '@/actions/export';
 
 // Helper to replace Turkish characters for jsPDF default Helvetica font compatibility
 function tr(text: string | number | undefined | null): string {
@@ -60,6 +60,52 @@ export function generateWeeklyPDF(userName: string, startDateStr: string, endDat
   });
 
   doc.save(`Haftalik_Beslenme_Raporu_${days[0]?.date || 'hafta'}.pdf`);
+}
+
+export function generateDateRangePDF(userName: string, startDateStr: string, endDateStr: string, days: ExportDayData[]) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  days.forEach((day, index) => {
+    if (index > 0) doc.addPage();
+    renderDayPage(doc, userName, day, index + 1, days.length, `TARIH ARALIGI RAPORU (${startDateStr} - ${endDateStr})`);
+  });
+  doc.save(`Beslenme_Raporu_${days[0]?.date || 'tarih_araligi'}_${days[days.length - 1]?.date || ''}.pdf`);
+}
+
+export function generateFinancePDF(userName: string, data: FinanceExportData) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const marginX = 14;
+  doc.setFillColor(...COLORS.headerBg);
+  doc.rect(marginX, 14, 182, 22, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('FINANS RAPORU', marginX + 6, 23);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(tr(`Kullanici: ${userName}  |  Tarih Araligi: ${data.startDate} - ${data.endDate}`), marginX + 6, 30);
+
+  doc.setTextColor(...COLORS.textDark);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(tr(`Toplam Gelir: ${data.income.toLocaleString('tr-TR')} TL`), marginX, 48);
+  doc.text(tr(`Toplam Gider: ${data.expense.toLocaleString('tr-TR')} TL`), marginX, 55);
+  doc.text(tr(`Net Durum: ${(data.income - data.expense).toLocaleString('tr-TR')} TL`), marginX, 62);
+
+  autoTable(doc, {
+    startY: 70,
+    head: [[tr('Tarih'), tr('Aciklama'), tr('Hesap'), tr('Kategori'), tr('Tur'), tr('Tutar')]],
+    body: data.transactions.map(item => [
+      tr(item.date), tr(item.description), tr(item.accountName), tr(item.categoryName),
+      item.type === 'income' ? 'Gelir' : item.type === 'expense' ? 'Gider' : 'Kart odemesi',
+      `${item.type === 'income' ? '+' : item.type === 'expense' ? '-' : ''}${item.amount.toLocaleString('tr-TR')} TL`
+    ]),
+    theme: 'striped',
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
+    headStyles: { fillColor: COLORS.headerBg, textColor: COLORS.headerText, fontStyle: 'bold' },
+    columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 42 }, 2: { cellWidth: 30 }, 3: { cellWidth: 30 }, 4: { cellWidth: 22 }, 5: { cellWidth: 28, halign: 'right' } }
+  });
+  doc.save(`Finans_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
 /**

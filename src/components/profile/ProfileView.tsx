@@ -109,7 +109,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
     if (activeSheet?.startsWith('editAccount_')) {
       const id = activeSheet.replace('editAccount_', '');
       const data = financeData?.accounts.find(a => a.id === id);
-      return <EditAccountForm onClose={() => setActiveSheet('manageAccounts')} onSuccess={handleSuccess} initialData={data} />;
+      return <EditAccountForm onSuccess={handleSuccess} initialData={data} accounts={financeData?.accounts || []} />;
     }
     if (activeSheet?.startsWith('editSubscription_')) {
       const id = activeSheet.replace('editSubscription_', '');
@@ -502,4 +502,3 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
     </div>
   );
 }
-
