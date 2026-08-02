@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const OPENROUTER_MODEL = 'openrouter/free';
 const REQUEST_TIMEOUT_MS = 12_000;
 
@@ -101,10 +101,17 @@ function foodSchema(unit: UnitType) {
 }
 
 function foodPrompt(foodName: string, unit: UnitType) {
-  const basis = unit === 'gram' ? '1 gram' : '1 adet';
-  return `Türkçe besin değerleri üret. Yemek: "${foodName}".
-Sadece JSON döndür. Değerler ${basis} için olmalı. Negatif değer kullanma.
-Marka veya paket gramajı belirsizse tahmin üretmek yerine genel ürün değerini kullan.`;
+  const basis = unit === 'gram' ? '1 gram' : '1 adet (ortalama porsiyon)';
+  return `Sen bir beslenme uzmanısın. Aşağıdaki Türkçe besin için USDA, TÜBİTAK veya güvenilir beslenme veri tabanlarına dayalı doğru beslenme değerlerini üret.
+Besin adı: "${foodName}"
+Birim: Değerler ${basis} için olmalı.
+Önemli kurallar:
+- Tüm sayısal değerler 0 veya daha büyük olmalı (negatif değer yasak)
+- Türk mutfağına özgü yemekler için pişmiş/hazır hali baz al
+- Çorba, pilav, yemek gibi ürünler için pişmiş ağırlık baz al
+- Marka belirsizse genel/ev yapımı değerini kullan
+- food_name_tr alanına en yaygın Türkçe adı yaz
+- food_name_en alanına İngilizce karşılığını yaz`;
 }
 
 function isGeminiBusy(error: unknown) {
