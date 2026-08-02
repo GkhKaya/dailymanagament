@@ -11,7 +11,29 @@ import { FoodCache } from "@/models/FoodCache";
 import { WeightLog } from "@/models/WeightLog";
 import { calculateTargetCalories, calculateBMR, calculateAge, isMale } from "@/lib/calories";
 
-// Helper to check session
+export async function getFoodDatabaseAction() {
+  try {
+    await connectDB();
+    const foods = await FoodCache.find({}).sort({ food_name: 1 }).lean();
+    
+    // Map _id to id to avoid Next.js serialization issues
+    const formattedFoods = foods.map(food => ({
+      id: food._id.toString(),
+      food_name: food.food_name,
+      food_name_en: food.food_name_en,
+      unit_type: food.unit_type,
+      per_unit: food.per_unit,
+      source: food.source,
+      ai_provider: food.ai_provider,
+      nutrition_basis: food.nutrition_basis,
+      search_tags: food.search_tags
+    }));
+
+    return { success: true, foods: formattedFoods };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Besin veritabanı getirilirken bir hata oluştu." };
+  }
+}
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !session.user) {

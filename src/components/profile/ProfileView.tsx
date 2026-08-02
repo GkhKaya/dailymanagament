@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info } from 'lucide-react';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
@@ -486,6 +486,21 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   <div className="flex items-center gap-3">
                     <Mail size={18} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
                     <span className="text-white text-sm font-medium">E-posta Değiştir</span>
+                  </div>
+                  <ChevronRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                </button>
+              </div>
+            </div>
+
+            {/* Diğer Card */}
+            <div className="bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-xl p-6 shadow-xl">
+              <h3 className="text-lg font-bold text-white mb-4">Diğer</h3>
+              
+              <div className="flex flex-col gap-2">
+                <button onClick={() => router.push('/profile/about')} className="flex items-center justify-between p-4 bg-[var(--surface-container)] hover:bg-[#27272a] rounded-lg transition-colors group border border-transparent hover:border-[var(--outline)]">
+                  <div className="flex items-center gap-3">
+                    <Info size={18} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                    <span className="text-white text-sm font-medium">Uygulama Hakkında</span>
                   </div>
                   <ChevronRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
                 </button>
