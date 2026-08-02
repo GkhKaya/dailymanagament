@@ -19,7 +19,7 @@ export default async function AboutPage() {
 
   // Fetch food database to display in modal
   const foodsRes = await getFoodDatabaseAction();
-  const foods = foodsRes.success ? foodsRes.foods : [];
+  const foods = (foodsRes.success ? foodsRes.foods : []) as any;
 
   return <AboutView foods={foods} />;
 }
