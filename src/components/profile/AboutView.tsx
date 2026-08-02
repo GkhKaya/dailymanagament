@@ -24,10 +24,12 @@ export function AboutView({ foods }: { foods: FoodData[] }) {
   const [isFoodModalOpen, setIsFoodModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredFoods = foods.filter(f => 
-    f.food_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (f.food_name_en && f.food_name_en.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredFoods = (foods || []).filter(f => {
+    const name = f?.food_name || '';
+    const enName = f?.food_name_en || '';
+    return name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           enName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-[var(--background)] py-8 px-4 sm:px-6 lg:px-8 flex justify-center">
@@ -113,15 +115,15 @@ export function AboutView({ foods }: { foods: FoodData[] }) {
                 
                 // Gösterilecek kalori ve makro hesaplaması
                 const multiplier = food.unit_type === 'gram' ? 100 : 1;
-                const cals = Math.round(food.per_unit.calories * multiplier);
-                const pro = (food.per_unit.protein_g * multiplier).toFixed(1);
-                const carb = (food.per_unit.carbs_g * multiplier).toFixed(1);
-                const fat = (food.per_unit.fat_g * multiplier).toFixed(1);
+                const cals = Math.round((food.per_unit?.calories || 0) * multiplier);
+                const pro = ((food.per_unit?.protein_g || 0) * multiplier).toFixed(1);
+                const carb = ((food.per_unit?.carbs_g || 0) * multiplier).toFixed(1);
+                const fat = ((food.per_unit?.fat_g || 0) * multiplier).toFixed(1);
 
                 return (
-                  <div key={food.id} className="bg-[var(--surface-container)] rounded-lg p-3 border border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] transition-colors flex justify-between items-center gap-2">
+                  <div key={food.id || Math.random().toString()} className="bg-[var(--surface-container)] rounded-lg p-3 border border-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)] transition-colors flex justify-between items-center gap-2">
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-sm font-bold text-white truncate">{food.food_name}</span>
+                      <span className="text-sm font-bold text-white truncate">{food.food_name || 'İsimsiz'}</span>
                       <span className="text-[11px] text-[var(--on-surface-variant)] truncate">{food.food_name_en || 'Çeviri yok'}</span>
                     </div>
                     
