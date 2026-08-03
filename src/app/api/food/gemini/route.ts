@@ -230,11 +230,11 @@ export async function POST(request: Request) {
     let result: NutritionResult;
     let provider: Provider;
     try {
-      result = await queryGemini(foodName, amount, unit);
+      result = await queryGemini(foodName, amount, unit as UnitType);
       provider = 'gemini';
     } catch (geminiError) {
       if (!isGeminiBusy(geminiError) && process.env.GEMINI_API_KEY) throw geminiError;
-      result = await queryOpenRouter(foodName, amount, unit);
+      result = await queryOpenRouter(foodName, amount, unit as UnitType);
       provider = 'openrouter';
     }
 
