@@ -602,6 +602,47 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                 </div>
               )}
 
+              {/* AI Ekleme Formu */}
+              {searchStep === 'gemini_form' && (
+                <div className="flex flex-col gap-3 p-4 bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.2)] rounded-2xl animate-fade-in">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles size={16} className="text-purple-400" />
+                    <span className="text-[13px] font-semibold text-purple-200">AI ile Besin Değeri Bul</span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      readOnly
+                      className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-[var(--on-surface-variant)] focus:outline-none cursor-not-allowed"
+                    />
+                    <div className="flex gap-2">
+                      <div className="flex bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl overflow-hidden flex-1">
+                        {(['gram', 'adet'] as const).map(u => (
+                          <button
+                            key={u}
+                            type="button"
+                            onClick={() => setUnitType(u)}
+                            className={`flex-1 py-2 text-xs font-medium transition-all ${unitType === u ? 'bg-purple-500 text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+                          >
+                            {u}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGeminiSearch}
+                    className="w-full mt-2 py-2.5 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Sparkles size={16} /> AI ile Hesapla
+                  </button>
+                </div>
+              )}
+
               {/* Manuel Ekleme Formu */}
               {searchStep === 'manual_form' && (
                 <div className="flex flex-col gap-3 p-4 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl animate-fade-in">
