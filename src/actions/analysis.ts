@@ -170,12 +170,13 @@ export async function getHealthAnalysisAction(filter: 'week' | 'month', offset: 
       const dayLabel = formatDay(d);
       
       const consumed = log.totals.calories_consumed || 0;
-      const burned = (log.totals.calories_burned_exercise || 0) + (log.totals.calories_burned_sleep || 0);
+      const burned = (log.totals.calories_burned_exercise || 0) + (log.totals.calories_burned_bmr || 0);
       
       calorieData.push({ day: dayLabel, consumed, burned });
       
       const sleepHours = log.sleep?.duration_minutes ? +(log.sleep.duration_minutes / 60).toFixed(1) : 0;
-      sleepData.push({ day: dayLabel, sleep: sleepHours });
+      const sleepCals = log.sleep?.calories_burned || 0;
+      sleepData.push({ day: dayLabel, sleep: sleepHours, sleepCalories: sleepCals });
 
       totalCarbs += (log.totals.carbs_g || 0);
       totalProtein += (log.totals.protein_g || 0);

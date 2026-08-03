@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, CalendarRange, Download, FileText, Layers, X } from 'lucide-react';
 import { getExportDataAction, getExportRangeDataAction, getFinanceExportDataAction } from '@/actions/export';
 import { generateDailyPDF, generateDateRangePDF, generateFinancePDF, generateMonthlyPDF, generateWeeklyPDF } from '@/lib/pdfGenerator';
@@ -24,6 +25,11 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [selectedType, setSelectedType] = useState<'daily' | 'weekly' | 'monthly' | 'range'>('daily');
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const isFinance = reportType === 'finance';
   const isRange = isFinance || selectedType === 'range';
 
@@ -65,7 +71,9 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
 
   const title = isFinance ? 'Finans PDF Raporu' : 'Beslenme PDF Raporu';
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <button type="button" aria-label="PDF penceresini kapat" className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-labelledby="pdf-export-title" className="relative z-10 flex w-full max-w-md flex-col gap-5 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[var(--surface-container)] p-5 shadow-2xl sm:p-6">
@@ -122,6 +130,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

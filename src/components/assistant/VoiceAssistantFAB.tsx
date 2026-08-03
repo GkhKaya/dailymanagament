@@ -24,15 +24,27 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
   const [financeDraft, setFinanceDraft] = useState<FinanceDraft | null>(null);
   
   const recognitionRef = useRef<any>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopMediaTracks = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
 
   useEffect(() => {
     // Component mount check if needed, but we init SpeechRecognition on click now.
+    return () => {
+      stopMediaTracks();
+    };
   }, []);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
+      stopMediaTracks();
       return;
     }
 
@@ -60,6 +72,7 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error", event.error);
       setIsListening(false);
+      stopMediaTracks();
       if (event.error === 'not-allowed') {
         toast.error("Mikrofon erişimine izin verilmedi. Lütfen tarayıcı ayarlarından izin verin.");
       } else if (event.error !== 'aborted') {
@@ -70,15 +83,21 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
     recognition.onend = () => {
       setIsListening(false);
       recognitionRef.current = null;
+      stopMediaTracks();
     };
 
     recognitionRef.current = recognition;
     
     try {
+      // Force get media stream to properly control microphone lifecycle (especially for Safari)
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       recognition.start();
     } catch (e) {
       console.error("Speech recognition start error", e);
       setIsListening(false);
+      stopMediaTracks();
     }
   };
 

@@ -74,7 +74,7 @@ export function DashboardView() {
       <div className="min-h-screen bg-[var(--background)] text-[var(--on-surface)] flex flex-col font-sans relative selection:bg-[var(--primary)] selection:text-black">
         <a className="skip-link" href="#main-content">Ana içeriğe geç</a>
         {/* ── Top App Bar / Header ── */}
-        <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0)] bg-[rgba(20,20,20,0.6)] backdrop-blur-xl sticky top-0 z-30">
+        <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0)] bg-transparent backdrop-blur-xl sticky top-0 z-30">
           <div className="flex items-center gap-[var(--space-6)]">
             {/* Logo & Brand */}
             <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-[var(--space-2)] cursor-pointer" onClick={() => setMode('overview')}>
@@ -215,6 +215,16 @@ export function DashboardView() {
             <FinanceAnalysis onBack={() => setMode('finance')} />
           )}
         </main>
+        
+        {/* ── Footer ── */}
+        <footer className="w-full py-6 flex items-center justify-center text-sm text-[var(--on-surface-variant)] mt-auto border-t border-[rgba(255,255,255,0.05)]">
+          <p>
+            Created by{' '}
+            <a href="https://devosuit.com" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400 font-semibold transition-colors">
+              devosuit
+            </a>
+          </p>
+        </footer>
 
         {/* ── FAB Menu ── */}
         {mode !== 'health-analysis' && mode !== 'finance-analysis' && (

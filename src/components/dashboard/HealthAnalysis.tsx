@@ -127,9 +127,22 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
                 <XAxis dataKey="day" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
-                  itemStyle={{ color: '#fff' }}
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-[rgba(20,20,25,0.9)] border border-[rgba(255,255,255,0.1)] rounded-xl p-3 shadow-xl">
+                          <p className="text-white font-bold mb-1">{data.day}</p>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm text-[#818cf8]">Süre: {data.sleep} Saat</span>
+                            <span className="text-sm text-orange-400">Yakılan: {data.sleepCalories} kcal</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
                 <Bar dataKey="sleep" name="Uyku Süresi" fill="#818cf8" radius={[4, 4, 0, 0]} barSize={20} />
               </BarChart>

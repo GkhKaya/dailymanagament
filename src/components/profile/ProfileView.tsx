@@ -29,6 +29,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   const [workoutDays, setWorkoutDays] = useState<any[]>([]);
   const [expandedWorkoutDays, setExpandedWorkoutDays] = useState<string[]>([]);
   const [selectedWorkoutDay, setSelectedWorkoutDay] = useState<any>(null);
+  const [jsonText, setJsonText] = useState('');
 
   const fetchWorkoutRoutine = () => {
     getWorkoutRoutineAction().then(res => {
@@ -39,26 +40,39 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   };
 
   const handleDownloadTemplate = () => {
-    const template = [
-      {
-        day_name: "Pazartesi - Göğüs",
-        exercises: [
-          { name: "Bench Press", sets: 4, reps: "10-12", weight_kg: 60 },
-          { name: "Incline Dumbbell Press", sets: 3, reps: "12", weight_kg: 20 }
-        ]
-      },
-      {
-        day_name: "Çarşamba - Sırt",
-        exercises: [
-          { name: "Pull Up", sets: 3, reps: "Max", weight_kg: 0 }
-        ]
-      }
-    ];
+    let template: any;
+    if (workoutDays.length > 0) {
+      template = workoutDays.map((day: any) => ({
+        day_name: day.day_name,
+        exercises: (day.exercises || []).map((ex: any) => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          weight_kg: ex.weight_kg || 0
+        }))
+      }));
+    } else {
+      template = [
+        {
+          day_name: "Pazartesi - Göğüs",
+          exercises: [
+            { name: "Bench Press", sets: 4, reps: "10-12", weight_kg: 60 },
+            { name: "Incline Dumbbell Press", sets: 3, reps: "12", weight_kg: 20 }
+          ]
+        },
+        {
+          day_name: "Çarşamba - Sırt",
+          exercises: [
+            { name: "Pull Up", sets: 3, reps: "Max", weight_kg: 0 }
+          ]
+        }
+      ];
+    }
     const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'antrenman_sablonu.json';
+    a.download = workoutDays.length > 0 ? 'antrenman_programim.json' : 'antrenman_sablonu.json';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -86,6 +100,23 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
       e.target.value = ''; // reset input
     };
     reader.readAsText(file);
+  };
+
+  const handlePasteJSONSubmit = async () => {
+    try {
+      const data = JSON.parse(jsonText);
+      const res = await importWorkoutRoutineAction(data);
+      if (res.success) {
+        toast.success("Antrenman programı başarıyla eklendi!");
+        fetchWorkoutRoutine();
+        setActiveSheet(null);
+        setJsonText('');
+      } else {
+        toast.error(res.error || "İçe aktarılırken hata oluştu.");
+      }
+    } catch(err) {
+      toast.error("Geçersiz JSON formatı! Lütfen kodu kontrol edin.");
+    }
   };
 
   useEffect(() => {
@@ -323,6 +354,13 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   >
                     <Download size={14} />
                   </button>
+                  <button
+                    onClick={() => setActiveSheet('pasteWorkoutJson')}
+                    className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors"
+                    title="Koddan Yapıştır"
+                  >
+                    <Edit2 size={14} />
+                  </button>
                   <label className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors cursor-pointer" title="JSON İçeri Aktar">
                     <Upload size={14} />
                     <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
@@ -448,16 +486,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </button>
                 </div>
                 
-                {/* FatSecret Info / Toggle styling */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 gap-4 sm:gap-0">
-                  <div className="flex flex-col pr-0 sm:pr-8">
-                    <span className="text-white font-medium">FatSecret (Besin Arama)</span>
-                    <span className="text-sm text-[var(--on-surface-variant)]">Ücretsiz versiyonda sadece İngilizce arama desteklenmektedir.</span>
-                  </div>
-                  <div className="w-12 h-6 rounded-full bg-[var(--primary)] relative flex items-center shrink-0 cursor-default opacity-80">
-                     <div className="w-4 h-4 rounded-full bg-white absolute right-1"></div>
-                  </div>
-                </div>
+
               </div>
             </div>
 
@@ -513,6 +542,27 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
 
       <BottomSheet isOpen={!!activeSheet} onClose={() => setActiveSheet(null)} title={getSheetTitle()}>
         {renderSheetContent()}
+      </BottomSheet>
+
+      <BottomSheet isOpen={activeSheet === 'pasteWorkoutJson'} onClose={() => setActiveSheet(null)} title="JSON ile Program Ekle">
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--on-surface-variant)]">
+            Buraya uygulamanın kullandığı formattaki antrenman JSON kodunu yapıştırabilirsiniz. 
+          </p>
+          <textarea
+            className="w-full h-48 bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl p-3 text-sm text-white focus:outline-none focus:border-[var(--primary)] font-mono resize-y"
+            placeholder="[{ &quot;day_name&quot;: &quot;...&quot;, &quot;exercises&quot;: [...] }]"
+            value={jsonText}
+            onChange={(e) => setJsonText(e.target.value)}
+          />
+          <button
+            onClick={handlePasteJSONSubmit}
+            disabled={!jsonText.trim()}
+            className="w-full py-3 bg-[var(--primary)] text-black rounded-xl font-bold text-sm hover:bg-[var(--primary-hover)] transition-all disabled:opacity-50"
+          >
+            JSON Kaydet
+          </button>
+        </div>
       </BottomSheet>
     </div>
   );
