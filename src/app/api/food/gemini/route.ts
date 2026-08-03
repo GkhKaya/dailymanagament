@@ -8,7 +8,7 @@ const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const OPENROUTER_MODEL = 'openrouter/free';
 const REQUEST_TIMEOUT_MS = 12_000;
 
-type UnitType = 'gram' | 'adet';
+type UnitType = 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
 type Provider = 'gemini' | 'openrouter';
 
 interface NutritionResult {
@@ -106,12 +106,12 @@ function foodSchema(unit: UnitType) {
       'per_unit_fat_g',
       'per_unit_fiber_g'
     ],
-    description: unit === 'gram' ? 'All nutrition values must be per 1 gram.' : 'All nutrition values must be per 1 piece.'
+    description: unit === 'gram' ? 'All nutrition values must be per 1 gram.' : `All nutrition values must be per 1 ${unit}.`
   };
 }
 
 function foodPrompt(foodName: string, unit: UnitType) {
-  const basis = unit === 'gram' ? '1 gram' : '1 adet (ortalama porsiyon)';
+  const basis = unit === 'gram' ? '1 gram' : `1 ${unit} (ortalama porsiyon)`;
   return `Sen bir beslenme uzmanısın. Aşağıdaki Türkçe besin için USDA, TÜBİTAK veya güvenilir beslenme veri tabanlarına dayalı doğru beslenme değerlerini üret.
 Besin adı: "${foodName}"
 Birim: Değerler ${basis} için olmalı.
@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     const amount = Number(body.amount);
     const unit = body.unit;
 
-    if (!foodName || foodName.length > 120 || !Number.isFinite(amount) || amount <= 0 || amount > 10_000 || (unit !== 'gram' && unit !== 'adet')) {
+    if (!foodName || foodName.length > 120 || !Number.isFinite(amount) || amount <= 0 || amount > 10_000 || !['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'].includes(unit as string)) {
       return NextResponse.json({ error: 'Geçerli yemek adı, miktar ve birim gerekli.' }, { status: 400 });
     }
 

@@ -11,7 +11,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
   const [protein, setProtein] = useState('0');
   const [carbs, setCarbs] = useState('0');
   const [fat, setFat] = useState('0');
-  const [unitType, setUnitType] = useState<'gram' | 'adet'>('gram');
+  const [unitType, setUnitType] = useState<'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı'>('gram');
   const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   

@@ -5,7 +5,7 @@ export interface ISavedFood extends Document {
   food_name: string;
   serving_description: string;
   quantity: number;
-  unit_type?: 'gram' | 'adet';
+  unit_type?: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
   food_cache_id?: string;
   fatsecret_food_id?: string;
   calories: number;
@@ -20,7 +20,7 @@ const SavedFoodSchema: Schema = new Schema({
   food_name: { type: String, required: true },
   serving_description: { type: String, required: true },
   quantity: { type: Number, required: true },
-  unit_type: { type: String, enum: ['gram', 'adet', 'bardak'], default: 'gram' },
+  unit_type: { type: String, enum: ['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'], default: 'gram' },
   food_cache_id: { type: String },
   fatsecret_food_id: { type: String },
   calories: { type: Number, required: true },

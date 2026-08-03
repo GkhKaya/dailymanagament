@@ -22,7 +22,7 @@ interface DBFoodResult {
   id: string;
   food_name: string;
   food_name_en: string | null;
-  unit_type: 'gram' | 'adet';
+  unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
   per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g?: number };
   brand_name: string | null;
   source: string;
@@ -32,7 +32,7 @@ interface DBFoodResult {
 interface SelectedFood {
   id: string | null;
   name: string;
-  unit_type: 'gram' | 'adet';
+  unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
   per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }
 
@@ -162,7 +162,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
   };
 
   const handleSelectRecent = async (food: any) => {
-    let detectedUnit: 'gram' | 'adet' = food.unit_type || 'gram';
+    let detectedUnit = food.unit_type || 'gram';
     if (!food.unit_type && food.serving_description) {
       const descLower = food.serving_description.toLowerCase();
       if (descLower.includes('adet') || descLower.includes('porsiyon')) {
@@ -618,18 +618,15 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                       className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-[var(--on-surface-variant)] focus:outline-none cursor-not-allowed"
                     />
                     <div className="flex gap-2">
-                      <div className="flex bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl overflow-hidden flex-1">
-                        {(['gram', 'adet'] as const).map(u => (
-                          <button
-                            key={u}
-                            type="button"
-                            onClick={() => setUnitType(u)}
-                            className={`flex-1 py-2 text-xs font-medium transition-all ${unitType === u ? 'bg-purple-500 text-white' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
-                          >
-                            {u}
-                          </button>
+                      <select
+                        value={unitType}
+                        onChange={(e) => setUnitType(e.target.value as any)}
+                        className="flex-1 bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-purple-500 transition-all cursor-pointer"
+                      >
+                        {['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'].map(u => (
+                          <option key={u} value={u} className="bg-[#1A1A26]">{u}</option>
                         ))}
-                      </div>
+                      </select>
                     </div>
                   </div>
 
@@ -668,20 +665,17 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                   </div>
 
                   <div className="flex gap-2">
-                    <div className="flex bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl overflow-hidden flex-1">
-                      {(['gram', 'adet'] as const).map(u => (
-                        <button
-                          key={u}
-                          type="button"
-                          onClick={() => setUnitType(u)}
-                          className={`flex-1 py-2 text-xs font-medium transition-all ${unitType === u ? 'bg-[var(--primary)] text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
-                        >
-                          {u}
-                        </button>
+                    <select
+                      value={unitType}
+                      onChange={(e) => setUnitType(e.target.value as any)}
+                      className="flex-1 bg-[#1A1A26] border border-[rgba(255,255,255,0.1)] rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-[var(--primary)] transition-all cursor-pointer"
+                    >
+                      {['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'].map(u => (
+                        <option key={u} value={u} className="bg-[#1A1A26]">{u}</option>
                       ))}
-                    </div>
+                    </select>
                     <div className="py-2 px-3 text-xs text-[var(--on-surface-variant)] flex items-center bg-[rgba(255,255,255,0.03)] rounded-xl border border-[rgba(255,255,255,0.05)]">
-                      Değerleri {unitType === 'gram' ? '100g' : '1 adet'} için girin
+                      Değerleri {unitType === 'gram' ? '100g' : `1 ${unitType}`} için girin
                     </div>
                   </div>
 
@@ -763,7 +757,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
                   />
                 </div>
                 <div className="py-3.5 px-4 bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl text-[13px] text-[var(--on-surface-variant)] font-medium min-w-[64px] text-center">
-                  {selectedFood.unit_type === 'gram' ? 'gram' : 'adet'}
+                  {selectedFood.unit_type}
                 </div>
               </div>
 
