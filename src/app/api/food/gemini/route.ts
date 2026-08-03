@@ -39,6 +39,16 @@ function normalizeNumber(value: unknown) {
   return Number.isFinite(number) && number >= 0 ? number : 0;
 }
 
+function parseJsonResponse(text: string): Record<string, unknown> {
+  let cleaned = text.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\n?/, '').replace(/\n?```$/, '');
+  }
+  return JSON.parse(cleaned) as Record<string, unknown>;
+}
+
 function calculateNutrition(perUnit: NutritionResult['per_unit'], amount: number): NutritionResult['calculated'] {
   return {
     calories: Math.round(perUnit.calories * amount),
@@ -136,7 +146,7 @@ async function queryGemini(foodName: string, amount: number, unit: UnitType) {
   });
 
   if (!response.text) throw new Error('Gemini boş yanıt döndürdü');
-  return buildResult(JSON.parse(response.text) as Record<string, unknown>, foodName, amount, unit);
+  return buildResult(parseJsonResponse(response.text), foodName, amount, unit);
 }
 
 async function queryOpenRouter(foodName: string, amount: number, unit: UnitType) {
@@ -167,7 +177,7 @@ async function queryOpenRouter(foodName: string, amount: number, unit: UnitType)
     const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const text = data.choices?.[0]?.message?.content;
     if (!text) throw new Error('OpenRouter boş yanıt döndürdü');
-    return buildResult(JSON.parse(text) as Record<string, unknown>, foodName, amount, unit);
+    return buildResult(parseJsonResponse(text), foodName, amount, unit);
   } finally {
     clearTimeout(timeout);
   }
