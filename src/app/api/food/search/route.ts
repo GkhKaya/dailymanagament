@@ -30,11 +30,11 @@ export async function GET(request: Request) {
       { score: { $meta: 'textScore' } }
     )
       .sort({ score: { $meta: 'textScore' } })
-      .limit(15)
+      .limit(30)
       .lean();
 
     // 2. Eğer text search az sonuç döndürdüyse regex ile de ara
-    if (foods.length < 5) {
+    if (foods.length < 10) {
       const regexResults = await FoodCache.find({
         $or: [
           { food_name: { $regex: safeRegex, $options: 'i' } },
@@ -43,14 +43,45 @@ export async function GET(request: Request) {
           { brand_name: { $regex: safeRegex, $options: 'i' } }
         ]
       })
-        .limit(15)
+        .limit(30)
         .lean();
 
       // Tekrar edenleri çıkar
       const existingIds = new Set(foods.map((f: any) => f._id.toString()));
       const newResults = regexResults.filter((f: any) => !existingIds.has(f._id.toString()));
-      foods = [...foods, ...newResults].slice(0, 15);
+      foods = [...foods, ...newResults];
     }
+
+    // 3. Akıllı Sıralama (In-memory sorting)
+    const queryLower = trimmed.toLocaleLowerCase('tr-TR');
+    
+    foods.sort((a: any, b: any) => {
+      const aName = (a.food_name || '').toLocaleLowerCase('tr-TR');
+      const bName = (b.food_name || '').toLocaleLowerCase('tr-TR');
+      
+      // Tam eşleşme en üstte
+      const aExact = aName === queryLower;
+      const bExact = bName === queryLower;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      
+      // Aranan kelime ile başlayanlar ikinci sırada
+      const aStartsWith = aName.startsWith(queryLower);
+      const bStartsWith = bName.startsWith(queryLower);
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+      
+      // MongoDB textScore'a göre sırala (varsa)
+      const aScore = a.score || 0;
+      const bScore = b.score || 0;
+      if (aScore !== bScore) return bScore - aScore;
+      
+      // Son çare olarak ismin kısalığına göre sırala (daha kısa, daha sade isimler üste)
+      return aName.length - bName.length;
+    });
+
+    // En iyi 15 sonucu al
+    foods = foods.slice(0, 15);
 
     const formatted = foods.map((f: any) => ({
       id: f._id.toString(),
