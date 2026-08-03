@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const OPENROUTER_MODEL = 'openrouter/free';
 const REQUEST_TIMEOUT_MS = 12_000;
 
