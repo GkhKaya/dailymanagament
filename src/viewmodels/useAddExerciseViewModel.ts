@@ -11,7 +11,7 @@ const MET_VALUES: Record<string, number> = {
   "Yoga": 3.0
 };
 
-export function useAddExerciseViewModel(onSuccess: () => void, userWeight: number = 70) {
+export function useAddExerciseViewModel(onSuccess: () => void, userWeight: number = 70, currentDateStr?: string) {
   const [exerciseType, setExerciseType] = useState('Yürüyüş');
   const [durationMinutes, setDurationMinutes] = useState('');
   const [burnedCalories, setBurnedCalories] = useState('');
@@ -39,7 +39,7 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
       if (!burnedCalories) throw new Error("Yakılan kalori zorunludur.");
 
       const res = await addExerciseAction({
-        date: new Date().toISOString(),
+        date: currentDateStr || new Date().toISOString(),
         name: exerciseType,
         duration_minutes: parseInt(durationMinutes),
         calories_burned: parseFloat(burnedCalories)

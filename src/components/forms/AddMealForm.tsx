@@ -55,7 +55,7 @@ const MEAL_OPTIONS: { id: MealType; label: string; icon: string }[] = [
   { id: 'snack', label: 'Ara Öğün', icon: '🍎' }
 ];
 
-export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () => void; onSuccess: () => void; currentDate?: string }) {
   const {
     type: mealType, setType: setMealType,
     foodName, setFoodName,
@@ -71,7 +71,7 @@ export function AddMealForm({ onClose, onSuccess }: { onClose: () => void; onSuc
     savedFoods, recentByType, isLoadingSaved,
     selectedSavedFoods, setSelectedSavedFoods,
     isLoading, handleSubmit, handleMultiSubmit
-  } = useAddMealViewModel(onSuccess);
+  } = useAddMealViewModel(onSuccess, currentDate);
 
   const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
   const [searchStep, setSearchStep] = useState<SearchStep>('idle');

@@ -30,13 +30,15 @@ export function AddTransactionForm({
   onSuccess,
   onOpenCategories,
   categories, 
-  accounts 
+  accounts,
+  currentDate
 }: { 
   onClose: () => void,
   onSuccess: () => void,
   onOpenCategories?: () => void,
   categories: { id: string; name: string; type: string }[],
-  accounts: { id: string; name: string }[]
+  accounts: { id: string; name: string }[],
+  currentDate?: string
 }) {
   const {
     type, setType,
@@ -46,7 +48,7 @@ export function AddTransactionForm({
     accountId, setAccountId,
     description, setDescription,
     isLoading, handleSubmit
-  } = useAddTransactionViewModel(onSuccess);
+  } = useAddTransactionViewModel(onSuccess, currentDate);
 
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 

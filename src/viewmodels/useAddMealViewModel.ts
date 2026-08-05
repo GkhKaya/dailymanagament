@@ -2,7 +2,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { addMealAction, getSavedFoodsAction } from '@/actions/health';
 
-export function useAddMealViewModel(onSuccess: () => void) {
+export function useAddMealViewModel(onSuccess: () => void, currentDateStr?: string) {
   const [type, setType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   const [foodName, setFoodName] = useState('');
   const [servingDescription, setServingDescription] = useState('1 porsiyon');
@@ -62,7 +62,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
       const parsedFat = parseFloat(fat) || 0;
 
       const res = await addMealAction({
-        date: new Date().toISOString(),
+        date: currentDateStr || new Date().toISOString(),
         type,
         food_name: foodName,
         serving_description: servingDescription,
@@ -118,7 +118,7 @@ export function useAddMealViewModel(onSuccess: () => void) {
       
       const promises = selected.map(food => {
         return addMealAction({
-          date: new Date().toISOString(),
+          date: currentDateStr || new Date().toISOString(),
           type,
           food_name: food.food_name,
           serving_description: food.serving_description || '1 porsiyon',

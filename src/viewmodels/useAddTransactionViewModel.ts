@@ -2,10 +2,10 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addTransactionAction } from '@/actions/finance';
 
-export function useAddTransactionViewModel(onSuccess: () => void) {
+export function useAddTransactionViewModel(onSuccess: () => void, currentDateStr?: string) {
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(currentDateStr || new Date().toISOString().split('T')[0]);
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
   const [description, setDescription] = useState('');

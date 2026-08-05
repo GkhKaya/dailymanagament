@@ -16,7 +16,7 @@ interface FinanceDraft {
   categories: Array<{ id: string; name: string }>;
 }
 
-export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
+export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () => void; currentDate?: string }) {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -108,7 +108,7 @@ export function VoiceAssistantFAB({ onSuccess }: { onSuccess?: () => void }) {
     setIsOpen(true);
     
     try {
-      const result = await processAssistantVoiceAction(text);
+      const result = await processAssistantVoiceAction(text, currentDate);
       if (result.success) {
         if (result.action === 'finance_preview') {
           setFinanceDraft(result.draft);

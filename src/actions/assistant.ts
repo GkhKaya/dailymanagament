@@ -127,7 +127,7 @@ Kullanıcı komutu: "${text}"`,
   return JSON.parse(response.text) as Record<string, unknown>;
 }
 
-export async function processAssistantVoiceAction(text: string) {
+export async function processAssistantVoiceAction(text: string, currentDateStr?: string) {
   try {
     if (!text.trim() || text.length > 500) return { success: false, error: 'Komut boş veya fazla uzun.' };
 
@@ -155,7 +155,7 @@ export async function processAssistantVoiceAction(text: string) {
         transaction_type: transactionType,
         amount,
         description: typeof finance.description === 'string' ? finance.description.trim().slice(0, 120) : '',
-        date: new Date().toISOString(),
+        date: currentDateStr || new Date().toISOString(),
         account_id: matchedAccount?._id.toString() || null,
         category_id: matchedCategory?._id.toString() || null,
         accounts: accounts.map((account) => ({ id: account._id.toString(), name: account.name })),
@@ -187,7 +187,7 @@ export async function processAssistantVoiceAction(text: string) {
         };
       });
 
-      const mealResult = await addMealsAction(foods.map((food) => ({ date: new Date().toISOString(), type: health.meal_type!, ...food })));
+      const mealResult = await addMealsAction(foods.map((food) => ({ date: currentDateStr || new Date().toISOString(), type: health.meal_type!, ...food })));
       if (!mealResult.success) return { success: false, error: mealResult.error || 'Öğün kaydı tamamlanamadı. Tekrar deneyin.' };
       return { success: true, action: 'health_saved' as const, message: `Öğüne eklendi: ${foods.map((food) => food.serving_description + ' ' + food.food_name).join(', ')}` };
     }

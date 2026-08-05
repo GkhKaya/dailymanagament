@@ -3,13 +3,13 @@ import { Moon } from 'lucide-react';
 import { useAddSleepViewModel } from '@/viewmodels/useAddSleepViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function AddSleepForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+export function AddSleepForm({ onClose, onSuccess, currentDate }: { onClose: () => void, onSuccess: () => void, currentDate?: string }) {
   const {
     hours, setHours,
     mins, setMins,
     quality, setQuality,
     isLoading, handleSubmit
-  } = useAddSleepViewModel(onSuccess);
+  } = useAddSleepViewModel(onSuccess, currentDate);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">

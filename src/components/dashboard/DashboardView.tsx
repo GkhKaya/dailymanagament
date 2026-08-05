@@ -231,18 +231,25 @@ export function DashboardView() {
           <FABMenu mode={mode} onOpenSheet={handleOpenSheet} />
         )}
 
-        <DashboardSheetManager 
-          activeSheet={activeSheet} 
-          sheetPayload={sheetPayload} 
-          setActiveSheet={setActiveSheet} 
-          setSheetPayload={setSheetPayload} 
-          handleSuccess={handleSuccess} 
-          refreshData={refreshData} 
-          financeData={financeData} 
-          healthData={healthData} 
-          currentDate={currentDate} 
-        />
-        <VoiceAssistantFAB onSuccess={refreshData} />
+        {(() => {
+          const localDateStr = new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+          return (
+            <>
+              <DashboardSheetManager 
+                activeSheet={activeSheet} 
+                sheetPayload={sheetPayload} 
+                setActiveSheet={setActiveSheet} 
+                setSheetPayload={setSheetPayload} 
+                handleSuccess={handleSuccess} 
+                refreshData={refreshData} 
+                financeData={financeData} 
+                healthData={healthData} 
+                currentDate={currentDate} 
+              />
+              <VoiceAssistantFAB onSuccess={refreshData} currentDate={localDateStr} />
+            </>
+          );
+        })()}
       </div>
     </PullToRefresh>
   );

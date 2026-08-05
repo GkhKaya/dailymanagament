@@ -61,6 +61,10 @@ export const auth = betterAuth({
         window: 60,
         max: 10000
     },
+    session: {
+        expiresIn: 60 * 60 * 24 * 7, // 7 gün
+        updateAge: 60 * 60 * 24, // her gün yenile
+    },
     advanced: {
         defaultCookieAttributes: {
             secure: process.env.NODE_ENV === "production",

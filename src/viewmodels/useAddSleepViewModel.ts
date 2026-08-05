@@ -2,8 +2,8 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addSleepAction } from '@/actions/health';
 
-export function useAddSleepViewModel(onSuccess: () => void) {
-  const [hours, setHours] = useState('');
+export function useAddSleepViewModel(onSuccess: () => void, currentDateStr?: string) {
+  const [hours, setHours] = useState('7');
   const [mins, setMins] = useState('');
   const [quality, setQuality] = useState('İyi');
   
@@ -23,7 +23,7 @@ export function useAddSleepViewModel(onSuccess: () => void) {
       if (totalMinutes <= 0) throw new Error("Süre zorunludur.");
 
       const res = await addSleepAction({
-        date: new Date().toISOString(),
+        date: currentDateStr || new Date().toISOString(),
         duration_minutes: totalMinutes,
         quality
       });

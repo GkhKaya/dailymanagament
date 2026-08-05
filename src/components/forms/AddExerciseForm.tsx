@@ -4,13 +4,13 @@ import { Activity } from 'lucide-react';
 import { useAddExerciseViewModel } from '@/viewmodels/useAddExerciseViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-export function AddExerciseForm({ onClose, onSuccess, userWeight = 70 }: { onClose: () => void, onSuccess: () => void, userWeight?: number }) {
+export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDate }: { onClose: () => void, onSuccess: () => void, userWeight?: number, currentDate?: string }) {
   const {
     exerciseType, setExerciseType,
     durationMinutes, setDurationMinutes,
     burnedCalories, setBurnedCalories,
     isLoading, handleSubmit
-  } = useAddExerciseViewModel(onSuccess, userWeight);
+  } = useAddExerciseViewModel(onSuccess, userWeight, currentDate);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
