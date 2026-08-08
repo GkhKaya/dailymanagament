@@ -6,7 +6,9 @@
     "dev": "next dev -p 3005",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run test:finance",
+    "test:finance": "node --experimental-strip-types --test tests/finance-rules.test.mjs"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.6.23",

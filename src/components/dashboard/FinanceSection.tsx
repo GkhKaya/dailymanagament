@@ -29,7 +29,9 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
     const datePart = txn.date.split(',')[0].toUpperCase();
     if (!acc[datePart]) acc[datePart] = { txns: [], net: 0 };
     acc[datePart].txns.push(txn);
-    acc[datePart].net += txn.type === 'income' ? txn.amount : -txn.amount;
+    if (txn.type === 'income' || txn.type === 'expense') {
+      acc[datePart].net += txn.type === 'income' ? txn.amount : -txn.amount;
+    }
     return acc;
   }, {} as Record<string, { txns: typeof data.recentTransactions, net: number }>);
 
@@ -124,6 +126,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
               <div className="flex flex-col gap-[var(--space-1)]">
                 {groupData.txns.map((txn) => {
                   const isIncome = txn.type === 'income';
+                  const isTransfer = txn.type === 'transfer';
                   return (
                     <div 
                       key={txn.id} 
@@ -132,7 +135,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                     >
                       <div className="flex items-center gap-[var(--space-3)]">
                         <div className="w-12 h-12 rounded-[var(--radius-input)] bg-[var(--surface-container)] flex items-center justify-center text-[var(--on-surface-variant)]">
-                          <TxnIcon title={txn.title} />
+                          {isTransfer ? <Wallet size={18} /> : <TxnIcon title={txn.title} />}
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
@@ -144,7 +147,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                             )}
                           </div>
                           <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize flex items-center gap-1">
-                            {txn.category || "Diğer"} 
+                            {isTransfer ? `Transfer${txn.relatedAccountName ? ` → ${txn.relatedAccountName}` : ''}` : (txn.category || "Diğer")} 
                             {txn.accountName && (
                                 <>
                                   <span className="w-1 h-1 rounded-full bg-[var(--on-surface-variant)] opacity-50"></span>
@@ -155,8 +158,8 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span className={`text-headline ${isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
-                          {isIncome ? '+' : '-'}{fmt(txn.amount)}
+                        <span className={`text-headline ${isTransfer ? 'text-[var(--on-surface-variant)]' : isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
+                          {isTransfer ? '' : isIncome ? '+' : '-'}{fmt(txn.amount)}
                         </span>
                       </div>
                     </div>

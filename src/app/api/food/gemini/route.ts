@@ -124,12 +124,6 @@ Birim: Değerler ${basis} için olmalı.
 - food_name_en alanına İngilizce karşılığını yaz`;
 }
 
-function isGeminiBusy(error: unknown) {
-  const candidate = error as { status?: number; message?: string };
-  const message = candidate.message?.toLowerCase() || '';
-  return candidate.status === 429 || candidate.status === 503 || ['429', 'quota', 'rate limit', 'resource exhausted', 'overloaded', 'service unavailable'].some((term) => message.includes(term));
-}
-
 async function queryGemini(foodName: string, amount: number, unit: UnitType) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY tanımlı değil');
@@ -233,9 +227,15 @@ export async function POST(request: Request) {
       result = await queryGemini(foodName, amount, unit as UnitType);
       provider = 'gemini';
     } catch (geminiError) {
-      if (!isGeminiBusy(geminiError) && process.env.GEMINI_API_KEY) throw geminiError;
-      result = await queryOpenRouter(foodName, amount, unit as UnitType);
-      provider = 'openrouter';
+      if (!process.env.OPENROUTER_API_KEY) throw geminiError;
+      try {
+        result = await queryOpenRouter(foodName, amount, unit as UnitType);
+        provider = 'openrouter';
+      } catch (openRouterError) {
+        const geminiMessage = geminiError instanceof Error ? geminiError.message : 'Gemini kullanılamadı.';
+        const openRouterMessage = openRouterError instanceof Error ? openRouterError.message : 'OpenRouter kullanılamadı.';
+        throw new Error(`AI sağlayıcıları çalışmadı. Gemini: ${geminiMessage} OpenRouter: ${openRouterMessage}`);
+      }
     }
 
     await FoodCache.updateOne(

@@ -64,6 +64,8 @@ export interface TransactionInfo {
   categoryId?: string;
   accountName?: string;
   accountId?: string;
+  relatedAccountName?: string;
+  relatedAccountId?: string;
   source?: string;
 }
 

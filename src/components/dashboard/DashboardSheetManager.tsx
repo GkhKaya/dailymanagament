@@ -18,6 +18,7 @@ const ManageCategoriesForm = dynamic(() => import("@/components/forms/ManageCate
 const ManageDebtsForm = dynamic(() => import("@/components/forms/ManageDebtsForm").then(m => m.ManageDebtsForm), { ssr: false });
 const ManageSubscriptionsForm = dynamic(() => import("@/components/forms/ManageSubscriptionsForm").then(m => m.ManageSubscriptionsForm), { ssr: false });
 const ManageAccountsForm = dynamic(() => import("@/components/forms/ManageAccountsForm").then(m => m.ManageAccountsForm), { ssr: false });
+const TransferAccountsForm = dynamic(() => import("@/components/forms/TransferAccountsForm").then(m => m.TransferAccountsForm), { ssr: false });
 const ManageWorkoutRoutineForm = dynamic(() => import("@/components/forms/ManageWorkoutRoutineForm").then(m => m.ManageWorkoutRoutineForm), { ssr: false });
 
 interface DashboardSheetManagerProps {
@@ -60,6 +61,7 @@ export function DashboardSheetManager({
         <ManageAccountsForm 
           onClose={() => setActiveSheet(null)} 
           onOpenAdd={() => setActiveSheet('addAccount')}
+          onOpenTransfer={() => setActiveSheet('transferAccounts')}
           onOpenEdit={(id: string) => { 
             const acc = financeData?.accounts?.find((a: any) => a.id === id);
             if (acc) {
@@ -71,6 +73,7 @@ export function DashboardSheetManager({
         />
       );
       case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} />;
+      case 'transferAccounts': return <TransferAccountsForm accounts={financeData?.accounts || []} currentDate={localDateStr} onSuccess={handleSuccess} onClose={() => setActiveSheet(null)} />;
       case 'editAccount': return <EditAccountForm onSuccess={handleSuccess} initialData={sheetPayload} accounts={financeData?.accounts || []} />;
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
       case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
@@ -91,6 +94,7 @@ export function DashboardSheetManager({
       case 'manageWorkoutRoutine': return sheetPayload?.id ? 'Antrenman Gününü Düzenle' : 'Antrenman Programı Ekle';
       case 'manageAccounts': return 'Hesapları Yönet';
       case 'addAccount': return 'Hesap Oluştur';
+      case 'transferAccounts': return 'Hesaplar Arası Transfer';
       case 'editAccount': return 'Hesabı Düzenle';
       case 'categories': return 'Kategori Yönetimi';
       case 'debts': return 'Borç Yönetimi';

@@ -11,6 +11,7 @@ import { Debt } from "@/models/Debt";
 import { DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
 import { revalidatePath } from "next/cache";
+import { applyTransactionEffect, validateTransfer } from "@/lib/finance-rules";
 
 // Helper to check session
 async function getUserId() {
@@ -148,6 +149,55 @@ export async function payCreditCardDebtAction(data: { creditCardId: string; amou
   }
 }
 
+export async function transferAccountsAction(data: {
+  sourceAccountId: string;
+  targetAccountId: string;
+  amount: number;
+  date: string;
+  description?: string;
+}) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const amount = Number(data.amount);
+    const [source, target] = await Promise.all([
+      Account.findOne({ _id: new mongoose.Types.ObjectId(data.sourceAccountId), user_id: userId, is_active: true }),
+      Account.findOne({ _id: new mongoose.Types.ObjectId(data.targetAccountId), user_id: userId, is_active: true })
+    ]);
+
+    if (!source || !target) return { success: false, error: 'Kaynak veya hedef hesap bulunamadı.' };
+    const validation = validateTransfer(
+      { id: source._id.toString(), type: source.type, balance: parseFloat(source.balance.toString()) },
+      { id: target._id.toString(), type: target.type, balance: parseFloat(target.balance.toString()) },
+      amount
+    );
+    if (!validation.valid) return { success: false, error: validation.error };
+
+    source.balance = mongoose.Types.Decimal128.fromString((parseFloat(source.balance.toString()) - amount).toString());
+    target.balance = mongoose.Types.Decimal128.fromString((parseFloat(target.balance.toString()) + amount).toString());
+    await Promise.all([source.save(), target.save()]);
+    await Transaction.create({
+      user_id: userId,
+      type: TransactionType.TRANSFER,
+      amount: mongoose.Types.Decimal128.fromString(amount.toString()),
+      date: new Date(data.date),
+      description: data.description?.trim() || `${source.name} → ${target.name} transferi`,
+      category_id: null,
+      account_id: source._id,
+      related_account_id: target._id,
+      show_as_expense: false,
+      affects_account_balance: true,
+      source: TransactionSource.MANUAL
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
 export async function deleteAccountAction(id: string) {
   try {
     await connectDB();
@@ -166,6 +216,15 @@ export async function addTransactionAction(data: { type: any; amount: number; da
     await connectDB();
     const userId = await getUserId();
     
+    const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id) as any, user_id: userId as any });
+    if (!account) return { success: false, error: 'Hesap bulunamadı.' };
+
+    const effect = applyTransactionEffect({
+      type: account.type,
+      balance: parseFloat(account.balance.toString()),
+      credit_card_details: account.credit_card_details ? { current_debt: parseFloat(account.credit_card_details.current_debt.toString()) } : undefined
+    }, data.type as 'income' | 'expense', data.amount);
+
     await Transaction.create({
       user_id: userId,
       type: data.type as any,
@@ -177,19 +236,13 @@ export async function addTransactionAction(data: { type: any; amount: number; da
       source: (data.source as any) || "manual"
     });
     
-    // Update account balance
-    const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id) as any, user_id: userId as any });
-    if (account) {
-      let currentBal = parseFloat(account.balance.toString());
-      if (data.type as any === 'income') {
-        currentBal += data.amount;
-      } else {
-        currentBal -= data.amount;
-      }
-      account.balance = mongoose.Types.Decimal128.fromString(currentBal.toString());
-      await account.save();
+    account.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
+    if (account.credit_card_details && effect.currentDebt !== undefined) {
+      account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(effect.currentDebt.toString());
     }
+    await account.save();
 
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;
@@ -208,16 +261,27 @@ export async function deleteTransactionAction(id: string) {
        return { success: false, error: "İşlem bulunamadı." };
     }
 
-    // Revert account balance
+    // Revert account balance and, for transfers, restore the target account.
     const account = await Account.findOne({ _id: txn.account_id, user_id: userId });
     if (account) {
-      let currentBal = parseFloat(account.balance.toString());
-      if (txn.type === 'income') {
-        currentBal -= parseFloat(txn.amount.toString());
+      if (txn.type === TransactionType.TRANSFER && txn.related_account_id) {
+        account.balance = mongoose.Types.Decimal128.fromString((parseFloat(account.balance.toString()) + parseFloat(txn.amount.toString())).toString());
+        const target = await Account.findOne({ _id: txn.related_account_id, user_id: userId });
+        if (target) {
+          target.balance = mongoose.Types.Decimal128.fromString((parseFloat(target.balance.toString()) - parseFloat(txn.amount.toString())).toString());
+          await target.save();
+        }
       } else {
-        currentBal += parseFloat(txn.amount.toString());
+        const effect = applyTransactionEffect({
+          type: account.type,
+          balance: parseFloat(account.balance.toString()),
+          credit_card_details: account.credit_card_details ? { current_debt: parseFloat(account.credit_card_details.current_debt.toString()) } : undefined
+        }, txn.type as 'income' | 'expense', -parseFloat(txn.amount.toString()));
+        account.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
+        if (account.credit_card_details && effect.currentDebt !== undefined) {
+          account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(effect.currentDebt.toString());
+        }
       }
-      account.balance = mongoose.Types.Decimal128.fromString(currentBal.toString());
       await account.save();
     }
 
@@ -240,6 +304,9 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
     if (!txn) {
        return { success: false, error: "İşlem bulunamadı." };
     }
+    if (txn.type === TransactionType.TRANSFER || data.type === TransactionType.TRANSFER) {
+      return { success: false, error: 'Transfer işlemleri bu ekrandan düzenlenemez.' };
+    }
 
     const oldAmount = parseFloat(txn.amount.toString());
     const oldType = txn.type;
@@ -248,26 +315,30 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
     // Revert old transaction effect on old account
     const oldAccount = await Account.findOne({ _id: txn.account_id, user_id: userId });
     if (oldAccount) {
-      let oldBal = parseFloat(oldAccount.balance.toString());
-      if (oldType === 'income') {
-        oldBal -= oldAmount;
-      } else {
-        oldBal += oldAmount;
+      const effect = applyTransactionEffect({
+        type: oldAccount.type,
+        balance: parseFloat(oldAccount.balance.toString()),
+        credit_card_details: oldAccount.credit_card_details ? { current_debt: parseFloat(oldAccount.credit_card_details.current_debt.toString()) } : undefined
+      }, oldType as 'income' | 'expense', -oldAmount);
+      oldAccount.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
+      if (oldAccount.credit_card_details && effect.currentDebt !== undefined) {
+        oldAccount.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(effect.currentDebt.toString());
       }
-      oldAccount.balance = mongoose.Types.Decimal128.fromString(oldBal.toString());
       await oldAccount.save();
     }
 
     // Apply new transaction effect on new account
     const newAccount = await Account.findOne({ _id: new mongoose.Types.ObjectId(data.account_id) as any, user_id: userId as any });
     if (newAccount) {
-      let newBal = parseFloat(newAccount.balance.toString());
-      if (data.type as any === 'income') {
-        newBal += data.amount;
-      } else {
-        newBal -= data.amount;
+      const effect = applyTransactionEffect({
+        type: newAccount.type,
+        balance: parseFloat(newAccount.balance.toString()),
+        credit_card_details: newAccount.credit_card_details ? { current_debt: parseFloat(newAccount.credit_card_details.current_debt.toString()) } : undefined
+      }, data.type as 'income' | 'expense', data.amount);
+      newAccount.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
+      if (newAccount.credit_card_details && effect.currentDebt !== undefined) {
+        newAccount.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(effect.currentDebt.toString());
       }
-      newAccount.balance = mongoose.Types.Decimal128.fromString(newBal.toString());
       await newAccount.save();
     }
 
@@ -280,6 +351,7 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
     txn.account_id = new mongoose.Types.ObjectId(data.account_id);
     await txn.save();
 
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;

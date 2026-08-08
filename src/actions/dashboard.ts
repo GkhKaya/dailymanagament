@@ -248,12 +248,13 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         .limit(50)
         .populate("category_id")
         .populate("account_id")
+        .populate("related_account_id")
         .lean(),
       Category.find({ $or: [{ user_id: userId }, { is_default: true }] }).lean(),
       Subscription.find({ user_id: userId, is_active: true }).lean(),
       Debt.find({ user_id: userId, status: { $ne: 'closed' } }).lean(),
       Transaction.aggregate([
-        { $match: { user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } } },
+        { $match: { user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth }, type: { $in: ['income', 'expense'] }, is_deleted: { $ne: true } } },
         { $group: { _id: "$type", total: { $sum: "$amount" } } }
       ])
     ]);
@@ -298,6 +299,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         categoryId: tx.category_id?._id?.toString(),
         accountName: tx.account_id?.name,
         accountId: tx.account_id?._id?.toString(),
+        relatedAccountName: tx.related_account_id?.name,
+        relatedAccountId: tx.related_account_id?._id?.toString(),
         source: tx.source
       };
     });

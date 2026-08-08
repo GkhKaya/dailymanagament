@@ -1,10 +1,11 @@
 import React from 'react';
-import { Wallet, CreditCard, Building2, Plus, Edit2 } from 'lucide-react';
+import { Wallet, CreditCard, Building2, Plus, Edit2, ArrowRightLeft } from 'lucide-react';
 
 const AccountIcon = ({ type }: { type: string }) => {
   switch (type) {
     case "cash": return <Wallet size={18} />;
-    case "credit": return <CreditCard size={18} />;
+    case "credit":
+    case "credit_card": return <CreditCard size={18} />;
     case "bank": return <Building2 size={18} />;
     default: return <Wallet size={18} />;
   }
@@ -13,11 +14,13 @@ const AccountIcon = ({ type }: { type: string }) => {
 export function ManageAccountsForm({ 
   onClose, 
   onOpenAdd,
+  onOpenTransfer,
   onOpenEdit,
   accounts 
 }: { 
   onClose: () => void,
   onOpenAdd: () => void,
+  onOpenTransfer?: () => void,
   onOpenEdit: (id: string) => void,
   accounts: { id: string; name: string; balance: number; type: string }[] 
 }) {
@@ -29,13 +32,14 @@ export function ManageAccountsForm({
         <div className="text-body text-[var(--on-surface-variant)]">
           Mevcut hesaplarınızı yönetin.
         </div>
-        <button 
-          onClick={onOpenAdd}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-black hover:bg-[var(--primary-hover)] transition-all font-medium text-[var(--font-body)]"
-        >
-          <Plus size={16} />
-          Yeni Ekle
-        </button>
+        <div className="flex gap-2">
+          {onOpenTransfer && <button type="button" onClick={onOpenTransfer} className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:bg-white/5">
+            <ArrowRightLeft size={16} /> Transfer
+          </button>}
+          <button type="button" onClick={onOpenAdd} className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 font-medium text-black hover:bg-[var(--primary-hover)]">
+            <Plus size={16} /> Yeni Ekle
+          </button>
+        </div>
       </div>
       
       <div className="flex flex-col gap-3">

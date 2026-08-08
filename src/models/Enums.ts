@@ -47,6 +47,7 @@ export enum TransactionType {
   ACCOUNT_ADJUSTMENT = 'account_adjustment',
   CREDIT_CARD_PAYMENT = 'credit_card_payment',
   DEBT_PAYMENT = 'debt_payment',
+  TRANSFER = 'transfer',
 }
 
 export enum TransactionSource {
