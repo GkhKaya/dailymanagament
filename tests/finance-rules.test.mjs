@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyTransactionEffect, validateTransfer } from '../src/lib/finance-rules.ts';
+import { applyTransactionEffect, getCreditCardDebt, validateTransfer } from '../src/lib/finance-rules.ts';
 
 const account = (type, balance, currentDebt = 0, id = undefined) => ({
   id,
@@ -19,6 +19,10 @@ test('reversing a credit card expense restores its debt', () => {
   const result = applyTransactionEffect(account('credit_card', -6000, 6000), 'expense', -1000);
 
   assert.deepEqual(result, { balance: -5000, currentDebt: 5000 });
+});
+
+test('missing credit card debt uses the existing negative card balance', () => {
+  assert.equal(getCreditCardDebt({ balance: -5000, credit_card_details: {} }), 5000);
 });
 
 test('transfer accepts non-credit accounts with enough balance', () => {

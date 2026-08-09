@@ -11,7 +11,7 @@ import { Debt } from "@/models/Debt";
 import { DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
 import { revalidatePath } from "next/cache";
-import { applyTransactionEffect, validateTransfer } from "@/lib/finance-rules";
+import { applyTransactionEffect, getCreditCardDebt, validateTransfer } from "@/lib/finance-rules";
 
 // Helper to check session
 async function getUserId() {
@@ -222,7 +222,7 @@ export async function addTransactionAction(data: { type: any; amount: number; da
     const effect = applyTransactionEffect({
       type: account.type,
       balance: parseFloat(account.balance.toString()),
-      credit_card_details: account.credit_card_details ? { current_debt: parseFloat(account.credit_card_details.current_debt.toString()) } : undefined
+      credit_card_details: account.credit_card_details ? { current_debt: getCreditCardDebt({ balance: parseFloat(account.balance.toString()), credit_card_details: { current_debt: account.credit_card_details.current_debt ? parseFloat(account.credit_card_details.current_debt.toString()) : null } }) } : undefined
     }, data.type as 'income' | 'expense', data.amount);
 
     await Transaction.create({
@@ -275,7 +275,7 @@ export async function deleteTransactionAction(id: string) {
         const effect = applyTransactionEffect({
           type: account.type,
           balance: parseFloat(account.balance.toString()),
-          credit_card_details: account.credit_card_details ? { current_debt: parseFloat(account.credit_card_details.current_debt.toString()) } : undefined
+          credit_card_details: account.credit_card_details ? { current_debt: getCreditCardDebt({ balance: parseFloat(account.balance.toString()), credit_card_details: { current_debt: account.credit_card_details.current_debt ? parseFloat(account.credit_card_details.current_debt.toString()) : null } }) } : undefined
         }, txn.type as 'income' | 'expense', -parseFloat(txn.amount.toString()));
         account.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
         if (account.credit_card_details && effect.currentDebt !== undefined) {
@@ -318,7 +318,7 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
       const effect = applyTransactionEffect({
         type: oldAccount.type,
         balance: parseFloat(oldAccount.balance.toString()),
-        credit_card_details: oldAccount.credit_card_details ? { current_debt: parseFloat(oldAccount.credit_card_details.current_debt.toString()) } : undefined
+        credit_card_details: oldAccount.credit_card_details ? { current_debt: getCreditCardDebt({ balance: parseFloat(oldAccount.balance.toString()), credit_card_details: { current_debt: oldAccount.credit_card_details.current_debt ? parseFloat(oldAccount.credit_card_details.current_debt.toString()) : null } }) } : undefined
       }, oldType as 'income' | 'expense', -oldAmount);
       oldAccount.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
       if (oldAccount.credit_card_details && effect.currentDebt !== undefined) {
@@ -333,7 +333,7 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
       const effect = applyTransactionEffect({
         type: newAccount.type,
         balance: parseFloat(newAccount.balance.toString()),
-        credit_card_details: newAccount.credit_card_details ? { current_debt: parseFloat(newAccount.credit_card_details.current_debt.toString()) } : undefined
+        credit_card_details: newAccount.credit_card_details ? { current_debt: getCreditCardDebt({ balance: parseFloat(newAccount.balance.toString()), credit_card_details: { current_debt: newAccount.credit_card_details.current_debt ? parseFloat(newAccount.credit_card_details.current_debt.toString()) : null } }) } : undefined
       }, data.type as 'income' | 'expense', data.amount);
       newAccount.balance = mongoose.Types.Decimal128.fromString(effect.balance.toString());
       if (newAccount.credit_card_details && effect.currentDebt !== undefined) {

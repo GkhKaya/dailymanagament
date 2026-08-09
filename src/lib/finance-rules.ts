@@ -2,10 +2,17 @@ export type FinanceAccount = {
   id?: string;
   type: string;
   balance: number;
-  credit_card_details?: { current_debt: number };
+  credit_card_details?: { current_debt?: number | null };
 };
 
 export type AccountEffect = { balance: number; currentDebt?: number };
+
+export function getCreditCardDebt(account: Pick<FinanceAccount, 'balance' | 'credit_card_details'>): number {
+  const savedDebt = account.credit_card_details?.current_debt;
+  return typeof savedDebt === 'number' && Number.isFinite(savedDebt)
+    ? Math.max(0, savedDebt)
+    : Math.max(0, -account.balance);
+}
 
 export function applyTransactionEffect(account: FinanceAccount, type: 'income' | 'expense', amount: number): AccountEffect {
   const balance = type === 'income' ? account.balance + amount : account.balance - amount;
@@ -14,9 +21,10 @@ export function applyTransactionEffect(account: FinanceAccount, type: 'income' |
     return { balance };
   }
 
+  const existingDebt = getCreditCardDebt(account);
   const currentDebt = type === 'income'
-    ? Math.max(0, account.credit_card_details.current_debt - amount)
-    : Math.max(0, account.credit_card_details.current_debt + amount);
+    ? Math.max(0, existingDebt - amount)
+    : Math.max(0, existingDebt + amount);
 
   return { balance, currentDebt };
 }
