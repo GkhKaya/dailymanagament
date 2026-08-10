@@ -33,3 +33,5 @@ export function findDiyanetDistrict<T extends { name: string }>(districts: T[], 
   const normalize = (value: string) => value.trim().toLocaleUpperCase('tr-TR').replaceAll('İ', 'I');
   return districts.find(item => normalize(item.name) === normalize(district));
 }
+
+export function getPrayerNotificationKey(prayerTimeId: string, prayer: string, kind: string) { return `${prayerTimeId}:${prayer}:${kind}`; }

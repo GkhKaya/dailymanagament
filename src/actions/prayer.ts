@@ -8,7 +8,7 @@ import { PrayerLocation } from '@/models/PrayerLocation';
 import { PrayerTime } from '@/models/PrayerTime';
 import { PrayerNotification } from '@/models/PrayerNotification';
 import { getDiyanetDistricts, getMonthlyPrayerTimes, resolveDiyanetDistrictId } from '@/lib/prayer-provider-diyanet';
-import { buildPrayerNotifications } from '@/lib/prayer-times';
+import { buildPrayerNotifications, getPrayerNotificationKey } from '@/lib/prayer-times';
 
 async function userId() { const session = await auth.api.getSession({ headers: await headers() }); return session?.user?.id || null; }
 
@@ -47,7 +47,7 @@ export async function syncPrayerMonthForUser(id: string, year: number, month: nu
   for (const day of days) {
     const record = await PrayerTime.findOneAndUpdate({ user_id: id, date: day.date }, { user_id: id, location_key: `${location.province}/${location.district}`, date: day.date, timezone: location.timezone, times: day.times, source: 'diyanet-imsakiyem' }, { upsert: true, new: true });
     const notices = buildPrayerNotifications(day.times);
-    for (const notice of notices) await PrayerNotification.findOneAndUpdate({ prayer_time_id: String(record._id), kind: notice.kind }, { user_id: id, prayer_time_id: String(record._id), kind: notice.kind, scheduled_at: notice.scheduled_at, status: notice.scheduled_at > new Date() ? 'pending' : 'cancelled' }, { upsert: true });
+    for (const notice of notices) { const notificationKey = getPrayerNotificationKey(String(record._id), notice.prayer, notice.kind); await PrayerNotification.findOneAndUpdate({ prayer_time_id: notificationKey, kind: notice.kind }, { user_id: id, prayer_time_id: notificationKey, kind: notice.kind, scheduled_at: notice.scheduled_at, status: notice.scheduled_at > new Date() ? 'pending' : 'cancelled' }, { upsert: true }); }
   }
   return days.length;
 }
