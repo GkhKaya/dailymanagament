@@ -15,7 +15,9 @@ async function userId() { const session = await auth.api.getSession({ headers: a
 export async function getPrayerDataAction(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
   const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
   await connectDB();
-  const [location, times] = await Promise.all([PrayerLocation.findOne({ user_id: id }).lean(), PrayerTime.find({ user_id: id, date: { $regex: `^${year}-${String(month).padStart(2, '0')}` } }).sort({ date: 1 }).lean()]);
+  const location = await PrayerLocation.findOne({ user_id: id }).lean();
+  const locationKey = location ? `${location.province}/${location.district}` : null;
+  const times = await PrayerTime.find({ user_id: id, location_key: locationKey || '__none__', date: { $regex: `^${year}-${String(month).padStart(2, '0')}` } }).sort({ date: 1 }).lean();
   return { success: true, location: location ? { province: location.province, district: location.district } : null, times: JSON.parse(JSON.stringify(times)) };
 }
 

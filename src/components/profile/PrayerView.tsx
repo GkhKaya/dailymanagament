@@ -15,7 +15,17 @@ export function PrayerView() {
   // The effect intentionally hydrates client state from the authenticated server action.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, []);
-  const save = async () => { setBusy(true); const result = await savePrayerLocationAction({ province, district }); setBusy(false); if (!result.success) return toast.error(result.error || 'Namaz konumu kaydedilemedi.'); toast.success('Namaz konumu kaydedildi.'); await load(); };
+  const save = async () => {
+    setBusy(true);
+    try {
+      const result = await savePrayerLocationAction({ province, district });
+      if (!result.success) return toast.error(result.error || 'Namaz konumu kaydedilemedi.');
+      await load();
+      toast.success('Namaz konumu ve vakitler güncellendi.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Namaz vakitleri güncellenemedi.');
+    } finally { setBusy(false); }
+  };
   const enablePush = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return toast.error('Bildirim için uygulamayı iPhone Ana Ekranına ekleyin.');
     try {

@@ -4,7 +4,7 @@ export type MonthlyPrayerDay = { date: string; times: Record<PrayerKind, Date> }
 const API = process.env.PRAYER_TIMES_API_URL || 'https://ezanvakti.imsakiyem.com/api';
 
 async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { next: { revalidate: 86400 } });
+  const response = await fetch(url, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(15_000) });
   if (!response.ok) throw new Error(`Diyanet namaz vakitleri alınamadı (${response.status})`);
   const payload = await response.json() as { success: boolean; data: T };
   if (!payload.success) throw new Error('Diyanet namaz vakitleri geçersiz yanıt verdi.');
