@@ -8,7 +8,7 @@ import { PrayerLocation } from '@/models/PrayerLocation';
 import { PrayerTime } from '@/models/PrayerTime';
 import { PrayerNotification } from '@/models/PrayerNotification';
 import { getDiyanetDistricts, getMonthlyPrayerTimes, resolveDiyanetDistrictId } from '@/lib/prayer-provider-diyanet';
-import { buildPrayerNotifications, getTestNotificationTime } from '@/lib/prayer-times';
+import { buildPrayerNotifications } from '@/lib/prayer-times';
 
 async function userId() { const session = await auth.api.getSession({ headers: await headers() }); return session?.user?.id || null; }
 
@@ -58,11 +58,4 @@ export async function savePushSubscriptionAction(subscription: { endpoint: strin
   await connectDB(); const { PushSubscription } = await import('@/models/PushSubscription');
   await PushSubscription.findOneAndUpdate({ endpoint: subscription.endpoint }, { user_id: id, ...subscription, active: true, last_error: null }, { upsert: true });
   return { success: true };
-}
-
-export async function scheduleTestPrayerNotificationAction() {
-  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
-  await connectDB();
-  const notification = await PrayerNotification.create({ user_id: id, prayer_time_id: `test-${id}-${Date.now()}`, kind: 'after_15m', scheduled_at: getTestNotificationTime(), status: 'pending' });
-  return { success: true, scheduledAt: notification.scheduled_at.toISOString() };
 }

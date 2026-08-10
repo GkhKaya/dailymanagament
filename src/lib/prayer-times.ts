@@ -33,5 +33,3 @@ export function findDiyanetDistrict<T extends { name: string }>(districts: T[], 
   const normalize = (value: string) => value.trim().toLocaleUpperCase('tr-TR').replaceAll('İ', 'I');
   return districts.find(item => normalize(item.name) === normalize(district));
 }
-
-export function getTestNotificationTime(now = new Date()) { return new Date(now.getTime() + 60_000); }
