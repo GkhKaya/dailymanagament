@@ -15,6 +15,7 @@ export function PrayerView() {
   // The effect intentionally hydrates client state from the authenticated server action.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load(); }, []);
+  useEffect(() => { void navigator.serviceWorker?.register('/sw.js').then(registration => registration.pushManager.getSubscription().then(subscription => setPushReady(!!subscription))).catch(() => setPushReady(false)); }, []);
   // Province changes trigger the external district lookup and reset its dependent selection.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { if (!province) { setDistricts([]); setDistrict(''); return; } void getPrayerDistrictsAction(province).then(result => { if (result.success) setDistricts((result.districts || []).map(item => item.name)); }); }, [province]);
@@ -36,8 +37,11 @@ export function PrayerView() {
       const registration = await navigator.serviceWorker.register('/sw.js');
       const key = await fetch('/api/push/vapid-public-key').then(r => r.text());
       if (!key) return toast.error('Bildirim ayarı eksik.');
-      const applicationServerKey = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-      const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+      const normalizedKey = key.trim().replace(/-/g, '+').replace(/_/g, '/');
+      const paddedKey = normalizedKey + '='.repeat((4 - normalizedKey.length % 4) % 4);
+      const applicationServerKey = Uint8Array.from(atob(paddedKey), c => c.charCodeAt(0));
+      const existing = await registration.pushManager.getSubscription();
+      const subscription = existing || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
       const json = subscription.toJSON();
       if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) throw new Error('Bildirim aboneliği oluşturulamadı.');
       const result = await savePushSubscriptionAction({ endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } }); if (!result.success) throw new Error(result.error || 'Bildirim kaydedilemedi.'); setPushReady(true); toast.success('Namaz bildirimleri açıldı.');
