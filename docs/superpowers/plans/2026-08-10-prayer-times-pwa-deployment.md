@@ -29,4 +29,4 @@ Safari’de uygulamayı aç, Paylaş → Ana Ekrana Ekle. Ana Ekran’daki Daily
 
 ## Kaynak
 
-Varsayılan sağlayıcı AlAdhan API’sinin Türkiye yöntemi 13’tür. Resmi Diyanet API erişimi sağlandığında `src/lib/prayer-provider-diyanet.ts` içindeki adapter aynı `MonthlyPrayerDay` çıktısını koruyacak şekilde değiştirilebilir.
+Vakit kaynağı Diyanet İşleri Başkanlığı verilerini sunan İmsakiyem API’dir. İlçe kimliği sunucu tarafında çözülür ve aylık veriler bu kimlikle çekilir.

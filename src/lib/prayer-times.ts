@@ -23,3 +23,8 @@ export function normalizeProviderTimes(date: string, timings: Record<string, str
   const clean = (value: string) => value.split(' ')[0];
   return { imsak: parseLocalTime(date, clean(timings.Imsak), timezone), ogle: parseLocalTime(date, clean(timings.Dhuhr), timezone), ikindi: parseLocalTime(date, clean(timings.Asr), timezone), aksam: parseLocalTime(date, clean(timings.Maghrib), timezone), yatsi: parseLocalTime(date, clean(timings.Isha), timezone) };
 }
+
+export function normalizeDiyanetTimes(date: string, timings: Record<string, string>) {
+  const time = (value: string) => parseLocalTime(date, value, 'Europe/Istanbul');
+  return { imsak: time(timings.imsak), ogle: time(timings.ogle), ikindi: time(timings.ikindi), aksam: time(timings.aksam), yatsi: time(timings.yatsi) };
+}
