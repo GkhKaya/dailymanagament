@@ -22,6 +22,7 @@ import { ManageWorkoutRoutineForm } from '@/components/forms/ManageWorkoutRoutin
 import { getWorkoutRoutineAction, importWorkoutRoutineAction } from '@/actions/workout';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
 import toast from 'react-hot-toast';
+import { PrayerView } from '@/components/profile/PrayerView';
 
 export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, target_weight_date?: string, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
@@ -294,6 +295,9 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
           {/* Right Column */}
           <div className="md:col-span-8 flex flex-col gap-6">
             
+            {/* Fiziksel Veriler Card */}
+            <PrayerView />
+
             {/* Fiziksel Veriler Card */}
             <div className="bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-xl p-6 shadow-xl">
               <h3 className="text-lg font-bold text-white mb-6">Fiziksel Veriler</h3>

@@ -20,6 +20,7 @@ export interface IUser extends Document {
     daily_calorie_goal?: number;
     currency: string;
     timezone?: string;
+    prayer_location?: { province: string; district: string; timezone: string };
   };
   created_at: Date;
   updated_at: Date;
@@ -43,7 +44,12 @@ const UserSchema: Schema = new Schema({
   settings: {
     daily_calorie_goal: { type: Number, default: null },
     currency: { type: String, default: 'TRY' },
-    timezone: { type: String }
+    timezone: { type: String },
+    prayer_location: {
+      province: { type: String },
+      district: { type: String },
+      timezone: { type: String, default: 'Europe/Istanbul' }
+    }
   }
 }, {
   collection: 'user',
