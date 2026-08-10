@@ -28,3 +28,8 @@ export function normalizeDiyanetTimes(date: string, timings: Record<string, stri
   const time = (value: string) => parseLocalTime(date, value, 'Europe/Istanbul');
   return { imsak: time(timings.imsak), ogle: time(timings.ogle), ikindi: time(timings.ikindi), aksam: time(timings.aksam), yatsi: time(timings.yatsi) };
 }
+
+export function findDiyanetDistrict<T extends { name: string }>(districts: T[], district: string) {
+  const normalize = (value: string) => value.trim().toLocaleUpperCase('tr-TR').replaceAll('İ', 'I');
+  return districts.find(item => normalize(item.name) === normalize(district));
+}

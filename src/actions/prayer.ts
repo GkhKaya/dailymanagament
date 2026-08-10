@@ -7,10 +7,17 @@ import { connectDB } from '@/lib/db';
 import { PrayerLocation } from '@/models/PrayerLocation';
 import { PrayerTime } from '@/models/PrayerTime';
 import { PrayerNotification } from '@/models/PrayerNotification';
-import { getMonthlyPrayerTimes, resolveDiyanetDistrictId } from '@/lib/prayer-provider-diyanet';
+import { getDiyanetDistricts, getMonthlyPrayerTimes, resolveDiyanetDistrictId } from '@/lib/prayer-provider-diyanet';
 import { buildPrayerNotifications } from '@/lib/prayer-times';
 
 async function userId() { const session = await auth.api.getSession({ headers: await headers() }); return session?.user?.id || null; }
+
+export async function getPrayerDistrictsAction(province: string) {
+  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
+  if (!province?.trim()) return { success: true, districts: [] };
+  try { return { success: true, districts: await getDiyanetDistricts(province) }; }
+  catch (error) { console.error('getPrayerDistrictsAction error:', error); return { success: false, error: 'İlçeler alınamadı.' }; }
+}
 
 export async function getPrayerDataAction(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
   const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };

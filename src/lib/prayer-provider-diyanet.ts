@@ -1,4 +1,4 @@
-import { normalizeDiyanetTimes, PrayerKind } from '@/lib/prayer-times';
+import { findDiyanetDistrict, normalizeDiyanetTimes, PrayerKind } from '@/lib/prayer-times';
 
 export type MonthlyPrayerDay = { date: string; times: Record<PrayerKind, Date> };
 const API = process.env.PRAYER_TIMES_API_URL || 'https://ezanvakti.imsakiyem.com/api';
@@ -15,13 +15,21 @@ export async function resolveDiyanetDistrictId(province: string, district: strin
   type State = { _id: string; name: string };
   type District = { _id: string; name: string };
   const states = await getJson<State[]>(`${API}/locations/states?countryId=2`);
-  const normalize = (value: string) => value.trim().toLocaleUpperCase('tr-TR').replaceAll('İ', 'I');
-  const state = states.find(item => normalize(item.name) === normalize(province));
+  const state = findDiyanetDistrict(states, province);
   if (!state) throw new Error('İl Diyanet kaynağında bulunamadı.');
   const districts = await getJson<District[]>(`${API}/locations/districts?stateId=${state._id}`);
-  const match = districts.find(item => normalize(item.name) === normalize(district));
+  const match = findDiyanetDistrict(districts, district);
   if (!match) throw new Error('İlçe Diyanet kaynağında bulunamadı.');
   return match._id;
+}
+
+export async function getDiyanetDistricts(province: string) {
+  type State = { _id: string; name: string };
+  type District = { _id: string; name: string };
+  const states = await getJson<State[]>(`${API}/locations/states?countryId=2`);
+  const state = findDiyanetDistrict(states, province);
+  if (!state) throw new Error('İl Diyanet kaynağında bulunamadı.');
+  return getJson<District[]>(`${API}/locations/districts?stateId=${state._id}`);
 }
 
 export async function getMonthlyPrayerTimes(districtId: string, year: number, month: number): Promise<MonthlyPrayerDay[]> {
