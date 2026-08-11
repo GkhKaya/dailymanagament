@@ -14,6 +14,7 @@ const MACRO_COLORS = {
   carbs: '#60a5fa',
   protein: '#4ade80',
   fat: '#facc15',
+  sugar: '#f472b6',
   calories: '#fb923c'
 };
 
@@ -25,7 +26,7 @@ interface DBFoodResult {
   food_name: string;
   food_name_en: string | null;
   unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
-  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fiber_g?: number };
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; fiber_g?: number };
   brand_name: string | null;
   source: string;
   provider?: 'gemini' | 'openrouter' | null;
@@ -35,7 +36,7 @@ interface SelectedFood {
   id: string | null;
   name: string;
   unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
-  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number };
 }
 
 interface SessionAddedMeal {
@@ -48,6 +49,7 @@ interface SessionAddedMeal {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  sugar_g: number;
   type: string;
 }
 const MEAL_OPTIONS: { id: MealType; label: string; icon: string }[] = [
@@ -68,6 +70,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     protein, setProtein,
     carbs, setCarbs,
     fat, setFat,
+    sugar, setSugar,
     fatsecretFoodId: foodCacheId, setFatsecretFoodId: setFoodCacheId,
     saveAsRecipe, setSaveAsRecipe,
     savedFoods, recentByType, isLoadingSaved,
@@ -88,6 +91,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
   const [manualProtein, setManualProtein] = useState('');
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
+  const [manualSugar, setManualSugar] = useState('');
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [isOcrReady, setIsOcrReady] = useState(false);
   const [ocrProvider, setOcrProvider] = useState<'gemini' | 'mistral'>('gemini');
@@ -142,6 +146,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
     setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
     setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
+    setSugar((Math.round((p.sugar_g || 0) * qty * 10) / 10).toString());
     setQuantity(qty.toString());
     setServingDescription(`${qty} ${unitType}`);
   }, [amount, selectedFood, unitType]);
@@ -155,7 +160,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
           calories: food.per_unit.calories, 
           protein_g: food.per_unit.protein_g, 
           carbs_g: food.per_unit.carbs_g, 
-          fat_g: food.per_unit.fat_g 
+          fat_g: food.per_unit.fat_g,
+          sugar_g: food.per_unit.sugar_g || 0
       }
     });
     setFoodName(food.food_name);
@@ -199,7 +205,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
         calories: (Number(food.calories) || 0) / qtyCalc,
         protein_g: (Number(food.protein_g) || 0) / qtyCalc,
         carbs_g: (Number(food.carbs_g) || 0) / qtyCalc,
-        fat_g: (Number(food.fat_g) || 0) / qtyCalc
+        fat_g: (Number(food.fat_g) || 0) / qtyCalc,
+        sugar_g: (Number(food.sugar_g) || 0) / qtyCalc
       };
     }
 
@@ -245,6 +252,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       setProtein(data.calculated.protein_g.toString());
       setCarbs(data.calculated.carbs_g.toString());
       setFat(data.calculated.fat_g.toString());
+      setSugar(data.calculated.sugar_g.toString());
       setQuantity(amount);
       setServingDescription(`${amount} ${unitType}`);
       setSearchStep('gemini_result');
@@ -255,8 +263,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
   };
 
   const handleManualSubmit = async () => {
-    if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat) {
-      toast.error('Lütfen kalori, karp, protein ve yağ alanlarını doldurun.');
+    if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat || !manualSugar) {
+      toast.error('Lütfen kalori, karp, protein, yağ ve şeker alanlarını doldurun.');
       return;
     }
     setSearchStep('manual_loading');
@@ -273,7 +281,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
           calories: manualCalories,
           protein_g: manualProtein,
           carbs_g: manualCarbs,
-          fat_g: manualFat
+          fat_g: manualFat,
+          sugar_g: manualSugar
         })
       });
       const data = await res.json();
@@ -294,6 +303,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
       setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
       setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
+      setSugar((Math.round((p.sugar_g || 0) * qty * 10) / 10).toString());
       setQuantity(qty.toString());
       setServingDescription(`${qty} ${unitType}`);
       setSearchStep('gemini_result');
@@ -323,6 +333,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       setManualProtein(String(nutrition.protein_g));
       setManualCarbs(String(nutrition.carbs_g));
       setManualFat(String(nutrition.fat_g));
+      setManualSugar(String(nutrition.sugar_g));
       setUnitType('gram');
       setAmount('100');
       setFoodName(foodName);
@@ -330,6 +341,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       setProtein(String(nutrition.protein_g));
       setCarbs(String(nutrition.carbs_g));
       setFat(String(nutrition.fat_g));
+      setSugar(String(nutrition.sugar_g));
       setQuantity('100');
       setServingDescription('100 gram');
       setFoodCacheId(null);
@@ -353,10 +365,12 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     setProtein('0');
     setCarbs('0');
     setFat('0');
+    setSugar('0');
     setManualCalories('');
     setManualProtein('');
     setManualCarbs('');
     setManualFat('');
+    setManualSugar('');
     setManualBrand('');
     setIsOcrReady(false);
     setSearchStep('idle');
@@ -422,12 +436,14 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     const p = parseFloat(protein) || 0;
     const cb = parseFloat(carbs) || 0;
     const f = parseFloat(fat) || 0;
+    const s = parseFloat(sugar) || 0;
     const total = p * 4 + cb * 4 + f * 9;
     return {
       calories: c,
       protein: p,
       carbs: cb,
       fat: f,
+      sugar: s,
       proteinPct: total > 0 ? Math.round((p * 4 / total) * 100) : 0,
       carbsPct: total > 0 ? Math.round((cb * 4 / total) * 100) : 0,
       fatPct: total > 0 ? Math.round((f * 9 / total) * 100) : 0
@@ -755,7 +771,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 mt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-1">
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-orange-400 font-semibold pl-1">Kalori</label>
                       <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => { setManualCalories(e.target.value); if (isOcrReady) setCalories(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-orange-500" />
@@ -772,13 +788,17 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                       <label className="text-[10px] text-yellow-400 font-semibold pl-1">Yağ (g)</label>
                       <input type="number" min="0" step="0.1" value={manualFat} onChange={e => { setManualFat(e.target.value); if (isOcrReady) setFat(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
                     </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] text-pink-400 font-semibold pl-1">Şeker (g)</label>
+                      <input type="number" min="0" step="0.1" value={manualSugar} onChange={e => { setManualSugar(e.target.value); if (isOcrReady) setSugar(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-pink-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-pink-500" />
+                    </div>
                   </div>
 
                   {!isOcrReady ? (
                     <button
                       type="button"
                       onClick={handleManualSubmit}
-                      disabled={!manualCalories || !manualProtein || !manualCarbs || !manualFat}
+                      disabled={!manualCalories || !manualProtein || !manualCarbs || !manualFat || !manualSugar}
                       className="w-full mt-2 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Veritabanına Kaydet ve Seç
@@ -866,11 +886,12 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                   </div>
 
                   {/* Makro değerler */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { label: 'Karb', value: nutrients.carbs, pct: nutrients.carbsPct, color: MACRO_COLORS.carbs, bg: 'rgba(96,165,250,0.1)' },
                       { label: 'Protein', value: nutrients.protein, pct: nutrients.proteinPct, color: MACRO_COLORS.protein, bg: 'rgba(74,222,128,0.1)' },
-                      { label: 'Yağ', value: nutrients.fat, pct: nutrients.fatPct, color: MACRO_COLORS.fat, bg: 'rgba(250,204,21,0.1)' }
+                      { label: 'Yağ', value: nutrients.fat, pct: nutrients.fatPct, color: MACRO_COLORS.fat, bg: 'rgba(250,204,21,0.1)' },
+                      { label: 'Şeker', value: nutrients.sugar, pct: 0, color: MACRO_COLORS.sugar, bg: 'rgba(244,114,182,0.1)' }
                     ].map(m => (
                       <div key={m.label} className="flex flex-col items-center py-2 rounded-xl" style={{ background: m.bg }}>
                         <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: m.color }}>{m.label}</span>

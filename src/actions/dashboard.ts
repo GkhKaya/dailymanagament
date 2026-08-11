@@ -136,6 +136,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           protein: 0,
           carbs: 0,
           fat: 0,
+          sugar: 0,
           meals: [],
           currentWeight: user?.current_weight_kg || 0,
           weightHistory
@@ -153,11 +154,13 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         let mealProtein = 0;
         let mealCarbs = 0;
         let mealFat = 0;
+        let mealSugar = 0;
         const mappedFoods = foods.map((f: any) => {
           mealCalories += f.nutrition_snapshot.calories;
           mealProtein += f.nutrition_snapshot.protein_g || 0;
           mealCarbs += f.nutrition_snapshot.carbs_g || 0;
           mealFat += f.nutrition_snapshot.fat_g || 0;
+          mealSugar += f.nutrition_snapshot.sugar_g || 0;
           return {
             id: f.entry_id ? f.entry_id.toString() : new mongoose.Types.ObjectId().toString(),
             name: f.food_name,
@@ -166,9 +169,11 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
             protein: f.nutrition_snapshot.protein_g || 0,
             carbs: f.nutrition_snapshot.carbs_g || 0,
             fat: f.nutrition_snapshot.fat_g || 0,
+            sugar: f.nutrition_snapshot.sugar_g || 0,
             protein_g: f.nutrition_snapshot.protein_g || 0,
             carbs_g: f.nutrition_snapshot.carbs_g || 0,
-            fat_g: f.nutrition_snapshot.fat_g || 0
+            fat_g: f.nutrition_snapshot.fat_g || 0,
+            sugar_g: f.nutrition_snapshot.sugar_g || 0
           };
         });
 
@@ -180,6 +185,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           protein: Math.round(mealProtein * 10) / 10,
           carbs: Math.round(mealCarbs * 10) / 10,
           fat: Math.round(mealFat * 10) / 10,
+          sugar: Math.round(mealSugar * 10) / 10,
           foods: mappedFoods
         });
       }
@@ -210,6 +216,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         protein: Math.round(dailyLog.totals.protein_g || 0),
         carbs: Math.round(dailyLog.totals.carbs_g || 0),
         fat: Math.round(dailyLog.totals.fat_g || 0),
+        sugar: Math.round(dailyLog.totals.sugar_g || 0),
         meals,
         currentWeight: user?.current_weight_kg || 0,
         weightHistory

@@ -5,6 +5,7 @@ export interface NutritionAnnotation {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  sugar_g: number;
 }
 
 export const nutritionAnnotationFormat = {
@@ -21,7 +22,8 @@ export const nutritionAnnotationFormat = {
         calories_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına kcal.' },
         protein_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına protein, gram.' },
         carbs_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına karbonhidrat, gram.' },
-        fat_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına yağ, gram.' }
+        fat_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına yağ, gram.' },
+        sugar_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına toplam şekerler, gram. İlave şeker değil.' }
       },
       required: [
         'food_name',
@@ -29,7 +31,8 @@ export const nutritionAnnotationFormat = {
         'calories_per_100g',
         'protein_g_per_100g',
         'carbs_g_per_100g',
-        'fat_g_per_100g'
+        'fat_g_per_100g',
+        'sugar_g_per_100g'
       ]
     }
   }
@@ -77,7 +80,8 @@ export function parseNutritionAnnotation(annotation: unknown): NutritionAnnotati
     calories: toNumber(data.calories_per_100g),
     protein_g: toNumber(data.protein_g_per_100g),
     carbs_g: toNumber(data.carbs_g_per_100g),
-    fat_g: toNumber(data.fat_g_per_100g)
+    fat_g: toNumber(data.fat_g_per_100g),
+    sugar_g: toNumber(data.sugar_g_per_100g)
   };
 
   if (Object.values(values).some((value) => value === null || value < 0)) {
@@ -93,6 +97,7 @@ export function parseNutritionAnnotation(annotation: unknown): NutritionAnnotati
     calories: values.calories as number,
     protein_g: values.protein_g as number,
     carbs_g: values.carbs_g as number,
-    fat_g: values.fat_g as number
+    fat_g: values.fat_g as number,
+    sugar_g: values.sugar_g as number
   };
 }

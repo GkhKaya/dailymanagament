@@ -17,7 +17,8 @@ export interface MealInfo {
   protein?: number;  // Öğün toplam proteini
   carbs?: number;    // Öğün toplam karbonhidratı
   fat?: number;      // Öğün toplam yağı
-  foods?: { id: string; name: string; amount: string; calories: number; protein_g?: number; carbs_g?: number; fat_g?: number }[];
+  sugar?: number;
+  foods?: { id: string; name: string; amount: string; calories: number; protein_g?: number; carbs_g?: number; fat_g?: number; sugar_g?: number }[];
 }
 
 export interface HealthDataDTO {
@@ -33,6 +34,7 @@ export interface HealthDataDTO {
   protein: number;
   carbs: number;
   fat: number;
+  sugar: number;
   meals: MealInfo[];
   currentWeight?: number;
   weightHistory?: { id?: string; date: string; weight: number; note?: string }[];

@@ -43,7 +43,7 @@ async function getUserId() {
 }
 
 // ── MEALS ──
-export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; food_cache_id?: string; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
+export async function addMealAction(data: { date: string; type: string; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; food_cache_id?: string; fatsecret_food_id?: string; save_as_recipe?: boolean }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -59,7 +59,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         sleep: { duration_minutes: 0, calories_burned: 0 },
         exercises: [],
-        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0, sugar_g: 0 }
       });
     }
 
@@ -75,7 +75,8 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,
-        fat_g: data.fat_g
+        fat_g: data.fat_g,
+        sugar_g: data.sugar_g || 0
       }
     };
 
@@ -90,6 +91,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
     log.totals.protein_g += data.protein_g;
     log.totals.carbs_g += data.carbs_g;
     log.totals.fat_g += data.fat_g;
+    log.totals.sugar_g += data.sugar_g || 0;
     
     await log.save();
 
@@ -106,7 +108,8 @@ export async function addMealAction(data: { date: string; type: string; food_nam
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,
-        fat_g: data.fat_g
+        fat_g: data.fat_g,
+        sugar_g: data.sugar_g || 0
       });
     }
 
@@ -118,7 +121,7 @@ export async function addMealAction(data: { date: string; type: string; food_nam
   }
 }
 
-export async function addMealsAction(items: Array<{ date: string; type: 'breakfast' | 'lunch' | 'dinner' | 'snack'; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; food_cache_id?: string }>) {
+export async function addMealsAction(items: Array<{ date: string; type: 'breakfast' | 'lunch' | 'dinner' | 'snack'; food_name: string; serving_description: string; quantity: number; unit_type?: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; food_cache_id?: string }>) {
   try {
     if (items.length === 0) return { success: false, error: 'Eklenecek besin bulunamadı.' };
     await connectDB();
@@ -138,7 +141,7 @@ export async function addMealsAction(items: Array<{ date: string; type: 'breakfa
         meals: { breakfast: [], lunch: [], dinner: [], snack: [] },
         sleep: { duration_minutes: 0, calories_burned: 0 },
         exercises: [],
-        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+        totals: { calories_consumed: 0, calories_burned_exercise: 0, calories_burned_sleep: 0, protein_g: 0, carbs_g: 0, fat_g: 0, sugar_g: 0 }
       });
     }
 
@@ -154,7 +157,8 @@ export async function addMealsAction(items: Array<{ date: string; type: 'breakfa
         calories: item.calories,
         protein_g: item.protein_g,
         carbs_g: item.carbs_g,
-        fat_g: item.fat_g
+        fat_g: item.fat_g,
+        sugar_g: item.sugar_g || 0
       }
     }));
 
@@ -163,6 +167,7 @@ export async function addMealsAction(items: Array<{ date: string; type: 'breakfa
     log.totals.protein_g += items.reduce((sum, item) => sum + item.protein_g, 0);
     log.totals.carbs_g += items.reduce((sum, item) => sum + item.carbs_g, 0);
     log.totals.fat_g += items.reduce((sum, item) => sum + item.fat_g, 0);
+    log.totals.sugar_g += items.reduce((sum, item) => sum + (item.sugar_g || 0), 0);
     await log.save();
 
     return { success: true, entry_ids: foods.map((food) => food.entry_id.toString()) };
@@ -172,7 +177,7 @@ export async function addMealsAction(items: Array<{ date: string; type: 'breakfa
   }
 }
 
-export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; }) {
+export async function updateMealAction(data: { date: string; entry_id: string; type: string; old_type: string; food_name: string; serving_description: string; calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -183,7 +188,7 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     if (!log) return { success: false, error: "Günlük kayıt bulunamadı." };
 
     let foundFood = null;
-    let oldCal = 0, oldProt = 0, oldCarb = 0, oldFat = 0;
+    let oldCal = 0, oldProt = 0, oldCarb = 0, oldFat = 0, oldSugar = 0;
 
     // Find and remove from old type array
     const oldType = data.old_type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -195,6 +200,7 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
         oldProt = foundFood.nutrition_snapshot.protein_g;
         oldCarb = foundFood.nutrition_snapshot.carbs_g;
         oldFat = foundFood.nutrition_snapshot.fat_g;
+        oldSugar = foundFood.nutrition_snapshot.sugar_g || 0;
         log.meals[oldType].splice(idx, 1);
       }
     }
@@ -208,6 +214,7 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     foundFood.nutrition_snapshot.protein_g = data.protein_g;
     foundFood.nutrition_snapshot.carbs_g = data.carbs_g;
     foundFood.nutrition_snapshot.fat_g = data.fat_g;
+    foundFood.nutrition_snapshot.sugar_g = data.sugar_g ?? oldSugar;
 
     // Push to new type array
     const newType = data.type as 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -218,6 +225,7 @@ export async function updateMealAction(data: { date: string; entry_id: string; t
     log.totals.protein_g += (data.protein_g - oldProt);
     log.totals.carbs_g += (data.carbs_g - oldCarb);
     log.totals.fat_g += (data.fat_g - oldFat);
+    log.totals.sugar_g += ((data.sugar_g ?? oldSugar) - oldSugar);
 
     await log.save();
     return { success: true };
@@ -251,6 +259,7 @@ export async function deleteMealAction(data: { date: string; entry_id: string; t
     log.totals.protein_g -= oldFood.nutrition_snapshot.protein_g;
     log.totals.carbs_g -= oldFood.nutrition_snapshot.carbs_g;
     log.totals.fat_g -= oldFood.nutrition_snapshot.fat_g;
+    log.totals.sugar_g -= oldFood.nutrition_snapshot.sugar_g || 0;
 
     // Remove from array
     log.meals[type].splice(idx, 1);
@@ -446,6 +455,7 @@ export async function getSavedFoodsAction() {
               protein_g: m.nutrition_snapshot?.protein_g ?? 0,
               carbs_g: m.nutrition_snapshot?.carbs_g ?? 0,
               fat_g: m.nutrition_snapshot?.fat_g ?? 0,
+              sugar_g: m.nutrition_snapshot?.sugar_g ?? 0,
               quantity: m.quantity ?? 1,
               unit_type: detectedUnit,
               serving_description: m.serving_description,
@@ -472,6 +482,7 @@ export async function getSavedFoodsAction() {
       protein_g: s.protein_g ?? 0,
       carbs_g: s.carbs_g ?? 0,
       fat_g: s.fat_g ?? 0,
+      sugar_g: s.sugar_g ?? 0,
       quantity: s.quantity ?? 1,
       unit_type: s.unit_type || (s.serving_description?.toLowerCase().includes('adet') || s.serving_description?.toLowerCase().includes('porsiyon') ? 'adet' : 'gram'),
       serving_description: s.serving_description,

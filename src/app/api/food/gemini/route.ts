@@ -20,6 +20,7 @@ interface NutritionResult {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
     fiber_g: number;
   };
   calculated: {
@@ -27,6 +28,7 @@ interface NutritionResult {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
   };
 }
 
@@ -54,7 +56,8 @@ function calculateNutrition(perUnit: NutritionResult['per_unit'], amount: number
     calories: Math.round(perUnit.calories * amount),
     protein_g: Math.round(perUnit.protein_g * amount * 10) / 10,
     carbs_g: Math.round(perUnit.carbs_g * amount * 10) / 10,
-    fat_g: Math.round(perUnit.fat_g * amount * 10) / 10
+    fat_g: Math.round(perUnit.fat_g * amount * 10) / 10,
+    sugar_g: Math.round(perUnit.sugar_g * amount * 10) / 10
   };
 }
 
@@ -64,6 +67,7 @@ function buildResult(payload: Record<string, unknown>, foodName: string, amount:
     protein_g: normalizeNumber(payload.per_unit_protein_g),
     carbs_g: normalizeNumber(payload.per_unit_carbs_g),
     fat_g: normalizeNumber(payload.per_unit_fat_g),
+    sugar_g: normalizeNumber(payload.per_unit_sugar_g),
     fiber_g: normalizeNumber(payload.per_unit_fiber_g)
   };
 
@@ -86,6 +90,7 @@ function foodSchema(unit: UnitType) {
       per_unit_protein_g: { type: Type.NUMBER, minimum: 0 },
       per_unit_carbs_g: { type: Type.NUMBER, minimum: 0 },
       per_unit_fat_g: { type: Type.NUMBER, minimum: 0 },
+      per_unit_sugar_g: { type: Type.NUMBER, minimum: 0 },
       per_unit_fiber_g: { type: Type.NUMBER, minimum: 0 }
     },
     required: [
@@ -95,6 +100,7 @@ function foodSchema(unit: UnitType) {
       'per_unit_protein_g',
       'per_unit_carbs_g',
       'per_unit_fat_g',
+      'per_unit_sugar_g',
       'per_unit_fiber_g'
     ],
     propertyOrdering: [
@@ -104,6 +110,7 @@ function foodSchema(unit: UnitType) {
       'per_unit_protein_g',
       'per_unit_carbs_g',
       'per_unit_fat_g',
+      'per_unit_sugar_g',
       'per_unit_fiber_g'
     ],
     description: unit === 'gram' ? 'All nutrition values must be per 1 gram.' : `All nutrition values must be per 1 ${unit}.`
@@ -120,6 +127,7 @@ Birim: Değerler ${basis} için olmalı.
 - Türk mutfağına özgü yemekler için pişmiş/hazır hali baz al
 - Çorba, pilav, yemek gibi ürünler için pişmiş ağırlık baz al
 - Marka belirsizse genel/ev yapımı değerini kullan
+- Toplam şeker değerini per_unit_sugar_g alanına yaz; ilave şeker değil, toplam şeker olmalı
 - food_name_tr alanına en yaygın Türkçe adı yaz
 - food_name_en alanına İngilizce karşılığını yaz`;
 }
@@ -204,6 +212,7 @@ export async function POST(request: Request) {
         protein_g: existing.per_unit.protein_g,
         carbs_g: existing.per_unit.carbs_g,
         fat_g: existing.per_unit.fat_g,
+        sugar_g: existing.per_unit.sugar_g || 0,
         fiber_g: existing.per_unit.fiber_g || 0
       };
       return NextResponse.json({

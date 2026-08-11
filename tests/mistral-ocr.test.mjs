@@ -9,7 +9,8 @@ test('parses valid Turkish label nutrition values as per-100g fields', () => {
     calories_per_100g: '389',
     protein_g_per_100g: '13.2',
     carbs_g_per_100g: '66,3',
-    fat_g_per_100g: '6.5'
+    fat_g_per_100g: '6.5',
+    sugar_g_per_100g: '1,0'
   }));
 
   assert.deepEqual(result, {
@@ -18,7 +19,8 @@ test('parses valid Turkish label nutrition values as per-100g fields', () => {
     calories: 389,
     protein_g: 13.2,
     carbs_g: 66.3,
-    fat_g: 6.5
+    fat_g: 6.5,
+    sugar_g: 1
   });
 });
 
@@ -29,7 +31,8 @@ test('rejects incomplete or negative nutrition annotation', () => {
       calories_per_100g: 100,
       protein_g_per_100g: -1,
       carbs_g_per_100g: 10,
-      fat_g_per_100g: 2
+      fat_g_per_100g: 2,
+      sugar_g_per_100g: 1
     })),
     /geçerli/i
   );
@@ -43,7 +46,8 @@ test('rejects an OCR result when every nutrition value is zero', () => {
       calories_per_100g: 0,
       protein_g_per_100g: 0,
       carbs_g_per_100g: 0,
-      fat_g_per_100g: 0
+      fat_g_per_100g: 0,
+      sugar_g_per_100g: 0
     })),
     /okunamadı/i
   );
@@ -54,9 +58,10 @@ test('accepts valid nutrition values when the OCR cannot identify the product na
     food_name: null,
     brand_name: null,
     calories_per_100g: 240,
-    protein_g_per_100g: 0,
-    carbs_g_per_100g: 60,
-    fat_g_per_100g: 0
+      protein_g_per_100g: 0,
+      carbs_g_per_100g: 60,
+      fat_g_per_100g: 0,
+      sugar_g_per_100g: 0
   }));
 
   assert.deepEqual(result, {
@@ -65,7 +70,8 @@ test('accepts valid nutrition values when the OCR cannot identify the product na
     calories: 240,
     protein_g: 0,
     carbs_g: 60,
-    fat_g: 0
+    fat_g: 0,
+    sugar_g: 0
   });
 });
 
@@ -89,6 +95,7 @@ test('defines the strict JSON schema required for nutrition label annotations', 
     'calories_per_100g',
     'protein_g_per_100g',
     'carbs_g_per_100g',
-    'fat_g_per_100g'
+    'fat_g_per_100g',
+    'sugar_g_per_100g'
   ]);
 });

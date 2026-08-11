@@ -10,6 +10,7 @@ test('uses the stable Gemini Flash model for food-label vision', () => {
     'calories_per_100g',
     'protein_g_per_100g',
     'carbs_g_per_100g',
-    'fat_g_per_100g'
+    'fat_g_per_100g',
+    'sugar_g_per_100g'
   ]);
 });

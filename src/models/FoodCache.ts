@@ -10,6 +10,7 @@ export interface IFoodCache extends Document {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
     fiber_g?: number;
   };
   brand_name?: string;        // Markalı ürünler için
@@ -31,6 +32,7 @@ const FoodCacheSchema: Schema = new Schema({
     protein_g: { type: Number, required: true },
     carbs_g: { type: Number, required: true },
     fat_g: { type: Number, required: true },
+    sugar_g: { type: Number, default: 0 },
     fiber_g: { type: Number, default: null }
   },
   brand_name: { type: String, default: null },

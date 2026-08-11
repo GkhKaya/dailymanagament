@@ -15,6 +15,7 @@ export interface IFoodEntry {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g?: number;
     fiber_g?: number;
     sodium_mg?: number;
   };
@@ -51,6 +52,7 @@ export interface IDailyLog extends Document {
     protein_g: number;
     carbs_g: number;
     fat_g: number;
+    sugar_g: number;
   };
   created_at: Date;
   updated_at: Date;
@@ -70,6 +72,7 @@ const FoodEntrySchema = new Schema({
     protein_g: { type: Number, required: true },
     carbs_g: { type: Number, required: true },
     fat_g: { type: Number, required: true },
+    sugar_g: { type: Number, default: 0 },
     fiber_g: { type: Number },
     sodium_mg: { type: Number }
   },
@@ -106,7 +109,8 @@ const DailyLogSchema: Schema = new Schema({
     calories_burned_bmr: { type: Number, default: 0 },
     protein_g: { type: Number, default: 0 },
     carbs_g: { type: Number, default: 0 },
-    fat_g: { type: Number, default: 0 }
+    fat_g: { type: Number, default: 0 },
+    sugar_g: { type: Number, default: 0 }
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

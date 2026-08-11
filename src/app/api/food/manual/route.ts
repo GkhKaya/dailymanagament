@@ -14,7 +14,8 @@ export async function POST(req: Request) {
       calories,
       protein_g,
       carbs_g,
-      fat_g
+      fat_g,
+      sugar_g
     } = body;
 
     if (!food_name || food_name.trim() === '') {
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
     const prot = parseFloat(protein_g) || 0;
     const carbs = parseFloat(carbs_g) || 0;
     const fat = parseFloat(fat_g) || 0;
+    const sugar = parseFloat(sugar_g) || 0;
 
     // Unit type is 'gram' or 'adet'
     // For 'gram', per_unit is per 1 gram (so divide 100g values by 100 if user entered per 100g or per 1 unit)
@@ -37,7 +39,8 @@ export async function POST(req: Request) {
       calories: Math.max(0, cal / divisor),
       protein_g: Math.max(0, prot / divisor),
       carbs_g: Math.max(0, carbs / divisor),
-      fat_g: Math.max(0, fat / divisor)
+      fat_g: Math.max(0, fat / divisor),
+      sugar_g: Math.max(0, sugar / divisor)
     };
 
     const trimmedName = food_name.trim();

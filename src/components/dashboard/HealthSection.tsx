@@ -137,6 +137,12 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <span className="text-caption text-[var(--on-surface-variant)]">15%</span>
           </div>
         </div>
+        <div className="flex flex-col">
+          <span className="text-caption text-pink-300">ŞEKER</span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-headline text-white">{data.sugar || 0}g</span>
+          </div>
+        </div>
         
         {/* Right Aligned Health Blocks */}
         <div className="flex items-center gap-[var(--space-4)] md:ml-auto w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[rgba(255,255,255,0.1)]">
@@ -227,6 +233,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                     <span className="text-caption" style={{ color: '#60a5fa' }}>K: {meal.carbs !== undefined ? `${meal.carbs}g` : `${Math.round(meal.calories * 0.1)}g`}</span>
                     <span className="text-caption" style={{ color: '#8ec13b' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
                     <span className="text-caption" style={{ color: '#facc15' }}>Y: {meal.fat !== undefined ? `${meal.fat}g` : `${Math.round(meal.calories * 0.03)}g`}</span>
+                    <span className="text-caption" style={{ color: '#f472b6' }}>Ş: {meal.sugar !== undefined ? `${meal.sugar}g` : '0g'}</span>
                   </div>
                 </div>
 
@@ -246,6 +253,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                             <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
                             <span className="text-[11px]" style={{ color: '#8ec13b' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
                             <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
+                            <span className="text-[11px]" style={{ color: '#f472b6' }}>Ş:{food.sugar_g ?? (food as any).sugar ?? 0}g</span>
                           </span>
                         </div>
                         <div className="flex items-baseline gap-1">
