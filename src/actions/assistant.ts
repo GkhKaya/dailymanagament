@@ -111,7 +111,7 @@ async function parseVoiceCommand(text: string) {
   if (!apiKey) throw new Error('GEMINI_API_KEY tanımlı değil.');
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.1-flash-lite',
     contents: `Türkçe kişisel finans ve yemek günlüğü komutunu JSON'a çevir.
 Finans için yalnız söylenen bilgileri çıkar. Bilinmeyen hesabı veya kategoriyi uydurma.
 Yemek için gram söylendiyse quantity gerçek gram sayısı, nutrition_basis per_gram, nutrition değerleri 1 gram için olmalı.

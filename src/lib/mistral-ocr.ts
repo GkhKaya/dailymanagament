@@ -7,6 +7,50 @@ export interface NutritionAnnotation {
   fat_g: number;
 }
 
+export const nutritionAnnotationFormat = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'nutrition_label',
+    strict: true,
+    schema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        food_name: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'Ürünün etikette yazan adı.' },
+        brand_name: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'Ürünün markası.' },
+        calories_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına kcal.' },
+        protein_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına protein, gram.' },
+        carbs_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına karbonhidrat, gram.' },
+        fat_g_per_100g: { anyOf: [{ type: 'number' }, { type: 'null' }], description: '100 gram başına yağ, gram.' }
+      },
+      required: [
+        'food_name',
+        'brand_name',
+        'calories_per_100g',
+        'protein_g_per_100g',
+        'carbs_g_per_100g',
+        'fat_g_per_100g'
+      ]
+    }
+  }
+} as const;
+
+export function extractMistralErrorMessage(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const data = payload as Record<string, unknown>;
+  if (typeof data.message === 'string' && data.message.trim()) return data.message.trim();
+  if (typeof data.detail === 'string' && data.detail.trim()) return data.detail.trim();
+  if (data.error && typeof data.error === 'object') {
+    const error = data.error as Record<string, unknown>;
+    if (typeof error.message === 'string' && error.message.trim()) return error.message.trim();
+  }
+  return null;
+}
+
+export function resolveFoodName(existingName: string, detectedName: string): string {
+  return existingName.trim() || detectedName.trim();
+}
+
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value !== 'string') return null;
@@ -36,8 +80,11 @@ export function parseNutritionAnnotation(annotation: unknown): NutritionAnnotati
     fat_g: toNumber(data.fat_g_per_100g)
   };
 
-  if (!foodName || Object.values(values).some((value) => value === null || value < 0)) {
+  if (Object.values(values).some((value) => value === null || value < 0)) {
     throw new Error('Etikette geçerli 100 g besin değerleri bulunamadı.');
+  }
+  if (Object.values(values).every((value) => value === 0)) {
+    throw new Error('Etikette besin değerleri okunamadı. Daha net bir etiket fotoğrafı deneyin.');
   }
 
   return {

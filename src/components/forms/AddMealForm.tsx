@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { deleteMealAction } from '@/actions/health';
 import toast from 'react-hot-toast';
 import { t } from '@/lib/i18n';
+import { resolveFoodName } from '@/lib/mistral-ocr';
 
 // Makro renk kodları
 const MACRO_COLORS = {
@@ -89,6 +90,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
   const [manualFat, setManualFat] = useState('');
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [isOcrReady, setIsOcrReady] = useState(false);
+  const [ocrProvider, setOcrProvider] = useState<'gemini' | 'mistral'>('gemini');
   const searchRef = useRef<HTMLInputElement>(null);
   const ocrInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -308,12 +310,14 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     try {
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('provider', ocrProvider);
       const res = await fetch('/api/food/ocr', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Etiket okunamadı.');
 
       const nutrition = data.nutrition;
-      setSearchQuery(nutrition.food_name);
+      const foodName = resolveFoodName(searchQuery, nutrition.food_name);
+      setSearchQuery(foodName);
       setManualBrand(nutrition.brand_name || '');
       setManualCalories(String(nutrition.calories));
       setManualProtein(String(nutrition.protein_g));
@@ -321,7 +325,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       setManualFat(String(nutrition.fat_g));
       setUnitType('gram');
       setAmount('100');
-      setFoodName(nutrition.food_name);
+      setFoodName(foodName);
       setCalories(String(nutrition.calories));
       setProtein(String(nutrition.protein_g));
       setCarbs(String(nutrition.carbs_g));
@@ -698,6 +702,16 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                     className="hidden"
                     onChange={(event) => handleLabelImage(event.target.files?.[0])}
                   />
+                  <select
+                    value={ocrProvider}
+                    onChange={(event) => setOcrProvider(event.target.value as 'gemini' | 'mistral')}
+                    disabled={isOcrLoading}
+                    className="min-h-[44px] w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[#1A1A26] px-3 text-sm text-white disabled:opacity-60"
+                    aria-label="OCR sağlayıcısı"
+                  >
+                    <option value="gemini">Gemini Vision (Önerilen)</option>
+                    <option value="mistral">Mistral OCR</option>
+                  </select>
                   <button
                     type="button"
                     onClick={() => ocrInputRef.current?.click()}
@@ -706,7 +720,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                     aria-label={t('forms.foodLabelOcr')}
                   >
                     {isOcrLoading ? <Loader2 size={17} className="animate-spin" /> : <Camera size={17} />}
-                    {isOcrLoading ? t('forms.foodLabelOcrReading') : t('forms.foodLabelOcr')}
+                    {isOcrLoading ? t('forms.foodLabelOcrReading') : `${ocrProvider === 'gemini' ? 'Gemini Vision' : 'Mistral OCR'} ile oku`}
                   </button>
                   <span className="text-center text-[11px] text-[var(--on-surface-variant)]">{t('forms.foodLabelOcrHint')}</span>
                   
