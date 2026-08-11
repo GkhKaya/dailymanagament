@@ -60,8 +60,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
           </div>
           
           <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
-            <button type="button" onClick={() => setIsPdfModalOpen(true)} className="min-h-11 shrink-0 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20" title="PDF raporu al">
-              <Download className="inline-block mr-1.5" size={15} />PDF
+            <button type="button" onClick={() => setIsPdfModalOpen(true)} className="min-h-11 shrink-0 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 px-3.5 text-xs font-bold text-white transition-colors hover:bg-[#8ec13b]/25 flex items-center justify-center gap-1.5" title="PDF raporu al">
+              <Download size={15} className="text-white" />
+              <span>PDF</span>
             </button>
           <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
             {[
@@ -103,9 +104,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-[#4ade80]">
+        <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-[#8ec13b]">
           <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Toplam Gelir</span>
-          <span className="text-xl font-bold text-[#4ade80]">{fmt(totalIncome)}</span>
+          <span className="text-xl font-bold text-[#8ec13b]">{fmt(totalIncome)}</span>
         </div>
         <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-white">
           <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Toplam Gider</span>
@@ -156,7 +157,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="income" name="Gelir" fill="#4ade80" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" name="Gelir" fill="#8ec13b" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="expense" name="Gider" fill="#c0c1ff" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

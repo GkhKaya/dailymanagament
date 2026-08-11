@@ -117,7 +117,7 @@ export function DashboardView() {
             <button 
               onClick={() => router.push('/profile')}
               aria-label="Profil ve ayarlar"
-              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-black transition-colors"
+              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
             >
               <User size={16} />
             </button>
@@ -139,7 +139,7 @@ export function DashboardView() {
                 aria-pressed={mode === 'overview'}
                 onClick={() => setMode('overview')}
                 className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
-                  mode === 'overview' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                  mode === 'overview' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
                 Genel bakış
@@ -148,7 +148,7 @@ export function DashboardView() {
                 aria-pressed={mode === 'health'}
                 onClick={() => setMode('health')}
                 className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
-                  mode === 'health' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                  mode === 'health' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
                 Sağlık
@@ -157,7 +157,7 @@ export function DashboardView() {
                 aria-pressed={mode === 'finance'}
                 onClick={() => setMode('finance')}
                 className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
-                  mode === 'finance' ? 'bg-[var(--primary)] text-black shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                  mode === 'finance' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
                 Finans

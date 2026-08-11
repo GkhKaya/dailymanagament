@@ -42,8 +42,8 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-hero text-white tracking-tight">Finansal Durum</h2>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => setIsPdfModalOpen(true)} aria-label="Finans raporunu PDF olarak indir" title="PDF raporu indir" className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 transition-colors hover:bg-emerald-500/20">
-            <Download size={17} />
+          <button type="button" onClick={() => setIsPdfModalOpen(true)} aria-label="Finans raporunu PDF olarak indir" title="PDF raporu indir" className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#8ec13b]/15 border border-[#8ec13b]/20 text-white transition-colors hover:bg-[#8ec13b]/25">
+            <Download size={17} className="text-white" />
           </button>
           {!isOverview && (
             <button type="button" onClick={onShowAnalysis} aria-label="Detaylı finans analizi" className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
@@ -106,7 +106,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
             <h3 className="text-caption text-[var(--on-surface-variant)]">İŞLEM GEÇMİŞİ</h3>
             <button 
               onClick={() => onOpenSheet && onOpenSheet('transaction')}
-              className="w-5 h-5 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-black transition-colors"
+              className="w-5 h-5 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
             >
               <Plus size={12} />
             </button>

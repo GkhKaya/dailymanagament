@@ -53,7 +53,7 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
           className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
         >
           <span className="font-medium text-sm">{t("dashboard.fab.addMeal")}</span>
-          <div className="w-8 h-8 rounded-full bg-[rgba(33,196,93,0.3)] flex items-center justify-center text-[#4ade80]">
+          <div className="w-8 h-8 rounded-full bg-[rgba(142,193,59,0.3)] flex items-center justify-center text-[#8ec13b]">
             <Utensils size={16} />
           </div>
         </button>

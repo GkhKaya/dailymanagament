@@ -9,7 +9,7 @@ export const Alert = {
         border: '1px solid rgba(255,255,255,0.1)',
       },
       iconTheme: {
-        primary: '#4ade80',
+        primary: '#8ec13b',
         secondary: '#1a1a1a',
       },
     });

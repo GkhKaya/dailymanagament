@@ -371,7 +371,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </label>
                   <button
                     onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
-                    className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-black transition-colors flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-white transition-colors flex items-center gap-1.5"
                   >
                     <Plus size={14} /> + Gün / Program Ekle
                   </button>
@@ -389,7 +389,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </div>
                   <button
                     onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
-                    className="mt-1 px-4 py-2 bg-[var(--primary)] text-black font-bold text-xs rounded-lg hover:bg-[var(--primary-hover)] transition-all"
+                    className="mt-1 px-4 py-2 bg-[var(--primary)] text-white font-bold text-xs rounded-lg hover:bg-[var(--primary-hover)] transition-all"
                   >
                     + Antrenman Programı Ekle
                   </button>
@@ -562,7 +562,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
           <button
             onClick={handlePasteJSONSubmit}
             disabled={!jsonText.trim()}
-            className="w-full py-3 bg-[var(--primary)] text-black rounded-xl font-bold text-sm hover:bg-[var(--primary-hover)] transition-all disabled:opacity-50"
+            className="w-full py-3 bg-[var(--primary)] text-white rounded-xl font-bold text-sm hover:bg-[var(--primary-hover)] transition-all disabled:opacity-50"
           >
             JSON Kaydet
           </button>

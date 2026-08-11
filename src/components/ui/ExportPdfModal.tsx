@@ -79,7 +79,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
       <div role="dialog" aria-modal="true" aria-labelledby="pdf-export-title" className="relative z-10 flex w-full max-w-md flex-col gap-5 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[var(--surface-container)] p-5 shadow-2xl sm:p-6">
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400"><CalendarRange size={21} /></div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]"><CalendarRange size={21} /></div>
             <div>
               <h3 id="pdf-export-title" className="text-base font-bold text-white">{title} İndir</h3>
               <p className="text-xs text-[var(--on-surface-variant)]">{isFinance ? 'İki tarih arasındaki kayıtları seçin.' : 'Rapor formatını seçin.'}</p>
@@ -99,8 +99,8 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
               const Icon = option.icon;
               const active = selectedType === option.id;
               return (
-                <button key={option.id} type="button" onClick={() => setSelectedType(option.id as typeof selectedType)} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-colors ${active ? 'border-emerald-400 bg-emerald-500/15 text-white' : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'}`}>
-                  <Icon size={17} className={active ? 'text-emerald-400' : ''} />
+                <button key={option.id} type="button" onClick={() => setSelectedType(option.id as typeof selectedType)} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-colors ${active ? 'border-[var(--primary)] bg-[var(--primary)]/15 text-white' : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'}`}>
+                  <Icon size={17} className={active ? 'text-[var(--primary)]' : ''} />
                   {option.label}
                 </button>
               );
@@ -111,11 +111,11 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
         {isRange && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-2 text-sm font-medium text-white">
             Başlangıç tarihi
-            <input type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="min-h-11 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white [color-scheme:dark] focus:border-emerald-400 focus:outline-none" />
+            <input type="date" value={startDate} max={endDate} onChange={(event) => setStartDate(event.target.value)} className="min-h-11 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white [color-scheme:dark] focus:border-[var(--primary)] focus:outline-none" />
           </label>
           <label className="flex flex-col gap-2 text-sm font-medium text-white">
             Bitiş tarihi
-            <input type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="min-h-11 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white [color-scheme:dark] focus:border-emerald-400 focus:outline-none" />
+            <input type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="min-h-11 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white [color-scheme:dark] focus:border-[var(--primary)] focus:outline-none" />
           </label>
         </div>}
 
@@ -125,7 +125,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
 
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} className="min-h-11 rounded-xl px-4 text-sm font-semibold text-[var(--on-surface-variant)] hover:bg-white/5 hover:text-white">İptal</button>
-          <button type="button" onClick={handleExport} disabled={isLoading} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={handleExport} disabled={isLoading} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50">
             <Download size={16} /> {isLoading ? 'PDF hazırlanıyor...' : 'PDF indir'}
           </button>
         </div>

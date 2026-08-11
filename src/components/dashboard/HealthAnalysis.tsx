@@ -53,10 +53,10 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
           <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
             <button
               onClick={() => setIsPdfModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold transition-all border border-emerald-500/20 shrink-0"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-white text-xs font-bold transition-all shrink-0"
               title="PDF Raporu Al"
             >
-              <Download size={15} />
+              <Download size={15} className="text-white" />
               <span>PDF Raporu</span>
             </button>
             <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl shrink-0">
@@ -111,7 +111,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 <Line type="monotone" dataKey="consumed" name="Alınan (kcal)" stroke="#c0c1ff" strokeWidth={3} dot={{ r: 4, fill: '#c0c1ff', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="burned" name="Yakılan (kcal)" stroke="#4ade80" strokeWidth={3} dot={{ r: 4, fill: '#4ade80', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="burned" name="Yakılan (kcal)" stroke="#8ec13b" strokeWidth={3} dot={{ r: 4, fill: '#8ec13b', strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

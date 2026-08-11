@@ -62,10 +62,10 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           <button 
             onClick={() => setIsPdfModalOpen(true)} 
             aria-label="Beslenme raporunu PDF olarak indir"
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors"
+            className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-white transition-colors"
             title="PDF Raporu İndir"
           >
-            <Download size={16} />
+            <Download size={16} className="text-white" />
           </button>
         </div>
       </div>
@@ -190,7 +190,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           <button 
             onClick={() => onOpenSheet && onOpenSheet('meal')}
             aria-label="Öğün ekle"
-            className="min-h-11 min-w-11 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-black transition-colors"
+            className="min-h-11 min-w-11 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
           >
             <Plus size={14} />
           </button>
@@ -225,7 +225,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                   {/* Real macro breakdown from actual data */}
                   <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
                     <span className="text-caption" style={{ color: '#60a5fa' }}>K: {meal.carbs !== undefined ? `${meal.carbs}g` : `${Math.round(meal.calories * 0.1)}g`}</span>
-                    <span className="text-caption" style={{ color: '#4ade80' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
+                    <span className="text-caption" style={{ color: '#8ec13b' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
                     <span className="text-caption" style={{ color: '#facc15' }}>Y: {meal.fat !== undefined ? `${meal.fat}g` : `${Math.round(meal.calories * 0.03)}g`}</span>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                           <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
                             <span>{food.amount}</span>
                             <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
-                            <span className="text-[11px]" style={{ color: '#4ade80' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
+                            <span className="text-[11px]" style={{ color: '#8ec13b' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
                             <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
                           </span>
                         </div>

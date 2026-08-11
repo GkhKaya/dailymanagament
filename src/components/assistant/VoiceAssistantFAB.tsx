@@ -188,7 +188,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
               </label>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setFinanceDraft(null)} className="flex-1 py-2 rounded-lg bg-white/5 text-white">İptal</button>
-                <button type="button" disabled={isProcessing || !financeDraft.account_id || !financeDraft.category_id || financeDraft.amount <= 0} onClick={handleConfirmFinance} className="flex-1 py-2 rounded-lg bg-[var(--primary)] text-black font-semibold disabled:opacity-40">Onayla</button>
+                <button type="button" disabled={isProcessing || !financeDraft.account_id || !financeDraft.category_id || financeDraft.amount <= 0} onClick={handleConfirmFinance} className="flex-1 py-2 rounded-lg bg-[var(--primary)] text-white font-semibold disabled:opacity-40">Onayla</button>
               </div>
             </div>
           ) : (
@@ -236,9 +236,9 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
            if (!isOpen && !isListening) setIsOpen(true);
            toggleListening();
         }}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--primary)] text-black'}`}
+        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-[var(--primary)] text-white'}`}
       >
-        {isProcessing ? <Loader2 className="animate-spin" size={24} /> : <Mic size={24} />}
+        {isProcessing ? <Loader2 className="animate-spin text-white" size={24} /> : <Mic className="text-white" size={24} />}
       </button>
     </div>
   );

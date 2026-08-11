@@ -5,9 +5,9 @@
   --background:            #09090b; /* Deep black */
   --on-surface:            #ffffff; /* Stark white */
   --on-surface-variant:    #a1a1aa; /* Zinc-400 / Gray */
-  --primary:               #4ade80; /* Neon Green */
-  --primary-hover:         #22c55e;
-  --inverse-primary:       #22c55e;
+  --primary:               #8ec13b; /* Lime Green */
+  --primary-hover:         #79aa32;
+  --inverse-primary:       #79aa32;
   --color-info:            #60a5fa;
   --color-warning:         #facc15;
   --color-sleep:           #818cf8;
@@ -17,7 +17,7 @@
   --outline:               #27272a; /* Subtle borders */
   
   --color-expense:         #ffffff; /* White for expenses */
-  --color-income:          #4ade80; /* Green for income */
+  --color-income:          #8ec13b; /* Green for income */
 
   /* ── Radii ── */
   --radius-btn:   9999px;
@@ -246,7 +246,7 @@ textarea {
 /* ── Primary button ── */
 .btn-primary {
   background-color: var(--primary);
-  color:            #000;
+  color:            #ffffff;
   height:           var(--size-btn-h);
   font-size:        var(--font-btn-size);
   font-weight:      var(--font-btn-weight);
