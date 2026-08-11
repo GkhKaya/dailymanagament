@@ -14,7 +14,8 @@ export function LoginView() {
       <div className="flex flex-1 items-center justify-center md:justify-end px-8 py-12 md:pl-16 md:pr-24">
 
         {/* Mobil logo */}
-        <div className="md:hidden absolute top-8 w-full text-center animate-slide-up">
+        <div className="md:hidden absolute top-8 w-full flex items-center justify-center gap-2 animate-slide-up">
+          <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" />
           <h1 className="text-logo" style={{ color: "var(--on-surface)" }}>
             {t("home.logo")}
           </h1>

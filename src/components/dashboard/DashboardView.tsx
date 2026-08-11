@@ -77,7 +77,8 @@ export function DashboardView() {
         <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0)] bg-transparent backdrop-blur-xl sticky top-0 z-30">
           <div className="flex items-center gap-[var(--space-6)]">
             {/* Logo & Brand */}
-            <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-[var(--space-2)] cursor-pointer" onClick={() => setMode('overview')}>
+            <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setMode('overview')}>
+              <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" width={32} height={32} style={{ maxHeight: "32px" }} />
               <span className="text-xl font-bold tracking-tight text-white">Daily<span className="text-[var(--primary)]">M</span></span>
             </button>
 

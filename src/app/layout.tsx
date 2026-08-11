@@ -1,12 +1,36 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import type { Viewport } from "next";
+
 export const metadata: Metadata = {
   title: {
     template: "%s | DailyM",
     default: "DailyM - Kişisel Yönetim Asistanınız",
   },
   description: "Kişisel hedeflerinizi, finansınızı ve sağlığınızı tek bir yerden yönetin.",
+  icons: {
+    icon: [
+      { url: "/assets/logo.svg", type: "image/svg+xml" },
+      { url: "/assets/logo.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/assets/logo.png",
+    apple: [
+      { url: "/assets/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DailyM",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0c0c14",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 import { Toaster } from 'react-hot-toast';

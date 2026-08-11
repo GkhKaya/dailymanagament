@@ -37,9 +37,12 @@ export function HeroPanel() {
     <div className="hidden md:flex flex-col justify-between flex-1 px-[var(--space-8)] py-[var(--space-8)] relative overflow-hidden">
       
       {/* Logo — top */}
-      <h1 className="text-logo text-[var(--primary)] animate-slide-up z-10">
-        {t("home.logo")}
-      </h1>
+      <div className="flex items-center gap-3 animate-slide-up z-10">
+        <img src="/assets/logo.svg" alt="DailyM" className="h-10 w-auto object-contain" width={40} height={40} style={{ maxHeight: "40px" }} />
+        <h1 className="text-logo text-[var(--primary)]">
+          {t("home.logo")}
+        </h1>
+      </div>
 
       {/* Carousel Area — Middle */}
       <div className="flex-1 flex flex-col justify-center z-10 mt-[var(--space-6)] mb-[var(--space-6)]">
