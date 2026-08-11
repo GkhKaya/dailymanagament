@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2 } from 'lucide-react';
+import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { deleteMealAction } from '@/actions/health';
 import toast from 'react-hot-toast';
+import { t } from '@/lib/i18n';
 
 // Makro renk kodları
 const MACRO_COLORS = {
@@ -86,7 +87,10 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
   const [manualProtein, setManualProtein] = useState('');
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [isOcrReady, setIsOcrReady] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const ocrInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Otomatik öğün seçimi
@@ -298,6 +302,43 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     }
   };
 
+  const handleLabelImage = async (file: File | undefined) => {
+    if (!file) return;
+    setIsOcrLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch('/api/food/ocr', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Etiket okunamadı.');
+
+      const nutrition = data.nutrition;
+      setSearchQuery(nutrition.food_name);
+      setManualBrand(nutrition.brand_name || '');
+      setManualCalories(String(nutrition.calories));
+      setManualProtein(String(nutrition.protein_g));
+      setManualCarbs(String(nutrition.carbs_g));
+      setManualFat(String(nutrition.fat_g));
+      setUnitType('gram');
+      setAmount('100');
+      setFoodName(nutrition.food_name);
+      setCalories(String(nutrition.calories));
+      setProtein(String(nutrition.protein_g));
+      setCarbs(String(nutrition.carbs_g));
+      setFat(String(nutrition.fat_g));
+      setQuantity('100');
+      setServingDescription('100 gram');
+      setFoodCacheId(null);
+      setIsOcrReady(true);
+      toast.success(t('forms.foodLabelOcrSuccess'));
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Etiket okunamadı.');
+    } finally {
+      setIsOcrLoading(false);
+      if (ocrInputRef.current) ocrInputRef.current.value = '';
+    }
+  };
+
   const handleClearSelection = () => {
     setSelectedFood(null);
     setGeminiResult(null);
@@ -313,6 +354,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
     setManualCarbs('');
     setManualFat('');
     setManualBrand('');
+    setIsOcrReady(false);
     setSearchStep('idle');
     setSearchResults([]);
     setShowDropdown(true);
@@ -647,6 +689,26 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                     <span className="text-[16px]">✍️</span>
                     <span className="text-[13px] font-semibold text-white">Yemeği Manuel Olarak Ekle</span>
                   </div>
+
+                  <input
+                    ref={ocrInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/avif"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(event) => handleLabelImage(event.target.files?.[0])}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => ocrInputRef.current?.click()}
+                    disabled={isOcrLoading}
+                    className="min-h-[48px] w-full rounded-xl border border-[rgba(142,193,59,0.35)] bg-[rgba(142,193,59,0.08)] px-3 py-2.5 text-sm font-semibold text-[var(--primary)] transition-colors hover:bg-[rgba(142,193,59,0.14)] disabled:cursor-wait disabled:opacity-60 flex items-center justify-center gap-2"
+                    aria-label={t('forms.foodLabelOcr')}
+                  >
+                    {isOcrLoading ? <Loader2 size={17} className="animate-spin" /> : <Camera size={17} />}
+                    {isOcrLoading ? t('forms.foodLabelOcrReading') : t('forms.foodLabelOcr')}
+                  </button>
+                  <span className="text-center text-[11px] text-[var(--on-surface-variant)]">{t('forms.foodLabelOcrHint')}</span>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -682,30 +744,36 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
                   <div className="grid grid-cols-4 gap-2 mt-1">
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-orange-400 font-semibold pl-1">Kalori</label>
-                      <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => setManualCalories(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+                      <input type="number" min="0" step="0.1" value={manualCalories} onChange={e => { setManualCalories(e.target.value); if (isOcrReady) setCalories(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-orange-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-orange-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-blue-400 font-semibold pl-1">Karb (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualCarbs} onChange={e => setManualCarbs(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-blue-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                      <input type="number" min="0" step="0.1" value={manualCarbs} onChange={e => { setManualCarbs(e.target.value); if (isOcrReady) setCarbs(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-blue-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-blue-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-green-400 font-semibold pl-1">Protein (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualProtein} onChange={e => setManualProtein(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-green-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-green-500" />
+                      <input type="number" min="0" step="0.1" value={manualProtein} onChange={e => { setManualProtein(e.target.value); if (isOcrReady) setProtein(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-green-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-green-500" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] text-yellow-400 font-semibold pl-1">Yağ (g)</label>
-                      <input type="number" min="0" step="0.1" value={manualFat} onChange={e => setManualFat(e.target.value)} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
+                      <input type="number" min="0" step="0.1" value={manualFat} onChange={e => { setManualFat(e.target.value); if (isOcrReady) setFat(e.target.value); }} placeholder="0" className="w-full bg-[#1A1A26] border border-yellow-500/30 rounded-xl py-2 px-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleManualSubmit}
-                    disabled={!manualCalories || !manualProtein || !manualCarbs || !manualFat}
-                    className="w-full mt-2 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Veritabanına Kaydet ve Seç
-                  </button>
+                  {!isOcrReady ? (
+                    <button
+                      type="button"
+                      onClick={handleManualSubmit}
+                      disabled={!manualCalories || !manualProtein || !manualCarbs || !manualFat}
+                      className="w-full mt-2 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Veritabanına Kaydet ve Seç
+                    </button>
+                  ) : (
+                    <div className="mt-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-center text-xs text-emerald-300">
+                      Değerleri kontrol et. Kaydetmek için aşağıdaki “Öğüne Ekle” düğmesine bas.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -876,7 +944,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
           type="submit"
           disabled={
             isLoading
-            || (activeTab === 'new' && (!selectedFood || !calories))
+            || (activeTab === 'new' && ((!selectedFood && !isOcrReady) || !calories))
             || (activeTab === 'saved' && selectedSavedFoods.length === 0)
           }
           className="flex-[2] py-3.5 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-[13px] font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
