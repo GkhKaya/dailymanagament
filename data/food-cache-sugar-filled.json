@@ -1,0 +1,5829 @@
+{
+  "exported_at": "2026-08-11T20:49:42.478Z",
+  "sugar_field": "per_unit.sugar_g",
+  "sugar_basis": "Gram ürünlerde 1 gram, diğer birimlerde 1 birim başına gram şeker.",
+  "foods": [
+    {
+      "id": "6a6fab6606e8d9554555c575",
+      "food_name": "Adana Kebap",
+      "food_name_en": "Adana Kebab",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.8,
+        "protein_g": 0.2,
+        "carbs_g": 0.05,
+        "fat_g": 0.21,
+        "fiber_g": 0.005,
+        "sugar_g": 0.006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6a8",
+      "food_name": "Ahtapot (Haşlanmış)",
+      "food_name_en": "Boiled Octopus",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.82,
+        "protein_g": 0.15,
+        "carbs_g": 0.022000000000000002,
+        "fat_g": 0.01,
+        "fiber_g": 0,
+        "sugar_g": 0.0033
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c674",
+      "food_name": "Ahududu",
+      "food_name_en": "Raspberry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.52,
+        "protein_g": 0.012,
+        "carbs_g": 0.11900000000000001,
+        "fat_g": 0.006999999999999999,
+        "fiber_g": 0.065,
+        "sugar_g": 0.044
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf3f",
+      "food_name": "Algida Classic Dondurma",
+      "food_name_en": "Algida Classic Ice Cream",
+      "brand_name": "Algida",
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 180,
+        "protein_g": 2.5,
+        "carbs_g": 24,
+        "fat_g": 8,
+        "fiber_g": 0,
+        "sugar_g": 18.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf41",
+      "food_name": "Algida Vienetta Dondurma",
+      "food_name_en": "Algida Vienetta Ice Cream",
+      "brand_name": "Algida",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.3,
+        "protein_g": 0.025,
+        "carbs_g": 0.26,
+        "fat_g": 0.12,
+        "fiber_g": 0,
+        "sugar_g": 0.182
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c65c",
+      "food_name": "Ananas",
+      "food_name_en": "Pineapple",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.5,
+        "protein_g": 0.005,
+        "carbs_g": 0.13,
+        "fat_g": 0.001,
+        "fiber_g": 0.013999999999999999,
+        "sugar_g": 0.099
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c67e",
+      "food_name": "Antep Fıstığı",
+      "food_name_en": "Pistachios",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.62,
+        "protein_g": 0.2,
+        "carbs_g": 0.28,
+        "fat_g": 0.45,
+        "fiber_g": 0.106,
+        "sugar_g": 0.077
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c645",
+      "food_name": "Armut",
+      "food_name_en": "Pear",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.57,
+        "protein_g": 0.004,
+        "carbs_g": 0.15,
+        "fat_g": 0.001,
+        "fiber_g": 0.031,
+        "sugar_g": 0.098
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6906e8d9554555c5c5",
+      "food_name": "Arpa (Pişmiş)",
+      "food_name_en": "Barley Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.23,
+        "protein_g": 0.023,
+        "carbs_g": 0.282,
+        "fat_g": 0.004,
+        "fiber_g": 0.06,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c660",
+      "food_name": "Avokado",
+      "food_name_en": "Avocado",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.6,
+        "protein_g": 0.02,
+        "carbs_g": 0.09,
+        "fat_g": 0.15,
+        "fiber_g": 0.067,
+        "sugar_g": 0.0066
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5fd",
+      "food_name": "Ayran",
+      "food_name_en": "Ayran Yogurt Drink",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.3,
+        "protein_g": 0.016,
+        "carbs_g": 0.024,
+        "fat_g": 0.015,
+        "fiber_g": 0,
+        "sugar_g": 0.024
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf2e",
+      "food_name": "Ayçiçek Yağı",
+      "food_name_en": "Sunflower Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 8.84,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 1,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7106e8d9554555c688",
+      "food_name": "Ayçiçeği Çekirdeği",
+      "food_name_en": "Sunflower Seeds",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.84,
+        "protein_g": 0.21,
+        "carbs_g": 0.2,
+        "fat_g": 0.51,
+        "fiber_g": 0.086,
+        "sugar_g": 0.026
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6ce",
+      "food_name": "Aşure",
+      "food_name_en": "Ashure Noah Pudding",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.4,
+        "protein_g": 0.04,
+        "carbs_g": 0.28,
+        "fat_g": 0.015,
+        "fiber_g": 0.035,
+        "sugar_g": 0.042
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf34",
+      "food_name": "Badem",
+      "food_name_en": "Almonds",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.78,
+        "protein_g": 0.214,
+        "carbs_g": 0.215,
+        "fat_g": 0.499,
+        "fiber_g": 0.125,
+        "sugar_g": 0.044
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7106e8d9554555c690",
+      "food_name": "Badem Ezmesi",
+      "food_name_en": "Almond Butter",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.14,
+        "protein_g": 0.21,
+        "carbs_g": 0.19,
+        "fat_g": 0.56,
+        "fiber_g": 0.105,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6d2",
+      "food_name": "Baklava",
+      "food_name_en": "Baklava Slice",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 330,
+        "protein_g": 5,
+        "carbs_g": 38,
+        "fat_g": 18,
+        "fiber_g": 1.5,
+        "sugar_g": 18.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_unit"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6e8",
+      "food_name": "Bal",
+      "food_name_en": "Honey",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.04,
+        "protein_g": 0.003,
+        "carbs_g": 0.82,
+        "fat_g": 0,
+        "fiber_g": 0.002,
+        "sugar_g": 0.82
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c53e",
+      "food_name": "Balkabağı Çorbası",
+      "food_name_en": "Pumpkin Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.42,
+        "protein_g": 0.012,
+        "carbs_g": 0.075,
+        "fat_g": 0.012,
+        "fiber_g": 0.01,
+        "sugar_g": 0.0187
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c59f",
+      "food_name": "Barbunya (Pişmiş)",
+      "food_name_en": "Kidney Beans Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.27,
+        "protein_g": 0.087,
+        "carbs_g": 0.228,
+        "fat_g": 0.005,
+        "fiber_g": 0.063,
+        "sugar_g": 0.0032
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acee1",
+      "food_name": "Basmati Pirinç",
+      "food_name_en": "Basmati Rice",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.49,
+        "protein_g": 0.073,
+        "carbs_g": 0.77,
+        "fat_g": 0.004,
+        "fiber_g": 0.012,
+        "sugar_g": 0.0012
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5d5",
+      "food_name": "Bazlama",
+      "food_name_en": "Bazlama Turkish Flatbread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.75,
+        "protein_g": 0.08800000000000001,
+        "carbs_g": 0.5,
+        "fat_g": 0.045,
+        "fiber_g": 0.022000000000000002,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5cb",
+      "food_name": "Beyaz Ekmek",
+      "food_name_en": "White Bread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.65,
+        "protein_g": 0.09,
+        "carbs_g": 0.49,
+        "fat_g": 0.032,
+        "fiber_g": 0.027000000000000003,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c620",
+      "food_name": "Beyaz Lahana",
+      "food_name_en": "White Cabbage",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.25,
+        "protein_g": 0.013000000000000001,
+        "carbs_g": 0.057999999999999996,
+        "fat_g": 0.001,
+        "fiber_g": 0.025,
+        "sugar_g": 0.032
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6c06e8d9554555c5ec",
+      "food_name": "Beyaz Peynir",
+      "food_name_en": "White Feta Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.64,
+        "protein_g": 0.14,
+        "carbs_g": 0.02,
+        "fat_g": 0.22,
+        "fiber_g": 0,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf12",
+      "food_name": "Beyaz Peynir (Tam Yağlı)",
+      "food_name_en": "Turkish White Cheese (Feta-Style)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.64,
+        "protein_g": 0.14,
+        "carbs_g": 0.03,
+        "fat_g": 0.21,
+        "fiber_g": 0,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5b3",
+      "food_name": "Beyaz Pirinç (Pişmiş)",
+      "food_name_en": "White Rice Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.3,
+        "protein_g": 0.027000000000000003,
+        "carbs_g": 0.28,
+        "fat_g": 0.003,
+        "fiber_g": 0.004,
+        "sugar_g": 0.001
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5a5",
+      "food_name": "Bezelye (Pişmiş)",
+      "food_name_en": "Green Peas Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.84,
+        "protein_g": 0.054000000000000006,
+        "carbs_g": 0.15,
+        "fat_g": 0.002,
+        "fiber_g": 0.055,
+        "sugar_g": 0.057
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6f19ea21a649cc66d40e0c",
+      "food_name": "Bim ranch",
+      "food_name_en": null,
+      "brand_name": "Bim",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.05,
+        "protein_g": 0.02,
+        "carbs_g": 0.043,
+        "fat_g": 0.309,
+        "fiber_g": 0,
+        "sugar_g": 0.0193
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a65e892e214fb22aa1c9350",
+      "food_name": "Bitkisel Yağlı Krem Sos",
+      "food_name_en": "Vegetable Cream Sauce",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.95,
+        "protein_g": 0.022,
+        "carbs_g": 0.04,
+        "fat_g": 0.185,
+        "fiber_g": 0,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6f2",
+      "food_name": "Bitter Çikolata",
+      "food_name_en": "Dark Chocolate",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.98,
+        "protein_g": 0.078,
+        "carbs_g": 0.46,
+        "fat_g": 0.43,
+        "fiber_g": 0.11,
+        "sugar_g": 0.24
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf20",
+      "food_name": "Brokoli",
+      "food_name_en": "Broccoli",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.34,
+        "protein_g": 0.028,
+        "carbs_g": 0.066,
+        "fat_g": 0.004,
+        "fiber_g": 0.026,
+        "sugar_g": 0.017
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6406e8d9554555c540",
+      "food_name": "Brokoli Çorbası",
+      "food_name_en": "Broccoli Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.38,
+        "protein_g": 0.022000000000000002,
+        "carbs_g": 0.05,
+        "fat_g": 0.013000000000000001,
+        "fiber_g": 0.015,
+        "sugar_g": 0.0125
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645c99e214fb22aa1acdf5",
+      "food_name": "Bulgur",
+      "food_name_en": "Bulgur Wheat",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.43,
+        "protein_g": 0.121,
+        "carbs_g": 0.688,
+        "fat_g": 0.013,
+        "fiber_g": 0.182,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5b7",
+      "food_name": "Bulgur (Pişmiş)",
+      "food_name_en": "Bulgur Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.83,
+        "protein_g": 0.031,
+        "carbs_g": 0.18600000000000003,
+        "fat_g": 0.002,
+        "fiber_g": 0.045,
+        "sugar_g": 0.001
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a7640e41f5a8410584a5f33",
+      "food_name": "Burger king kornet dondurma",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 167,
+        "protein_g": 3.57,
+        "carbs_g": 28,
+        "fat_g": 4.34,
+        "fiber_g": 0,
+        "sugar_g": 18.0
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5c7",
+      "food_name": "Buğday Kepeği",
+      "food_name_en": "Wheat Bran",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.16,
+        "protein_g": 0.155,
+        "carbs_g": 0.645,
+        "fat_g": 0.043,
+        "fiber_g": 0.428,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5a1",
+      "food_name": "Börülce (Pişmiş)",
+      "food_name_en": "Black-Eyed Peas Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.16,
+        "protein_g": 0.079,
+        "carbs_g": 0.20800000000000002,
+        "fat_g": 0.006,
+        "fiber_g": 0.065,
+        "sugar_g": 0.034
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c672",
+      "food_name": "Böğürtlen",
+      "food_name_en": "Blackberry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.43,
+        "protein_g": 0.013999999999999999,
+        "carbs_g": 0.096,
+        "fat_g": 0.005,
+        "fiber_g": 0.053,
+        "sugar_g": 0.049
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6be",
+      "food_name": "Cacık",
+      "food_name_en": "Cacik Yogurt Cucumber Dip",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.4,
+        "protein_g": 0.025,
+        "carbs_g": 0.027999999999999997,
+        "fat_g": 0.018000000000000002,
+        "fiber_g": 0.004,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a64e9cee214fb22aa1b7f89",
+      "food_name": "Carrefour Kids Süt Mısırlı Nohut Cipsi",
+      "food_name_en": "Carrefour Kids Milk and Chickpea Chips",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 235.76,
+        "protein_g": 14.75,
+        "carbs_g": 37.12,
+        "fat_g": 3.14,
+        "fiber_g": 0,
+        "sugar_g": 3.0
+      },
+      "source": "gemini",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7006e8d9554555c679",
+      "food_name": "Ceviz",
+      "food_name_en": "Walnuts",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.54,
+        "protein_g": 0.15,
+        "carbs_g": 0.14,
+        "fat_g": 0.65,
+        "fiber_g": 0.067,
+        "sugar_g": 0.026
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5f6",
+      "food_name": "Cheddar Peyniri",
+      "food_name_en": "Cheddar Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.03,
+        "protein_g": 0.25,
+        "carbs_g": 0.013000000000000001,
+        "fat_g": 0.33,
+        "fiber_g": 0,
+        "sugar_g": 0.005
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c68a",
+      "food_name": "Chia Tohumu",
+      "food_name_en": "Chia Seeds",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.86,
+        "protein_g": 0.17,
+        "carbs_g": 0.42,
+        "fat_g": 0.31,
+        "fiber_g": 0.344,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a58fa79cf4b1322035330a3",
+      "food_name": "Chicken Breast",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6e6",
+      "food_name": "Corn Flakes",
+      "food_name_en": "Corn Flakes Cereal",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.78,
+        "protein_g": 0.075,
+        "carbs_g": 0.84,
+        "fat_g": 0.009000000000000001,
+        "fiber_g": 0.03,
+        "sugar_g": 0.084
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c56d",
+      "food_name": "Dana Antrikot (Izgara)",
+      "food_name_en": "Beef Ribeye Grilled",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.9,
+        "protein_g": 0.24,
+        "carbs_g": 0,
+        "fat_g": 0.22,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1aceff",
+      "food_name": "Dana Bonfile",
+      "food_name_en": "Beef Tenderloin",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.44,
+        "protein_g": 0.22,
+        "carbs_g": 0,
+        "fat_g": 0.061,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6506e8d9554555c56f",
+      "food_name": "Dana Bonfile (Izgara)",
+      "food_name_en": "Beef Tenderloin Grilled",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.12,
+        "protein_g": 0.28,
+        "carbs_g": 0,
+        "fat_g": 0.11,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c593",
+      "food_name": "Dana Ciğer (Kızarmış)",
+      "food_name_en": "Fried Beef Liver",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.91,
+        "protein_g": 0.24,
+        "carbs_g": 0.055,
+        "fat_g": 0.08,
+        "fiber_g": 0,
+        "sugar_g": 0.0066
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c583",
+      "food_name": "Dana Döner",
+      "food_name_en": "Beef Doner Kebab",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.55,
+        "protein_g": 0.22,
+        "carbs_g": 0.05,
+        "fat_g": 0.17,
+        "fiber_g": 0.005,
+        "sugar_g": 0.006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c587",
+      "food_name": "Dana Haşlama",
+      "food_name_en": "Boiled Beef",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.05,
+        "protein_g": 0.28,
+        "carbs_g": 0,
+        "fat_g": 0.1,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c589",
+      "food_name": "Dana Kavurma",
+      "food_name_en": "Beef Kavurma",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.8,
+        "protein_g": 0.25,
+        "carbs_g": 0.02,
+        "fat_g": 0.19,
+        "fiber_g": 0,
+        "sugar_g": 0.0024
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c569",
+      "food_name": "Dana Kıyma (Yağlı)",
+      "food_name_en": "Beef Ground Fatty",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.5,
+        "protein_g": 0.17,
+        "carbs_g": 0,
+        "fat_g": 0.2,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c56b",
+      "food_name": "Dana Kıyma (Yağsız)",
+      "food_name_en": "Lean Ground Beef",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.8,
+        "protein_g": 0.21,
+        "carbs_g": 0,
+        "fat_g": 0.11,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c571",
+      "food_name": "Dana Pirzola (Izgara)",
+      "food_name_en": "Beef Chops Grilled",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.35,
+        "protein_g": 0.26,
+        "carbs_g": 0,
+        "fat_g": 0.14,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c573",
+      "food_name": "Dana Şiş Kebap",
+      "food_name_en": "Beef Shish Kebab",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.2,
+        "protein_g": 0.24,
+        "carbs_g": 0.03,
+        "fat_g": 0.12,
+        "fiber_g": 0,
+        "sugar_g": 0.0036
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c638",
+      "food_name": "Dereotu",
+      "food_name_en": "Dill",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.43,
+        "protein_g": 0.035,
+        "carbs_g": 0.07,
+        "fat_g": 0.011000000000000001,
+        "fiber_g": 0.021,
+        "sugar_g": 0.007
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf1a",
+      "food_name": "Domates",
+      "food_name_en": "Tomato",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.18,
+        "protein_g": 0.009,
+        "carbs_g": 0.039,
+        "fat_g": 0.002,
+        "fiber_g": 0.012,
+        "sugar_g": 0.026
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6406e8d9554555c52a",
+      "food_name": "Domates Çorbası",
+      "food_name_en": "Tomato Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.4,
+        "protein_g": 0.015,
+        "carbs_g": 0.06,
+        "fat_g": 0.012,
+        "fiber_g": 0.008,
+        "sugar_g": 0.015
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6115201e4c148ce30128aa",
+      "food_name": "Dry Bulgur",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6406e8d9554555c536",
+      "food_name": "Düğün Çorbası",
+      "food_name_en": "Wedding Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.85,
+        "protein_g": 0.065,
+        "carbs_g": 0.045,
+        "fat_g": 0.048,
+        "fiber_g": 0.002,
+        "sugar_g": 0.0112
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5a7",
+      "food_name": "Edamame",
+      "food_name_en": "Edamame",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.22,
+        "protein_g": 0.11,
+        "carbs_g": 0.099,
+        "fat_g": 0.052000000000000005,
+        "fiber_g": 0.052000000000000005,
+        "sugar_g": 0.022
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a58f7dacf4b132203532b38",
+      "food_name": "Egg",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca6e214fb22aa1aceeb",
+      "food_name": "Ekmek (Beyaz)",
+      "food_name_en": "White Bread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.65,
+        "protein_g": 0.09,
+        "carbs_g": 0.49,
+        "fat_g": 0.032,
+        "fiber_g": 0.027,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf28",
+      "food_name": "Elma",
+      "food_name_en": "Apple",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 81,
+        "protein_g": 0.4,
+        "carbs_g": 21,
+        "fat_g": 0.3,
+        "fiber_g": 3.7,
+        "sugar_g": 16.3
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c70a",
+      "food_name": "Elma Suyu",
+      "food_name_en": "Apple Juice",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.46,
+        "protein_g": 0.001,
+        "carbs_g": 0.114,
+        "fat_g": 0.001,
+        "fiber_g": 0.002,
+        "sugar_g": 0.098
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c640",
+      "food_name": "Enginar",
+      "food_name_en": "Artichoke",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.47,
+        "protein_g": 0.033,
+        "carbs_g": 0.105,
+        "fat_g": 0.002,
+        "fiber_g": 0.054000000000000006,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c66e",
+      "food_name": "Erik",
+      "food_name_en": "Plum",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.46,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.11,
+        "fat_g": 0.003,
+        "fiber_g": 0.013999999999999999,
+        "sugar_g": 0.099
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5b5",
+      "food_name": "Esmer Pirinç (Pişmiş)",
+      "food_name_en": "Brown Rice Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.23,
+        "protein_g": 0.026000000000000002,
+        "carbs_g": 0.26,
+        "fat_g": 0.009000000000000001,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.002
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6c8",
+      "food_name": "Et Güveç",
+      "food_name_en": "Turkish Meat Casserole",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.4,
+        "protein_g": 0.095,
+        "carbs_g": 0.085,
+        "fat_g": 0.075,
+        "fiber_g": 0.02,
+        "sugar_g": 0.0213
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6c6",
+      "food_name": "Etli Biber Dolması",
+      "food_name_en": "Stuffed Bell Peppers with Meat",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.48,
+        "protein_g": 0.075,
+        "carbs_g": 0.14,
+        "fat_g": 0.07,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.035
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6da",
+      "food_name": "Etli Nohut",
+      "food_name_en": "Chickpea with Meat Stew",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.65,
+        "protein_g": 0.11,
+        "carbs_g": 0.18,
+        "fat_g": 0.055,
+        "fiber_g": 0.04,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c525",
+      "food_name": "Ezogelin Çorbası",
+      "food_name_en": "Ezogelin Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.65,
+        "protein_g": 0.038,
+        "carbs_g": 0.105,
+        "fat_g": 0.012,
+        "fiber_g": 0.021,
+        "sugar_g": 0.0262
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6db51421a649cc66d40dfd",
+      "food_name": "Ezogelin çorbası",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 160,
+        "protein_g": 6,
+        "carbs_g": 24,
+        "fat_g": 5,
+        "fiber_g": 0,
+        "sugar_g": 3.0
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5ad",
+      "food_name": "Falafel",
+      "food_name_en": "Falafel",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.33,
+        "protein_g": 0.13,
+        "carbs_g": 0.32,
+        "fat_g": 0.18,
+        "fiber_g": 0.068,
+        "sugar_g": 0.015
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acef7",
+      "food_name": "Fasulye (Kuru Beyaz)",
+      "food_name_en": "White Beans",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.37,
+        "protein_g": 0.238,
+        "carbs_g": 0.602,
+        "fat_g": 0.008,
+        "fiber_g": 0.155,
+        "sugar_g": 0.021
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c700",
+      "food_name": "Filtre Kahve (Sade)",
+      "food_name_en": "Filter Coffee Black",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.02,
+        "protein_g": 0.003,
+        "carbs_g": 0.003,
+        "fat_g": 0.001,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf32",
+      "food_name": "Fındık",
+      "food_name_en": "Hazelnuts",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.28,
+        "protein_g": 0.15,
+        "carbs_g": 0.168,
+        "fat_g": 0.609,
+        "fiber_g": 0.097,
+        "sugar_g": 0.043
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6506e8d9554555c55e",
+      "food_name": "Fırın Tavuk (Bütün)",
+      "food_name_en": "Roast Whole Chicken",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.39,
+        "protein_g": 0.27,
+        "carbs_g": 0,
+        "fat_g": 0.14,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c68e",
+      "food_name": "Fıstık Ezmesi",
+      "food_name_en": "Peanut Butter",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.88,
+        "protein_g": 0.25,
+        "carbs_g": 0.2,
+        "fat_g": 0.5,
+        "fiber_g": 0.06,
+        "sugar_g": 0.09
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5db",
+      "food_name": "Galeta",
+      "food_name_en": "Rusks Crackers",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.82,
+        "protein_g": 0.095,
+        "carbs_g": 0.74,
+        "fat_g": 0.06,
+        "fiber_g": 0.032,
+        "sugar_g": 0.08
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf43",
+      "food_name": "Gong Çikolata",
+      "food_name_en": "Gong Chocolate Bar",
+      "brand_name": "Ülker",
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 270,
+        "protein_g": 3.5,
+        "carbs_g": 36,
+        "fat_g": 12,
+        "fiber_g": 1,
+        "sugar_g": 22.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6e2",
+      "food_name": "Granola",
+      "food_name_en": "Granola",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.71,
+        "protein_g": 0.106,
+        "carbs_g": 0.64,
+        "fat_g": 0.2,
+        "fiber_g": 0.065,
+        "sugar_g": 0.26
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6115531e4c148ce30128ff",
+      "food_name": "Ground Beef (80% Lean / 20% Fat)",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6d8",
+      "food_name": "Gözleme (Ispanaklı)",
+      "food_name_en": "Gozleme with Spinach",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.1,
+        "protein_g": 0.075,
+        "carbs_g": 0.28,
+        "fat_g": 0.08,
+        "fiber_g": 0.025,
+        "sugar_g": 0.028
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6d6",
+      "food_name": "Gözleme (Peynirli)",
+      "food_name_en": "Gozleme with Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.46,
+        "protein_g": 0.095,
+        "carbs_g": 0.28,
+        "fat_g": 0.11,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.028
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c69c",
+      "food_name": "Hamsi (Izgara)",
+      "food_name_en": "Grilled Anchovy",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.31,
+        "protein_g": 0.18,
+        "carbs_g": 0,
+        "fat_g": 0.07,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c69a",
+      "food_name": "Hamsi (Kızarmış)",
+      "food_name_en": "Fried Anchovy",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.95,
+        "protein_g": 0.18,
+        "carbs_g": 0.075,
+        "fat_g": 0.1,
+        "fiber_g": 0,
+        "sugar_g": 0.0112
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c610",
+      "food_name": "Havuç",
+      "food_name_en": "Carrot",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.41,
+        "protein_g": 0.009000000000000001,
+        "carbs_g": 0.096,
+        "fat_g": 0.002,
+        "fiber_g": 0.027999999999999997,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6c0",
+      "food_name": "Haydari",
+      "food_name_en": "Haydari Yogurt Dip",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.95,
+        "protein_g": 0.07,
+        "carbs_g": 0.035,
+        "fat_g": 0.06,
+        "fiber_g": 0.002,
+        "sugar_g": 0.02
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c562",
+      "food_name": "Hindi Göğsü",
+      "food_name_en": "Turkey Breast",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.57,
+        "protein_g": 0.3,
+        "carbs_g": 0,
+        "fat_g": 0.032,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf06",
+      "food_name": "Hindi Göğsü (Çiğ)",
+      "food_name_en": "Turkey Breast (Raw)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.05,
+        "protein_g": 0.23,
+        "carbs_g": 0,
+        "fat_g": 0.01,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5a9",
+      "food_name": "Hummus",
+      "food_name_en": "Hummus",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.66,
+        "protein_g": 0.079,
+        "carbs_g": 0.14,
+        "fat_g": 0.096,
+        "fiber_g": 0.06,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c668",
+      "food_name": "Hurma",
+      "food_name_en": "Date",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.77,
+        "protein_g": 0.018000000000000002,
+        "carbs_g": 0.75,
+        "fat_g": 0.002,
+        "fiber_g": 0.067,
+        "sugar_g": 0.63
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6de",
+      "food_name": "Hünkar Beğendi",
+      "food_name_en": "Hunkar Begendi Lamb with Eggplant Puree",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.75,
+        "protein_g": 0.11,
+        "carbs_g": 0.09,
+        "fat_g": 0.11,
+        "fiber_g": 0.015,
+        "sugar_g": 0.0225
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf1e",
+      "food_name": "Ispanak",
+      "food_name_en": "Spinach",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.23,
+        "protein_g": 0.029,
+        "carbs_g": 0.036,
+        "fat_g": 0.004,
+        "fiber_g": 0.022,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c618",
+      "food_name": "Kabak",
+      "food_name_en": "Zucchini",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.17,
+        "protein_g": 0.012,
+        "carbs_g": 0.031,
+        "fat_g": 0.003,
+        "fiber_g": 0.01,
+        "sugar_g": 0.025
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c686",
+      "food_name": "Kabak Çekirdeği",
+      "food_name_en": "Pumpkin Seeds",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.59,
+        "protein_g": 0.3,
+        "carbs_g": 0.11,
+        "fat_g": 0.49,
+        "fiber_g": 0.06,
+        "sugar_g": 0.014
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c680",
+      "food_name": "Kaju",
+      "food_name_en": "Cashews",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.53,
+        "protein_g": 0.18,
+        "carbs_g": 0.3,
+        "fat_g": 0.44,
+        "fiber_g": 0.033,
+        "sugar_g": 0.059
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6ae",
+      "food_name": "Kalkan Balığı (Izgara)",
+      "food_name_en": "Grilled Turbot",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.11,
+        "protein_g": 0.17,
+        "carbs_g": 0,
+        "fat_g": 0.045,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6a6",
+      "food_name": "Karides (Haşlanmış)",
+      "food_name_en": "Boiled Shrimp",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.99,
+        "protein_g": 0.24,
+        "carbs_g": 0,
+        "fat_g": 0.003,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c61d",
+      "food_name": "Karnabahar",
+      "food_name_en": "Cauliflower",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.25,
+        "protein_g": 0.02,
+        "carbs_g": 0.05,
+        "fat_g": 0.003,
+        "fiber_g": 0.02,
+        "sugar_g": 0.019
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6b2",
+      "food_name": "Karnıyarık",
+      "food_name_en": "Karniyarik Stuffed Eggplant with Meat",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.5,
+        "protein_g": 0.065,
+        "carbs_g": 0.07,
+        "fat_g": 0.11,
+        "fiber_g": 0.022000000000000002,
+        "sugar_g": 0.0175
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c64f",
+      "food_name": "Karpuz",
+      "food_name_en": "Watermelon",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.3,
+        "protein_g": 0.006,
+        "carbs_g": 0.076,
+        "fat_g": 0.002,
+        "fiber_g": 0.004,
+        "sugar_g": 0.062
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c651",
+      "food_name": "Kavun",
+      "food_name_en": "Cantaloupe Melon",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.34,
+        "protein_g": 0.008,
+        "carbs_g": 0.08199999999999999,
+        "fat_g": 0.002,
+        "fiber_g": 0.009000000000000001,
+        "sugar_g": 0.079
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6b06e8d9554555c5e8",
+      "food_name": "Kaymak",
+      "food_name_en": "Clotted Cream Kaymak",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.38,
+        "protein_g": 0.026000000000000002,
+        "carbs_g": 0.037000000000000005,
+        "fat_g": 0.35,
+        "fiber_g": 0,
+        "sugar_g": 0.03
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c670",
+      "food_name": "Kayısı (Taze)",
+      "food_name_en": "Fresh Apricot",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.48,
+        "protein_g": 0.013999999999999999,
+        "carbs_g": 0.11,
+        "fat_g": 0.004,
+        "fiber_g": 0.02,
+        "sugar_g": 0.092
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf14",
+      "food_name": "Kaşar Peyniri",
+      "food_name_en": "Kashar Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.56,
+        "protein_g": 0.25,
+        "carbs_g": 0.02,
+        "fat_g": 0.27,
+        "fiber_g": 0,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5fb",
+      "food_name": "Kefir",
+      "food_name_en": "Kefir",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.41,
+        "protein_g": 0.033,
+        "carbs_g": 0.045,
+        "fat_g": 0.01,
+        "fiber_g": 0,
+        "sugar_g": 0.045
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf47",
+      "food_name": "Kepekli Yulaf Ezmesi",
+      "food_name_en": "Rolled Oats",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.71,
+        "protein_g": 0.132,
+        "carbs_g": 0.674,
+        "fat_g": 0.064,
+        "fiber_g": 0.103,
+        "sugar_g": 0.0099
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c630",
+      "food_name": "Kereviz",
+      "food_name_en": "Celery",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.16,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.03,
+        "fat_g": 0.002,
+        "fiber_g": 0.016,
+        "sugar_g": 0.013
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c68c",
+      "food_name": "Keten Tohumu",
+      "food_name_en": "Flaxseed",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.34,
+        "protein_g": 0.18,
+        "carbs_g": 0.29,
+        "fat_g": 0.42,
+        "fiber_g": 0.273,
+        "sugar_g": 0.016
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6906e8d9554555c5c3",
+      "food_name": "Kinoa (Pişmiş)",
+      "food_name_en": "Quinoa Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.2,
+        "protein_g": 0.044000000000000004,
+        "carbs_g": 0.213,
+        "fat_g": 0.019,
+        "fiber_g": 0.027999999999999997,
+        "sugar_g": 0.009
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c656",
+      "food_name": "Kiraz",
+      "food_name_en": "Cherry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.63,
+        "protein_g": 0.011000000000000001,
+        "carbs_g": 0.16,
+        "fat_g": 0.002,
+        "fiber_g": 0.021,
+        "sugar_g": 0.128
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c65a",
+      "food_name": "Kivi",
+      "food_name_en": "Kiwi",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.61,
+        "protein_g": 0.011000000000000001,
+        "carbs_g": 0.15,
+        "fat_g": 0.005,
+        "fiber_g": 0.03,
+        "sugar_g": 0.09
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c70c",
+      "food_name": "Kola",
+      "food_name_en": "Cola Soft Drink",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.41,
+        "protein_g": 0,
+        "carbs_g": 0.106,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.106
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6f4",
+      "food_name": "Kraker (Tuzlu)",
+      "food_name_en": "Salted Crackers",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.21,
+        "protein_g": 0.08,
+        "carbs_g": 0.7,
+        "fat_g": 0.12,
+        "fiber_g": 0.025,
+        "sugar_g": 0.03
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6c06e8d9554555c5ea",
+      "food_name": "Krema",
+      "food_name_en": "Heavy Cream",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.92,
+        "protein_g": 0.021,
+        "carbs_g": 0.038,
+        "fat_g": 0.3,
+        "fiber_g": 0,
+        "sugar_g": 0.029
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c542",
+      "food_name": "Kremalı Sebze Çorbası",
+      "food_name_en": "Creamy Vegetable Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.65,
+        "protein_g": 0.018000000000000002,
+        "carbs_g": 0.075,
+        "fat_g": 0.035,
+        "fiber_g": 0.012,
+        "sugar_g": 0.0187
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a70a12606e8d95545565a86",
+      "food_name": "Kumpir",
+      "food_name_en": "Baked Potato with Toppings",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2,
+        "protein_g": 0.065,
+        "carbs_g": 0.185,
+        "fat_g": 0.105,
+        "fiber_g": 0.018,
+        "sugar_g": 0.0278
+      },
+      "source": "gemini",
+      "ai_provider": "gemini",
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c59d",
+      "food_name": "Kuru Fasulye (Pişmiş)",
+      "food_name_en": "White Beans Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.27,
+        "protein_g": 0.087,
+        "carbs_g": 0.22,
+        "fat_g": 0.005,
+        "fiber_g": 0.063,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6b4",
+      "food_name": "Kuru Fasulye Yemeği",
+      "food_name_en": "Turkish White Bean Stew",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.2,
+        "protein_g": 0.075,
+        "carbs_g": 0.18,
+        "fat_g": 0.025,
+        "fiber_g": 0.045,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c66c",
+      "food_name": "Kuru Kayısı",
+      "food_name_en": "Dried Apricot",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.41,
+        "protein_g": 0.034,
+        "carbs_g": 0.62,
+        "fat_g": 0.005,
+        "fiber_g": 0.073,
+        "sugar_g": 0.53
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c66a",
+      "food_name": "Kuru Üzüm",
+      "food_name_en": "Raisin",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.99,
+        "protein_g": 0.031,
+        "carbs_g": 0.79,
+        "fat_g": 0.005,
+        "fiber_g": 0.037000000000000005,
+        "sugar_g": 0.592
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6906e8d9554555c5c1",
+      "food_name": "Kuskus (Pişmiş)",
+      "food_name_en": "Couscous Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.12,
+        "protein_g": 0.038,
+        "carbs_g": 0.23199999999999998,
+        "fat_g": 0.002,
+        "fiber_g": 0.013999999999999999,
+        "sugar_g": 0.001
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c581",
+      "food_name": "Kuzu Kıyma",
+      "food_name_en": "Ground Lamb",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.81,
+        "protein_g": 0.16,
+        "carbs_g": 0,
+        "fat_g": 0.24,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c57d",
+      "food_name": "Kuzu Pirzola (Izgara)",
+      "food_name_en": "Lamb Chops Grilled",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.94,
+        "protein_g": 0.25,
+        "carbs_g": 0,
+        "fat_g": 0.21,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c595",
+      "food_name": "Kuzu İncik",
+      "food_name_en": "Lamb Shank",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.45,
+        "protein_g": 0.26,
+        "carbs_g": 0,
+        "fat_g": 0.16,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c57f",
+      "food_name": "Kuzu Şiş",
+      "food_name_en": "Lamb Shish",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.35,
+        "protein_g": 0.26,
+        "carbs_g": 0.015,
+        "fat_g": 0.14,
+        "fiber_g": 0,
+        "sugar_g": 0.0018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c62e",
+      "food_name": "Kuşkonmaz",
+      "food_name_en": "Asparagus",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.2,
+        "protein_g": 0.022000000000000002,
+        "carbs_g": 0.039,
+        "fat_g": 0.002,
+        "fiber_g": 0.021,
+        "sugar_g": 0.019
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a58fc25cf4b1322035332f6",
+      "food_name": "Köfte",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6606e8d9554555c57b",
+      "food_name": "Köfte (Haşlanmış)",
+      "food_name_en": "Boiled Turkish Meatball",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.18,
+        "protein_g": 0.19,
+        "carbs_g": 0.06,
+        "fat_g": 0.14,
+        "fiber_g": 0.008,
+        "sugar_g": 0.0072
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c579",
+      "food_name": "Köfte (Izgara)",
+      "food_name_en": "Grilled Turkish Meatball",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.58,
+        "protein_g": 0.2,
+        "carbs_g": 0.065,
+        "fat_g": 0.18,
+        "fiber_g": 0.008,
+        "sugar_g": 0.0078
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c60b",
+      "food_name": "Kırmızı Biber",
+      "food_name_en": "Red Bell Pepper",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.31,
+        "protein_g": 0.01,
+        "carbs_g": 0.06,
+        "fat_g": 0.003,
+        "fiber_g": 0.021,
+        "sugar_g": 0.042
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c622",
+      "food_name": "Kırmızı Lahana",
+      "food_name_en": "Red Cabbage",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.31,
+        "protein_g": 0.013999999999999999,
+        "carbs_g": 0.07400000000000001,
+        "fat_g": 0.002,
+        "fiber_g": 0.021,
+        "sugar_g": 0.038
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c597",
+      "food_name": "Kırmızı Mercimek (Pişmiş)",
+      "food_name_en": "Red Lentils Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.16,
+        "protein_g": 0.09,
+        "carbs_g": 0.2,
+        "fat_g": 0.004,
+        "fiber_g": 0.079,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6bc",
+      "food_name": "Kısır",
+      "food_name_en": "Kisir Turkish Bulgur Salad",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.3,
+        "protein_g": 0.035,
+        "carbs_g": 0.22,
+        "fat_g": 0.035,
+        "fiber_g": 0.03,
+        "sugar_g": 0.055
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acefb",
+      "food_name": "Kıyma (Dana Orta Yağlı)",
+      "food_name_en": "Ground Beef (Medium Fat)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.17,
+        "protein_g": 0.175,
+        "carbs_g": 0,
+        "fat_g": 0.15,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acefd",
+      "food_name": "Kıyma (Kuzu)",
+      "food_name_en": "Ground Lamb",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.82,
+        "protein_g": 0.17,
+        "carbs_g": 0,
+        "fat_g": 0.2,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a7b49ef6d11ee35430bd096",
+      "food_name": "Kıymalı kaşarlı gözleme",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.1,
+        "protein_g": 0.1,
+        "carbs_g": 0.23,
+        "fat_g": 0.15,
+        "fiber_g": 0,
+        "sugar_g": 0.023
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6d4",
+      "food_name": "Lahmacun",
+      "food_name_en": "Lahmacun Turkish Pizza",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.3,
+        "protein_g": 0.095,
+        "carbs_g": 0.32,
+        "fat_g": 0.07,
+        "fiber_g": 0.02,
+        "sugar_g": 0.032
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5d2",
+      "food_name": "Lavaş",
+      "food_name_en": "Lavash Flatbread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.77,
+        "protein_g": 0.095,
+        "carbs_g": 0.54,
+        "fat_g": 0.027999999999999997,
+        "fiber_g": 0.024,
+        "sugar_g": 0.054
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a65e3ece214fb22aa1c89fd",
+      "food_name": "Leblebi (Sarı Leblebi)",
+      "food_name_en": "Roasted Yellow Chickpeas",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.68,
+        "protein_g": 0.198,
+        "carbs_g": 0.58,
+        "fat_g": 0.052,
+        "fiber_g": 0.12,
+        "sugar_g": 0.107
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7106e8d9554555c69e",
+      "food_name": "Levrek (Izgara)",
+      "food_name_en": "Grilled Sea Bass",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.24,
+        "protein_g": 0.19,
+        "carbs_g": 0,
+        "fat_g": 0.052000000000000005,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c666",
+      "food_name": "Limon",
+      "food_name_en": "Lemon",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.29,
+        "protein_g": 0.011000000000000001,
+        "carbs_g": 0.09300000000000001,
+        "fat_g": 0.003,
+        "fiber_g": 0.027999999999999997,
+        "sugar_g": 0.025
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c70e",
+      "food_name": "Limonata",
+      "food_name_en": "Lemonade",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.26,
+        "protein_g": 0.001,
+        "carbs_g": 0.068,
+        "fat_g": 0,
+        "fiber_g": 0.001,
+        "sugar_g": 0.0102
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf18",
+      "food_name": "Lor Peyniri",
+      "food_name_en": "Cottage Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.98,
+        "protein_g": 0.113,
+        "carbs_g": 0.033,
+        "fat_g": 0.043,
+        "fiber_g": 0,
+        "sugar_g": 0.027
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acee8",
+      "food_name": "Makarna",
+      "food_name_en": "Pasta",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.71,
+        "protein_g": 0.13,
+        "carbs_g": 0.75,
+        "fat_g": 0.015,
+        "fiber_g": 0.028,
+        "sugar_g": 0.027
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5b9",
+      "food_name": "Makarna (Pişmiş)",
+      "food_name_en": "Pasta Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.31,
+        "protein_g": 0.05,
+        "carbs_g": 0.25,
+        "fat_g": 0.011000000000000001,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c649",
+      "food_name": "Mandalina",
+      "food_name_en": "Tangerine",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.53,
+        "protein_g": 0.008,
+        "carbs_g": 0.13,
+        "fat_g": 0.003,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.106
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c65e",
+      "food_name": "Mango",
+      "food_name_en": "Mango",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.6,
+        "protein_g": 0.008,
+        "carbs_g": 0.15,
+        "fat_g": 0.004,
+        "fiber_g": 0.016,
+        "sugar_g": 0.137
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c62c",
+      "food_name": "Mantar",
+      "food_name_en": "White Mushroom",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.22,
+        "protein_g": 0.031,
+        "carbs_g": 0.033,
+        "fat_g": 0.003,
+        "fiber_g": 0.01,
+        "sugar_g": 0.02
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c53c",
+      "food_name": "Mantar Çorbası",
+      "food_name_en": "Mushroom Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.45,
+        "protein_g": 0.02,
+        "carbs_g": 0.06,
+        "fat_g": 0.015,
+        "fiber_g": 0.008,
+        "sugar_g": 0.015
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a58fc55cf4b13220353336c",
+      "food_name": "Mantu",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c625",
+      "food_name": "Marul",
+      "food_name_en": "Lettuce",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.15,
+        "protein_g": 0.013999999999999999,
+        "carbs_g": 0.028999999999999998,
+        "fat_g": 0.002,
+        "fiber_g": 0.013000000000000001,
+        "sugar_g": 0.008
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c634",
+      "food_name": "Maydanoz",
+      "food_name_en": "Parsley",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.36,
+        "protein_g": 0.03,
+        "carbs_g": 0.063,
+        "fat_g": 0.008,
+        "fiber_g": 0.033,
+        "sugar_g": 0.0085
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a64f611e214fb22aa1b9010",
+      "food_name": "McDonald's Big Mac",
+      "food_name_en": "Big Mac",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 228,
+        "protein_g": 13.3,
+        "carbs_g": 20.4,
+        "fat_g": 10.4,
+        "fiber_g": 0,
+        "sugar_g": 3.06
+      },
+      "source": "gemini",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a65e3ece214fb22aa1c89f9",
+      "food_name": "McDonald's Patates Kızartması (Orta Boy)",
+      "food_name_en": "McDonald's French Fries (Medium)",
+      "brand_name": "McDonald's",
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 277,
+        "protein_g": 3,
+        "carbs_g": 35.3,
+        "fat_g": 14.5,
+        "fiber_g": 3.4,
+        "sugar_g": 0.3
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a78a6971feffa9fe930e178",
+      "food_name": "Mcdonalds dörtlü nugget",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 170,
+        "protein_g": 10,
+        "carbs_g": 10,
+        "fat_g": 10,
+        "fiber_g": 0,
+        "sugar_g": 0.3
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c605",
+      "food_name": "Menemen",
+      "food_name_en": "Turkish Eggs Menemen",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.08,
+        "protein_g": 0.05,
+        "carbs_g": 0.045,
+        "fat_g": 0.075,
+        "fiber_g": 0.008,
+        "sugar_g": 0.0067
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acef3",
+      "food_name": "Mercimek (Kırmızı)",
+      "food_name_en": "Red Lentils",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.52,
+        "protein_g": 0.238,
+        "carbs_g": 0.602,
+        "fat_g": 0.011,
+        "fiber_g": 0.108,
+        "sugar_g": 0.021
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5ab",
+      "food_name": "Mercimek Köftesi",
+      "food_name_en": "Lentil Kofte",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.9,
+        "protein_g": 0.085,
+        "carbs_g": 0.3,
+        "fat_g": 0.045,
+        "fiber_g": 0.045,
+        "sugar_g": 0.036
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c527",
+      "food_name": "Mercimek Çorbası",
+      "food_name_en": "Lentil Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.55,
+        "protein_g": 0.035,
+        "carbs_g": 0.085,
+        "fat_g": 0.01,
+        "fiber_g": 0.025,
+        "sugar_g": 0.0213
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6aa",
+      "food_name": "Midye",
+      "food_name_en": "Mussels",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.86,
+        "protein_g": 0.12,
+        "carbs_g": 0.037000000000000005,
+        "fat_g": 0.022000000000000002,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf3d",
+      "food_name": "Mis Tam Yağlı Süt",
+      "food_name_en": "Mis Whole Milk",
+      "brand_name": "Mis",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.63,
+        "protein_g": 0.03,
+        "carbs_g": 0.047,
+        "fat_g": 0.035,
+        "fiber_g": 0,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf3b",
+      "food_name": "Mis Yağsız Süt",
+      "food_name_en": "Mis Skimmed Milk",
+      "brand_name": "Mis",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.33,
+        "protein_g": 0.034,
+        "carbs_g": 0.048,
+        "fat_g": 0.001,
+        "fiber_g": 0,
+        "sugar_g": 0.048
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5f4",
+      "food_name": "Mozzarella Peyniri",
+      "food_name_en": "Mozzarella Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.8,
+        "protein_g": 0.17,
+        "carbs_g": 0.022000000000000002,
+        "fat_g": 0.22,
+        "fiber_g": 0,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6d0",
+      "food_name": "Muhallebi",
+      "food_name_en": "Turkish Milk Pudding",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.05,
+        "protein_g": 0.035,
+        "carbs_g": 0.2,
+        "fat_g": 0.015,
+        "fiber_g": 0.001,
+        "sugar_g": 0.14
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf26",
+      "food_name": "Muz",
+      "food_name_en": "Banana",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 89,
+        "protein_g": 1.1,
+        "carbs_g": 23,
+        "fat_g": 0.3,
+        "fiber_g": 2.6,
+        "sugar_g": 12.2
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6e4",
+      "food_name": "Müsli",
+      "food_name_en": "Muesli",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.78,
+        "protein_g": 0.11,
+        "carbs_g": 0.73,
+        "fat_g": 0.075,
+        "fiber_g": 0.07,
+        "sugar_g": 0.1095
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c63c",
+      "food_name": "Mısır",
+      "food_name_en": "Corn",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.96,
+        "protein_g": 0.034,
+        "carbs_g": 0.21,
+        "fat_g": 0.015,
+        "fiber_g": 0.024,
+        "sugar_g": 0.045
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c636",
+      "food_name": "Nane",
+      "food_name_en": "Mint",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.44,
+        "protein_g": 0.033,
+        "carbs_g": 0.084,
+        "fat_g": 0.006999999999999999,
+        "fiber_g": 0.068,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c664",
+      "food_name": "Nar",
+      "food_name_en": "Pomegranate",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.83,
+        "protein_g": 0.017,
+        "carbs_g": 0.19,
+        "fat_g": 0.012,
+        "fiber_g": 0.04,
+        "sugar_g": 0.137
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c713",
+      "food_name": "Nar Suyu",
+      "food_name_en": "Pomegranate Juice",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.54,
+        "protein_g": 0.002,
+        "carbs_g": 0.133,
+        "fat_g": 0.003,
+        "fiber_g": 0.003,
+        "sugar_g": 0.13
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a7afc39b034a78d05e9c89f",
+      "food_name": "Nescafe cafe latte",
+      "food_name_en": null,
+      "brand_name": "Nescafe",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.26,
+        "protein_g": 0.013000000000000001,
+        "carbs_g": 0.023,
+        "fat_g": 0.012,
+        "fiber_g": 0,
+        "sugar_g": 0.0034
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acef5",
+      "food_name": "Nohut",
+      "food_name_en": "Chickpeas",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.64,
+        "protein_g": 0.19,
+        "carbs_g": 0.607,
+        "fat_g": 0.06,
+        "fiber_g": 0.17,
+        "sugar_g": 0.107
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6706e8d9554555c59b",
+      "food_name": "Nohut (Pişmiş)",
+      "food_name_en": "Chickpeas Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.64,
+        "protein_g": 0.08900000000000001,
+        "carbs_g": 0.27,
+        "fat_g": 0.026000000000000002,
+        "fiber_g": 0.076,
+        "sugar_g": 0.048
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6b6",
+      "food_name": "Nohutlu Pilav",
+      "food_name_en": "Chickpea Rice Pilaf",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.48,
+        "protein_g": 0.045,
+        "carbs_g": 0.27,
+        "fat_g": 0.025,
+        "fiber_g": 0.022000000000000002,
+        "sugar_g": 0.0054
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6ee",
+      "food_name": "Nutella",
+      "food_name_en": "Nutella Hazelnut Spread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.41,
+        "protein_g": 0.063,
+        "carbs_g": 0.57,
+        "fat_g": 0.31,
+        "fiber_g": 0.034,
+        "sugar_g": 0.56
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a590a95cf4b1322035344ef",
+      "food_name": "Oats",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a5916dccf4b132203535792",
+      "food_name": "Original Tam Tam Crackers",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6ac",
+      "food_name": "Palamut (Izgara)",
+      "food_name_en": "Grilled Atlantic Bonito",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.62,
+        "protein_g": 0.21,
+        "carbs_g": 0,
+        "fat_g": 0.085,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c63e",
+      "food_name": "Pancar",
+      "food_name_en": "Beetroot",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.43,
+        "protein_g": 0.016,
+        "carbs_g": 0.096,
+        "fat_g": 0.002,
+        "fiber_g": 0.027999999999999997,
+        "sugar_g": 0.068
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5f8",
+      "food_name": "Parmesan Peyniri",
+      "food_name_en": "Parmesan Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.31,
+        "protein_g": 0.38,
+        "carbs_g": 0.040999999999999995,
+        "fat_g": 0.29,
+        "fiber_g": 0,
+        "sugar_g": 0.009
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c58b",
+      "food_name": "Pastırma",
+      "food_name_en": "Pastirma Cured Beef",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.6,
+        "protein_g": 0.35,
+        "carbs_g": 0.02,
+        "fat_g": 0.13,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf24",
+      "food_name": "Patates",
+      "food_name_en": "Potato",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.77,
+        "protein_g": 0.02,
+        "carbs_g": 0.175,
+        "fat_g": 0.001,
+        "fiber_g": 0.022,
+        "sugar_g": 0.008
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c612",
+      "food_name": "Patates (Pişmiş)",
+      "food_name_en": "Boiled Potato",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.87,
+        "protein_g": 0.019,
+        "carbs_g": 0.2,
+        "fat_g": 0.001,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.009
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6f8",
+      "food_name": "Patates Cipsi",
+      "food_name_en": "Potato Chips",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.36,
+        "protein_g": 0.07,
+        "carbs_g": 0.53,
+        "fat_g": 0.35,
+        "fiber_g": 0.048,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6f6",
+      "food_name": "Patates Kızartması",
+      "food_name_en": "French Fries",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.12,
+        "protein_g": 0.034,
+        "carbs_g": 0.41,
+        "fat_g": 0.15,
+        "fiber_g": 0.035,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c616",
+      "food_name": "Patlıcan",
+      "food_name_en": "Eggplant",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.25,
+        "protein_g": 0.01,
+        "carbs_g": 0.059000000000000004,
+        "fat_g": 0.002,
+        "fiber_g": 0.03,
+        "sugar_g": 0.035
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6c2",
+      "food_name": "Patlıcan Salatası",
+      "food_name_en": "Roasted Eggplant Salad",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.68,
+        "protein_g": 0.015,
+        "carbs_g": 0.055,
+        "fat_g": 0.045,
+        "fiber_g": 0.02,
+        "sugar_g": 0.0138
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c534",
+      "food_name": "Paça Çorbası",
+      "food_name_en": "Pacha Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.72,
+        "protein_g": 0.075,
+        "carbs_g": 0.02,
+        "fat_g": 0.04,
+        "fiber_g": 0,
+        "sugar_g": 0.005
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6ea",
+      "food_name": "Pekmez",
+      "food_name_en": "Grape Molasses",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.8,
+        "protein_g": 0.02,
+        "carbs_g": 0.68,
+        "fat_g": 0.005,
+        "fiber_g": 0.008,
+        "sugar_g": 0.55
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a70d5ce06e8d95545567b3c",
+      "food_name": "Petibör",
+      "food_name_en": "Petit Beurre Biscuit",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 41,
+        "protein_g": 0.7,
+        "carbs_g": 6.5,
+        "fat_g": 1.6,
+        "fiber_g": 0.2,
+        "sugar_g": 1.7
+      },
+      "source": "gemini",
+      "ai_provider": "gemini",
+      "nutrition_basis": "per_unit"
+    },
+    {
+      "id": "6a70d55406e8d95545567ae1",
+      "food_name": "Petibör bisküvi",
+      "food_name_en": "Petit-beurre biscuit",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.6,
+        "protein_g": 0.075,
+        "carbs_g": 0.72,
+        "fat_g": 0.18,
+        "fiber_g": 0.025,
+        "sugar_g": 0.072
+      },
+      "source": "gemini",
+      "ai_provider": "gemini",
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5d0",
+      "food_name": "Pide (Sade)",
+      "food_name_en": "Turkish Pita Plain",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.75,
+        "protein_g": 0.09,
+        "carbs_g": 0.52,
+        "fat_g": 0.04,
+        "fiber_g": 0.025,
+        "sugar_g": 0.052
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6e2d2821a649cc66d40e0a",
+      "food_name": "Piko",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 84,
+        "protein_g": 0.9,
+        "carbs_g": 12,
+        "fat_g": 3.7,
+        "fiber_g": 0,
+        "sugar_g": 6.0
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5b1",
+      "food_name": "Pinto Fasulye (Pişmiş)",
+      "food_name_en": "Pinto Beans Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.43,
+        "protein_g": 0.09,
+        "carbs_g": 0.26,
+        "fat_g": 0.006999999999999999,
+        "fiber_g": 0.09,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf45",
+      "food_name": "Pirinç (Beyaz, Uzun Taneli)",
+      "food_name_en": "White Rice (Long Grain)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.65,
+        "protein_g": 0.075,
+        "carbs_g": 0.795,
+        "fat_g": 0.006,
+        "fiber_g": 0.012,
+        "sugar_g": 0.0159
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a58fc6fcf4b1322035333a5",
+      "food_name": "Plum Wine",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6fa",
+      "food_name": "Popcorn",
+      "food_name_en": "Air Popped Popcorn",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.75,
+        "protein_g": 0.129,
+        "carbs_g": 0.74,
+        "fat_g": 0.043,
+        "fiber_g": 0.151,
+        "sugar_g": 0.009
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf2a",
+      "food_name": "Portakal",
+      "food_name_en": "Orange",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 62,
+        "protein_g": 1.2,
+        "carbs_g": 15.4,
+        "fat_g": 0.2,
+        "fiber_g": 3.1,
+        "sugar_g": 12.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c708",
+      "food_name": "Portakal Suyu (Taze)",
+      "food_name_en": "Fresh Squeezed Orange Juice",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.45,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.10400000000000001,
+        "fat_g": 0.002,
+        "fiber_g": 0.002,
+        "sugar_g": 0.084
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c642",
+      "food_name": "Pırasa",
+      "food_name_en": "Leek",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.61,
+        "protein_g": 0.015,
+        "carbs_g": 0.14,
+        "fat_g": 0.003,
+        "fiber_g": 0.018000000000000002,
+        "sugar_g": 0.039
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a7648aa1f5a8410584a5f35",
+      "food_name": "Raw shots fıstık ezmesi sade",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.54,
+        "protein_g": 0.278,
+        "carbs_g": 0.287,
+        "fat_g": 0.396,
+        "fiber_g": 0,
+        "sugar_g": 0.043
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a7648df1f5a8410584a5f38",
+      "food_name": "Raw shots fıztık ezmesi ballı hindistan",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.25,
+        "protein_g": 0.2296,
+        "carbs_g": 0.1975,
+        "fat_g": 0.5285,
+        "fiber_g": 0,
+        "sugar_g": 0.1382
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c628",
+      "food_name": "Roka",
+      "food_name_en": "Arugula",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.25,
+        "protein_g": 0.026000000000000002,
+        "carbs_g": 0.037000000000000005,
+        "fat_g": 0.006999999999999999,
+        "fiber_g": 0.016,
+        "sugar_g": 0.021
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a65e3ece214fb22aa1c89fb",
+      "food_name": "Ruffles Ketçaplı",
+      "food_name_en": "Ruffles Ketchup Flavored Chips",
+      "brand_name": "Ruffles",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.35,
+        "protein_g": 0.059,
+        "carbs_g": 0.52,
+        "fat_g": 0.33,
+        "fiber_g": 0.04,
+        "sugar_g": 0.078
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6fe",
+      "food_name": "Sade Çay",
+      "food_name_en": "Black Tea Plain",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.01,
+        "protein_g": 0.001,
+        "carbs_g": 0.002,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c591",
+      "food_name": "Salam",
+      "food_name_en": "Salami",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.4,
+        "protein_g": 0.15,
+        "carbs_g": 0.02,
+        "fat_g": 0.3,
+        "fiber_g": 0,
+        "sugar_g": 0.005
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf1c",
+      "food_name": "Salatalık",
+      "food_name_en": "Cucumber",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.15,
+        "protein_g": 0.006,
+        "carbs_g": 0.036,
+        "fat_g": 0.001,
+        "fiber_g": 0.005,
+        "sugar_g": 0.017
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5d7",
+      "food_name": "Sandviç Ekmeği (Kepekli)",
+      "food_name_en": "Sandwich Bread Whole Grain",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.55,
+        "protein_g": 0.1,
+        "carbs_g": 0.46,
+        "fat_g": 0.035,
+        "fiber_g": 0.065,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6a4",
+      "food_name": "Sardalya (Konserve)",
+      "food_name_en": "Canned Sardines",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.08,
+        "protein_g": 0.25,
+        "carbs_g": 0,
+        "fat_g": 0.11,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c60e",
+      "food_name": "Sarımsak",
+      "food_name_en": "Garlic",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.49,
+        "protein_g": 0.064,
+        "carbs_g": 0.33,
+        "fat_g": 0.005,
+        "fiber_g": 0.021,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c603",
+      "food_name": "Scrambled Eggs",
+      "food_name_en": "Scrambled Eggs",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.49,
+        "protein_g": 0.09699999999999999,
+        "carbs_g": 0.016,
+        "fat_g": 0.115,
+        "fiber_g": 0,
+        "sugar_g": 0.004
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acef0",
+      "food_name": "Simit",
+      "food_name_en": "Simit (Turkish Sesame Bread Ring)",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 280,
+        "protein_g": 8.5,
+        "carbs_g": 54,
+        "fat_g": 4.5,
+        "fiber_g": 2.1,
+        "sugar_g": 4.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5af",
+      "food_name": "Siyah Fasulye (Pişmiş)",
+      "food_name_en": "Black Beans Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.32,
+        "protein_g": 0.08900000000000001,
+        "carbs_g": 0.24,
+        "fat_g": 0.005,
+        "fiber_g": 0.087,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c694",
+      "food_name": "Somon (Izgara)",
+      "food_name_en": "Grilled Salmon",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.08,
+        "protein_g": 0.2,
+        "carbs_g": 0,
+        "fat_g": 0.13,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf01",
+      "food_name": "Somon (Çiğ)",
+      "food_name_en": "Salmon (Raw)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.08,
+        "protein_g": 0.2,
+        "carbs_g": 0,
+        "fat_g": 0.13,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6606e8d9554555c58f",
+      "food_name": "Sosis",
+      "food_name_en": "Sausage",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.96,
+        "protein_g": 0.12,
+        "carbs_g": 0.04,
+        "fat_g": 0.27,
+        "fiber_g": 0,
+        "sugar_g": 0.006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6706e8d9554555c5a3",
+      "food_name": "Soya Fasulyesi (Pişmiş)",
+      "food_name_en": "Soybeans Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.73,
+        "protein_g": 0.17,
+        "carbs_g": 0.1,
+        "fat_g": 0.09,
+        "fiber_g": 0.06,
+        "sugar_g": 0.03
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf22",
+      "food_name": "Soğan",
+      "food_name_en": "Onion",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.4,
+        "protein_g": 0.011,
+        "carbs_g": 0.093,
+        "fat_g": 0.001,
+        "fiber_g": 0.017,
+        "sugar_g": 0.042
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6406e8d9554555c544",
+      "food_name": "Soğan Çorbası",
+      "food_name_en": "Onion Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.48,
+        "protein_g": 0.015,
+        "carbs_g": 0.08,
+        "fat_g": 0.012,
+        "fiber_g": 0.008,
+        "sugar_g": 0.02
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6fc",
+      "food_name": "Su",
+      "food_name_en": "Water",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c58d",
+      "food_name": "Sucuk",
+      "food_name_en": "Sujuk Turkish Sausage",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4,
+        "protein_g": 0.22,
+        "carbs_g": 0.02,
+        "fat_g": 0.35,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6dc",
+      "food_name": "Sulu Köfte",
+      "food_name_en": "Turkish Meatball Stew",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.3,
+        "protein_g": 0.09,
+        "carbs_g": 0.1,
+        "fat_g": 0.06,
+        "fiber_g": 0.012,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c684",
+      "food_name": "Susam",
+      "food_name_en": "Sesame Seeds",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.73,
+        "protein_g": 0.17,
+        "carbs_g": 0.23,
+        "fat_g": 0.5,
+        "fiber_g": 0.11800000000000001,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf08",
+      "food_name": "Süt (Tam Yağlı)",
+      "food_name_en": "Whole Milk",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.61,
+        "protein_g": 0.032,
+        "carbs_g": 0.047,
+        "fat_g": 0.033,
+        "fiber_g": 0,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf0a",
+      "food_name": "Süt (Yarım Yağlı)",
+      "food_name_en": "Semi-Skimmed Milk",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.46,
+        "protein_g": 0.032,
+        "carbs_g": 0.047,
+        "fat_g": 0.015,
+        "fiber_g": 0,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6cc",
+      "food_name": "Sütlaç",
+      "food_name_en": "Turkish Rice Pudding",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.22,
+        "protein_g": 0.035,
+        "carbs_g": 0.2,
+        "fat_g": 0.032,
+        "fiber_g": 0.002,
+        "sugar_g": 0.14
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c704",
+      "food_name": "Sütlü Kahve",
+      "food_name_en": "Latte Coffee with Milk",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.5,
+        "protein_g": 0.025,
+        "carbs_g": 0.05,
+        "fat_g": 0.022000000000000002,
+        "fiber_g": 0,
+        "sugar_g": 0.045
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6f0",
+      "food_name": "Sütlü Çikolata",
+      "food_name_en": "Milk Chocolate",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.35,
+        "protein_g": 0.077,
+        "carbs_g": 0.59,
+        "fat_g": 0.3,
+        "fiber_g": 0.015,
+        "sugar_g": 0.52
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf0e",
+      "food_name": "Süzme Yoğurt",
+      "food_name_en": "Greek Yogurt",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.59,
+        "protein_g": 0.1,
+        "carbs_g": 0.036,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.036
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6606e8d9554555c585",
+      "food_name": "Sığır Biftek",
+      "food_name_en": "Beef Steak",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.42,
+        "protein_g": 0.27,
+        "carbs_g": 0,
+        "fat_g": 0.15,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c692",
+      "food_name": "Tahin",
+      "food_name_en": "Tahini",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.95,
+        "protein_g": 0.17,
+        "carbs_g": 0.21,
+        "fat_g": 0.53,
+        "fiber_g": 0.09300000000000001,
+        "sugar_g": 0.005
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1aceee",
+      "food_name": "Tam Buğday Ekmeği",
+      "food_name_en": "Whole Wheat Bread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.47,
+        "protein_g": 0.11,
+        "carbs_g": 0.414,
+        "fat_g": 0.034,
+        "fiber_g": 0.069,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6806e8d9554555c5bb",
+      "food_name": "Tam Buğday Makarnası (Pişmiş)",
+      "food_name_en": "Whole Wheat Pasta Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.24,
+        "protein_g": 0.053,
+        "carbs_g": 0.26,
+        "fat_g": 0.005,
+        "fiber_g": 0.032,
+        "sugar_g": 0.008
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5dd",
+      "food_name": "Tam Yağlı Süt",
+      "food_name_en": "Whole Milk",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.61,
+        "protein_g": 0.032,
+        "carbs_g": 0.048,
+        "fat_g": 0.033,
+        "fiber_g": 0,
+        "sugar_g": 0.048
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c52c",
+      "food_name": "Tarhana Çorbası",
+      "food_name_en": "Tarhana Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.62,
+        "protein_g": 0.027999999999999997,
+        "carbs_g": 0.095,
+        "fat_g": 0.015,
+        "fiber_g": 0.012,
+        "sugar_g": 0.0238
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c614",
+      "food_name": "Tatlı Patates (Pişmiş)",
+      "food_name_en": "Sweet Potato Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.86,
+        "protein_g": 0.016,
+        "carbs_g": 0.2,
+        "fat_g": 0.001,
+        "fiber_g": 0.033,
+        "sugar_g": 0.065
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c54a",
+      "food_name": "Tavuk Budu (Derili, Fırın)",
+      "food_name_en": "Chicken Thigh Skin-On Baked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.29,
+        "protein_g": 0.25,
+        "carbs_g": 0,
+        "fat_g": 0.14,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c54c",
+      "food_name": "Tavuk Budu (Derisiz)",
+      "food_name_en": "Skinless Chicken Thigh",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.79,
+        "protein_g": 0.25,
+        "carbs_g": 0,
+        "fat_g": 0.09,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c564",
+      "food_name": "Tavuk Ciğeri",
+      "food_name_en": "Chicken Liver",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.67,
+        "protein_g": 0.245,
+        "carbs_g": 0.01,
+        "fat_g": 0.075,
+        "fiber_g": 0,
+        "sugar_g": 0.0012
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c554",
+      "food_name": "Tavuk Döner",
+      "food_name_en": "Chicken Doner",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.95,
+        "protein_g": 0.24,
+        "carbs_g": 0.04,
+        "fat_g": 0.085,
+        "fiber_g": 0.002,
+        "sugar_g": 0.0048
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c546",
+      "food_name": "Tavuk Göğsü (Haşlanmış)",
+      "food_name_en": "Boiled Chicken Breast",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.65,
+        "protein_g": 0.31,
+        "carbs_g": 0,
+        "fat_g": 0.036000000000000004,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c548",
+      "food_name": "Tavuk Göğsü (Izgara)",
+      "food_name_en": "Grilled Chicken Breast",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.65,
+        "protein_g": 0.31,
+        "carbs_g": 0,
+        "fat_g": 0.036000000000000004,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acef9",
+      "food_name": "Tavuk Göğsü (Çiğ)",
+      "food_name_en": "Chicken Breast (Raw)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.2,
+        "protein_g": 0.23,
+        "carbs_g": 0,
+        "fat_g": 0.026,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6506e8d9554555c54e",
+      "food_name": "Tavuk Kanat (Fırın)",
+      "food_name_en": "Baked Chicken Wings",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.9,
+        "protein_g": 0.27,
+        "carbs_g": 0,
+        "fat_g": 0.195,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c556",
+      "food_name": "Tavuk Köfte",
+      "food_name_en": "Chicken Meatballs",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.75,
+        "protein_g": 0.2,
+        "carbs_g": 0.08,
+        "fat_g": 0.075,
+        "fiber_g": 0.005,
+        "sugar_g": 0.0096
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c550",
+      "food_name": "Tavuk Kıyması",
+      "food_name_en": "Ground Chicken",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.48,
+        "protein_g": 0.17,
+        "carbs_g": 0,
+        "fat_g": 0.085,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c55a",
+      "food_name": "Tavuk Pirzola",
+      "food_name_en": "Chicken Chop",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.2,
+        "protein_g": 0.26,
+        "carbs_g": 0.01,
+        "fat_g": 0.125,
+        "fiber_g": 0,
+        "sugar_g": 0.0012
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c55c",
+      "food_name": "Tavuk Salatası",
+      "food_name_en": "Chicken Salad",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.3,
+        "protein_g": 0.18,
+        "carbs_g": 0.04,
+        "fat_g": 0.05,
+        "fiber_g": 0.01,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c558",
+      "food_name": "Tavuk Sote",
+      "food_name_en": "Chicken Saute",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.85,
+        "protein_g": 0.25,
+        "carbs_g": 0.05,
+        "fat_g": 0.07,
+        "fiber_g": 0.01,
+        "sugar_g": 0.0075
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c53a",
+      "food_name": "Tavuk Suyu Çorbası",
+      "food_name_en": "Chicken Broth Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.28,
+        "protein_g": 0.025,
+        "carbs_g": 0.025,
+        "fat_g": 0.008,
+        "fiber_g": 0.001,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c566",
+      "food_name": "Tavuk Tandır",
+      "food_name_en": "Chicken Tandoori",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.05,
+        "protein_g": 0.26,
+        "carbs_g": 0.035,
+        "fat_g": 0.095,
+        "fiber_g": 0,
+        "sugar_g": 0.0053
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6e2b6b21a649cc66d40e08",
+      "food_name": "Tavuk pirzola",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.45,
+        "protein_g": 0.19,
+        "carbs_g": 0,
+        "fat_g": 0.1,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6506e8d9554555c552",
+      "food_name": "Tavuk Şiş (Izgara)",
+      "food_name_en": "Chicken Shish Kebab Grilled",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.85,
+        "protein_g": 0.28,
+        "carbs_g": 0.025,
+        "fat_g": 0.065,
+        "fiber_g": 0,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c62a",
+      "food_name": "Taze Soğan",
+      "food_name_en": "Spring Onion",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.32,
+        "protein_g": 0.018000000000000002,
+        "carbs_g": 0.073,
+        "fat_g": 0.002,
+        "fiber_g": 0.026000000000000002,
+        "sugar_g": 0.023
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c719",
+      "food_name": "Tempeh",
+      "food_name_en": "Tempeh",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.93,
+        "protein_g": 0.19,
+        "carbs_g": 0.094,
+        "fat_g": 0.11,
+        "fiber_g": 0,
+        "sugar_g": 0.025
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf16",
+      "food_name": "Tereyağı",
+      "food_name_en": "Butter",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 7.17,
+        "protein_g": 0.005,
+        "carbs_g": 0.001,
+        "fat_g": 0.81,
+        "fiber_g": 0,
+        "sugar_g": 0.0006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c717",
+      "food_name": "Tofu",
+      "food_name_en": "Tofu",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.76,
+        "protein_g": 0.081,
+        "carbs_g": 0.019,
+        "fat_g": 0.048,
+        "fiber_g": 0.003,
+        "sugar_g": 0.006
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c696",
+      "food_name": "Ton Balığı (Konserve, Suda)",
+      "food_name_en": "Canned Tuna in Water",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.16,
+        "protein_g": 0.26,
+        "carbs_g": 0,
+        "fat_g": 0.01,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c698",
+      "food_name": "Ton Balığı (Konserve, Yağlı)",
+      "food_name_en": "Canned Tuna in Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.98,
+        "protein_g": 0.22,
+        "carbs_g": 0,
+        "fat_g": 0.12,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf03",
+      "food_name": "Ton Balığı (Su İçinde)",
+      "food_name_en": "Tuna (Canned in Water)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.16,
+        "protein_g": 0.259,
+        "carbs_g": 0,
+        "fat_g": 0.01,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5d9",
+      "food_name": "Tortilla",
+      "food_name_en": "Flour Tortilla",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.06,
+        "protein_g": 0.08199999999999999,
+        "carbs_g": 0.51,
+        "fat_g": 0.073,
+        "fiber_g": 0.032,
+        "sugar_g": 0.025
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6c06e8d9554555c5ef",
+      "food_name": "Tulum Peyniri",
+      "food_name_en": "Tulum Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.47,
+        "protein_g": 0.22,
+        "carbs_g": 0.01,
+        "fat_g": 0.29,
+        "fiber_g": 0,
+        "sugar_g": 0.003
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a5916ddcf4b13220353579a",
+      "food_name": "Turkish Taouk Marinade",
+      "food_name_en": null,
+      "brand_name": null,
+      "per_unit": {
+        "calories": 0,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 0,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": null,
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6e06e8d9554555c632",
+      "food_name": "Turp",
+      "food_name_en": "Radish",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.16,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.034,
+        "fat_g": 0.001,
+        "fiber_g": 0.016,
+        "sugar_g": 0.019
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7406e8d9554555c702",
+      "food_name": "Türk Kahvesi (Sade)",
+      "food_name_en": "Turkish Coffee Plain",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.02,
+        "protein_g": 0.003,
+        "carbs_g": 0.003,
+        "fat_g": 0.001,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c577",
+      "food_name": "Urfa Kebap",
+      "food_name_en": "Urfa Kebab",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.65,
+        "protein_g": 0.2,
+        "carbs_g": 0.045,
+        "fat_g": 0.19,
+        "fiber_g": 0.005,
+        "sugar_g": 0.0054
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6a2",
+      "food_name": "Uskumru",
+      "food_name_en": "Mackerel",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.05,
+        "protein_g": 0.19,
+        "carbs_g": 0,
+        "fat_g": 0.14,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a7a032009f964d12575b30c",
+      "food_name": "Vib fındıklı kahve",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.29,
+        "protein_g": 0.024,
+        "carbs_g": 0.843,
+        "fat_g": 0.091,
+        "fiber_g": 0,
+        "sugar_g": 0.1264
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c658",
+      "food_name": "Vişne",
+      "food_name_en": "Sour Cherry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.5,
+        "protein_g": 0.01,
+        "carbs_g": 0.122,
+        "fat_g": 0.003,
+        "fiber_g": 0.016,
+        "sugar_g": 0.085
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf36",
+      "food_name": "Whey Protein (Vanilyalı)",
+      "food_name_en": "Whey Protein Vanilla",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.73,
+        "protein_g": 0.79,
+        "carbs_g": 0.06,
+        "fat_g": 0.03,
+        "fiber_g": 0,
+        "sugar_g": 0.03
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c715",
+      "food_name": "Whey Protein Tozu",
+      "food_name_en": "Whey Protein Powder",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.7,
+        "protein_g": 0.8,
+        "carbs_g": 0.1,
+        "fat_g": 0.05,
+        "fiber_g": 0,
+        "sugar_g": 0.04
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c676",
+      "food_name": "Yaban Mersini",
+      "food_name_en": "Blueberry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.57,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.145,
+        "fat_g": 0.003,
+        "fiber_g": 0.024,
+        "sugar_g": 0.1
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c52f",
+      "food_name": "Yayla Çorbası",
+      "food_name_en": "Yayla Soup (Yogurt Soup)",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.68,
+        "protein_g": 0.035,
+        "carbs_g": 0.065,
+        "fat_g": 0.032,
+        "fiber_g": 0.003,
+        "sugar_g": 0.0163
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6b06e8d9554555c5df",
+      "food_name": "Yağsız Süt",
+      "food_name_en": "Skim Milk",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.34,
+        "protein_g": 0.034,
+        "carbs_g": 0.05,
+        "fat_g": 0.001,
+        "fiber_g": 0,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c67c",
+      "food_name": "Yer Fıstığı",
+      "food_name_en": "Peanuts",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.67,
+        "protein_g": 0.26,
+        "carbs_g": 0.16,
+        "fat_g": 0.49,
+        "fiber_g": 0.085,
+        "sugar_g": 0.047
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c609",
+      "food_name": "Yeşil Biber",
+      "food_name_en": "Green Bell Pepper",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.2,
+        "protein_g": 0.009000000000000001,
+        "carbs_g": 0.046,
+        "fat_g": 0.002,
+        "fiber_g": 0.017,
+        "sugar_g": 0.024
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6606e8d9554555c599",
+      "food_name": "Yeşil Mercimek (Pişmiş)",
+      "food_name_en": "Green Lentils Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.16,
+        "protein_g": 0.09,
+        "carbs_g": 0.2,
+        "fat_g": 0.004,
+        "fiber_g": 0.079,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a698a499f665d8a5e0a2b96",
+      "food_name": "Yeşil mercimek",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.29,
+        "protein_g": 0.23,
+        "carbs_g": 0.366,
+        "fat_g": 0.006,
+        "fiber_g": 0,
+        "sugar_g": 0.021
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6b06e8d9554555c5e3",
+      "food_name": "Yoğurt (Light)",
+      "food_name_en": "Low-Fat Yogurt",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.4,
+        "protein_g": 0.042,
+        "carbs_g": 0.05,
+        "fat_g": 0.004,
+        "fiber_g": 0,
+        "sugar_g": 0.05
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf0c",
+      "food_name": "Yoğurt (Tam Yağlı)",
+      "food_name_en": "Full Fat Yogurt",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.97,
+        "protein_g": 0.045,
+        "carbs_g": 0.038,
+        "fat_g": 0.06,
+        "fiber_g": 0,
+        "sugar_g": 0.038
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca6e214fb22aa1acee4",
+      "food_name": "Yulaf",
+      "food_name_en": "Oats",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.89,
+        "protein_g": 0.17,
+        "carbs_g": 0.662,
+        "fat_g": 0.07,
+        "fiber_g": 0.105,
+        "sugar_g": 0.0099
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6906e8d9554555c5bd",
+      "food_name": "Yulaf (Pişmiş)",
+      "food_name_en": "Oats Cooked",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.71,
+        "protein_g": 0.025,
+        "carbs_g": 0.12,
+        "fat_g": 0.015,
+        "fiber_g": 0.017,
+        "sugar_g": 0.0025
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6906e8d9554555c5bf",
+      "food_name": "Yulaf Ezmesi (Ham)",
+      "food_name_en": "Raw Oats",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.79,
+        "protein_g": 0.132,
+        "carbs_g": 0.68,
+        "fat_g": 0.065,
+        "fiber_g": 0.106,
+        "sugar_g": 0.0099
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca7e214fb22aa1acf10",
+      "food_name": "Yumurta",
+      "food_name_en": "Egg",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 72,
+        "protein_g": 6.3,
+        "carbs_g": 0.4,
+        "fat_g": 4.8,
+        "fiber_g": 0,
+        "sugar_g": 0.2
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c5ff",
+      "food_name": "Yumurta (Haşlanmış)",
+      "food_name_en": "Boiled Egg",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 78,
+        "protein_g": 6.3,
+        "carbs_g": 0.6,
+        "fat_g": 5.3,
+        "fiber_g": 0,
+        "sugar_g": 0.6
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_unit"
+    },
+    {
+      "id": "6a6fab6d06e8d9554555c601",
+      "food_name": "Yumurta (Sahanda)",
+      "food_name_en": "Fried Egg",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 90,
+        "protein_g": 6.3,
+        "carbs_g": 0.4,
+        "fat_g": 7,
+        "fiber_g": 0,
+        "sugar_g": 0.2
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_unit"
+    },
+    {
+      "id": "6a6fab6b06e8d9554555c5e6",
+      "food_name": "Yunan Yoğurdu",
+      "food_name_en": "Greek Yogurt",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.73,
+        "protein_g": 0.1,
+        "carbs_g": 0.036000000000000004,
+        "fat_g": 0.004,
+        "fiber_g": 0,
+        "sugar_g": 0.036
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf30",
+      "food_name": "Zeytin (Siyah)",
+      "food_name_en": "Black Olive",
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 7,
+        "protein_g": 0.05,
+        "carbs_g": 0.4,
+        "fat_g": 0.7,
+        "fiber_g": 0.2,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf49",
+      "food_name": "Zeytinyağlı Konserve Ton Balığı",
+      "food_name_en": "Tuna in Olive Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2,
+        "protein_g": 0.243,
+        "carbs_g": 0,
+        "fat_g": 0.1,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6ba",
+      "food_name": "Zeytinyağlı Taze Fasulye",
+      "food_name_en": "Green Beans in Olive Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.72,
+        "protein_g": 0.018000000000000002,
+        "carbs_g": 0.055,
+        "fat_g": 0.05,
+        "fiber_g": 0.02,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6c4",
+      "food_name": "Zeytinyağlı Yaprak Sarması",
+      "food_name_en": "Stuffed Vine Leaves with Olive Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.55,
+        "protein_g": 0.025,
+        "carbs_g": 0.22,
+        "fat_g": 0.065,
+        "fiber_g": 0.025,
+        "sugar_g": 0.055
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf2c",
+      "food_name": "Zeytinyağı",
+      "food_name_en": "Olive Oil",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 8.84,
+        "protein_g": 0,
+        "carbs_g": 0,
+        "fat_g": 1,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a738a8c01063d9ef2b88c1c",
+      "food_name": "calve barbekü sos",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.33,
+        "protein_g": 0.005,
+        "carbs_g": 0.03,
+        "fat_g": 0.006,
+        "fiber_g": 0,
+        "sugar_g": 0.0135
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6904bc9f665d8a5e0a2b91",
+      "food_name": "emsal fıstık ezmesi",
+      "food_name_en": null,
+      "brand_name": "emsal",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.22,
+        "protein_g": 0.242,
+        "carbs_g": 0.174,
+        "fat_g": 0.523,
+        "fiber_g": 0,
+        "sugar_g": 0.0261
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a77530f1f5a8410584a5f4f",
+      "food_name": "hardal",
+      "food_name_en": null,
+      "brand_name": "hermes",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.35,
+        "protein_g": 0.002,
+        "carbs_g": 0.12,
+        "fat_g": 0.21,
+        "fiber_g": 0,
+        "sugar_g": 0.054
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a77359c1f5a8410584a5f49",
+      "food_name": "izmir bomba",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "adet",
+      "per_unit": {
+        "calories": 125,
+        "protein_g": 1.5,
+        "carbs_g": 17,
+        "fat_g": 8,
+        "fiber_g": 0,
+        "sugar_g": 9.5
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6a323dc02ad28b75e1c7b6",
+      "food_name": "mayonez",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.15,
+        "protein_g": 0.003,
+        "carbs_g": 0.14,
+        "fat_g": 0.4,
+        "fiber_g": 0,
+        "sugar_g": 0.063
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a67b0f5636a63696f42f2f5",
+      "food_name": "mis laktozsuz yoğurt",
+      "food_name_en": null,
+      "brand_name": "mis",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.4,
+        "protein_g": 0.04,
+        "carbs_g": 0.047,
+        "fat_g": 0.015,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a70d6269789ef34fef6bfc6",
+      "food_name": "petibör bisküvi",
+      "food_name_en": null,
+      "brand_name": "bim",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 4.28,
+        "protein_g": 0.057999999999999996,
+        "carbs_g": 0.79,
+        "fat_g": 0.096,
+        "fiber_g": 0,
+        "sugar_g": 0.079
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a67a6b6ec33f5ffa29656c9",
+      "food_name": "tommis bol peynirli",
+      "food_name_en": null,
+      "brand_name": "tommis",
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.71,
+        "protein_g": 0.10300000000000001,
+        "carbs_g": 0.31,
+        "fat_g": 0.114,
+        "fiber_g": 0,
+        "sugar_g": 0.2325
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7006e8d9554555c682",
+      "food_name": "Çam Fıstığı",
+      "food_name_en": "Pine Nuts",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 6.73,
+        "protein_g": 0.14,
+        "carbs_g": 0.13,
+        "fat_g": 0.68,
+        "fiber_g": 0.037000000000000005,
+        "sugar_g": 0.036
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6a06e8d9554555c5ce",
+      "food_name": "Çavdar Ekmeği",
+      "food_name_en": "Rye Bread",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.59,
+        "protein_g": 0.085,
+        "carbs_g": 0.483,
+        "fat_g": 0.033,
+        "fiber_g": 0.057999999999999996,
+        "sugar_g": 0.038
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a645ca8e214fb22aa1acf38",
+      "food_name": "Çikolata (Bitter %70)",
+      "food_name_en": "Dark Chocolate 70%",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 5.98,
+        "protein_g": 0.078,
+        "carbs_g": 0.457,
+        "fat_g": 0.428,
+        "fiber_g": 0.107,
+        "sugar_g": 0.24
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c64b",
+      "food_name": "Çilek",
+      "food_name_en": "Strawberry",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.32,
+        "protein_g": 0.006999999999999999,
+        "carbs_g": 0.077,
+        "fat_g": 0.003,
+        "fiber_g": 0.02,
+        "sugar_g": 0.049
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6ec",
+      "food_name": "Çilek Reçeli",
+      "food_name_en": "Strawberry Jam",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.5,
+        "protein_g": 0.004,
+        "carbs_g": 0.65,
+        "fat_g": 0.001,
+        "fiber_g": 0.006999999999999999,
+        "sugar_g": 0.48
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7106e8d9554555c6a0",
+      "food_name": "Çipura (Izgara)",
+      "food_name_en": "Grilled Sea Bream",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.28,
+        "protein_g": 0.19,
+        "carbs_g": 0,
+        "fat_g": 0.055,
+        "fiber_g": 0,
+        "sugar_g": 0.0
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6ca",
+      "food_name": "Çoban Salatası",
+      "food_name_en": "Shepherd Salad",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.38,
+        "protein_g": 0.01,
+        "carbs_g": 0.055,
+        "fat_g": 0.015,
+        "fiber_g": 0.015,
+        "sugar_g": 0.0138
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6c06e8d9554555c5f2",
+      "food_name": "Çökelek",
+      "food_name_en": "Turkish Curd Cheese",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.05,
+        "protein_g": 0.095,
+        "carbs_g": 0.02,
+        "fat_g": 0.065,
+        "fiber_g": 0,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6506e8d9554555c560",
+      "food_name": "Çıtır Tavuk (Kızarmış)",
+      "food_name_en": "Fried Crispy Chicken",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.12,
+        "protein_g": 0.24,
+        "carbs_g": 0.12,
+        "fat_g": 0.2,
+        "fiber_g": 0.005,
+        "sugar_g": 0.018
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c64d",
+      "food_name": "Üzüm",
+      "food_name_en": "Grapes",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.67,
+        "protein_g": 0.006,
+        "carbs_g": 0.17,
+        "fat_g": 0.004,
+        "fiber_g": 0.009000000000000001,
+        "sugar_g": 0.16
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6b0",
+      "food_name": "İmam Bayıldı",
+      "food_name_en": "Imam Bayildi Stuffed Eggplant",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.2,
+        "protein_g": 0.02,
+        "carbs_g": 0.075,
+        "fat_g": 0.095,
+        "fiber_g": 0.025,
+        "sugar_g": 0.0112
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7006e8d9554555c662",
+      "food_name": "İncir (Taze)",
+      "food_name_en": "Fresh Fig",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.74,
+        "protein_g": 0.008,
+        "carbs_g": 0.19,
+        "fat_g": 0.003,
+        "fiber_g": 0.028999999999999998,
+        "sugar_g": 0.163
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7306e8d9554555c6e0",
+      "food_name": "İskender Kebap",
+      "food_name_en": "Iskender Kebab",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 2.45,
+        "protein_g": 0.16,
+        "carbs_g": 0.18,
+        "fat_g": 0.13,
+        "fiber_g": 0.01,
+        "sugar_g": 0.0216
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab7206e8d9554555c6b8",
+      "food_name": "İç Pilav",
+      "food_name_en": "Turkish Stuffed Rice Pilaf",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 1.65,
+        "protein_g": 0.035,
+        "carbs_g": 0.26,
+        "fat_g": 0.06,
+        "fiber_g": 0.015,
+        "sugar_g": 0.0052
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c531",
+      "food_name": "İşkembe Çorbası",
+      "food_name_en": "Tripe Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.58,
+        "protein_g": 0.055,
+        "carbs_g": 0.03,
+        "fat_g": 0.03,
+        "fiber_g": 0,
+        "sugar_g": 0.0075
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a778a391f5a8410584a5f53",
+      "food_name": "ıslak kek",
+      "food_name_en": null,
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 3.6,
+        "protein_g": 0.07,
+        "carbs_g": 0.55,
+        "fat_g": 0.2,
+        "fiber_g": 0,
+        "sugar_g": 0.385
+      },
+      "source": "manual",
+      "ai_provider": null,
+      "nutrition_basis": null
+    },
+    {
+      "id": "6a6fab7406e8d9554555c711",
+      "food_name": "Şalgam Suyu",
+      "food_name_en": "Shalgam Turkish Turnip Juice",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.15,
+        "protein_g": 0.005,
+        "carbs_g": 0.03,
+        "fat_g": 0.001,
+        "fiber_g": 0.008,
+        "sugar_g": 0.01
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6f06e8d9554555c653",
+      "food_name": "Şeftali",
+      "food_name_en": "Peach",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.39,
+        "protein_g": 0.009000000000000001,
+        "carbs_g": 0.095,
+        "fat_g": 0.003,
+        "fiber_g": 0.015,
+        "sugar_g": 0.084
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    },
+    {
+      "id": "6a6fab6406e8d9554555c538",
+      "food_name": "Şehriye Çorbası",
+      "food_name_en": "Vermicelli Soup",
+      "brand_name": null,
+      "unit_type": "gram",
+      "per_unit": {
+        "calories": 0.58,
+        "protein_g": 0.025,
+        "carbs_g": 0.085,
+        "fat_g": 0.015,
+        "fiber_g": 0.004,
+        "sugar_g": 0.0213
+      },
+      "source": "seed",
+      "ai_provider": null,
+      "nutrition_basis": "per_gram"
+    }
+  ]
+}
