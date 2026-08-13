@@ -9,7 +9,7 @@ import { User } from "@/models/User";
 import { SavedFood } from "@/models/SavedFood";
 import { FoodCache } from "@/models/FoodCache";
 import { WeightLog } from "@/models/WeightLog";
-import { calculateTargetCalories, calculateBMR, calculateAge, isMale } from "@/lib/calories";
+import { calculateTargetCalories, calculateBMR, calculateAge, calculateStepsCalories, isMale } from "@/lib/calories";
 
 export async function getFoodDatabaseAction() {
   try {
@@ -274,7 +274,7 @@ export async function deleteMealAction(data: { date: string; entry_id: string; t
 }
 
 // ── EXERCISES ──
-export async function addExerciseAction(data: { date: string; name: string; duration_minutes: number; calories_burned: number }) {
+export async function addExerciseAction(data: { date: string; name: string; duration_minutes: number; calories_burned: number; step_count?: number }) {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -282,9 +282,23 @@ export async function addExerciseAction(data: { date: string; name: string; dura
     targetDate.setUTCHours(0, 0, 0, 0);
     
     const user = await User.findById(userId);
-    
-    // Use the exact calories provided by the user
-    const netCalories = data.calories_burned;
+    const isStepEntry = data.name === "Adım Sayısı" && Number.isFinite(data.step_count) && (data.step_count || 0) > 0;
+
+    if (!Number.isFinite(data.duration_minutes) || data.duration_minutes < 0 || !Number.isFinite(data.calories_burned) || data.calories_burned < 0) {
+      return { success: false, error: "Egzersiz bilgileri geçersiz." };
+    }
+
+    if (data.name === "Adım Sayısı" && !isStepEntry) {
+      return { success: false, error: "Geçerli bir adım sayısı girin." };
+    }
+
+    const netCalories = isStepEntry
+      ? calculateStepsCalories(user?.current_weight_kg || 0, data.step_count!)
+      : data.calories_burned;
+
+    if (isStepEntry && (!user?.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date)) {
+      return { success: false, error: "Adım kalorisi için boy, kilo ve doğum tarihi bilgileri eksiksiz olmalıdır." };
+    }
 
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
     if (!log) {
@@ -298,17 +312,26 @@ export async function addExerciseAction(data: { date: string; name: string; dura
       });
     }
 
+    if (isStepEntry) {
+      const age = calculateAge(user!.profile.birth_date);
+      const bmr = calculateBMR(user!.current_weight_kg!, user!.profile.height_cm!, age, user!.profile.gender);
+      log.exercises = log.exercises.filter((exercise: { step_count?: number }) => !exercise.step_count);
+      log.bmr_added = true;
+      log.totals.calories_burned_bmr = bmr + netCalories;
+    }
+
     log.exercises.push({
       name: data.name,
       duration_minutes: data.duration_minutes,
       calories_burned: netCalories,
-      source: "manual"
+      source: isStepEntry ? "estimated" : "manual",
+      ...(isStepEntry ? { step_count: data.step_count } : {})
     });
 
-    log.totals.calories_burned_exercise += netCalories;
+    if (!isStepEntry) log.totals.calories_burned_exercise += netCalories;
     
     await log.save();
-    return { success: true, netCalories };
+    return { success: true, netCalories, bmr: isStepEntry ? log.totals.calories_burned_bmr : undefined };
   } catch (e: unknown) {
     const err = e as Error;
     return { success: false, error: err.message };

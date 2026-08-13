@@ -6,8 +6,9 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDate }: { onClose: () => void, onSuccess: () => void, userWeight?: number, currentDate?: string }) {
   const {
-    exerciseType, setExerciseType,
-    durationMinutes, setDurationMinutes,
+    exerciseType, handleExerciseTypeChange,
+    durationMinutes, handleDurationChange,
+    stepCount, handleStepCountChange,
     burnedCalories, setBurnedCalories,
     isLoading, handleSubmit
   } = useAddExerciseViewModel(onSuccess, userWeight, currentDate);
@@ -22,7 +23,7 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.exerciseType')}</label>
           <select 
             value={exerciseType}
-            onChange={(e) => setExerciseType(e.target.value)}
+            onChange={(e) => handleExerciseTypeChange(e.target.value)}
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none"
           >
             <option value="Koşu">Koşu</option>
@@ -31,21 +32,38 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
             <option value="Bisiklet">Bisiklet</option>
             <option value="Yüzme">Yüzme</option>
             <option value="Yoga">Yoga</option>
+            <option value="Adım Sayısı">Adım Sayısı</option>
           </select>
         </div>
 
-        {/* Süre */}
-        <div className="flex flex-col gap-2">
+        {exerciseType === 'Adım Sayısı' ? (
+          <div className="flex flex-col gap-2">
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider" htmlFor="step-count">Adım Sayısı</label>
+            <input
+              id="step-count"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              required
+              value={stepCount}
+              onChange={(e) => handleStepCountChange(e.target.value)}
+              placeholder="10000"
+              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.duration')}</label>
           <input 
             type="number" 
             required
             value={durationMinutes}
-            onChange={(e) => setDurationMinutes(e.target.value)}
+            onChange={(e) => handleDurationChange(e.target.value)}
             placeholder="45" 
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
           />
         </div>
+        )}
 
         {/* Yakılan Kalori */}
         <div className="flex flex-col gap-2">
@@ -61,7 +79,7 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-[var(--font-headline)] font-semibold text-orange-400 focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
             />
           </div>
-          <span className="text-caption text-[var(--on-surface-variant)] mt-1 ml-2">Bu bilgilerine göre tahmini bir kaloridir. Akıllı saat ile ölçtüğün veriyi girmen daha sağlıklı olacaktır.</span>
+          <span className="text-caption text-[var(--on-surface-variant)] mt-1 ml-2">{exerciseType === 'Adım Sayısı' ? 'Kilon ve adım sayına göre tahmini olarak hesaplanır ve BMR toplamına eklenir.' : 'Bu bilgilerine göre tahmini bir kaloridir. Akıllı saat ile ölçtüğün veriyi girmen daha sağlıklı olacaktır.'}</span>
         </div>
       </div>
 

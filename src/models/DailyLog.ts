@@ -42,6 +42,7 @@ export interface IDailyLog extends Document {
     duration_minutes: number;
     calories_burned: number;
     source: ExerciseSource;
+    step_count?: number;
   }[];
   bmr_added: boolean;
   totals: {
@@ -99,7 +100,8 @@ const DailyLogSchema: Schema = new Schema({
     name: { type: String, required: true },
     duration_minutes: { type: Number, required: true },
     calories_burned: { type: Number, required: true },
-    source: { type: String, enum: Object.values(ExerciseSource), required: true }
+    source: { type: String, enum: Object.values(ExerciseSource), required: true },
+    step_count: { type: Number, min: 1 }
   }],
   bmr_added: { type: Boolean, default: false },
   totals: {

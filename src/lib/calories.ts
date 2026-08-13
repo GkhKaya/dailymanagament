@@ -29,6 +29,11 @@ export function calculateBMR(
   return Math.round(bmr);
 }
 
+export function calculateStepsCalories(weight: number, steps: number): number {
+  if (!Number.isFinite(weight) || !Number.isFinite(steps) || weight <= 0 || steps <= 0) return 0;
+  return Math.round(weight * steps * 0.0005);
+}
+
 export function calculateTargetCalories(
   weight: number,
   height: number,
