@@ -3,6 +3,9 @@ import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
 import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
+import { SwipeableItem } from "@/components/ui/SwipeableItem";
+import { deleteMealAction } from "@/actions/health";
+import toast from "react-hot-toast";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -13,9 +16,10 @@ interface HealthSectionProps {
   onShowAnalysis?: () => void;
   onOpenSheet?: (type: string, payload?: unknown) => void;
   onAddBmr?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
-export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr }: HealthSectionProps) {
+export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr, onRefresh }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
@@ -26,6 +30,51 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
     setExpandedMeals(prev => 
       prev.includes(mealId) ? prev.filter(id => id !== mealId) : [...prev, mealId]
     );
+  };
+
+  const handleDeleteFood = async (foodId: string, mealType: string) => {
+    if (!foodId) return;
+    const dateStr = data.date || (currentDate ? currentDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+    const res = await deleteMealAction({
+      date: dateStr,
+      entry_id: foodId,
+      type: mealType,
+    });
+
+    if (res.success) {
+      toast.success("Yemek silindi");
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } else {
+      toast.error(res.error || "Yemek silinemedi");
+    }
+  };
+
+  const handleDeleteMealCategory = async (meal: { type: string; foods?: Array<{ id: string }> }) => {
+    if (!meal.foods || meal.foods.length === 0) return;
+    const dateStr = data.date || (currentDate ? currentDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+    
+    let success = false;
+    for (const food of meal.foods) {
+      if (food.id) {
+        const res = await deleteMealAction({
+          date: dateStr,
+          entry_id: food.id,
+          type: meal.type,
+        });
+        if (res.success) success = true;
+      }
+    }
+
+    if (success) {
+      toast.success("Öğün silindi");
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } else {
+      toast.error("Öğün silinemedi");
+    }
   };
 
 
@@ -206,61 +255,67 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           {data.meals.map((meal) => {
             const isExpanded = expandedMeals.includes(meal.id);
             const subtitle = meal.foods?.map(f => f.name).join(', ') || meal.foodName;
+            const hasFoods = meal.foods && meal.foods.length > 0;
             
             return (
               <div key={meal.id} className="glass-card flex flex-col overflow-hidden">
                 {/* Meal Header */}
-                <div 
-                  className="px-[var(--space-3)] py-[var(--space-2)] flex flex-col gap-[var(--space-2)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
+                <SwipeableItem
+                  disabled={isExpanded || !hasFoods}
+                  onDelete={() => handleDeleteMealCategory(meal)}
                   onClick={() => toggleMeal(meal.id)}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="text-headline text-white capitalize">{t(`dashboard.health.${meal.type}`) || meal.type}</span>
-                        {isExpanded ? <ChevronUp size={16} className="text-[var(--on-surface-variant)]" /> : <ChevronDown size={16} className="text-[var(--on-surface-variant)]" />}
+                  <div className="px-[var(--space-3)] py-[var(--space-2)] flex flex-col gap-[var(--space-2)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-headline text-white capitalize">{t(`dashboard.health.${meal.type}`) || meal.type}</span>
+                          {isExpanded ? <ChevronUp size={16} className="text-[var(--on-surface-variant)]" /> : <ChevronDown size={16} className="text-[var(--on-surface-variant)]" />}
+                        </div>
+                        <span className="text-body text-[var(--on-surface-variant)] italic text-sm line-clamp-1">{subtitle}</span>
                       </div>
-                      <span className="text-body text-[var(--on-surface-variant)] italic text-sm line-clamp-1">{subtitle}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-headline text-[var(--primary)]">{meal.calories}</span>
+                        <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
+                      </div>
                     </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-headline text-[var(--primary)]">{meal.calories}</span>
-                      <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
+                    
+                    {/* Real macro breakdown from actual data */}
+                    <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
+                      <span className="text-caption" style={{ color: '#60a5fa' }}>K: {meal.carbs !== undefined ? `${meal.carbs}g` : `${Math.round(meal.calories * 0.1)}g`}</span>
+                      <span className="text-caption" style={{ color: '#8ec13b' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
+                      <span className="text-caption" style={{ color: '#facc15' }}>Y: {meal.fat !== undefined ? `${meal.fat}g` : `${Math.round(meal.calories * 0.03)}g`}</span>
+                      <span className="text-caption" style={{ color: '#f472b6' }}>Ş: {meal.sugar !== undefined ? `${meal.sugar}g` : '0g'}</span>
                     </div>
                   </div>
-                  
-                  {/* Real macro breakdown from actual data */}
-                  <div className="flex items-center gap-[var(--space-3)] mt-[var(--space-1)]">
-                    <span className="text-caption" style={{ color: '#60a5fa' }}>K: {meal.carbs !== undefined ? `${meal.carbs}g` : `${Math.round(meal.calories * 0.1)}g`}</span>
-                    <span className="text-caption" style={{ color: '#8ec13b' }}>P: {meal.protein !== undefined ? `${meal.protein}g` : `${Math.round(meal.calories * 0.05)}g`}</span>
-                    <span className="text-caption" style={{ color: '#facc15' }}>Y: {meal.fat !== undefined ? `${meal.fat}g` : `${Math.round(meal.calories * 0.03)}g`}</span>
-                    <span className="text-caption" style={{ color: '#f472b6' }}>Ş: {meal.sugar !== undefined ? `${meal.sugar}g` : '0g'}</span>
-                  </div>
-                </div>
+                </SwipeableItem>
 
                 {/* Expanded Foods List */}
                 {isExpanded && meal.foods && meal.foods.length > 0 && (
                   <div className="flex flex-col border-t border-[rgba(255,255,255,0.05)] bg-[rgba(0,0,0,0.2)]">
                     {meal.foods.map((food, idx) => (
-                      <div 
+                      <SwipeableItem
                         key={food.id || idx}
-                        className="flex items-center justify-between px-[var(--space-3)] py-3 border-b border-[rgba(255,255,255,0.02)] last:border-0 cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                        onDelete={() => handleDeleteFood(food.id, meal.type)}
                         onClick={() => onOpenSheet && onOpenSheet('editMeal', { ...food, type: meal.type, date: data.date })}
                       >
-                        <div className="flex flex-col">
-                          <span className="text-body font-medium text-white">{food.name}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
-                            <span>{food.amount}</span>
-                            <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
-                            <span className="text-[11px]" style={{ color: '#8ec13b' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
-                            <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
-                            <span className="text-[11px]" style={{ color: '#f472b6' }}>Ş:{food.sugar_g ?? (food as any).sugar ?? 0}g</span>
-                          </span>
+                        <div className="flex items-center justify-between px-[var(--space-3)] py-3 border-b border-[rgba(255,255,255,0.02)] last:border-0 cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                          <div className="flex flex-col">
+                            <span className="text-body font-medium text-white">{food.name}</span>
+                            <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
+                              <span>{food.amount}</span>
+                              <span className="text-[11px]" style={{ color: '#60a5fa' }}>K:{food.carbs_g ?? (food as any).carbs ?? 0}g</span>
+                              <span className="text-[11px]" style={{ color: '#8ec13b' }}>P:{food.protein_g ?? (food as any).protein ?? 0}g</span>
+                              <span className="text-[11px]" style={{ color: '#facc15' }}>Y:{food.fat_g ?? (food as any).fat ?? 0}g</span>
+                              <span className="text-[11px]" style={{ color: '#f472b6' }}>Ş:{food.sugar_g ?? (food as any).sugar ?? 0}g</span>
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-body font-medium text-[var(--primary)]">{food.calories}</span>
+                            <span className="text-caption text-[var(--on-surface-variant)]">kcal</span>
+                          </div>
                         </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-body font-medium text-[var(--primary)]">{food.calories}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)]">kcal</span>
-                        </div>
-                      </div>
+                      </SwipeableItem>
                     ))}
                   </div>
                 )}

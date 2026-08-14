@@ -173,7 +173,7 @@ export function DashboardView() {
             <div className="flex flex-col xl:flex-row gap-[var(--space-8)] w-full max-w-[1600px] mx-auto animate-fade-in">
               {/* Split Screen for Overview */}
               <div className="flex-1 relative">
-                {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} onAddBmr={handleAddBmr} />}
+                {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} onOpenSheet={handleOpenSheet} onAddBmr={handleAddBmr} onRefresh={refreshData} />}
               </div>
               <div className="flex-1 relative">
                 {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} currentDate={currentDate} />}
@@ -192,6 +192,7 @@ export function DashboardView() {
                 onShowAnalysis={() => setMode('health-analysis')}
                 onOpenSheet={handleOpenSheet}
                 onAddBmr={handleAddBmr}
+                onRefresh={refreshData}
               />
             )
           )}
