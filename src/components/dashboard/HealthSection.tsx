@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { SwipeableItem } from "@/components/ui/SwipeableItem";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { deleteMealAction, deleteExerciseAction } from "@/actions/health";
 import toast from "react-hot-toast";
 
@@ -22,6 +23,7 @@ interface HealthSectionProps {
 export function HealthSection({ data, isOverview = true, currentDate, onPrevDay, onNextDay, onShowAnalysis, onOpenSheet, onAddBmr, onRefresh }: HealthSectionProps) {
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isBurnedModalOpen, setIsBurnedModalOpen] = useState(false);
 
   const totalBurned = data.burnedCalories;
   const netCalories = data.consumedCalories - totalBurned;
@@ -95,8 +97,6 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
     }
   };
 
-
-
   const formatDate = (date?: Date) => {
     if (!date) return "";
     const today = new Date();
@@ -151,15 +151,33 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           </div>
         </div>
 
-        {/* YAKILAN */}
-        <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start relative overflow-hidden h-full">
-          <span className="text-[11px] md:text-caption text-[var(--on-surface-variant)] truncate">YAKILAN</span>
+        {/* YAKILAN (Clickable to open exercise details) */}
+        <div 
+          onClick={() => setIsBurnedModalOpen(true)}
+          className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start relative overflow-hidden h-full cursor-pointer hover:border-[#8ec13b]/40 hover:bg-[rgba(255,255,255,0.03)] transition-all group"
+          title="Yakılan kalori ve egzersiz detaylarını görün"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] md:text-caption text-[var(--on-surface-variant)] truncate group-hover:text-white transition-colors">YAKILAN</span>
+            <ChevronRight size={14} className="text-[var(--on-surface-variant)] opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          </div>
           <div className="flex items-baseline gap-1 mt-1 truncate">
             <span className="text-xl md:text-metric text-white font-bold">{totalBurned}</span>
             <span className="text-[11px] md:text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
+          
+          <div className="mt-1 flex items-center gap-1 flex-wrap">
+            {data.exercises && data.exercises.length > 0 ? (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#8ec13b]/15 text-[#8ec13b] font-semibold border border-[#8ec13b]/20">
+                {data.exercises.length} Egzersiz
+              </span>
+            ) : (
+              <span className="text-[10px] text-[var(--on-surface-variant)] opacity-70">Detaylar ›</span>
+            )}
+          </div>
+
           {!data.bmrAdded && onAddBmr && (
-            <div className="mt-1 md:mt-2">
+            <div className="mt-1 md:mt-2" onClick={(e) => e.stopPropagation()}>
               <button 
                 onClick={onAddBmr}
                 className="w-full text-center text-[11px] md:text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-1 md:px-2 py-1 md:py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)] truncate"
@@ -187,7 +205,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           <span className="text-caption text-[var(--primary)]">KARB</span>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-headline text-white">{data.carbs || 0}g</span>
-            <span className="text-caption text-[var(--on-surface-variant)]">52%</span> {/* Example percentage */}
+            <span className="text-caption text-[var(--on-surface-variant)]">52%</span>
           </div>
         </div>
         <div className="flex flex-col">
@@ -256,93 +274,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         </div>
       </div>
 
-      {/* Exercise Details */}
-      <div className="mt-[var(--space-4)]">
-        <div className="flex items-center justify-between mb-[var(--space-3)]">
-          <div className="flex items-center gap-2">
-            <h3 className="text-caption text-[var(--on-surface-variant)]">EGZERSİZ VE AKTİVİTELER</h3>
-            {data.exercises && data.exercises.length > 0 && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#8ec13b]/15 text-[#8ec13b] font-bold border border-[#8ec13b]/20">
-                {data.exercises.length} Kayıt
-              </span>
-            )}
-          </div>
-          <button 
-            onClick={() => onOpenSheet && onOpenSheet('exercise')}
-            aria-label="Egzersiz ekle"
-            className="min-h-11 min-w-11 rounded-full border border-[#8ec13b] text-[#8ec13b] flex items-center justify-center hover:bg-[#8ec13b] hover:text-white transition-colors"
-            title="Egzersiz Ekle"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
 
-        {data.exercises && data.exercises.length > 0 ? (
-          <div className="flex flex-col gap-[var(--space-2)]">
-            {data.exercises.map((ex) => {
-              const isStep = ex.name === 'Adım Sayısı' || (ex.step_count && ex.step_count > 0);
-              return (
-                <div key={ex.id} className="glass-card flex flex-col overflow-hidden">
-                  <SwipeableItem
-                    onDelete={() => handleDeleteExercise(ex.id)}
-                    confirmDeleteText="Sil"
-                  >
-                    <div className="px-[var(--space-3)] py-3 flex items-center justify-between hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="min-w-9 min-h-9 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 flex items-center justify-center text-[#8ec13b]">
-                          {isStep ? <Footprints size={18} /> : ex.name.includes('Ağırlık') ? <Dumbbell size={18} /> : <Flame size={18} />}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-body font-medium text-white capitalize">{ex.name}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
-                            {ex.duration_minutes > 0 && <span>{ex.duration_minutes} dk</span>}
-                            {ex.step_count && ex.step_count > 0 && <span>{ex.step_count.toLocaleString('tr-TR')} adım</span>}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-headline text-[#8ec13b] font-bold">+{ex.calories_burned}</span>
-                          <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteExercise(ex.id);
-                          }}
-                          className="min-h-9 min-w-9 flex items-center justify-center rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Egzersizi Sil"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </SwipeableItem>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="glass-card p-4 rounded-xl flex items-center justify-between border border-[rgba(255,255,255,0.05)]">
-            <div className="flex items-center gap-3">
-              <div className="min-w-9 min-h-9 rounded-xl bg-white/5 flex items-center justify-center text-white/40">
-                <Flame size={18} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-white/80">Bugün henüz egzersiz eklenmedi</span>
-                <span className="text-xs text-[var(--on-surface-variant)]">Egzersizlerinizi ekleyip detaylı görün.</span>
-              </div>
-            </div>
-            <button
-              onClick={() => onOpenSheet && onOpenSheet('exercise')}
-              className="px-3 py-1.5 rounded-xl bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-[#8ec13b] text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
-            >
-              <Plus size={14} /> Ekle
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* Meal Details */}
       <div className="mt-[var(--space-4)]">
@@ -438,6 +370,149 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
         onClose={() => setIsPdfModalOpen(false)} 
         currentDate={currentDate} 
       />
+
+      <BottomSheet
+        isOpen={isBurnedModalOpen}
+        onClose={() => setIsBurnedModalOpen(false)}
+        title="Yakılan Kalori & Egzersiz Detayları"
+      >
+        <div className="flex flex-col gap-5">
+          {/* Top Burned Overview Banner */}
+          <div className="p-4 rounded-2xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-xs text-[var(--on-surface-variant)] uppercase tracking-wider font-medium">Toplam Yakılan Kalori</span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-bold text-white">{totalBurned}</span>
+                <span className="text-xs text-[var(--on-surface-variant)]">kcal</span>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setIsBurnedModalOpen(false);
+                onOpenSheet && onOpenSheet('exercise');
+              }}
+              className="px-3.5 py-2 rounded-xl bg-[#8ec13b] hover:bg-[#79aa32] text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 shrink-0"
+            >
+              <Plus size={15} /> Egzersiz Ekle
+            </button>
+          </div>
+
+          {/* Calories Breakdown Grid */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] flex flex-col">
+              <span className="text-[11px] text-[var(--on-surface-variant)]">Egzersizler</span>
+              <span className="text-base font-bold text-[#8ec13b] mt-0.5">
+                {data.exercises?.reduce((acc, e) => acc + (e.calories_burned || 0), 0) || 0} kcal
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] flex flex-col">
+              <span className="text-[11px] text-[var(--on-surface-variant)]">BMR</span>
+              <span className="text-base font-bold text-blue-400 mt-0.5">
+                {data.caloriesBurnedBmr || 0} kcal
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] flex flex-col">
+              <span className="text-[11px] text-[var(--on-surface-variant)]">Uyku</span>
+              <span className="text-base font-bold text-[#818cf8] mt-0.5">
+                {data.sleepCalories || 0} kcal
+              </span>
+            </div>
+          </div>
+
+          {/* Exercises List Header */}
+          <div className="flex items-center justify-between pt-2">
+            <h3 className="text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+              Egzersiz Kayıtları ({data.exercises?.length || 0})
+            </h3>
+          </div>
+
+          {/* Exercises List */}
+          {data.exercises && data.exercises.length > 0 ? (
+            <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
+              {data.exercises.map((ex) => {
+                const isStep = ex.name === 'Adım Sayısı' || (ex.step_count && ex.step_count > 0);
+                return (
+                  <div key={ex.id} className="glass-card flex flex-col overflow-hidden rounded-xl">
+                    <SwipeableItem
+                      onDelete={() => handleDeleteExercise(ex.id)}
+                      confirmDeleteText="Sil"
+                    >
+                      <div 
+                        className="px-4 py-3 flex items-center justify-between hover:bg-[rgba(255,255,255,0.03)] transition-colors cursor-pointer"
+                        onClick={() => {
+                          setIsBurnedModalOpen(false);
+                          onOpenSheet && onOpenSheet('exercise', ex);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="min-w-9 min-h-9 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 flex items-center justify-center text-[#8ec13b]">
+                            {isStep ? <Footprints size={18} /> : ex.name.includes('Ağırlık') ? <Dumbbell size={18} /> : <Flame size={18} />}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-white capitalize">{ex.name}</span>
+                            <span className="text-xs text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
+                              {ex.duration_minutes > 0 && <span>{ex.duration_minutes} dk</span>}
+                              {ex.step_count && ex.step_count > 0 && <span>{ex.step_count.toLocaleString('tr-TR')} adım</span>}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-baseline gap-1 mr-1">
+                            <span className="text-base font-bold text-[#8ec13b]">+{ex.calories_burned}</span>
+                            <span className="text-xs text-[var(--on-surface-variant)]">kcal</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsBurnedModalOpen(false);
+                              onOpenSheet && onOpenSheet('exercise', ex);
+                            }}
+                            className="min-h-8 min-w-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                            title="Egzersizi Düzenle"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExercise(ex.id);
+                            }}
+                            className="min-h-8 min-w-8 flex items-center justify-center rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            title="Egzersizi Sil"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </SwipeableItem>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="glass-card p-5 rounded-2xl flex flex-col items-center justify-center text-center gap-3 border border-[rgba(255,255,255,0.05)] py-8">
+              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/40">
+                <Flame size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-white">Bugün henüz egzersiz kaydı yok</span>
+                <span className="text-xs text-[var(--on-surface-variant)] mt-1">Yürüdüğünüz adımları veya antrenmanlarınızı kaydedebilirsiniz.</span>
+              </div>
+              <button
+                onClick={() => {
+                  setIsBurnedModalOpen(false);
+                  onOpenSheet && onOpenSheet('exercise');
+                }}
+                className="mt-2 px-4 py-2 rounded-xl bg-[#8ec13b] text-white text-xs font-bold hover:bg-[#79aa32] transition-colors shadow-md flex items-center gap-1.5"
+              >
+                <Plus size={15} /> Egzersiz Ekle
+              </button>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 }
