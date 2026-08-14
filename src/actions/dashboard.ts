@@ -138,6 +138,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           fat: 0,
           sugar: 0,
           meals: [],
+          exercises: [],
           currentWeight: user?.current_weight_kg || 0,
           weightHistory
         }
@@ -191,6 +192,15 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
       }
     }
     let exerciseMinutes = 0;
+    const mappedExercises = (dailyLog.exercises || []).map((ex: any) => ({
+      id: ex.entry_id ? ex.entry_id.toString() : (ex._id ? ex._id.toString() : new mongoose.Types.ObjectId().toString()),
+      name: ex.name,
+      duration_minutes: ex.duration_minutes || 0,
+      calories_burned: ex.calories_burned || 0,
+      source: ex.source,
+      step_count: ex.step_count
+    }));
+
     if (dailyLog.exercises) {
       exerciseMinutes = dailyLog.exercises.reduce((acc: number, ex: any) => acc + (ex.duration_minutes || 0), 0);
     }
@@ -218,6 +228,7 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         fat: Math.round(dailyLog.totals.fat_g || 0),
         sugar: Math.round(dailyLog.totals.sugar_g || 0),
         meals,
+        exercises: mappedExercises,
         currentWeight: user?.current_weight_kg || 0,
         weightHistory
       }

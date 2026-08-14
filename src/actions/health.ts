@@ -650,3 +650,35 @@ export async function deleteWeightLogAction(id: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function deleteExerciseAction(data: { date: string; entry_id: string }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const targetDate = new Date(data.date);
+    targetDate.setUTCHours(0, 0, 0, 0);
+
+    const log = await DailyLog.findOne({ user_id: userId, date: targetDate });
+    if (!log) return { success: false, error: "Günlük kayıt bulunamadı." };
+
+    if (!log.exercises) return { success: false, error: "Egzersiz bulunamadı." };
+
+    const idx = log.exercises.findIndex((e: any) => e.entry_id?.toString() === data.entry_id || e._id?.toString() === data.entry_id);
+    if (idx === -1) return { success: false, error: "Egzersiz bulunamadı." };
+
+    const oldEx = log.exercises[idx];
+
+    // Subtract calories from totals
+    log.totals.calories_burned_exercise -= oldEx.calories_burned || 0;
+    if (log.totals.calories_burned_exercise < 0) log.totals.calories_burned_exercise = 0;
+
+    log.exercises.splice(idx, 1);
+
+    await log.save();
+    return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.error(err);
+    return { success: false, error: err.message };
+  }
+}

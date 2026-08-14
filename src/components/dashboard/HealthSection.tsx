@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2 } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { SwipeableItem } from "@/components/ui/SwipeableItem";
-import { deleteMealAction } from "@/actions/health";
+import { deleteMealAction, deleteExerciseAction } from "@/actions/health";
 import toast from "react-hot-toast";
 
 interface HealthSectionProps {
@@ -48,6 +48,24 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       }
     } else {
       toast.error(res.error || "Yemek silinemedi");
+    }
+  };
+
+  const handleDeleteExercise = async (exerciseId: string) => {
+    if (!exerciseId) return;
+    const dateStr = data.date || (currentDate ? currentDate.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+    const res = await deleteExerciseAction({
+      date: dateStr,
+      entry_id: exerciseId,
+    });
+
+    if (res.success) {
+      toast.success("Egzersiz silindi");
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } else {
+      toast.error(res.error || "Egzersiz silinemedi");
     }
   };
 
@@ -236,6 +254,94 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             </div>
           </button>
         </div>
+      </div>
+
+      {/* Exercise Details */}
+      <div className="mt-[var(--space-4)]">
+        <div className="flex items-center justify-between mb-[var(--space-3)]">
+          <div className="flex items-center gap-2">
+            <h3 className="text-caption text-[var(--on-surface-variant)]">EGZERSİZ VE AKTİVİTELER</h3>
+            {data.exercises && data.exercises.length > 0 && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#8ec13b]/15 text-[#8ec13b] font-bold border border-[#8ec13b]/20">
+                {data.exercises.length} Kayıt
+              </span>
+            )}
+          </div>
+          <button 
+            onClick={() => onOpenSheet && onOpenSheet('exercise')}
+            aria-label="Egzersiz ekle"
+            className="min-h-11 min-w-11 rounded-full border border-[#8ec13b] text-[#8ec13b] flex items-center justify-center hover:bg-[#8ec13b] hover:text-white transition-colors"
+            title="Egzersiz Ekle"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+
+        {data.exercises && data.exercises.length > 0 ? (
+          <div className="flex flex-col gap-[var(--space-2)]">
+            {data.exercises.map((ex) => {
+              const isStep = ex.name === 'Adım Sayısı' || (ex.step_count && ex.step_count > 0);
+              return (
+                <div key={ex.id} className="glass-card flex flex-col overflow-hidden">
+                  <SwipeableItem
+                    onDelete={() => handleDeleteExercise(ex.id)}
+                    confirmDeleteText="Sil"
+                  >
+                    <div className="px-[var(--space-3)] py-3 flex items-center justify-between hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-9 min-h-9 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 flex items-center justify-center text-[#8ec13b]">
+                          {isStep ? <Footprints size={18} /> : ex.name.includes('Ağırlık') ? <Dumbbell size={18} /> : <Flame size={18} />}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-body font-medium text-white capitalize">{ex.name}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-2 mt-0.5">
+                            {ex.duration_minutes > 0 && <span>{ex.duration_minutes} dk</span>}
+                            {ex.step_count && ex.step_count > 0 && <span>{ex.step_count.toLocaleString('tr-TR')} adım</span>}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-headline text-[#8ec13b] font-bold">+{ex.calories_burned}</span>
+                          <span className="text-caption text-[var(--on-surface-variant)] lowercase">kcal</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteExercise(ex.id);
+                          }}
+                          className="min-h-9 min-w-9 flex items-center justify-center rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          title="Egzersizi Sil"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </SwipeableItem>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="glass-card p-4 rounded-xl flex items-center justify-between border border-[rgba(255,255,255,0.05)]">
+            <div className="flex items-center gap-3">
+              <div className="min-w-9 min-h-9 rounded-xl bg-white/5 flex items-center justify-center text-white/40">
+                <Flame size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-white/80">Bugün henüz egzersiz eklenmedi</span>
+                <span className="text-xs text-[var(--on-surface-variant)]">Egzersizlerinizi ekleyip detaylı görün.</span>
+              </div>
+            </div>
+            <button
+              onClick={() => onOpenSheet && onOpenSheet('exercise')}
+              className="px-3 py-1.5 rounded-xl bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-[#8ec13b] text-xs font-bold transition-colors shrink-0 flex items-center gap-1"
+            >
+              <Plus size={14} /> Ekle
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Meal Details */}

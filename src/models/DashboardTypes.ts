@@ -21,6 +21,15 @@ export interface MealInfo {
   foods?: { id: string; name: string; amount: string; calories: number; protein_g?: number; carbs_g?: number; fat_g?: number; sugar_g?: number }[];
 }
 
+export interface ExerciseInfo {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  calories_burned: number;
+  source?: string;
+  step_count?: number;
+}
+
 export interface HealthDataDTO {
   date: string; // ISO date string
   targetCalories: number;
@@ -36,6 +45,7 @@ export interface HealthDataDTO {
   fat: number;
   sugar: number;
   meals: MealInfo[];
+  exercises?: ExerciseInfo[];
   currentWeight?: number;
   weightHistory?: { id?: string; date: string; weight: number; note?: string }[];
 }
