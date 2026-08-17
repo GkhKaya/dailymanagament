@@ -99,12 +99,6 @@ export async function addMealAction(data: { date: string; type: string; food_nam
     if (data.save_as_recipe) {
       await SavedFood.create({
         user_id: userId,
-        food_name: data.food_name,
-        serving_description: data.serving_description,
-        quantity: data.quantity,
-        unit_type: data.unit_type || 'gram',
-        food_cache_id: data.food_cache_id,
-        fatsecret_food_id: data.fatsecret_food_id,
         calories: data.calories,
         protein_g: data.protein_g,
         carbs_g: data.carbs_g,

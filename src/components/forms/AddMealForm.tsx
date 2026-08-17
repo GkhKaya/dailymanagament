@@ -59,7 +59,7 @@ const MEAL_OPTIONS: { id: MealType; label: string; icon: string }[] = [
   { id: 'snack', label: 'Ara Öğün', icon: '🍎' }
 ];
 
-export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () => void; onSuccess: () => void; currentDate?: string }) {
+export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: { onClose: () => void; onSuccess: () => void; currentDate?: string; onOpenAIPhoto?: () => void }) {
   const {
     type: mealType, setType: setMealType,
     foodName, setFoodName,
@@ -457,6 +457,19 @@ export function AddMealForm({ onClose, onSuccess, currentDate }: { onClose: () =
       onSubmit={onFormSubmit}
       className="flex flex-col gap-5"
     >
+      {/* ── AI PHOTO BUTTON ── */}
+      {onOpenAIPhoto && (
+        <button
+          type="button"
+          onClick={onOpenAIPhoto}
+          className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-emerald-500/20 hover:from-emerald-500/30 hover:to-emerald-500/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 group cursor-pointer"
+        >
+          <Camera size={18} className="group-hover:scale-110 transition-transform" />
+          <Sparkles size={16} className="animate-pulse" />
+          <span>Fotoğraf İle Yemek Analiz Et & Ekle (AI)</span>
+        </button>
+      )}
+
       {/* ── TABS ── */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.04)] rounded-2xl">
         {(['new', 'saved'] as const).map(tab => (

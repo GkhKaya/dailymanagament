@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil, Camera, Sparkles } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { SwipeableItem } from "@/components/ui/SwipeableItem";
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -280,13 +280,25 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       <div className="mt-[var(--space-4)]">
         <div className="flex items-center justify-between mb-[var(--space-3)]">
           <h3 className="text-caption text-[var(--on-surface-variant)]">ÖĞÜN DETAYLARI</h3>
-          <button 
-            onClick={() => onOpenSheet && onOpenSheet('meal')}
-            aria-label="Öğün ekle"
-            className="min-h-11 min-w-11 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
-          >
-            <Plus size={14} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onOpenSheet && onOpenSheet('aiPhotoMeal')}
+              aria-label="Fotoğraf ile AI besin ekle"
+              className="px-3 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 flex items-center gap-1.5 hover:bg-emerald-500 hover:text-black text-xs font-bold transition-all shadow-md cursor-pointer"
+              title="Fotoğraf ile AI Besin Analizi Et & Ekle"
+            >
+              <Camera size={14} />
+              <Sparkles size={13} className="animate-pulse" />
+              <span className="hidden sm:inline">Fotoğrafla AI Ekle</span>
+            </button>
+            <button 
+              onClick={() => onOpenSheet && onOpenSheet('meal')}
+              aria-label="Öğün ekle"
+              className="min-h-11 min-w-11 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
         
         <div className="flex flex-col gap-[var(--space-2)]">

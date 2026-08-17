@@ -20,6 +20,7 @@ const ManageSubscriptionsForm = dynamic(() => import("@/components/forms/ManageS
 const ManageAccountsForm = dynamic(() => import("@/components/forms/ManageAccountsForm").then(m => m.ManageAccountsForm), { ssr: false });
 const TransferAccountsForm = dynamic(() => import("@/components/forms/TransferAccountsForm").then(m => m.TransferAccountsForm), { ssr: false });
 const ManageWorkoutRoutineForm = dynamic(() => import("@/components/forms/ManageWorkoutRoutineForm").then(m => m.ManageWorkoutRoutineForm), { ssr: false });
+const AIPhotoMealModal = dynamic(() => import("@/components/forms/AIPhotoMealModal").then(m => m.AIPhotoMealModal), { ssr: false });
 
 interface DashboardSheetManagerProps {
   activeSheet: string | null;
@@ -47,11 +48,23 @@ export function DashboardSheetManager({
   
   const localDateStr = new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
+  if (activeSheet === 'aiPhotoMeal') {
+    return (
+      <AIPhotoMealModal
+        isOpen={true}
+        onClose={() => setActiveSheet(null)}
+        onSuccess={handleSuccess}
+        currentDate={localDateStr}
+        initialMealType={sheetPayload?.mealType || 'lunch'}
+      />
+    );
+  }
+
   const renderSheetContent = () => {
     switch (activeSheet) {
       case 'transaction': return <AddTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenCategories={() => setActiveSheet('categories')} categories={financeData?.categories || []} accounts={financeData?.accounts || []} currentDate={localDateStr} />;
       case 'edit-transaction': return <EditTransactionForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} accounts={financeData?.accounts || []} transaction={sheetPayload} />;
-      case 'meal': return <AddMealForm onClose={() => { setActiveSheet(null); setSheetPayload(null); refreshData(); }} onSuccess={refreshData} currentDate={localDateStr} />;
+      case 'meal': return <AddMealForm onClose={() => { setActiveSheet(null); setSheetPayload(null); refreshData(); }} onSuccess={refreshData} currentDate={localDateStr} onOpenAIPhoto={() => setActiveSheet('aiPhotoMeal')} />;
       case 'editMeal': return <EditMealForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialData={sheetPayload} />;
       case 'exercise': return <AddExerciseForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} userWeight={healthData?.currentWeight || 70} currentDate={localDateStr} />;
       case 'addSleep': return <AddSleepForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} currentDate={localDateStr} />;
