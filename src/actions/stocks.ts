@@ -7,8 +7,8 @@ import { headers } from "next/headers";
 import { StockTrade } from "@/models/StockTrade";
 import { StockPosition } from "@/models/StockPosition";
 import { StockTradeType } from "@/models/Enums";
-import { calculateStockPortfolio, RawTrade } from "@/lib/stock-engine";
-import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
+import { calculateStockPortfolio, RawTrade, POPULAR_BIST_STOCKS } from "@/lib/stock-engine";
+import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
 import { revalidatePath } from "next/cache";
 
 async function getUserId() {
@@ -162,13 +162,85 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       realized_pnl_percent: t.realized_pnl_percent,
     }));
 
+  // Build known stocks dictionary: User's historical symbols + POPULAR_BIST_STOCKS
+  const userKnownSymbols = new Map<string, string>();
+  for (const t of rawTrades) {
+    if (t.symbol) {
+      const sym = t.symbol.toUpperCase();
+      if (t.name) {
+        userKnownSymbols.set(sym, t.name);
+      } else if (!userKnownSymbols.has(sym)) {
+        userKnownSymbols.set(sym, POPULAR_BIST_STOCKS[sym] || '');
+      }
+    }
+  }
+
+  const knownStocksDTO: KnownStockDTO[] = [];
+  
+  // 1. First add all symbols user has ever traded
+  for (const [sym, nm] of userKnownSymbols.entries()) {
+    knownStocksDTO.push({
+      symbol: sym,
+      name: nm || POPULAR_BIST_STOCKS[sym] || sym,
+      isCustom: true,
+    });
+  }
+
+  // 2. Then add remaining popular stocks that user hasn't traded yet
+  for (const [sym, nm] of Object.entries(POPULAR_BIST_STOCKS)) {
+    if (!userKnownSymbols.has(sym)) {
+      knownStocksDTO.push({
+        symbol: sym,
+        name: nm,
+        isCustom: false,
+      });
+    }
+  }
+
   return {
     positions: positionsDTO,
     closedPositions: closedPositionsDTO,
     realizedTrades: realizedTradesDTO,
     allTrades: allTradesDTO,
+    knownStocks: knownStocksDTO,
     totals: calc.totals,
   };
+}
+
+/**
+ * Update stock company name across all trades and position for a user
+ */
+export async function updateStockSymbolNameAction(
+  symbol: string,
+  newName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const cleanName = newName.trim();
+
+    if (!cleanSymbol) {
+      return { success: false, error: "Geçerli bir hisse sembolü girin." };
+    }
+
+    await StockTrade.updateMany(
+      { user_id: userId, symbol: cleanSymbol },
+      { $set: { name: cleanName || undefined } }
+    );
+
+    await StockPosition.findOneAndUpdate(
+      { user_id: userId, symbol: cleanSymbol },
+      { $set: { name: cleanName || undefined } }
+    );
+
+    await syncAndCalculatePortfolio(userId);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error("updateStockSymbolNameAction error:", error);
+    return { success: false, error: error.message || "Hisse adı güncellenemedi." };
+  }
 }
 
 /**

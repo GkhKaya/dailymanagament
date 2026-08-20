@@ -148,11 +148,18 @@ export interface StockPositionDTO {
   last_trade_date?: string;
 }
 
+export interface KnownStockDTO {
+  symbol: string;
+  name: string;
+  isCustom?: boolean;
+}
+
 export interface StockPortfolioDTO {
   positions: StockPositionDTO[];
   closedPositions: StockPositionDTO[];
   realizedTrades: StockTradeDTO[];
   allTrades: StockTradeDTO[];
+  knownStocks: KnownStockDTO[];
   totals: {
     totalInvestedCost: number;        // Açık pozisyonlardaki toplam maliyet
     totalCurrentValue: number;         // Açık pozisyonlardaki güncel değer (varsa)

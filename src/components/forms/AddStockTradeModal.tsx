@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { addStockTradeAction, updateStockTradeAction } from "@/actions/stocks";
-import { StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
+import { StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
 import toast from "react-hot-toast";
 
 interface AddStockTradeModalProps {
@@ -14,6 +14,7 @@ interface AddStockTradeModalProps {
   initialSymbol?: string;
   editTrade?: StockTradeDTO | null;
   positions?: StockPositionDTO[];
+  knownStocks?: KnownStockDTO[];
 }
 
 export function AddStockTradeModal({
@@ -24,10 +25,12 @@ export function AddStockTradeModal({
   initialSymbol = '',
   editTrade = null,
   positions = [],
+  knownStocks = [],
 }: AddStockTradeModalProps) {
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>(editTrade?.type || initialType);
   const [symbol, setSymbol] = useState(editTrade?.symbol || initialSymbol || '');
   const [name, setName] = useState(editTrade?.name || '');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [lots, setLots] = useState<string>(editTrade ? String(editTrade.lots) : '');
   const [price, setPrice] = useState<string>(editTrade ? String(editTrade.price) : '');
   const [date, setDate] = useState<string>(
@@ -47,14 +50,29 @@ export function AddStockTradeModal({
       setNotes(editTrade.notes || '');
     } else {
       setTradeType(initialType);
-      if (initialSymbol) setSymbol(initialSymbol);
+      if (initialSymbol) {
+        setSymbol(initialSymbol);
+        const match = knownStocks.find(k => k.symbol.toUpperCase() === initialSymbol.toUpperCase());
+        if (match && match.name) setName(match.name);
+      }
     }
-  }, [editTrade, initialType, initialSymbol]);
+  }, [editTrade, initialType, initialSymbol, knownStocks]);
 
   if (!isOpen) return null;
 
   const cleanSymbol = symbol.trim().toUpperCase();
   const matchedPos = positions.find((p) => p.symbol.toUpperCase() === cleanSymbol);
+
+  const filteredSuggestions = knownStocks.filter(k => {
+    if (!cleanSymbol) return false;
+    return k.symbol.toUpperCase().includes(cleanSymbol) || k.name.toLowerCase().includes(symbol.toLowerCase());
+  }).slice(0, 6);
+
+  const handleSelectSuggestion = (k: KnownStockDTO) => {
+    setSymbol(k.symbol);
+    setName(k.name);
+    setShowSuggestions(false);
+  };
 
   const numLots = parseFloat(lots) || 0;
   const numPrice = parseFloat(price) || 0;
@@ -249,7 +267,7 @@ export function AddStockTradeModal({
 
           {/* Symbol & Name Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 relative">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
                 Hisse Sembolü *
               </label>
@@ -257,10 +275,51 @@ export function AddStockTradeModal({
                 type="text"
                 required
                 value={symbol}
-                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-                placeholder="Örn: THYAO, EREGL"
+                onFocus={() => setShowSuggestions(true)}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase();
+                  setSymbol(val);
+                  setShowSuggestions(true);
+                  const match = knownStocks.find(k => k.symbol.toUpperCase() === val);
+                  if (match && match.name && !name) {
+                    setName(match.name);
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowSuggestions(false), 200);
+                  const match = knownStocks.find(k => k.symbol.toUpperCase() === cleanSymbol);
+                  if (match && match.name && !name) {
+                    setName(match.name);
+                  }
+                }}
+                placeholder="Örn: THYAO, ASELS"
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold tracking-wider placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all uppercase"
               />
+
+              {/* Suggestions Dropdown */}
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className="absolute top-[100%] left-0 right-0 z-50 mt-1 bg-[#181826] border border-white/15 rounded-2xl shadow-2xl overflow-hidden py-1 max-h-48 overflow-y-auto">
+                  {filteredSuggestions.map((item) => (
+                    <button
+                      key={item.symbol}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectSuggestion(item);
+                      }}
+                      className="w-full px-3.5 py-2 text-left hover:bg-white/10 flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-xs">{item.symbol}</span>
+                        <span className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[170px]">{item.name}</span>
+                      </div>
+                      {item.isCustom && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">Kayıtlı</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">

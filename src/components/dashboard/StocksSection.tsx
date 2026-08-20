@@ -27,6 +27,8 @@ import { getStockPortfolioAction, deleteStockTradeAction } from "@/actions/stock
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
 import { AddStockTradeModal } from "@/components/forms/AddStockTradeModal";
 import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal";
+import { EditStockSymbolModal } from "@/components/forms/EditStockSymbolModal";
+import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrdersModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import toast from "react-hot-toast";
 
@@ -45,6 +47,12 @@ export function StocksSection() {
 
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [priceModalPosition, setPriceModalPosition] = useState<StockPositionDTO | null>(null);
+
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
+  const [ordersModalPosition, setOrdersModalPosition] = useState<StockPositionDTO | null>(null);
+
+  const [isEditSymbolModalOpen, setIsEditSymbolModalOpen] = useState(false);
+  const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string } | null>(null);
 
   const fetchPortfolio = useCallback(async () => {
     setIsLoading(true);
@@ -108,6 +116,16 @@ export function StocksSection() {
   const handleOpenPriceModal = (position: StockPositionDTO) => {
     setPriceModalPosition(position);
     setIsPriceModalOpen(true);
+  };
+
+  const handleOpenOrdersModal = (position: StockPositionDTO) => {
+    setOrdersModalPosition(position);
+    setIsOrdersModalOpen(true);
+  };
+
+  const handleOpenEditSymbol = (symbol: string, name?: string) => {
+    setEditSymbolModalData({ symbol, name });
+    setIsEditSymbolModalOpen(true);
   };
 
   if (isLoading && !portfolio) {
@@ -400,9 +418,19 @@ export function StocksSection() {
                         {pos.symbol.slice(0, 4)}
                       </div>
                       <div>
-                        <h4 className="text-base font-bold text-white tracking-wide flex items-center gap-1.5">
-                          {pos.symbol}
-                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-base font-bold text-white tracking-wide">
+                            {pos.symbol}
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditSymbol(pos.symbol, pos.name)}
+                            className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors cursor-pointer"
+                            title="Şirket / Tanım adını düzenle"
+                          >
+                            <Edit3 size={12} />
+                          </button>
+                        </div>
                         <p className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[150px]">
                           {pos.name || "Borsa İstanbul"}
                         </p>
@@ -476,6 +504,15 @@ export function StocksSection() {
                       className="flex-1 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Minus size={14} /> Satış Yap
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenOrdersModal(pos)}
+                      title="Giriş Fiyatı ve Lot Emirlerini Düzenle"
+                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <ListOrdered size={14} />
+                      <span className="text-[11px] font-semibold hidden sm:inline">Maliyet Düzenle</span>
                     </button>
                     <button
                       type="button"
@@ -694,6 +731,7 @@ export function StocksSection() {
         initialSymbol={tradeModalSymbol}
         editTrade={editTrade}
         positions={portfolio?.positions || []}
+        knownStocks={portfolio?.knownStocks || []}
       />
 
       <UpdateStockPriceModal
@@ -702,6 +740,44 @@ export function StocksSection() {
         onSuccess={fetchPortfolio}
         position={priceModalPosition}
       />
+
+      {ordersModalPosition && (
+        <StockPositionOrdersModal
+          isOpen={isOrdersModalOpen}
+          onClose={() => {
+            setIsOrdersModalOpen(false);
+            setOrdersModalPosition(null);
+          }}
+          onSuccess={fetchPortfolio}
+          position={ordersModalPosition}
+          trades={portfolio?.allTrades || []}
+          onEditTrade={(trade) => {
+            setIsOrdersModalOpen(false);
+            handleEditTrade(trade);
+          }}
+          onAddTrade={(type, symbol) => {
+            setIsOrdersModalOpen(false);
+            if (type === 'buy') handleOpenBuy(symbol);
+            else handleOpenSell(symbol);
+          }}
+          onEditSymbolName={(symbol, currentName) => {
+            handleOpenEditSymbol(symbol, currentName);
+          }}
+        />
+      )}
+
+      {editSymbolModalData && (
+        <EditStockSymbolModal
+          isOpen={isEditSymbolModalOpen}
+          onClose={() => {
+            setIsEditSymbolModalOpen(false);
+            setEditSymbolModalData(null);
+          }}
+          onSuccess={fetchPortfolio}
+          symbol={editSymbolModalData.symbol}
+          currentName={editSymbolModalData.name}
+        />
+      )}
     </div>
   );
 }
