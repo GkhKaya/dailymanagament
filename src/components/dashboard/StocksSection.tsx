@@ -31,6 +31,7 @@ export function StocksSection() {
   const [activeTab, setActiveTab] = useState<'positions' | 'realized' | 'trades'>('positions');
   const [searchQuery, setSearchQuery] = useState('');
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
+  const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
 
   // Modals state
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
@@ -82,6 +83,8 @@ export function StocksSection() {
   };
 
   const handleEditTrade = (trade: StockTradeDTO) => {
+    setIsOrdersModalOpen(false);
+    setOrdersModalPosition(null);
     setEditTrade(trade);
     setTradeModalType(trade.type);
     setTradeModalSymbol(trade.symbol);
@@ -166,9 +169,10 @@ export function StocksSection() {
   const performanceColor = performance.trend === "gain" ? "text-emerald-400" : performance.trend === "loss" ? "text-rose-400" : "text-[var(--on-surface-variant)]";
   const performanceSurface = performance.trend === "gain" ? "border-emerald-500/25 bg-emerald-500/5" : performance.trend === "loss" ? "border-rose-500/25 bg-rose-500/5" : "border-[var(--outline)]";
 
-  const openPositions = (portfolio?.positions || []).filter(p => 
-    !searchQuery || p.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const openPositions = (portfolio?.positions || []).filter(p => {
+    const matchesSearch = !searchQuery || p.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch && (assetFilter === 'all' || p.assetType === assetFilter);
+  });
 
   const realizedTrades = (portfolio?.realizedTrades || []).filter(t => 
     !searchQuery || t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (t.name && t.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -282,7 +286,15 @@ export function StocksSection() {
         </div>
 
         {/* Search Input */}
-        <div className="relative flex items-center w-full sm:w-64">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-[var(--surface-container-low)] rounded-[var(--radius-input)] border border-[var(--outline)]">
+            {([['all', 'Tümü'], ['stock', 'Hisse'], ['fund', 'Fon']] as const).map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setAssetFilter(value)} aria-pressed={assetFilter === value} className={`min-h-9 px-3 rounded-md text-xs font-bold transition-colors ${assetFilter === value ? value === 'fund' ? 'bg-purple-500/20 text-purple-300' : 'bg-[var(--primary)] text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex items-center w-full sm:w-64">
           <Search size={14} className="absolute left-3.5 text-white/40" />
           <input
             type="text"
@@ -292,6 +304,7 @@ export function StocksSection() {
             aria-label="Hisse sembolü ara"
             className="min-h-11 w-full bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-[var(--radius-input)] py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--primary)]"
           />
+          </div>
         </div>
       </div>
 
@@ -325,13 +338,13 @@ export function StocksSection() {
                   {/* Card Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-11 h-11 rounded-2xl bg-[var(--primary)]/15 border border-[var(--primary)]/30 flex items-center justify-center text-white font-black text-sm tracking-wider">
+                      <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-black text-sm tracking-wider ${pos.assetType === 'fund' ? 'bg-purple-500/15 border-purple-500/30' : 'bg-[var(--primary)]/15 border-[var(--primary)]/30'}`}>
                         {pos.symbol.slice(0, 4)}
                       </div>
                       <div>
                           <div className="flex items-center gap-2">
                             <h4 className="text-base font-bold text-white tracking-wide">{pos.symbol}</h4>
-                            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-[var(--on-surface-variant)]">{pos.assetType === 'fund' ? 'FON' : 'HİSSE'}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${pos.assetType === 'fund' ? 'bg-purple-500/15 text-purple-300' : 'bg-[var(--primary)]/15 text-[var(--primary)]'}`}>{pos.assetType === 'fund' ? 'FON' : 'HİSSE'}</span>
                           </div>
                         <p className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[150px]">
                           {pos.name || "Borsa İstanbul"}
