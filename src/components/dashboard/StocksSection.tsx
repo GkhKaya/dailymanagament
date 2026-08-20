@@ -23,7 +23,7 @@ import {
   Trophy,
   Filter
 } from "lucide-react";
-import { getStockPortfolioAction, deleteStockTradeAction } from "@/actions/stocks";
+import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
 import { AddStockTradeModal } from "@/components/forms/AddStockTradeModal";
 import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal";
@@ -126,6 +126,24 @@ export function StocksSection() {
   const handleOpenEditSymbol = (symbol: string, name?: string) => {
     setEditSymbolModalData({ symbol, name });
     setIsEditSymbolModalOpen(true);
+  };
+
+  const handleDeletePosition = async (symbol: string) => {
+    if (!confirm(`${symbol} hissesine ait tüm alış/satış geçmişi ve portföy kaydı tamamen silinecektir. Emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      const res = await deleteStockPositionAction(symbol);
+      if (res.success) {
+        toast.success(`${symbol} hissesi ve tüm kayıtları başarıyla silindi.`);
+        fetchPortfolio();
+      } else {
+        toast.error(res.error || "Silme işlemi başarısız.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Hata oluştu.");
+    }
   };
 
   if (isLoading && !portfolio) {
@@ -521,6 +539,14 @@ export function StocksSection() {
                       className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-all cursor-pointer"
                     >
                       <Edit3 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePosition(pos.symbol)}
+                      title="Hisseyi ve Tüm Geçmişini Tamamen Sil"
+                      className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-all cursor-pointer"
+                    >
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

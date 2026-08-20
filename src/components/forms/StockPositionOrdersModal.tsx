@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, TrendingUp, Edit2, Trash2, Plus, Calendar, DollarSign, Building2 } from "lucide-react";
 import { StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
-import { deleteStockTradeAction } from "@/actions/stocks";
+import { deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
 import toast from "react-hot-toast";
 
 interface StockPositionOrdersModalProps {
@@ -56,6 +56,24 @@ export function StockPositionOrdersModal({
       toast.error(err.message || "Hata oluştu.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleDeleteEntirePosition = async () => {
+    if (!confirm(`${position.symbol} hissesine ait tüm alış ve satış kayıtları tamamen silinecektir. Emin misiniz?`)) {
+      return;
+    }
+    try {
+      const res = await deleteStockPositionAction(position.symbol);
+      if (res.success) {
+        toast.success(`${position.symbol} hissesi tamamen silindi.`);
+        onSuccess();
+        onClose();
+      } else {
+        toast.error(res.error || "Silme işlemi başarısız.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Hata oluştu.");
     }
   };
 
@@ -236,11 +254,18 @@ export function StockPositionOrdersModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-black/40 border-t border-white/10 flex justify-end shrink-0">
+        <div className="px-6 py-3 bg-black/40 border-t border-white/10 flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={handleDeleteEntirePosition}
+            className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <Trash2 size={13} /> Hisseyi Tamamen Sil
+          </button>
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all"
+            className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
           >
             Kapat
           </button>

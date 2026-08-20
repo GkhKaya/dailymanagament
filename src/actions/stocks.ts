@@ -429,3 +429,33 @@ export async function updateStockCurrentPriceAction(
     return { success: false, error: error.message || "Güncel fiyat kaydedilemedi." };
   }
 }
+
+/**
+ * Delete an entire stock and all its trade history
+ */
+export async function deleteStockPositionAction(
+  symbol: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const cleanSymbol = symbol.trim().toUpperCase();
+
+    if (!cleanSymbol) {
+      return { success: false, error: "Geçerli bir hisse sembolü belirtin." };
+    }
+
+    // Delete all trades for this symbol
+    await StockTrade.deleteMany({ user_id: userId, symbol: cleanSymbol });
+
+    // Delete the position record
+    await StockPosition.deleteMany({ user_id: userId, symbol: cleanSymbol });
+
+    await syncAndCalculatePortfolio(userId);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error("deleteStockPositionAction error:", error);
+    return { success: false, error: error.message || "Hisse silinemedi." };
+  }
+}
