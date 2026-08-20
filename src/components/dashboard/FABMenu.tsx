@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Utensils, Activity, DollarSign, X, Camera, TrendingUp } from "lucide-react";
+import { Plus, Utensils, Activity, DollarSign, X, Camera } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { DashboardMode } from "@/models/DashboardTypes";
 
@@ -28,16 +28,6 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
           isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none'
         }`}
       >
-        <button 
-          onClick={() => handleAction('stockTrade')}
-          className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[var(--primary)]/30 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
-        >
-          <span className="font-semibold text-sm">Hisse Alış / Satış Ekle</span>
-          <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center text-[var(--primary)]">
-            <TrendingUp size={16} />
-          </div>
-        </button>
-
         <button 
           onClick={() => handleAction('transaction')}
           className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"

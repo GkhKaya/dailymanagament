@@ -45,6 +45,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     id: t._id.toString(),
     symbol: t.symbol,
     name: t.name,
+    assetType: t.asset_type === 'fund' ? 'fund' : 'stock',
     type: t.type as 'buy' | 'sell',
     lots: Number(t.lots),
     price: Number(t.price),
@@ -83,6 +84,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       {
         $set: {
           name: pos.name,
+          asset_type: pos.assetType,
           total_lots: pos.total_lots,
           average_cost: pos.average_cost,
           total_cost: pos.total_cost,
@@ -102,6 +104,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     id: p.symbol,
     symbol: p.symbol,
     name: p.name,
+    assetType: p.assetType,
     total_lots: p.total_lots,
     average_cost: p.average_cost,
     total_cost: p.total_cost,
@@ -116,6 +119,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     id: p.symbol,
     symbol: p.symbol,
     name: p.name,
+    assetType: p.assetType,
     total_lots: p.total_lots,
     average_cost: p.average_cost,
     total_cost: p.total_cost,
@@ -130,6 +134,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     id: t._id || t.id,
     symbol: t.symbol,
     name: t.name,
+    assetType: t.assetType || 'stock',
     type: t.type,
     lots: t.lots,
     price: t.price,
@@ -148,7 +153,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     .map((t) => ({
       id: t._id || t.id,
       symbol: t.symbol,
-      name: t.name,
+    name: t.name,
+    assetType: t.assetType || 'stock',
       type: t.type,
       lots: t.lots,
       price: t.price,
@@ -263,6 +269,7 @@ export async function getStockPortfolioAction(): Promise<{ success: boolean; dat
 export async function addStockTradeAction(data: {
   symbol: string;
   name?: string;
+  assetType?: 'stock' | 'fund';
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -308,6 +315,7 @@ export async function addStockTradeAction(data: {
       user_id: userId,
       symbol,
       name: data.name?.trim() || undefined,
+      asset_type: data.assetType === 'fund' ? 'fund' : 'stock',
       type: data.type === 'sell' ? StockTradeType.SELL : StockTradeType.BUY,
       lots,
       price,
@@ -333,6 +341,7 @@ export async function updateStockTradeAction(
   data: {
     symbol: string;
     name?: string;
+    assetType?: 'stock' | 'fund';
     type: 'buy' | 'sell';
     lots: number;
     price: number;
@@ -359,6 +368,7 @@ export async function updateStockTradeAction(
 
     trade.symbol = symbol;
     trade.name = data.name?.trim() || undefined;
+    trade.asset_type = data.assetType === 'fund' ? 'fund' : 'stock';
     trade.type = data.type === 'sell' ? StockTradeType.SELL : StockTradeType.BUY;
     trade.lots = lots;
     trade.price = price;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { addStockTradeAction, updateStockTradeAction } from "@/actions/stocks";
 import { StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
@@ -28,6 +29,7 @@ export function AddStockTradeModal({
   knownStocks = [],
 }: AddStockTradeModalProps) {
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>(editTrade?.type || initialType);
+  const [assetType, setAssetType] = useState<'stock' | 'fund'>(editTrade?.assetType || 'stock');
   const [symbol, setSymbol] = useState(editTrade?.symbol || initialSymbol || '');
   const [name, setName] = useState(editTrade?.name || '');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -42,6 +44,7 @@ export function AddStockTradeModal({
   useEffect(() => {
     if (editTrade) {
       setTradeType(editTrade.type);
+      setAssetType(editTrade.assetType || 'stock');
       setSymbol(editTrade.symbol);
       setName(editTrade.name || '');
       setLots(String(editTrade.lots));
@@ -50,13 +53,14 @@ export function AddStockTradeModal({
       setNotes(editTrade.notes || '');
     } else {
       setTradeType(initialType);
+      setAssetType('stock');
       if (initialSymbol) {
         setSymbol(initialSymbol);
         const match = knownStocks.find(k => k.symbol.toUpperCase() === initialSymbol.toUpperCase());
         if (match && match.name) setName(match.name);
       }
     }
-  }, [editTrade, initialType, initialSymbol, knownStocks]);
+  }, [isOpen, editTrade, initialType, initialSymbol]);
 
   if (!isOpen) return null;
 
@@ -132,6 +136,7 @@ export function AddStockTradeModal({
         const res = await updateStockTradeAction(editTrade.id, {
           symbol: cleanSymbol,
           name: name || undefined,
+          assetType,
           type: tradeType,
           lots: numLots,
           price: numPrice,
@@ -150,6 +155,7 @@ export function AddStockTradeModal({
         const res = await addStockTradeAction({
           symbol: cleanSymbol,
           name: name || undefined,
+          assetType,
           type: tradeType,
           lots: numLots,
           price: numPrice,
@@ -173,9 +179,9 @@ export function AddStockTradeModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/70 animate-fade-in">
-      <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#12121c] rounded-3xl border border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden">
+  const modal = (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 backdrop-blur-md bg-black/70 animate-fade-in">
+      <div className="relative w-full max-w-lg max-h-[calc(100dvh-1.5rem)] sm:max-h-[92dvh] flex flex-col bg-[#12121c] rounded-3xl border border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden">
         
         {/* Modal Header */}
         <div className="px-6 py-4 flex items-center justify-between border-b border-white/10 bg-black/30 shrink-0">
@@ -189,7 +195,7 @@ export function AddStockTradeModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-white">
-                {editTrade ? "Emri Düzenle" : tradeType === 'buy' ? "Hisse Alış Emri" : "Hisse Satış Emri"}
+                {editTrade ? "İşlemi Düzenle" : tradeType === 'buy' ? `${assetType === 'fund' ? 'Fon' : 'Hisse'} Alışı` : `${assetType === 'fund' ? 'Fon' : 'Hisse'} Satışı`}
               </h2>
               <p className="text-xs text-[var(--on-surface-variant)]">
                 {tradeType === 'buy' ? "Portföye yeni lot ekleme veya ilk alış" : "Kâr/zarar hesaplamalı lot satışı"}
@@ -209,6 +215,13 @@ export function AddStockTradeModal({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-4">
           
           {/* Buy / Sell Switcher */}
+          {!editTrade && (
+            <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5">
+              <button type="button" onClick={() => setAssetType('stock')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'stock' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Hisse</button>
+              <button type="button" onClick={() => setAssetType('fund')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'fund' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Fon</button>
+            </div>
+          )}
+
           {!editTrade && (
             <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5">
               <button
@@ -240,7 +253,7 @@ export function AddStockTradeModal({
           {tradeType === 'sell' && positions.length > 0 && !editTrade && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Portföydeki Hisseler
+                Portföydeki Varlıklar
               </label>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                 {positions.map((p) => (
@@ -269,7 +282,7 @@ export function AddStockTradeModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5 relative">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Hisse Sembolü *
+                {assetType === 'fund' ? 'Fon Kodu *' : 'Hisse Sembolü *'}
               </label>
               <input
                 type="text"
@@ -292,7 +305,7 @@ export function AddStockTradeModal({
                     setName(match.name);
                   }
                 }}
-                placeholder="Örn: THYAO, ASELS"
+                placeholder={assetType === 'fund' ? 'Örn: TTE, MAC' : 'Örn: THYAO, ASELS'}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold tracking-wider placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all uppercase"
               />
 
@@ -324,13 +337,13 @@ export function AddStockTradeModal({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Şirket / Tanım (Opsiyonel)
+                {assetType === 'fund' ? 'Fon Adı (Opsiyonel)' : 'Şirket / Tanım (Opsiyonel)'}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Örn: Türk Hava Yolları"
+                placeholder={assetType === 'fund' ? 'Örn: Para Piyasası Fonu' : 'Örn: Türk Hava Yolları'}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
@@ -503,4 +516,6 @@ export function AddStockTradeModal({
       </div>
     </div>
   );
+
+  return typeof document === "undefined" ? null : createPortal(modal, document.body);
 }

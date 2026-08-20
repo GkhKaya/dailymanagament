@@ -103,3 +103,12 @@ test('handles full position closure and separate stock symbols', () => {
   assert.equal(result.totals.topProfitableSymbol?.symbol, 'ASELS');
   assert.equal(result.totals.topProfitableSymbol?.pnl, 1000);
 });
+
+test('keeps a fund type while calculating its manual-price profit and loss', () => {
+  const result = calculateStockPortfolio([
+    { id: 'fund-buy', symbol: 'TTE', name: 'Para Piyasası Fonu', assetType: 'fund', type: 'buy', lots: 120, price: 10, date: '2026-08-20' },
+  ], { TTE: 11.5 });
+
+  assert.equal(result.openPositions[0].assetType, 'fund');
+  assert.equal(result.openPositions[0].unrealized_pnl, 180);
+});

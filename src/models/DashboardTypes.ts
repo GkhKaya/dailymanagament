@@ -121,6 +121,7 @@ export interface StockTradeDTO {
   id: string;
   symbol: string;
   name?: string;
+  assetType: 'stock' | 'fund';
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -138,6 +139,7 @@ export interface StockPositionDTO {
   id: string;
   symbol: string;
   name?: string;
+  assetType: 'stock' | 'fund';
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -175,4 +177,3 @@ export interface StockPortfolioDTO {
     topProfitableSymbol?: { symbol: string; pnl: number };
   };
 }
-

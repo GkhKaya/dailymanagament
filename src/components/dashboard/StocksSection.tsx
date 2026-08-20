@@ -6,22 +6,14 @@ import {
   TrendingDown, 
   Plus, 
   Minus, 
-  DollarSign, 
   PieChart, 
   ListOrdered, 
-  History, 
   Edit3, 
   Trash2, 
   Search, 
-  CheckCircle2, 
-  AlertCircle, 
-  Tag, 
   ArrowUpRight, 
   ArrowDownRight,
-  RefreshCw,
-  Sparkles,
-  Trophy,
-  Filter
+  MoreHorizontal
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -30,6 +22,7 @@ import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal"
 import { EditStockSymbolModal } from "@/components/forms/EditStockSymbolModal";
 import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrdersModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { formatStockCurrency, getPortfolioPerformance } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
 
 export function StocksSection() {
@@ -168,6 +161,10 @@ export function StocksSection() {
     totalBuyVolume: 0,
     totalSellVolume: 0,
   };
+  const performance = getPortfolioPerformance(totals.totalCurrentValue, totals.totalInvestedCost);
+  const performanceLabel = performance.trend === "gain" ? "Artış" : performance.trend === "loss" ? "Düşüş" : "Değişim yok";
+  const performanceColor = performance.trend === "gain" ? "text-emerald-400" : performance.trend === "loss" ? "text-rose-400" : "text-[var(--on-surface-variant)]";
+  const performanceSurface = performance.trend === "gain" ? "border-emerald-500/25 bg-emerald-500/5" : performance.trend === "loss" ? "border-rose-500/25 bg-rose-500/5" : "border-[var(--outline)]";
 
   const openPositions = (portfolio?.positions || []).filter(p => 
     !searchQuery || p.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -184,220 +181,116 @@ export function StocksSection() {
   });
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto animate-fade-in">
+    <div className="flex flex-col gap-[var(--space-4)] w-full max-w-6xl mx-auto animate-fade-in">
       
       {/* ── HEADER BANNER ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 sm:gap-3">
-            <span className="p-1.5 sm:p-2 rounded-2xl bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] shrink-0">
-              <TrendingUp size={22} className="sm:w-6 sm:h-6" />
+          <h2 className="text-hero text-white tracking-tight flex items-center gap-3">
+            <span className="w-11 h-11 rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] shrink-0 flex items-center justify-center">
+              <TrendingUp size={20} />
             </span>
-            Borsa & Portföy Takibi
-          </h1>
-          <p className="text-[11px] sm:text-sm text-[var(--on-surface-variant)] mt-0.5 sm:mt-1">
-            Hisse alım-satım emirleriniz, kademeli maliyet ve anlık kâr/zarar defteri
+            Borsa
+          </h2>
+          <p className="text-body text-[var(--on-surface-variant)] mt-2">
+            Portföyün bugün nasıl?
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => handleOpenBuy()}
-            className="px-3.5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs sm:text-sm font-bold transition-all shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
+            className="min-h-11 px-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Plus size={16} /> Alış Emri Gir
           </button>
           <button
             type="button"
             onClick={() => handleOpenSell()}
-            className="px-3.5 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs sm:text-sm font-bold transition-all shadow-md flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
+            className="min-h-11 px-4 rounded-full bg-transparent hover:bg-white/5 border border-[var(--outline)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Minus size={16} /> Satış Yap
           </button>
         </div>
       </div>
 
-      {/* ── TOP STATS OVERVIEW CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        
-        {/* 1. Realized Profit / Loss (Gerçekleşen Kâr/Zarar) */}
-        <div className={`glass-card p-3.5 sm:p-5 rounded-3xl border flex flex-col justify-between transition-all ${
-          totals.totalRealizedPnl >= 0
-            ? 'bg-emerald-500/5 border-emerald-500/25 shadow-[0_8px_30px_rgba(16,185,129,0.08)]'
-            : 'bg-rose-500/5 border-rose-500/25 shadow-[0_8px_30px_rgba(244,63,94,0.08)]'
-        }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Net Kâr / Zarar
-            </span>
-            <span className={`p-1 sm:p-1.5 rounded-xl ${
-              totals.totalRealizedPnl >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
-            }`}>
-              {totals.totalRealizedPnl >= 0 ? <ArrowUpRight size={14} className="sm:w-4 sm:h-4" /> : <ArrowDownRight size={14} className="sm:w-4 sm:h-4" />}
-            </span>
-          </div>
-
-          <div className="my-1.5 sm:my-2">
-            <div className={`text-lg sm:text-3xl font-black truncate ${
-              totals.totalRealizedPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
-            }`}>
-              {totals.totalRealizedPnl >= 0 ? '+' : ''}
-              {totals.totalRealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+      <section aria-label="Portföy özeti" className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className={`glass-card col-span-2 p-4 border ${performanceSurface}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-caption text-[var(--on-surface-variant)]">PORTFÖY DEĞERİ</p>
+              <p className="text-title text-white mt-1">{formatStockCurrency(totals.totalCurrentValue)}</p>
             </div>
-            <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
-              <span className={`text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full ${
-                totals.totalRealizedPnlPercent >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
-              }`}>
-                {totals.totalRealizedPnlPercent >= 0 ? '+' : ''}%{totals.totalRealizedPnlPercent.toFixed(2)} Getiri
-              </span>
+            <div className={`text-right ${performanceColor}`}>
+              <p className="text-body font-bold flex items-center justify-end gap-1.5">{performance.trend === "loss" ? <ArrowDownRight size={16} aria-hidden="true" /> : <ArrowUpRight size={16} aria-hidden="true" />}{performance.pnl >= 0 ? "+" : ""}{formatStockCurrency(performance.pnl)}</p>
+              <p className="text-xs font-semibold mt-0.5">{performanceLabel} · %{performance.percent.toFixed(2)}</p>
             </div>
-          </div>
-
-          <div className="text-[10px] sm:text-[11px] text-[var(--on-surface-variant)] pt-1.5 sm:pt-2 border-t border-white/5 flex items-center justify-between">
-            <span>Kârlı: <strong className="text-emerald-400">{totals.winningTradesCount}</strong></span>
-            <span>Zararlı: <strong className="text-rose-400">{totals.losingTradesCount}</strong></span>
           </div>
         </div>
-
-        {/* 2. Open Positions Total Cost (Açık Yatırım Maliyeti) */}
-        <div className="glass-card p-3.5 sm:p-5 rounded-3xl border border-white/10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Açık Portföy
-            </span>
-            <span className="p-1 sm:p-1.5 rounded-xl bg-[var(--primary)]/15 text-[var(--primary)]">
-              <DollarSign size={14} className="sm:w-4 sm:h-4" />
-            </span>
-          </div>
-
-          <div className="my-1.5 sm:my-2">
-            <div className="text-lg sm:text-3xl font-black text-white truncate">
-              {totals.totalInvestedCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-            </div>
-            <p className="text-[10px] sm:text-xs text-[var(--on-surface-variant)] mt-0.5 sm:mt-1 truncate">
-              {portfolio?.positions.length || 0} açık hisse
-            </p>
-          </div>
-
-          <div className="text-[10px] sm:text-[11px] text-[var(--on-surface-variant)] pt-1.5 sm:pt-2 border-t border-white/5 flex items-center justify-between">
-            <span>Alış: <strong>{totals.totalBuyVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺</strong></span>
-          </div>
+        <div className="glass-card p-3">
+          <p className="text-caption text-[var(--on-surface-variant)]">YATIRILAN</p>
+          <p className="text-body font-bold text-white mt-1 truncate">{formatStockCurrency(totals.totalInvestedCost)}</p>
+          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">{portfolio?.positions.length || 0} varlık</p>
         </div>
-
-        {/* 3. Win Rate (Başarı Oranı) */}
-        <div className="glass-card p-3.5 sm:p-5 rounded-3xl border border-white/10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Başarı (Win Rate)
-            </span>
-            <span className="p-1 sm:p-1.5 rounded-xl bg-amber-500/15 text-amber-400">
-              <Trophy size={14} className="sm:w-4 sm:h-4" />
-            </span>
-          </div>
-
-          <div className="my-1.5 sm:my-2">
-            <div className="text-lg sm:text-3xl font-black text-amber-300">
-              %{totals.winRate.toFixed(1)}
-            </div>
-            <div className="w-full bg-black/40 h-1.5 sm:h-2 rounded-full mt-1.5 sm:mt-2 overflow-hidden border border-white/5">
-              <div 
-                className="bg-gradient-to-r from-emerald-500 to-amber-400 h-full rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(0, totals.winRate))}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="text-[10px] sm:text-[11px] text-[var(--on-surface-variant)] pt-1.5 sm:pt-2 border-t border-white/5 flex items-center justify-between">
-            <span>{totals.winningTradesCount} Kâr / {totals.losingTradesCount} Zarar</span>
-          </div>
+        <div className="glass-card p-3">
+          <p className="text-caption text-[var(--on-surface-variant)]">GERÇEKLEŞEN</p>
+          <p className={`text-body font-bold mt-1 truncate ${totals.totalRealizedPnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{totals.totalRealizedPnl >= 0 ? "+" : ""}{formatStockCurrency(totals.totalRealizedPnl)}</p>
+          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">Satış sonucu</p>
         </div>
-
-        {/* 4. Top Winner Stock */}
-        <div className="glass-card p-3.5 sm:p-5 rounded-3xl border border-white/10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Lider Hisse
-            </span>
-            <span className="p-1 sm:p-1.5 rounded-xl bg-purple-500/15 text-purple-400">
-              <Sparkles size={14} className="sm:w-4 sm:h-4" />
-            </span>
-          </div>
-
-          <div className="my-1.5 sm:my-2">
-            {totals.topProfitableSymbol ? (
-              <>
-                <div className="text-lg sm:text-3xl font-black text-emerald-400 tracking-wider truncate">
-                  {totals.topProfitableSymbol.symbol}
-                </div>
-                <p className="text-[10px] sm:text-xs font-bold text-emerald-300 mt-0.5 sm:mt-1 truncate">
-                  +{totals.topProfitableSymbol.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺ Kâr
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-base sm:text-xl font-bold text-white/50">Satış Yok</div>
-                <p className="text-[10px] sm:text-xs text-[var(--on-surface-variant)] mt-0.5 sm:mt-1">İlk satış bekleniyor</p>
-              </>
-            )}
-          </div>
-
-          <div className="text-[10px] sm:text-[11px] text-[var(--on-surface-variant)] pt-1.5 sm:pt-2 border-t border-white/5 truncate">
-            Satış: <strong>{totals.totalSellVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺</strong>
-          </div>
-        </div>
-      </div>
+      </section>
 
       {/* ── TABS & SEARCH BAR ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         
         {/* Navigation Tabs */}
-        <div className="flex p-1 bg-black/40 rounded-2xl border border-white/5 overflow-x-auto custom-scrollbar">
+        <div className="grid grid-cols-3 p-1 bg-[var(--surface-container-low)] rounded-[var(--radius-card)] border border-[var(--outline)] w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('positions')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`min-h-11 px-2 rounded-[var(--radius-input)] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
               activeTab === 'positions'
                 ? 'bg-[var(--primary)] text-black shadow-sm'
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <PieChart size={14} /> Açık Portföy ({portfolio?.positions.length || 0})
+            <PieChart size={14} aria-hidden="true" /> <span className="sm:hidden">Portföy</span><span className="hidden sm:inline">Açık Portföy</span> ({portfolio?.positions.length || 0})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('realized')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`min-h-11 px-2 rounded-[var(--radius-input)] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
               activeTab === 'realized'
                 ? 'bg-[var(--primary)] text-black shadow-sm'
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <TrendingUp size={14} /> Gerçekleşen Kâr/Zarar ({portfolio?.realizedTrades.length || 0})
+            <TrendingUp size={14} aria-hidden="true" /> <span className="sm:hidden">Kâr/Zarar</span><span className="hidden sm:inline">Gerçekleşen Kâr/Zarar</span> ({portfolio?.realizedTrades.length || 0})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('trades')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`min-h-11 px-2 rounded-[var(--radius-input)] text-xs font-bold transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
               activeTab === 'trades'
                 ? 'bg-[var(--primary)] text-black shadow-sm'
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <ListOrdered size={14} /> Emir Defteri ({portfolio?.allTrades.length || 0})
+            <ListOrdered size={14} aria-hidden="true" /> <span className="sm:hidden">İşlemler</span><span className="hidden sm:inline">Emir Defteri</span> ({portfolio?.allTrades.length || 0})
           </button>
         </div>
 
         {/* Search Input */}
-        <div className="relative flex items-center min-w-[220px]">
+        <div className="relative flex items-center w-full sm:w-64">
           <Search size={14} className="absolute left-3.5 text-white/40" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Hisse sembolü ara (THYAO...)"
-            className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--primary)]"
+            aria-label="Hisse sembolü ara"
+            className="min-h-11 w-full bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-[var(--radius-input)] py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--primary)]"
           />
         </div>
       </div>
@@ -423,11 +316,11 @@ export function StocksSection() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {openPositions.map((pos) => (
                 <div 
                   key={pos.symbol}
-                  className="glass-card p-5 rounded-3xl border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4 group"
+                  className="glass-card p-4 flex flex-col justify-between gap-4"
                 >
                   {/* Card Header */}
                   <div className="flex items-center justify-between">
@@ -436,19 +329,10 @@ export function StocksSection() {
                         {pos.symbol.slice(0, 4)}
                       </div>
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-base font-bold text-white tracking-wide">
-                            {pos.symbol}
-                          </h4>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditSymbol(pos.symbol, pos.name)}
-                            className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors cursor-pointer"
-                            title="Şirket / Tanım adını düzenle"
-                          >
-                            <Edit3 size={12} />
-                          </button>
-                        </div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-base font-bold text-white tracking-wide">{pos.symbol}</h4>
+                            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-[var(--on-surface-variant)]">{pos.assetType === 'fund' ? 'FON' : 'HİSSE'}</span>
+                          </div>
                         <p className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[150px]">
                           {pos.name || "Borsa İstanbul"}
                         </p>
@@ -462,17 +346,17 @@ export function StocksSection() {
                   </div>
 
                   {/* Metrics Grid */}
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-black/40 rounded-2xl border border-white/5 text-xs">
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-[var(--surface-container)] rounded-[var(--radius-input)] border border-[var(--outline)] text-xs">
                     <div>
                       <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">Ort. Maliyet</span>
                       <span className="font-bold text-white">
-                        {pos.average_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                        {formatStockCurrency(pos.average_cost)}
                       </span>
                     </div>
                     <div>
                       <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">Toplam Maliyet</span>
                       <span className="font-bold text-white">
-                        {pos.total_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                        {formatStockCurrency(pos.total_cost)}
                       </span>
                     </div>
 
@@ -481,12 +365,12 @@ export function StocksSection() {
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Güncel:</span>
                         {pos.current_price && pos.current_price > 0 ? (
-                          <span className="font-bold text-white">{pos.current_price.toFixed(2)} ₺</span>
+                          <span className="font-bold text-white">{formatStockCurrency(pos.current_price)}</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => handleOpenPriceModal(pos)}
-                            className="text-[10px] text-[var(--primary)] hover:underline font-semibold"
+                            className="min-h-11 px-2 -my-2 text-xs text-[var(--primary)] hover:underline font-semibold"
                           >
                             + Fiyat Gir
                           </button>
@@ -499,7 +383,7 @@ export function StocksSection() {
                             (pos.unrealized_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
                           }`}>
                             {(pos.unrealized_pnl || 0) >= 0 ? '+' : ''}
-                            {(pos.unrealized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                            {formatStockCurrency(pos.unrealized_pnl || 0)}
                             {' '}({(pos.unrealized_pnl_percent || 0) >= 0 ? '+' : ''}%{(pos.unrealized_pnl_percent || 0).toFixed(1)})
                           </span>
                         </div>
@@ -508,46 +392,47 @@ export function StocksSection() {
                   </div>
 
                   {/* Card Actions */}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => handleOpenBuy(pos.symbol)}
-                      className="flex-1 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      className="min-h-11 px-3 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Plus size={14} /> Ekle (Alış)
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenSell(pos.symbol)}
-                      className="flex-1 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      className="min-h-11 px-3 rounded-full border border-[var(--outline)] hover:bg-white/5 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Minus size={14} /> Satış Yap
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleOpenOrdersModal(pos)}
-                      title="Giriş Fiyatı ve Lot Emirlerini Düzenle"
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <ListOrdered size={14} />
-                      <span className="text-[11px] font-semibold hidden sm:inline">Maliyet Düzenle</span>
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => handleOpenPriceModal(pos)}
+                      aria-label={`${pos.symbol} güncel fiyatını düzenle`}
                       title="Güncel Fiyat Güncelle"
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-all cursor-pointer"
+                      className="min-h-11 px-3 rounded-full bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Edit3 size={14} />
+                      <span className="text-xs font-bold">Fiyat</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePosition(pos.symbol)}
-                      title="Hisseyi ve Tüm Geçmişini Tamamen Sil"
-                      className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-all cursor-pointer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <details className="col-span-2 group">
+                      <summary className="min-h-11 cursor-pointer list-none rounded-[var(--radius-input)] border border-[var(--outline)] px-3 flex items-center justify-center gap-2 text-xs font-bold text-[var(--on-surface-variant)] hover:bg-white/5 transition-colors">
+                        <MoreHorizontal size={16} aria-hidden="true" /> Diğer işlemler
+                      </summary>
+                      <div className="grid grid-cols-1 gap-2 pt-2">
+                        <button type="button" onClick={() => handleOpenOrdersModal(pos)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
+                          Maliyet işlemlerini düzenle
+                        </button>
+                        <button type="button" onClick={() => handleOpenEditSymbol(pos.symbol, pos.name)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
+                          {pos.assetType === 'fund' ? 'Fon adını düzenle' : 'Hisse adını düzenle'}
+                        </button>
+                        <button type="button" onClick={() => handleDeletePosition(pos.symbol)} className="min-h-11 rounded-[var(--radius-input)] bg-rose-500/10 px-3 text-left text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-colors">
+                          {pos.assetType === 'fund' ? 'Fonu ve tüm geçmişini sil' : 'Hisseyi ve tüm geçmişini sil'}
+                        </button>
+                      </div>
+                    </details>
                   </div>
                 </div>
               ))}

@@ -64,6 +64,7 @@ export interface RawTrade {
   id?: string;
   symbol: string;
   name?: string;
+  assetType?: 'stock' | 'fund';
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -87,6 +88,7 @@ export interface ComputedTrade extends RawTrade {
 export interface ComputedPosition {
   symbol: string;
   name?: string;
+  assetType: 'stock' | 'fund';
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -159,6 +161,7 @@ export function calculateStockPortfolio(
     let currentLots = 0;
     let totalInvestedCost = 0;
     let symbolLastName = '';
+    let symbolAssetType: 'stock' | 'fund' = 'stock';
     let lastTradeDate: string | undefined;
 
     for (const trade of symTrades) {
@@ -166,6 +169,7 @@ export function calculateStockPortfolio(
       const price = Number(trade.price) || 0;
       const tradeAmount = lots * price;
       if (trade.name) symbolLastName = trade.name;
+      if (trade.assetType) symbolAssetType = trade.assetType;
       lastTradeDate = new Date(trade.date).toISOString();
 
       let costBasis = 0;
@@ -229,6 +233,7 @@ export function calculateStockPortfolio(
     const positionObj: ComputedPosition = {
       symbol,
       name: symbolLastName,
+      assetType: symbolAssetType,
       total_lots: Math.round(currentLots * 10000) / 10000,
       average_cost: roundedAvgCost,
       total_cost: roundedTotalCost,

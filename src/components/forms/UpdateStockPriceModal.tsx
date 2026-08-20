@@ -68,7 +68,7 @@ export function UpdateStockPriceModal({
               <TrendingUp size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{position.symbol} Güncel Fiyat</h3>
+              <h3 className="text-sm font-bold text-white">{position.symbol} Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı</h3>
               <p className="text-[11px] text-[var(--on-surface-variant)]">{position.total_lots} Lot | Ort. Maliyet: {position.average_cost.toFixed(2)} ₺</p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export function UpdateStockPriceModal({
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Piyasa / Güncel Fiyat (₺)
+              Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı (₺)
             </label>
             <input
               type="number"
