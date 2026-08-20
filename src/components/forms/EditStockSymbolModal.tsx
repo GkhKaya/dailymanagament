@@ -11,6 +11,7 @@ interface EditStockSymbolModalProps {
   onSuccess: () => void;
   symbol: string;
   currentName?: string;
+  currentAssetType?: 'stock' | 'fund';
 }
 
 export function EditStockSymbolModal({
@@ -19,8 +20,10 @@ export function EditStockSymbolModal({
   onSuccess,
   symbol,
   currentName = "",
+  currentAssetType = 'stock',
 }: EditStockSymbolModalProps) {
   const [name, setName] = useState(currentName);
+  const [assetType, setAssetType] = useState<'stock' | 'fund'>(currentAssetType);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -29,9 +32,9 @@ export function EditStockSymbolModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await updateStockSymbolNameAction(symbol, name);
+      const res = await updateStockSymbolNameAction(symbol, name, assetType);
       if (res.success) {
-        toast.success(`${symbol} şirket bilgisi güncellendi.`);
+        toast.success(`${symbol} bilgileri güncellendi.`);
         onSuccess();
         onClose();
       } else {
@@ -54,8 +57,8 @@ export function EditStockSymbolModal({
               <Building2 size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{symbol} Şirket Adı</h3>
-              <p className="text-[11px] text-[var(--on-surface-variant)]">Kayıtlı şirket adını düzenleyin</p>
+              <h3 className="text-sm font-bold text-white">{symbol} Varlık Bilgisi</h3>
+              <p className="text-[11px] text-[var(--on-surface-variant)]">Adını ve türünü düzenleyin</p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-white/70">
@@ -67,7 +70,7 @@ export function EditStockSymbolModal({
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Şirket / Tanım
+              Tanım
             </label>
             <input
               type="text"
@@ -78,6 +81,14 @@ export function EditStockSymbolModal({
               placeholder="Örn: Aselsan Elektronik Sanayi"
               className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-[var(--primary)]"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">Varlık Türü</label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-black/40 rounded-xl border border-white/10">
+              <button type="button" onClick={() => setAssetType('stock')} className={`min-h-11 rounded-lg text-xs font-bold transition-colors ${assetType === 'stock' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Hisse</button>
+              <button type="button" onClick={() => setAssetType('fund')} className={`min-h-11 rounded-lg text-xs font-bold transition-colors ${assetType === 'fund' ? 'bg-purple-500/25 text-purple-200' : 'text-white/60 hover:text-white'}`}>Fon</button>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-2">

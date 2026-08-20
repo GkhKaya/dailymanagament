@@ -46,7 +46,7 @@ export function StocksSection() {
   const [ordersModalPosition, setOrdersModalPosition] = useState<StockPositionDTO | null>(null);
 
   const [isEditSymbolModalOpen, setIsEditSymbolModalOpen] = useState(false);
-  const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string } | null>(null);
+  const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string; assetType: 'stock' | 'fund' } | null>(null);
 
   const fetchPortfolio = useCallback(async () => {
     setIsLoading(true);
@@ -119,8 +119,8 @@ export function StocksSection() {
     setIsOrdersModalOpen(true);
   };
 
-  const handleOpenEditSymbol = (symbol: string, name?: string) => {
-    setEditSymbolModalData({ symbol, name });
+  const handleOpenEditSymbol = (symbol: string, name?: string, assetType: 'stock' | 'fund' = 'stock') => {
+    setEditSymbolModalData({ symbol, name, assetType });
     setIsEditSymbolModalOpen(true);
   };
 
@@ -438,7 +438,7 @@ export function StocksSection() {
                         <button type="button" onClick={() => handleOpenOrdersModal(pos)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
                           Maliyet işlemlerini düzenle
                         </button>
-                        <button type="button" onClick={() => handleOpenEditSymbol(pos.symbol, pos.name)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
+                        <button type="button" onClick={() => handleOpenEditSymbol(pos.symbol, pos.name, pos.assetType)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
                           {pos.assetType === 'fund' ? 'Fon adını düzenle' : 'Hisse adını düzenle'}
                         </button>
                         <button type="button" onClick={() => handleDeletePosition(pos.symbol)} className="min-h-11 rounded-[var(--radius-input)] bg-rose-500/10 px-3 text-left text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-colors">
@@ -685,7 +685,7 @@ export function StocksSection() {
             else handleOpenSell(symbol);
           }}
           onEditSymbolName={(symbol, currentName) => {
-            handleOpenEditSymbol(symbol, currentName);
+            handleOpenEditSymbol(symbol, currentName, ordersModalPosition.assetType);
           }}
         />
       )}
@@ -700,6 +700,7 @@ export function StocksSection() {
           onSuccess={fetchPortfolio}
           symbol={editSymbolModalData.symbol}
           currentName={editSymbolModalData.name}
+          currentAssetType={editSymbolModalData.assetType}
         />
       )}
     </div>

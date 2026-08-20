@@ -218,7 +218,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
  */
 export async function updateStockSymbolNameAction(
   symbol: string,
-  newName: string
+  newName: string,
+  assetType: 'stock' | 'fund' = 'stock'
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await connectDB();
@@ -232,12 +233,12 @@ export async function updateStockSymbolNameAction(
 
     await StockTrade.updateMany(
       { user_id: userId, symbol: cleanSymbol },
-      { $set: { name: cleanName || undefined } }
+      { $set: { name: cleanName || undefined, asset_type: assetType } }
     );
 
     await StockPosition.findOneAndUpdate(
       { user_id: userId, symbol: cleanSymbol },
-      { $set: { name: cleanName || undefined } }
+      { $set: { name: cleanName || undefined, asset_type: assetType } }
     );
 
     await syncAndCalculatePortfolio(userId);
