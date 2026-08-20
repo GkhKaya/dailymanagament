@@ -85,8 +85,8 @@ export function UpdateStockPriceModal({
             </label>
             <input
               type="number"
-              step="0.01"
-              min="0.01"
+              step="any"
+              min="0"
               required
               autoFocus
               value={price}

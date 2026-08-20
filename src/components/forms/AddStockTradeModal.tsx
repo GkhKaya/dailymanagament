@@ -313,7 +313,7 @@ export function AddStockTradeModal({
               <input
                 type="number"
                 step="any"
-                min="0.0001"
+                min="0"
                 required
                 value={lots}
                 onChange={(e) => setLots(e.target.value)}
@@ -328,8 +328,8 @@ export function AddStockTradeModal({
               </label>
               <input
                 type="number"
-                step="0.01"
-                min="0.0001"
+                step="any"
+                min="0"
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
