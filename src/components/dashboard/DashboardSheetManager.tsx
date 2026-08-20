@@ -21,6 +21,7 @@ const ManageAccountsForm = dynamic(() => import("@/components/forms/ManageAccoun
 const TransferAccountsForm = dynamic(() => import("@/components/forms/TransferAccountsForm").then(m => m.TransferAccountsForm), { ssr: false });
 const ManageWorkoutRoutineForm = dynamic(() => import("@/components/forms/ManageWorkoutRoutineForm").then(m => m.ManageWorkoutRoutineForm), { ssr: false });
 const AIPhotoMealModal = dynamic(() => import("@/components/forms/AIPhotoMealModal").then(m => m.AIPhotoMealModal), { ssr: false });
+const AddStockTradeModal = dynamic(() => import("@/components/forms/AddStockTradeModal").then(m => m.AddStockTradeModal), { ssr: false });
 
 interface DashboardSheetManagerProps {
   activeSheet: string | null;
@@ -56,6 +57,18 @@ export function DashboardSheetManager({
         onSuccess={handleSuccess}
         currentDate={localDateStr}
         initialMealType={sheetPayload?.mealType || 'lunch'}
+      />
+    );
+  }
+
+  if (activeSheet === 'stockTrade') {
+    return (
+      <AddStockTradeModal
+        isOpen={true}
+        onClose={() => setActiveSheet(null)}
+        onSuccess={handleSuccess}
+        initialType={sheetPayload?.type || 'buy'}
+        initialSymbol={sheetPayload?.symbol || ''}
       />
     );
   }

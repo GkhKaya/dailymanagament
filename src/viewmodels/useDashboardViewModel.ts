@@ -11,7 +11,7 @@ export function useDashboardViewModel() {
     const handleHashChange = () => {
       if (typeof window !== 'undefined') {
         const hash = window.location.hash.replace('#', '') as DashboardMode;
-        if (['overview', 'health', 'finance', 'health-analysis', 'finance-analysis'].includes(hash)) {
+        if (['overview', 'health', 'finance', 'stocks', 'health-analysis', 'finance-analysis'].includes(hash)) {
           setModeState(hash);
         } else {
           setModeState('overview');

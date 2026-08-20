@@ -71,3 +71,9 @@ export enum DebtStatus {
   PARTIALLY_PAID = 'partially_paid',
   CLOSED = 'closed',
 }
+
+export enum StockTradeType {
+  BUY = 'buy',
+  SELL = 'sell',
+}
+

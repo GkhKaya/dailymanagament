@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Utensils, Activity, DollarSign, X } from "lucide-react";
+import { Plus, Utensils, Activity, DollarSign, X, Camera, TrendingUp } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { DashboardMode } from "@/models/DashboardTypes";
 
@@ -29,6 +29,16 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
         }`}
       >
         <button 
+          onClick={() => handleAction('stockTrade')}
+          className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[var(--primary)]/30 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+        >
+          <span className="font-semibold text-sm">Hisse Alış / Satış Ekle</span>
+          <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 flex items-center justify-center text-[var(--primary)]">
+            <TrendingUp size={16} />
+          </div>
+        </button>
+
+        <button 
           onClick={() => handleAction('transaction')}
           className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
         >
@@ -45,6 +55,16 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
           <span className="font-medium text-sm">{t("dashboard.fab.addExercise")}</span>
           <div className="w-8 h-8 rounded-full bg-[rgba(217,119,33,0.3)] flex items-center justify-center text-orange-400">
             <Activity size={16} />
+          </div>
+        </button>
+
+        <button 
+          onClick={() => handleAction('aiPhotoMeal')}
+          className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-md text-emerald-400 px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
+        >
+          <span className="font-semibold text-sm">AI Fotoğrafla Yemek Ekle</span>
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Camera size={16} />
           </div>
         </button>
 

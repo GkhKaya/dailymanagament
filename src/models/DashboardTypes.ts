@@ -3,10 +3,11 @@ import {
   AccountType, 
   TransactionType, 
   CategoryType, 
-  DebtDirection 
+  DebtDirection,
+  StockTradeType
 } from './Enums';
 
-export type DashboardMode = 'overview' | 'health' | 'finance' | 'health-analysis' | 'finance-analysis';
+export type DashboardMode = 'overview' | 'health' | 'finance' | 'stocks' | 'health-analysis' | 'finance-analysis';
 
 // ── Health Data Models ──
 export interface MealInfo {
@@ -114,3 +115,57 @@ export interface FinanceDataDTO {
   debts: DebtInfo[];
   subscriptions: SubscriptionInfo[];
 }
+
+// ── Stock & Portfolio Data Models ──
+export interface StockTradeDTO {
+  id: string;
+  symbol: string;
+  name?: string;
+  type: 'buy' | 'sell';
+  lots: number;
+  price: number;
+  total_amount: number;
+  date: string;       // Formatted or ISO date
+  rawDate: string;    // ISO string
+  notes?: string;
+  cost_basis?: number;
+  total_cost?: number;
+  realized_pnl?: number;
+  realized_pnl_percent?: number;
+}
+
+export interface StockPositionDTO {
+  id: string;
+  symbol: string;
+  name?: string;
+  total_lots: number;
+  average_cost: number;
+  total_cost: number;
+  current_price?: number;
+  current_value?: number;
+  unrealized_pnl?: number;
+  unrealized_pnl_percent?: number;
+  last_trade_date?: string;
+}
+
+export interface StockPortfolioDTO {
+  positions: StockPositionDTO[];
+  closedPositions: StockPositionDTO[];
+  realizedTrades: StockTradeDTO[];
+  allTrades: StockTradeDTO[];
+  totals: {
+    totalInvestedCost: number;        // Açık pozisyonlardaki toplam maliyet
+    totalCurrentValue: number;         // Açık pozisyonlardaki güncel değer (varsa)
+    totalUnrealizedPnl: number;        // Açık pozisyonlardaki potansiyel K/Z
+    totalUnrealizedPnlPercent: number; // Açık pozisyonlar potansiyel K/Z %
+    totalRealizedPnl: number;          // Toplam gerçekleşen kar/zarar ₺
+    totalRealizedPnlPercent: number;   // Toplam gerçekleşen kar/zarar %
+    winningTradesCount: number;        // Kârlı satış adedi
+    losingTradesCount: number;         // Zararlı satış adedi
+    winRate: number;                   // Başarı yüzdesi %
+    totalBuyVolume: number;            // Toplam yapılan alış hacmi
+    totalSellVolume: number;           // Toplam yapılan satış hacmi
+    topProfitableSymbol?: { symbol: string; pnl: number };
+  };
+}
+

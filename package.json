@@ -9,10 +9,11 @@
     "lint": "eslint",
     "export:food-sugar": "node scripts/export-food-cache-sugar.mjs",
     "import:food-sugar": "node scripts/import-food-cache-sugar.mjs",
-    "test": "npm run test:finance && npm run test:ocr && npm run test:calories",
+    "test": "npm run test:finance && npm run test:ocr && npm run test:calories && npm run test:stocks",
     "test:calories": "node --experimental-strip-types --test tests/calories.test.mjs",
     "test:finance": "node --experimental-strip-types --test tests/finance-rules.test.mjs",
-    "test:ocr": "node --experimental-strip-types --test tests/mistral-ocr.test.mjs tests/gemini-vision.test.mjs"
+    "test:ocr": "node --experimental-strip-types --test tests/mistral-ocr.test.mjs tests/gemini-vision.test.mjs",
+    "test:stocks": "node --experimental-strip-types --test tests/stock-engine.test.mjs"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.6.23",

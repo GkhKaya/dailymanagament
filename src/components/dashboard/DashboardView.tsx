@@ -15,9 +15,9 @@ import { VoiceAssistantFAB } from '@/components/assistant/VoiceAssistantFAB';
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 // Performans optimizasyonu: Ağır formları ve analiz sayfalarını sadece ihtiyaç anında (tıklandığında) yüklenecek şekilde (Lazy Load) ayırıyoruz.
-// Bu sayede uygulamanın ilk açılış süresi (ve geliştirme modunda derlenme süresi) devasa oranda hızlanır.
 const HealthAnalysis = dynamic(() => import("@/components/dashboard/HealthAnalysis").then(m => m.HealthAnalysis), { ssr: false });
 const FinanceAnalysis = dynamic(() => import("@/components/dashboard/FinanceAnalysis").then(m => m.FinanceAnalysis), { ssr: false });
+const StocksSection = dynamic(() => import("@/components/dashboard/StocksSection").then(m => m.StocksSection), { ssr: false });
 
 import { DashboardSheetManager } from "@/components/dashboard/DashboardSheetManager";
 
@@ -38,6 +38,9 @@ export function DashboardView() {
         break;
       case 'finance':
         document.title = "Cüzdan | DailyM";
+        break;
+      case 'stocks':
+        document.title = "Borsa & Portföy | DailyM";
         break;
       case 'health-analysis':
         document.title = "Sağlık Analizi | DailyM";
@@ -81,32 +84,38 @@ export function DashboardView() {
               <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" width={32} height={32} style={{ maxHeight: "32px" }} />
               <span className="text-xl font-bold tracking-tight text-white">Daily<span className="text-[var(--primary)]">M</span></span>
             </button>
-
-            {/* Navigation Tabs (Overview, Health, Finance) */}
             <nav className="hidden sm:flex items-center gap-[var(--space-4)]">
               <button
                 onClick={() => setMode('overview')}
-                className={`text-body font-medium transition-colors ${
-                  mode === 'overview' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                className={`text-body font-medium transition-colors cursor-pointer ${
+                  mode === 'overview' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
                 }`}
               >
                 {t("dashboard.tabOverview")}
               </button>
               <button
                 onClick={() => setMode('health')}
-                className={`text-body font-medium transition-colors ${
-                  mode === 'health' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                className={`text-body font-medium transition-colors cursor-pointer ${
+                  mode === 'health' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
                 }`}
               >
                 {t("dashboard.tabHealth")}
               </button>
               <button
                 onClick={() => setMode('finance')}
-                className={`text-body font-medium transition-colors ${
-                  mode === 'finance' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                className={`text-body font-medium transition-colors cursor-pointer ${
+                  mode === 'finance' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
                 }`}
               >
                 {t("dashboard.tabFinance")}
+              </button>
+              <button
+                onClick={() => setMode('stocks')}
+                className={`text-body font-medium transition-colors cursor-pointer ${
+                  mode === 'stocks' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                }`}
+              >
+                Borsa
               </button>
             </nav>
           </div>
@@ -134,20 +143,20 @@ export function DashboardView() {
         {/* Mobile Mode Switcher (shows below header on small screens) */}
         <div className="w-full px-4 pb-4 sm:hidden flex justify-center relative z-10">
           {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
-            <div className="flex w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
+            <div className="grid grid-cols-4 gap-1 w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
               <button
                 aria-pressed={mode === 'overview'}
                 onClick={() => setMode('overview')}
-                className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
                   mode === 'overview' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
-                Genel bakış
+                Genel
               </button>
               <button
                 aria-pressed={mode === 'health'}
                 onClick={() => setMode('health')}
-                className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
                   mode === 'health' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
@@ -156,11 +165,20 @@ export function DashboardView() {
               <button
                 aria-pressed={mode === 'finance'}
                 onClick={() => setMode('finance')}
-                className={`flex-1 py-2 text-center rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
                   mode === 'finance' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
                 }`}
               >
-                Finans
+                Cüzdan
+              </button>
+              <button
+                aria-pressed={mode === 'stocks'}
+                onClick={() => setMode('stocks')}
+                className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
+                  mode === 'stocks' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'
+                }`}
+              >
+                Borsa
               </button>
             </div>
           )}
@@ -201,12 +219,16 @@ export function DashboardView() {
             isLoadingFinance || !financeData ? <LoadingSpinner /> : (
               <FinanceSection 
                 data={financeData} 
-                isOverview={false}
+                isOverview={false} 
                 onOpenSheet={handleOpenSheet} 
                 onShowAnalysis={() => setMode('finance-analysis')} 
                 currentDate={currentDate}
               />
             )
+          )}
+
+          {mode === 'stocks' && (
+            <StocksSection />
           )}
 
           {mode === 'health-analysis' && (
