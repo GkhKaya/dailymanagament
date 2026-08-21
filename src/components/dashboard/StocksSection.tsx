@@ -22,7 +22,7 @@ import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal"
 import { EditStockSymbolModal } from "@/components/forms/EditStockSymbolModal";
 import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrdersModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { formatStockCurrency, getPortfolioPerformance } from "@/lib/stocks-ui";
+import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
 
 export function StocksSection() {
@@ -32,6 +32,7 @@ export function StocksSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
+  const [realizedPeriod, setRealizedPeriod] = useState<'all' | 'week' | 'month'>('all');
 
   // Modals state
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
@@ -174,9 +175,14 @@ export function StocksSection() {
     return matchesSearch && (assetFilter === 'all' || p.assetType === assetFilter);
   });
 
-  const realizedTrades = (portfolio?.realizedTrades || []).filter(t => 
-    !searchQuery || t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (t.name && t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const realizedTrades = filterRealizedTrades(
+    (portfolio?.realizedTrades || []).filter(t =>
+      !searchQuery || t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (t.name && t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ),
+    assetFilter,
+    realizedPeriod,
   );
+  const realizedSummary = summarizeRealizedTrades(realizedTrades);
 
   const allTrades = (portfolio?.allTrades || []).filter(t => {
     const matchesSearch = !searchQuery || t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || (t.name && t.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -457,6 +463,26 @@ export function StocksSection() {
       {/* ── TAB 2: REALIZED PROFIT / LOSS LOG (GERÇEKLEŞEN KÂR/ZARAR DEFTERİ) ── */}
       {activeTab === 'realized' && (
         <div className="flex flex-col gap-3">
+          <div className="glass-card p-4 rounded-3xl border border-white/10 flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)]">Filtrelenmiş net durum</p>
+                <p className={`text-2xl font-black ${realizedSummary.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {realizedSummary.netPnl >= 0 ? '+' : ''}{formatStockCurrency(realizedSummary.netPnl)}
+                </p>
+              </div>
+              <div className="flex gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
+                {([['all', 'Tümü'], ['week', 'Haftalık'], ['month', 'Aylık']] as const).map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setRealizedPeriod(value)} className={`min-h-9 px-3 rounded-md text-xs font-bold ${realizedPeriod === value ? 'bg-[var(--primary)] text-black' : 'text-white/60 hover:text-white'}`}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-4 text-xs text-[var(--on-surface-variant)]">
+              <span>Kârlı: <strong className="text-emerald-400">{realizedSummary.winningCount}</strong></span>
+              <span>Zararlı: <strong className="text-rose-400">{realizedSummary.losingCount}</strong></span>
+              <span>İşlem: <strong className="text-white">{realizedTrades.length}</strong></span>
+            </div>
+          </div>
           {realizedTrades.length === 0 ? (
             <div className="glass-card p-10 rounded-3xl border border-white/10 flex flex-col items-center justify-center text-center gap-3">
               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">

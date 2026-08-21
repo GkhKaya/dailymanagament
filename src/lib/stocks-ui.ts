@@ -1,5 +1,23 @@
 export type PortfolioTrend = "gain" | "loss" | "neutral";
 
+type RealizedTradeFilter = 'all' | 'stock' | 'fund';
+type RealizedPeriodFilter = 'all' | 'week' | 'month';
+
+export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; rawDate: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()) {
+  const start = new Date(now);
+  if (period === 'week') start.setDate(start.getDate() - 7);
+  if (period === 'month') start.setMonth(start.getMonth() - 1);
+  return trades.filter((trade) => (assetFilter === 'all' || trade.assetType === assetFilter) && (period === 'all' || new Date(trade.rawDate) >= start));
+}
+
+export function summarizeRealizedTrades(trades: Array<{ realized_pnl?: number }>) {
+  return {
+    netPnl: Math.round(trades.reduce((sum, trade) => sum + (trade.realized_pnl || 0), 0) * 100) / 100,
+    winningCount: trades.filter((trade) => (trade.realized_pnl || 0) > 0).length,
+    losingCount: trades.filter((trade) => (trade.realized_pnl || 0) < 0).length,
+  };
+}
+
 export function getPortfolioPerformance(currentValue: number, investedCost: number) {
   const pnl = currentValue - investedCost;
   const trend: PortfolioTrend = pnl > 0 ? "gain" : pnl < 0 ? "loss" : "neutral";
