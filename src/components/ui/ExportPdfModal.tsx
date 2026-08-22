@@ -39,6 +39,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
   const [startDate, setStartDate] = useState(defaultEndDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [selectedType, setSelectedType] = useState<'daily' | 'weekly' | 'monthly' | 'range'>('daily');
+  const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -69,7 +70,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
         const range = selectedType === 'range'
           ? { startDate, endDate }
           : getStocksPeriodRange(selectedType, currentDate || new Date());
-        const res = await getStocksExportDataAction(range.startDate, range.endDate);
+        const res = await getStocksExportDataAction(range.startDate, range.endDate, assetFilter);
         if (!res.success || !res.data) throw new Error(res.error || 'Borsa rapor verileri alınamadı.');
         generateStocksPDF(res.userName || 'Kullanıcı', res.data);
       } else if (isFinance) {
@@ -149,6 +150,17 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
             Bitiş tarihi
             <input type="date" value={endDate} min={startDate} onChange={(event) => setEndDate(event.target.value)} className="min-h-11 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white [color-scheme:dark] focus:border-[var(--primary)] focus:outline-none" />
           </label>
+        </div>}
+
+        {isStocks && <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'all', label: 'Hisse + Fon' },
+            { id: 'stock', label: 'Sadece Hisse' },
+            { id: 'fund', label: 'Sadece Fon' },
+          ].map(option => {
+            const active = assetFilter === option.id;
+            return <button key={option.id} type="button" onClick={() => setAssetFilter(option.id as typeof assetFilter)} className={`min-h-11 rounded-xl border px-2 text-xs font-bold transition-colors ${active ? 'border-[var(--primary)] bg-[var(--primary)]/15 text-white' : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'}`}>{option.label}</button>;
+          })}
         </div>}
 
         <p className="rounded-xl bg-white/[0.03] px-3 py-2.5 text-xs leading-5 text-[var(--on-surface-variant)]">

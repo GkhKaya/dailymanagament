@@ -237,7 +237,7 @@ export async function getFinanceExportDataAction(startDateStr: string, endDateSt
   }
 }
 
-export async function getStocksExportDataAction(startDateStr?: string, endDateStr?: string) {
+export async function getStocksExportDataAction(startDateStr?: string, endDateStr?: string, assetFilter: 'all' | 'stock' | 'fund' = 'all') {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -267,10 +267,12 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       return tDate >= startFilterDate && tDate <= endFilterDate;
     };
 
-    const filteredRealized = portfolio.realizedTrades.filter(t => filterByDate(t.rawDate || t.date));
-    const filteredAllTrades = portfolio.allTrades.filter(t => filterByDate(t.rawDate || t.date));
+    const filterByAsset = (assetType: string | undefined) => assetFilter === 'all' || (assetType || 'stock') === assetFilter;
+    const filteredRealized = portfolio.realizedTrades.filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType));
+    const filteredAllTrades = portfolio.allTrades.filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType));
+    const filteredPositions = portfolio.positions.filter(p => filterByAsset(p.assetType));
 
-    const positions: StocksExportPosition[] = portfolio.positions.map(p => ({
+    const positions: StocksExportPosition[] = filteredPositions.map(p => ({
       symbol: p.symbol,
       name: p.name || '',
       assetType: p.assetType || 'stock',
@@ -298,14 +300,38 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       notes: t.notes || '',
     });
 
+    const mappedRealizedTrades = filteredRealized.map(mapTrade);
+    const mappedAllTrades = filteredAllTrades.map(mapTrade);
+    const totalInvestedCost = positions.reduce((sum, p) => sum + (p.total_cost || 0), 0);
+    const totalCurrentValue = positions.reduce((sum, p) => sum + (p.current_value || 0), 0);
+    const totalUnrealizedPnl = positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
+    const totalRealizedPnl = mappedRealizedTrades.reduce((sum, t) => sum + (t.realized_pnl || 0), 0);
+    const realizedCostBasis = mappedRealizedTrades.reduce((sum, t) => sum + (t.cost_basis || 0), 0);
+    const totalBuyVolume = mappedAllTrades.filter(t => t.type === 'buy').reduce((sum, t) => sum + t.total_amount, 0);
+    const totalSellVolume = mappedAllTrades.filter(t => t.type === 'sell').reduce((sum, t) => sum + t.total_amount, 0);
+    const winningTradesCount = mappedRealizedTrades.filter(t => (t.realized_pnl || 0) > 0).length;
+    const losingTradesCount = mappedRealizedTrades.filter(t => (t.realized_pnl || 0) < 0).length;
+
     const data: StocksExportData = {
       startDate: startDateStr ? new Date(`${startDateStr}T00:00:00.000Z`).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : (filteredAllTrades.length > 0 ? filteredAllTrades[filteredAllTrades.length - 1].date : new Date().toLocaleDateString('tr-TR')),
       endDate: endDateStr ? new Date(`${endDateStr}T00:00:00.000Z`).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : new Date().toLocaleDateString('tr-TR'),
       generatedAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      totals: portfolio.totals,
+      totals: {
+        totalInvestedCost,
+        totalCurrentValue,
+        totalUnrealizedPnl,
+        totalUnrealizedPnlPercent: totalInvestedCost ? (totalUnrealizedPnl / totalInvestedCost) * 100 : 0,
+        totalRealizedPnl,
+        totalRealizedPnlPercent: realizedCostBasis ? (totalRealizedPnl / realizedCostBasis) * 100 : 0,
+        winRate: mappedRealizedTrades.length ? (winningTradesCount / mappedRealizedTrades.length) * 100 : 0,
+        winningTradesCount,
+        losingTradesCount,
+        totalBuyVolume,
+        totalSellVolume,
+      },
       positions,
-      realizedTrades: filteredRealized.map(mapTrade),
-      allTrades: filteredAllTrades.map(mapTrade),
+      realizedTrades: mappedRealizedTrades,
+      allTrades: mappedAllTrades,
     };
 
     return {
