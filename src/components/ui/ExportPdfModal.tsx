@@ -19,6 +19,21 @@ function inputDate(date: Date) {
   return offsetDate.toISOString().slice(0, 10);
 }
 
+function getStocksPeriodRange(type: 'daily' | 'weekly' | 'monthly', date: Date) {
+  const start = new Date(date);
+  const end = new Date(date);
+  if (type === 'weekly') {
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - day + 1);
+    end.setTime(start.getTime());
+    end.setDate(end.getDate() + 6);
+  } else if (type === 'monthly') {
+    start.setDate(1);
+    end.setMonth(end.getMonth() + 1, 0);
+  }
+  return { startDate: inputDate(start), endDate: inputDate(end) };
+}
+
 export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'health' }: ExportPdfModalProps) {
   const defaultEndDate = inputDate(currentDate || new Date());
   const [startDate, setStartDate] = useState(defaultEndDate);
@@ -39,7 +54,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
 
   const isFinance = reportType === 'finance';
   const isStocks = reportType === 'stocks';
-  const isRange = isFinance || isStocks || selectedType === 'range';
+  const isRange = isFinance || selectedType === 'range';
 
   if (!isOpen) return null;
 
@@ -51,7 +66,10 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
     setIsLoading(true);
     try {
       if (isStocks) {
-        const res = await getStocksExportDataAction(startDate, endDate);
+        const range = selectedType === 'range'
+          ? { startDate, endDate }
+          : getStocksPeriodRange(selectedType, currentDate || new Date());
+        const res = await getStocksExportDataAction(range.startDate, range.endDate);
         if (!res.success || !res.data) throw new Error(res.error || 'Borsa rapor verileri alınamadı.');
         generateStocksPDF(res.userName || 'Kullanıcı', res.data);
       } else if (isFinance) {
@@ -102,7 +120,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
           <button type="button" onClick={onClose} aria-label="Kapat" className="min-h-11 min-w-11 rounded-full text-[var(--on-surface-variant)] transition-colors hover:bg-white/5 hover:text-white"><X className="mx-auto" size={18} /></button>
         </div>
 
-        {!isFinance && !isStocks && (
+        {!isFinance && (
           <div className="grid grid-cols-2 gap-2">
             {[
               { id: 'daily', label: 'Günlük', icon: FileText },
@@ -134,7 +152,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
         </div>}
 
         <p className="rounded-xl bg-white/[0.03] px-3 py-2.5 text-xs leading-5 text-[var(--on-surface-variant)]">
-          {isStocks ? 'Açık hisse/fon pozisyonları, gerçekleşen kâr/zararlar ve tüm emir defteri rapora eklenir.' : isFinance ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.' : selectedType === 'range' ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.' : selectedType === 'daily' ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.' : selectedType === 'weekly' ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.' : 'Seçili ayın dört haftalık özeti hazırlanır.'}
+          {isStocks ? 'Seçilen dönemdeki hisse/fon işlemleri, gerçekleşen kâr/zararlar ve açık portföy özeti rapora eklenir.' : isFinance ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.' : selectedType === 'range' ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.' : selectedType === 'daily' ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.' : selectedType === 'weekly' ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.' : 'Seçili ayın dört haftalık özeti hazırlanır.'}
         </p>
 
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
