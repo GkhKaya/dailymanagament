@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { ExportDayData, ExportWeekSummary, FinanceExportData } from '@/actions/export';
+import { ExportDayData, ExportWeekSummary, FinanceExportData, StocksExportData } from '@/actions/export';
 
 // Helper to replace Turkish characters for jsPDF default Helvetica font compatibility
 function tr(text: string | number | undefined | null): string {
@@ -106,6 +106,210 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
     columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 42 }, 2: { cellWidth: 30 }, 3: { cellWidth: 30 }, 4: { cellWidth: 22 }, 5: { cellWidth: 28, halign: 'right' } }
   });
   doc.save(`Finans_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
+}
+
+export function generateStocksPDF(userName: string, data: StocksExportData) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const marginX = 14;
+  let currentY = 14;
+
+  // Header Banner
+  doc.setFillColor(...COLORS.headerBg);
+  doc.rect(marginX, currentY, 182, 22, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(tr('BORSA VE PORTFOY RAPORU'), marginX + 6, currentY + 9);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(tr(`Kullanici: ${userName}  |  Tarih Araligi: ${data.startDate} - ${data.endDate}  |  Olusturuldu: ${data.generatedAt}`), marginX + 6, currentY + 16);
+
+  currentY += 28;
+
+  // Summary Metrics Box
+  doc.setFillColor(...COLORS.lightBg);
+  doc.setDrawColor(...COLORS.border);
+  doc.rect(marginX, currentY, 182, 26, 'FD');
+
+  doc.setTextColor(...COLORS.textDark);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(tr('PORTFOY OZET GOSTERGELERI'), marginX + 4, currentY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  const investedStr = `${data.totals.totalInvestedCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
+  const currValStr = `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
+  const unrealizedStr = `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (${data.totals.totalUnrealizedPnlPercent >= 0 ? '+' : ''}%${data.totals.totalUnrealizedPnlPercent.toFixed(1)})`;
+  const realizedStr = `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (${data.totals.totalRealizedPnlPercent >= 0 ? '+' : ''}%${data.totals.totalRealizedPnlPercent.toFixed(1)})`;
+  const winRateStr = `%${data.totals.winRate.toFixed(1)} (${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar)`;
+
+  doc.text(tr(`Toplam Maliyet: ${investedStr}`), marginX + 4, currentY + 12);
+  doc.text(tr(`Guncel Portfoy Degeri: ${currValStr}`), marginX + 4, currentY + 17);
+  doc.text(tr(`Potansiyel Kar/Zarar: ${unrealizedStr}`), marginX + 4, currentY + 22);
+
+  doc.text(tr(`Gerceklesen Net Kar/Zarar: ${realizedStr}`), marginX + 96, currentY + 12);
+  doc.text(tr(`Kazanma Orani: ${winRateStr}`), marginX + 96, currentY + 17);
+  doc.text(tr(`Toplam Hacim: Alis ${data.totals.totalBuyVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL | Satis ${data.totals.totalSellVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`), marginX + 96, currentY + 22);
+
+  currentY += 32;
+
+  // Table 1: Open Positions
+  doc.setFillColor(...COLORS.headerBg);
+  doc.rect(marginX, currentY, 182, 6, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tr(`Aclik Portfoy Pozisyonlari (${data.positions.length} Varlik)`), marginX + 4, currentY + 4.2);
+  currentY += 7;
+
+  if (data.positions.length === 0) {
+    doc.setTextColor(...COLORS.textMuted);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text(tr('Portfoyde acik hisse veya fon pozisyonu bulunmuyor.'), marginX + 4, currentY + 5);
+    currentY += 10;
+  } else {
+    autoTable(doc, {
+      startY: currentY,
+      head: [[tr('Sembol'), tr('Sirket / Tanim'), tr('Tur'), tr('Lot'), tr('Ort. Maliyet'), tr('Top. Maliyet'), tr('Guncel Fiyat'), tr('Potansiyel K/Z')]],
+      body: data.positions.map(p => [
+        tr(p.symbol),
+        tr(p.name || '-'),
+        p.assetType === 'fund' ? 'FON' : 'HISSE',
+        p.total_lots.toLocaleString('tr-TR'),
+        `${p.average_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${p.total_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        p.current_price ? `${p.current_price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL` : '-',
+        p.unrealized_pnl !== undefined ? `${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(p.unrealized_pnl_percent || 0).toFixed(1)})` : '-'
+      ]),
+      theme: 'striped',
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
+      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 18 },
+        1: { cellWidth: 38 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 16, halign: 'right' },
+        4: { cellWidth: 24, halign: 'right' },
+        5: { cellWidth: 24, halign: 'right' },
+        6: { cellWidth: 22, halign: 'right' },
+        7: { cellWidth: 26, halign: 'right' },
+      }
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Check if new page is needed before Table 2
+  if (currentY > 230) {
+    doc.addPage();
+    currentY = 14;
+  }
+
+  // Table 2: Realized Trades (Closed Profits/Losses)
+  doc.setFillColor(...COLORS.headerBg);
+  doc.rect(marginX, currentY, 182, 6, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tr(`Gerceklesen Kar / Zarar Kayitlari (${data.realizedTrades.length} Satis)`), marginX + 4, currentY + 4.2);
+  currentY += 7;
+
+  if (data.realizedTrades.length === 0) {
+    doc.setTextColor(...COLORS.textMuted);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text(tr('Secilen tarih araliginda gerceklesen satis kaydi bulunmuyor.'), marginX + 4, currentY + 5);
+    currentY += 10;
+  } else {
+    autoTable(doc, {
+      startY: currentY,
+      head: [[tr('Tarih'), tr('Sembol'), tr('Tur'), tr('Satilan Lot'), tr('Alis Maliyeti'), tr('Satis Fiyati'), tr('Toplam Tutar'), tr('Net Kar/Zarar')]],
+      body: data.realizedTrades.map(t => [
+        tr(t.date),
+        tr(t.symbol),
+        t.assetType === 'fund' ? 'FON' : 'HISSE',
+        t.lots.toLocaleString('tr-TR'),
+        `${(t.cost_basis || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${(t.realized_pnl || 0) >= 0 ? '+' : ''}${(t.realized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(t.realized_pnl_percent || 0).toFixed(1)})`
+      ]),
+      theme: 'striped',
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
+      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 18, halign: 'right' },
+        4: { cellWidth: 24, halign: 'right' },
+        5: { cellWidth: 24, halign: 'right' },
+        6: { cellWidth: 28, halign: 'right' },
+        7: { cellWidth: 36, halign: 'right' },
+      }
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Check if new page is needed before Table 3
+  if (currentY > 230) {
+    doc.addPage();
+    currentY = 14;
+  }
+
+  // Table 3: All Trade Orders
+  doc.setFillColor(...COLORS.headerBg);
+  doc.rect(marginX, currentY, 182, 6, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text(tr(`Emir Defteri ve Islem Gecmisi (${data.allTrades.length} Emir)`), marginX + 4, currentY + 4.2);
+  currentY += 7;
+
+  if (data.allTrades.length > 0) {
+    autoTable(doc, {
+      startY: currentY,
+      head: [[tr('Tarih'), tr('Sembol'), tr('Varlik'), tr('Islem'), tr('Lot'), tr('Birim Fiyat'), tr('Toplam Tutar'), tr('Not')]],
+      body: data.allTrades.map(t => [
+        tr(t.date),
+        tr(t.symbol),
+        t.assetType === 'fund' ? 'FON' : 'HISSE',
+        t.type === 'buy' ? 'ALIS' : 'SATIS',
+        t.lots.toLocaleString('tr-TR'),
+        `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        tr(t.notes || '-')
+      ]),
+      theme: 'striped',
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
+      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 14 },
+        4: { cellWidth: 16, halign: 'right' },
+        5: { cellWidth: 24, halign: 'right' },
+        6: { cellWidth: 26, halign: 'right' },
+        7: { cellWidth: 50 },
+      }
+    });
+  }
+
+  // Add Page Numbers to all pages
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(tr(`Sayfa ${i} / ${pageCount} - DailyM Borsa & Portfoy Raporu`), 105, 290, { align: 'center' });
+  }
+
+  doc.save(`Borsa_Portfoy_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
 /**

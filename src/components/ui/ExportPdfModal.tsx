@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, CalendarRange, Download, FileText, Layers, X } from 'lucide-react';
-import { getExportDataAction, getExportRangeDataAction, getFinanceExportDataAction } from '@/actions/export';
-import { generateDailyPDF, generateDateRangePDF, generateFinancePDF, generateMonthlyPDF, generateWeeklyPDF } from '@/lib/pdfGenerator';
+import { Calendar, CalendarRange, Download, FileText, Layers, X, TrendingUp } from 'lucide-react';
+import { getExportDataAction, getExportRangeDataAction, getFinanceExportDataAction, getStocksExportDataAction } from '@/actions/export';
+import { generateDailyPDF, generateDateRangePDF, generateFinancePDF, generateMonthlyPDF, generateWeeklyPDF, generateStocksPDF } from '@/lib/pdfGenerator';
 import toast from 'react-hot-toast';
 
 interface ExportPdfModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentDate?: Date;
-  reportType?: 'health' | 'finance';
+  reportType?: 'health' | 'finance' | 'stocks';
 }
 
 function inputDate(date: Date) {
@@ -29,9 +29,17 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (reportType === 'stocks') {
+      // Default to 1 year back for stock history
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      setStartDate(inputDate(oneYearAgo));
+    }
+  }, [reportType]);
+
   const isFinance = reportType === 'finance';
-  const isRange = isFinance || selectedType === 'range';
+  const isStocks = reportType === 'stocks';
+  const isRange = isFinance || isStocks || selectedType === 'range';
 
   if (!isOpen) return null;
 
@@ -42,7 +50,11 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
     }
     setIsLoading(true);
     try {
-      if (isFinance) {
+      if (isStocks) {
+        const res = await getStocksExportDataAction(startDate, endDate);
+        if (!res.success || !res.data) throw new Error(res.error || 'Borsa rapor verileri alınamadı.');
+        generateStocksPDF(res.userName || 'Kullanıcı', res.data);
+      } else if (isFinance) {
         const res = await getFinanceExportDataAction(startDate, endDate);
         if (!res.success || !res.data) throw new Error(res.error || 'Rapor verileri alınamadı.');
         generateFinancePDF(res.userName || 'Kullanıcı', res.data);
@@ -69,7 +81,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
     }
   };
 
-  const title = isFinance ? 'Finans PDF Raporu' : 'Beslenme PDF Raporu';
+  const title = isStocks ? 'Borsa & Portföy PDF Raporu' : isFinance ? 'Finans PDF Raporu' : 'Beslenme PDF Raporu';
 
   if (!mounted) return null;
 
@@ -79,16 +91,18 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
       <div role="dialog" aria-modal="true" aria-labelledby="pdf-export-title" className="relative z-10 flex w-full max-w-md flex-col gap-5 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[var(--surface-container)] p-5 shadow-2xl sm:p-6">
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]"><CalendarRange size={21} /></div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+              {isStocks ? <TrendingUp size={21} /> : <CalendarRange size={21} />}
+            </div>
             <div>
               <h3 id="pdf-export-title" className="text-base font-bold text-white">{title} İndir</h3>
-              <p className="text-xs text-[var(--on-surface-variant)]">{isFinance ? 'İki tarih arasındaki kayıtları seçin.' : 'Rapor formatını seçin.'}</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">{isStocks || isFinance ? 'İki tarih arasındaki kayıtları seçin.' : 'Rapor formatını seçin.'}</p>
             </div>
           </div>
           <button type="button" onClick={onClose} aria-label="Kapat" className="min-h-11 min-w-11 rounded-full text-[var(--on-surface-variant)] transition-colors hover:bg-white/5 hover:text-white"><X className="mx-auto" size={18} /></button>
         </div>
 
-        {!isFinance && (
+        {!isFinance && !isStocks && (
           <div className="grid grid-cols-2 gap-2">
             {[
               { id: 'daily', label: 'Günlük', icon: FileText },
@@ -120,13 +134,13 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
         </div>}
 
         <p className="rounded-xl bg-white/[0.03] px-3 py-2.5 text-xs leading-5 text-[var(--on-surface-variant)]">
-          {isFinance ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.' : selectedType === 'range' ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.' : selectedType === 'daily' ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.' : selectedType === 'weekly' ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.' : 'Seçili ayın dört haftalık özeti hazırlanır.'}
+          {isStocks ? 'Açık hisse/fon pozisyonları, gerçekleşen kâr/zararlar ve tüm emir defteri rapora eklenir.' : isFinance ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.' : selectedType === 'range' ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.' : selectedType === 'daily' ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.' : selectedType === 'weekly' ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.' : 'Seçili ayın dört haftalık özeti hazırlanır.'}
         </p>
 
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} className="min-h-11 rounded-xl px-4 text-sm font-semibold text-[var(--on-surface-variant)] hover:bg-white/5 hover:text-white">İptal</button>
           <button type="button" onClick={handleExport} disabled={isLoading} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50">
-            <Download size={16} /> {isLoading ? 'PDF hazırlanıyor...' : 'PDF indir'}
+            <Download size={16} /> {isLoading ? 'PDF indiriliyor...' : 'PDF indir'}
           </button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
 import { Transaction } from "@/models/Transaction";
+import { getStockPortfolioAction } from "@/actions/stocks";
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -102,6 +103,56 @@ export interface FinanceExportData {
   transactions: FinanceExportTransaction[];
 }
 
+export interface StocksExportPosition {
+  symbol: string;
+  name: string;
+  assetType: 'stock' | 'fund';
+  total_lots: number;
+  average_cost: number;
+  total_cost: number;
+  current_price?: number;
+  current_value?: number;
+  unrealized_pnl?: number;
+  unrealized_pnl_percent?: number;
+}
+
+export interface StocksExportTrade {
+  date: string;
+  symbol: string;
+  name: string;
+  assetType: 'stock' | 'fund';
+  type: 'buy' | 'sell';
+  lots: number;
+  price: number;
+  cost_basis?: number;
+  realized_pnl?: number;
+  realized_pnl_percent?: number;
+  total_amount: number;
+  notes?: string;
+}
+
+export interface StocksExportData {
+  startDate: string;
+  endDate: string;
+  generatedAt: string;
+  totals: {
+    totalInvestedCost: number;
+    totalCurrentValue: number;
+    totalUnrealizedPnl: number;
+    totalUnrealizedPnlPercent: number;
+    totalRealizedPnl: number;
+    totalRealizedPnlPercent: number;
+    winRate: number;
+    winningTradesCount: number;
+    losingTradesCount: number;
+    totalBuyVolume: number;
+    totalSellVolume: number;
+  };
+  positions: StocksExportPosition[];
+  realizedTrades: StocksExportTrade[];
+  allTrades: StocksExportTrade[];
+}
+
 function getDateRange(startDateStr: string, endDateStr: string) {
   const startDate = new Date(`${startDateStr}T00:00:00.000Z`);
   const endDate = new Date(`${endDateStr}T23:59:59.999Z`);
@@ -183,6 +234,88 @@ export async function getFinanceExportDataAction(startDateStr: string, endDateSt
   } catch (error: unknown) {
     const err = error as Error;
     return { success: false, error: err.message || 'Veri alınırken hata oluştu.' };
+  }
+}
+
+export async function getStocksExportDataAction(startDateStr?: string, endDateStr?: string) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const [user, portfolioRes] = await Promise.all([
+      User.findById(userId).lean(),
+      getStockPortfolioAction()
+    ]);
+
+    if (!portfolioRes.success || !portfolioRes.data) {
+      throw new Error(portfolioRes.error || "Borsa verileri alınamadı.");
+    }
+
+    const portfolio = portfolioRes.data;
+    const hasRange = Boolean(startDateStr && endDateStr);
+    let startFilterDate: Date | null = null;
+    let endFilterDate: Date | null = null;
+
+    if (hasRange && startDateStr && endDateStr) {
+      const range = getDateRange(startDateStr, endDateStr);
+      startFilterDate = range.startDate;
+      endFilterDate = range.endDate;
+    }
+
+    const filterByDate = (tradeDateStr: string | undefined) => {
+      if (!startFilterDate || !endFilterDate || !tradeDateStr) return true;
+      const tDate = new Date(tradeDateStr);
+      return tDate >= startFilterDate && tDate <= endFilterDate;
+    };
+
+    const filteredRealized = portfolio.realizedTrades.filter(t => filterByDate(t.rawDate || t.date));
+    const filteredAllTrades = portfolio.allTrades.filter(t => filterByDate(t.rawDate || t.date));
+
+    const positions: StocksExportPosition[] = portfolio.positions.map(p => ({
+      symbol: p.symbol,
+      name: p.name || '',
+      assetType: p.assetType || 'stock',
+      total_lots: p.total_lots,
+      average_cost: p.average_cost,
+      total_cost: p.total_cost,
+      current_price: p.current_price,
+      current_value: p.current_value,
+      unrealized_pnl: p.unrealized_pnl,
+      unrealized_pnl_percent: p.unrealized_pnl_percent,
+    }));
+
+    const mapTrade = (t: any): StocksExportTrade => ({
+      date: t.date,
+      symbol: t.symbol,
+      name: t.name || '',
+      assetType: t.assetType || 'stock',
+      type: t.type,
+      lots: t.lots,
+      price: t.price,
+      cost_basis: t.cost_basis,
+      realized_pnl: t.realized_pnl,
+      realized_pnl_percent: t.realized_pnl_percent,
+      total_amount: t.total_amount || (t.lots * t.price),
+      notes: t.notes || '',
+    });
+
+    const data: StocksExportData = {
+      startDate: startDateStr ? new Date(`${startDateStr}T00:00:00.000Z`).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : (filteredAllTrades.length > 0 ? filteredAllTrades[filteredAllTrades.length - 1].date : new Date().toLocaleDateString('tr-TR')),
+      endDate: endDateStr ? new Date(`${endDateStr}T00:00:00.000Z`).toLocaleDateString('tr-TR', { timeZone: 'UTC' }) : new Date().toLocaleDateString('tr-TR'),
+      generatedAt: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      totals: portfolio.totals,
+      positions,
+      realizedTrades: filteredRealized.map(mapTrade),
+      allTrades: filteredAllTrades.map(mapTrade),
+    };
+
+    return {
+      success: true,
+      userName: (user as any)?.profile?.name || (user as any)?.name || 'Kullanıcı',
+      data
+    };
+  } catch (error: unknown) {
+    const err = error as Error;
+    return { success: false, error: err.message || 'Borsa raporu verisi alınırken hata oluştu.' };
   }
 }
 

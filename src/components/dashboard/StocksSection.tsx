@@ -13,7 +13,9 @@ import {
   Search, 
   ArrowUpRight, 
   ArrowDownRight,
-  MoreHorizontal
+  MoreHorizontal,
+  Download,
+  X
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -21,6 +23,7 @@ import { AddStockTradeModal } from "@/components/forms/AddStockTradeModal";
 import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal";
 import { EditStockSymbolModal } from "@/components/forms/EditStockSymbolModal";
 import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrdersModal";
+import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
@@ -35,6 +38,7 @@ export function StocksSection() {
   const [realizedPeriod, setRealizedPeriod] = useState<'all' | 'week' | 'month'>('all');
 
   // Modals state
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [tradeModalType, setTradeModalType] = useState<'buy' | 'sell'>('buy');
   const [tradeModalSymbol, setTradeModalSymbol] = useState('');
@@ -195,20 +199,40 @@ export function StocksSection() {
       
       {/* ── HEADER BANNER ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h2 className="text-hero text-white tracking-tight flex items-center gap-3">
-            <span className="w-11 h-11 rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] shrink-0 flex items-center justify-center">
-              <TrendingUp size={20} />
-            </span>
-            Borsa
-          </h2>
-          <p className="text-body text-[var(--on-surface-variant)] mt-2">
-            Portföyün bugün nasıl?
-          </p>
+        <div className="flex items-center justify-between gap-3 w-full sm:w-auto">
+          <div>
+            <h2 className="text-hero text-white tracking-tight flex items-center gap-3">
+              <span className="w-11 h-11 rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] shrink-0 flex items-center justify-center">
+                <TrendingUp size={20} />
+              </span>
+              Borsa
+            </h2>
+            <p className="text-body text-[var(--on-surface-variant)] mt-2">
+              Portföyün bugün nasıl?
+            </p>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setIsPdfModalOpen(true)} 
+            aria-label="Borsa raporunu PDF olarak indir" 
+            title="PDF Raporu İndir" 
+            className="sm:hidden min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer"
+          >
+            <Download size={18} className="text-white" />
+          </button>
         </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setIsPdfModalOpen(true)}
+            aria-label="Borsa raporunu PDF olarak indir"
+            title="PDF Raporu İndir"
+            className="hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer mr-1"
+          >
+            <Download size={16} className="text-white" />
+          </button>
           <button
             type="button"
             onClick={() => handleOpenBuy()}
@@ -301,15 +325,25 @@ export function StocksSection() {
             ))}
           </div>
           <div className="relative flex items-center w-full sm:w-64">
-          <Search size={14} className="absolute left-3.5 text-white/40" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Hisse sembolü ara (THYAO...)"
-            aria-label="Hisse sembolü ara"
-            className="min-h-11 w-full bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-[var(--radius-input)] py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--primary)]"
-          />
+            <Search size={14} className="absolute left-3.5 text-white/40 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Hisse sembolü veya fon ara..."
+              aria-label="Hisse sembolü ara"
+              className="min-h-11 w-full bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-[var(--radius-input)] py-2 pl-9 pr-8 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--primary)]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Aramayı temizle"
+                className="absolute right-2 p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -324,14 +358,14 @@ export function StocksSection() {
               </div>
               <h3 className="text-base font-bold text-white">Açık Pozisyon Bulunmuyor</h3>
               <p className="text-xs text-[var(--on-surface-variant)] max-w-md">
-                Portföyünüzde henüz hisse bulunmuyor. İlk hisse alış emrinizi girerek maliyet ve kâr/zarar takibine başlayın.
+                Portföyünüzde henüz hisse veya fon bulunmuyor. İlk alış emrinizi girerek maliyet ve kâr/zarar takibine başlayın.
               </p>
               <button
                 type="button"
                 onClick={() => handleOpenBuy()}
-                className="mt-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-black font-bold text-xs flex items-center gap-2 hover:opacity-90 shadow-md"
+                className="mt-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-black font-bold text-xs flex items-center gap-2 hover:opacity-90 shadow-md cursor-pointer"
               >
-                <Plus size={15} /> İlk Hisse Alışını Ekle
+                <Plus size={15} /> İlk Alış Emrini Ekle
               </button>
             </div>
           ) : (
@@ -339,28 +373,50 @@ export function StocksSection() {
               {openPositions.map((pos) => (
                 <div 
                   key={pos.symbol}
-                  className="glass-card p-4 flex flex-col justify-between gap-4"
+                  className="glass-card p-4 flex flex-col justify-between gap-4 relative"
                 >
                   {/* Card Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-black text-sm tracking-wider ${pos.assetType === 'fund' ? 'bg-purple-500/15 border-purple-500/30' : 'bg-[var(--primary)]/15 border-[var(--primary)]/30'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-black text-sm tracking-wider shrink-0 ${pos.assetType === 'fund' ? 'bg-purple-500/15 border-purple-500/30' : 'bg-[var(--primary)]/15 border-[var(--primary)]/30'}`}>
                         {pos.symbol.slice(0, 4)}
                       </div>
-                      <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-white tracking-wide">{pos.symbol}</h4>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${pos.assetType === 'fund' ? 'bg-purple-500/15 text-purple-300' : 'bg-[var(--primary)]/15 text-[var(--primary)]'}`}>{pos.assetType === 'fund' ? 'FON' : 'HİSSE'}</span>
-                          </div>
-                        <p className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[150px]">
-                          {pos.name || "Borsa İstanbul"}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-base font-bold text-white tracking-wide">{pos.symbol}</h4>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${pos.assetType === 'fund' ? 'bg-purple-500/15 text-purple-300' : 'bg-[var(--primary)]/15 text-[var(--primary)]'}`}>
+                            {pos.assetType === 'fund' ? 'FON' : 'HİSSE'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[var(--on-surface-variant)] truncate">
+                          {pos.name || (pos.assetType === 'fund' ? 'Yatırım Fonu' : 'Borsa İstanbul')}
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-base font-black text-white">{pos.total_lots}</span>
-                      <span className="text-[10px] text-[var(--on-surface-variant)] block">Lot</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="text-right mr-1">
+                        <span className="text-base font-black text-white">{pos.total_lots}</span>
+                        <span className="text-[10px] text-[var(--on-surface-variant)] block">Lot</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditSymbol(pos.symbol, pos.name, pos.assetType)}
+                        aria-label={`${pos.symbol} adını düzenle`}
+                        title="İsim Düzenle"
+                        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePosition(pos.symbol)}
+                        aria-label={`${pos.symbol} hissesini sil`}
+                        title="Hisseyi Tamamen Sil"
+                        className="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
 
@@ -389,7 +445,7 @@ export function StocksSection() {
                           <button
                             type="button"
                             onClick={() => handleOpenPriceModal(pos)}
-                            className="min-h-11 px-2 -my-2 text-xs text-[var(--primary)] hover:underline font-semibold"
+                            className="min-h-9 px-2 text-xs text-[var(--primary)] hover:underline font-semibold cursor-pointer"
                           >
                             + Fiyat Gir
                           </button>
@@ -410,48 +466,40 @@ export function StocksSection() {
                     </div>
                   </div>
 
-                  {/* Card Actions */}
+                  {/* Card Actions: 2x2 clean grid */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => handleOpenBuy(pos.symbol)}
-                      className="min-h-11 px-3 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="min-h-11 px-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                     >
-                      <Plus size={14} /> Ekle (Alış)
+                      <Plus size={15} /> Ekle (Alış)
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenSell(pos.symbol)}
-                      className="min-h-11 px-3 rounded-full border border-[var(--outline)] hover:bg-white/5 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="min-h-11 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
-                      <Minus size={14} /> Satış Yap
+                      <Minus size={15} /> Satış Yap
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenPriceModal(pos)}
                       aria-label={`${pos.symbol} güncel fiyatını düzenle`}
-                      title="Güncel Fiyat Güncelle"
-                      className="min-h-11 px-3 rounded-full bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
-                      <Edit3 size={14} />
-                      <span className="text-xs font-bold">Fiyat</span>
+                      <Edit3 size={13} className="text-[var(--primary)]" />
+                      <span>Fiyat Gir</span>
                     </button>
-                    <details className="col-span-2 group">
-                      <summary className="min-h-11 cursor-pointer list-none rounded-[var(--radius-input)] border border-[var(--outline)] px-3 flex items-center justify-center gap-2 text-xs font-bold text-[var(--on-surface-variant)] hover:bg-white/5 transition-colors">
-                        <MoreHorizontal size={16} aria-hidden="true" /> Diğer işlemler
-                      </summary>
-                      <div className="grid grid-cols-1 gap-2 pt-2">
-                        <button type="button" onClick={() => handleOpenOrdersModal(pos)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
-                          Maliyet işlemlerini düzenle
-                        </button>
-                        <button type="button" onClick={() => handleOpenEditSymbol(pos.symbol, pos.name, pos.assetType)} className="min-h-11 rounded-[var(--radius-input)] bg-white/5 px-3 text-left text-xs font-bold text-white hover:bg-white/10 transition-colors">
-                          {pos.assetType === 'fund' ? 'Fon adını düzenle' : 'Hisse adını düzenle'}
-                        </button>
-                        <button type="button" onClick={() => handleDeletePosition(pos.symbol)} className="min-h-11 rounded-[var(--radius-input)] bg-rose-500/10 px-3 text-left text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-colors">
-                          {pos.assetType === 'fund' ? 'Fonu ve tüm geçmişini sil' : 'Hisseyi ve tüm geçmişini sil'}
-                        </button>
-                      </div>
-                    </details>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenOrdersModal(pos)}
+                      aria-label={`${pos.symbol} emir ve maliyetlerini düzenle`}
+                      className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                    >
+                      <ListOrdered size={13} className="text-blue-400" />
+                      <span>Maliyet/Emirler</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -729,6 +777,12 @@ export function StocksSection() {
           currentAssetType={editSymbolModalData.assetType}
         />
       )}
+
+      <ExportPdfModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        reportType="stocks"
+      />
     </div>
   );
 }
