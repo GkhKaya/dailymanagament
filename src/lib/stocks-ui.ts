@@ -5,7 +5,11 @@ type RealizedPeriodFilter = 'all' | 'week' | 'month';
 
 export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; rawDate: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()) {
   const start = new Date(now);
-  if (period === 'week') start.setDate(start.getDate() - 7);
+  if (period === 'week') {
+    const dayOfWeek = start.getDay() || 7;
+    start.setDate(start.getDate() - dayOfWeek + 1);
+    start.setHours(0, 0, 0, 0);
+  }
   if (period === 'month') start.setMonth(start.getMonth() - 1);
   return trades.filter((trade) => (assetFilter === 'all' || trade.assetType === assetFilter) && (period === 'all' || new Date(trade.rawDate) >= start));
 }

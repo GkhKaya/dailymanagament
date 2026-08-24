@@ -24,3 +24,12 @@ test("filters realized trades by asset type and period", () => {
   assert.deepEqual(result.map((trade) => trade.id), ['2']);
   assert.deepEqual(summarizeRealizedTrades(result), { netPnl: -25, winningCount: 0, losingCount: 1 });
 });
+
+test("weekly filter starts on Monday instead of rolling seven days", () => {
+  const trades = [
+    { id: 'current-week', assetType: 'stock', rawDate: '2026-08-24T10:00:00.000Z', realized_pnl: 100 },
+    { id: 'previous-week', assetType: 'stock', rawDate: '2026-08-21T10:00:00.000Z', realized_pnl: -25 },
+  ];
+  const result = filterRealizedTrades(trades, 'all', 'week', new Date('2026-08-24T12:00:00.000Z'));
+  assert.deepEqual(result.map((trade) => trade.id), ['current-week']);
+});
