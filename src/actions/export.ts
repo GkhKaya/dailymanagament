@@ -127,6 +127,7 @@ export interface StocksExportTrade {
   cost_basis?: number;
   realized_pnl?: number;
   realized_pnl_percent?: number;
+  holding_days?: number;
   total_amount: number;
   notes?: string;
 }
@@ -296,6 +297,7 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       cost_basis: t.cost_basis,
       realized_pnl: t.realized_pnl,
       realized_pnl_percent: t.realized_pnl_percent,
+      holding_days: t.holding_days,
       total_amount: t.total_amount || (t.lots * t.price),
       notes: t.notes || '',
     });

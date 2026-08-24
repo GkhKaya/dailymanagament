@@ -133,6 +133,7 @@ export interface StockTradeDTO {
   total_cost?: number;
   realized_pnl?: number;
   realized_pnl_percent?: number;
+  holding_days?: number;
 }
 
 export interface StockPositionDTO {

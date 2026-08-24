@@ -146,6 +146,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     total_cost: t.total_cost,
     realized_pnl: t.realized_pnl,
     realized_pnl_percent: t.realized_pnl_percent,
+    holding_days: t.holding_days,
   }));
 
   const allTradesDTO: StockTradeDTO[] = calc.computedTrades
@@ -166,6 +167,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       total_cost: t.total_cost,
       realized_pnl: t.realized_pnl,
       realized_pnl_percent: t.realized_pnl_percent,
+      holding_days: t.holding_days,
     }));
 
   // Build known stocks dictionary: User's historical symbols + POPULAR_BIST_STOCKS

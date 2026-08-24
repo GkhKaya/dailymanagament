@@ -565,7 +565,7 @@ export function StocksSection() {
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
                             SATIŞ
                           </span>
-                          <span className="text-xs text-[var(--on-surface-variant)]">{trade.date}</span>
+                          <span className="text-xs text-[var(--on-surface-variant)]">{trade.date} · {trade.holding_days ?? 0} gün</span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)] mt-0.5">
                           <strong>{trade.lots} Lot</strong> satıldı &bull; Satış: <strong>{trade.price.toFixed(2)} ₺</strong> (Alış Maliyeti: {trade.cost_basis?.toFixed(2)} ₺)

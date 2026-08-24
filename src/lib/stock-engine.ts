@@ -83,6 +83,7 @@ export interface ComputedTrade extends RawTrade {
   total_cost: number;
   realized_pnl: number;
   realized_pnl_percent: number;
+  holding_days?: number;
 }
 
 export interface ComputedPosition {
@@ -163,6 +164,7 @@ export function calculateStockPortfolio(
     let symbolLastName = '';
     let symbolAssetType: 'stock' | 'fund' = 'stock';
     let lastTradeDate: string | undefined;
+    let totalPurchaseTime = 0;
 
     for (const trade of symTrades) {
       const lots = Number(trade.lots) || 0;
@@ -176,9 +178,11 @@ export function calculateStockPortfolio(
       let totalCost = 0;
       let realizedPnl = 0;
       let realizedPnlPercent = 0;
+      let holdingDays: number | undefined;
 
       if (trade.type === 'buy') {
         totalBuyVolume += tradeAmount;
+        totalPurchaseTime += lots * new Date(trade.date).getTime();
         currentLots += lots;
         totalInvestedCost += tradeAmount;
 
@@ -195,6 +199,10 @@ export function calculateStockPortfolio(
         realizedPnlPercent = avgCost > 0 
           ? Math.round(((price - avgCost) / avgCost) * 10000) / 100 
           : 0;
+
+        const averagePurchaseTime = currentLots > 0 ? totalPurchaseTime / currentLots : new Date(trade.date).getTime();
+        holdingDays = Math.max(0, Math.floor((new Date(trade.date).getTime() - averagePurchaseTime) / 86_400_000));
+        totalPurchaseTime -= averagePurchaseTime * Math.min(lots, currentLots);
 
         currentLots = Math.max(0, currentLots - lots);
         // After sell, the remaining cost basis reduces proportionally
@@ -214,6 +222,7 @@ export function calculateStockPortfolio(
         total_cost: totalCost,
         realized_pnl: realizedPnl,
         realized_pnl_percent: realizedPnlPercent,
+        holding_days: holdingDays,
       };
 
       computedTradesMap.set(trade._id || trade.id || `${symbol}-${trade.date}-${trade.type}-${lots}`, computed);

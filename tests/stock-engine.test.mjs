@@ -20,6 +20,7 @@ test('calculates single buy and partial sell with realized profit', () => {
   assert.equal(sellTrade.total_cost, 8000);    // 40 * 200
   assert.equal(sellTrade.realized_pnl, 2000);  // 10000 - 8000
   assert.equal(sellTrade.realized_pnl_percent, 25); // +25%
+  assert.equal(sellTrade.holding_days, 5);
 
   // Open position check
   assert.equal(result.openPositions.length, 1);
