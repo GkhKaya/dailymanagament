@@ -536,9 +536,21 @@ export function downloadHealthStory(data: HealthDataDTO) {
   ctx.textAlign = 'left';
 
   // ── 9. TRIGGER DOWNLOAD ──
+  // Render at 2x internally, then downsample once to the exact Instagram
+  // Story size. This keeps thin text and borders sharp without exporting a
+  // 2160x3840 image that Instagram has to rescale itself.
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = BASE_WIDTH;
+  outputCanvas.height = BASE_HEIGHT;
+  const outputContext = outputCanvas.getContext('2d', { alpha: false });
+  if (!outputContext) throw new Error('Hikaye görseli oluşturulamadı.');
+  outputContext.imageSmoothingEnabled = true;
+  outputContext.imageSmoothingQuality = 'high';
+  outputContext.drawImage(canvas, 0, 0, BASE_WIDTH, BASE_HEIGHT);
+
   const link = document.createElement('a');
   const dateStr = (data.date || new Date().toISOString()).slice(0, 10);
   link.download = `dailym-beslenme-${dateStr}.png`;
-  link.href = canvas.toDataURL('image/png');
+  link.href = outputCanvas.toDataURL('image/png');
   link.click();
 }
