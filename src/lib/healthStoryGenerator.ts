@@ -167,7 +167,8 @@ export function downloadHealthStory(data: HealthDataDTO) {
   ctx.fillText(dateFormatted, BASE_WIDTH - pad, curY + 28);
   ctx.textAlign = 'left';
 
-  curY += 68;
+  // Keep the headline clearly below the brand badge/date row.
+  curY += 92;
 
   // Main Headline
   ctx.fillStyle = '#ffffff';
