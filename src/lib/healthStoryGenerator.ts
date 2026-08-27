@@ -1,4 +1,5 @@
 import { HealthDataDTO } from '@/models/DashboardTypes';
+import pica from 'pica';
 
 const BASE_WIDTH = 1080;
 const BASE_HEIGHT = 1920;
@@ -86,7 +87,7 @@ function formatTurkishDate(dateStr: string): string {
   }
 }
 
-export function downloadHealthStory(data: HealthDataDTO) {
+export async function downloadHealthStory(data: HealthDataDTO) {
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
@@ -546,7 +547,7 @@ export function downloadHealthStory(data: HealthDataDTO) {
   if (!outputContext) throw new Error('Hikaye görseli oluşturulamadı.');
   outputContext.imageSmoothingEnabled = true;
   outputContext.imageSmoothingQuality = 'high';
-  outputContext.drawImage(canvas, 0, 0, BASE_WIDTH, BASE_HEIGHT);
+  await pica().resize(canvas, outputCanvas, { quality: 3 });
 
   const link = document.createElement('a');
   const dateStr = (data.date || new Date().toISOString()).slice(0, 10);

@@ -137,9 +137,9 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           </button>
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               try {
-                downloadHealthStory(data);
+                await downloadHealthStory(data);
                 toast.success("Instagram hikaye görseli indirildi.");
               } catch (error) {
                 toast.error(error instanceof Error ? error.message : "Hikaye görseli oluşturulamadı.");

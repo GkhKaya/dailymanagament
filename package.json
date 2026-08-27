@@ -26,6 +26,7 @@
     "mongodb": "^7.5.0",
     "mongoose": "^9.7.3",
     "next": "16.2.10",
+    "pica": "^10.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
