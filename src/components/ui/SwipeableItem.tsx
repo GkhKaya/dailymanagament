@@ -139,6 +139,7 @@ export function SwipeableItem({
         style={{
           width: "100%",
           opacity: translateX < 0 ? 1 : 0,
+          pointerEvents: translateX < 0 ? "auto" : "none",
         }}
         onClick={(e) => {
           e.stopPropagation();
