@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil, Camera, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil, Camera, Sparkles, ImageDown } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { SwipeableItem } from "@/components/ui/SwipeableItem";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { deleteMealAction, deleteExerciseAction } from "@/actions/health";
 import toast from "react-hot-toast";
+import { downloadHealthStory } from "@/lib/healthStoryGenerator";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -133,6 +134,22 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             title="PDF Raporu İndir"
           >
             <Download size={16} className="text-white" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                downloadHealthStory(data);
+                toast.success("Instagram hikaye görseli indirildi.");
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Hikaye görseli oluşturulamadı.");
+              }
+            }}
+            aria-label="Instagram hikaye görselini indir"
+            className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#14b8a6]/20 hover:bg-[#14b8a6]/35 border border-[#5eead4]/30 text-white transition-colors"
+            title="Instagram Hikaye Görseli İndir"
+          >
+            <ImageDown size={16} />
           </button>
         </div>
       </div>
