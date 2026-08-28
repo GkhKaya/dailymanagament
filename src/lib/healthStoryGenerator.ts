@@ -1,4 +1,5 @@
 import { HealthDataDTO } from '@/models/DashboardTypes';
+import pica from 'pica';
 
 const BASE_WIDTH = 1080;
 const BASE_HEIGHT = 1920;
@@ -85,7 +86,7 @@ function formatTurkishDate(dateStr: string): string {
   }
 }
 
-export function downloadHealthStory(data: HealthDataDTO) {
+export async function downloadHealthStory(data: HealthDataDTO) {
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
@@ -533,10 +534,16 @@ export function downloadHealthStory(data: HealthDataDTO) {
   ctx.fillText('DailyM · Kişisel Sağlık ve Beslenme Takibi', BASE_WIDTH - pad, footerY + 14);
   ctx.textAlign = 'left';
 
-  // ── 9. DOWNLOAD IMAGE ──
+  // ── 9. DOWNSAMPLE WITH PICA & DOWNLOAD IMAGE ──
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = BASE_WIDTH;
+  outputCanvas.height = BASE_HEIGHT;
+
+  await pica().resize(canvas, outputCanvas, { quality: 3 });
+
   const link = document.createElement('a');
   const dateStr = (data.date || new Date().toISOString()).slice(0, 10);
   link.download = `dailym-beslenme-${dateStr}.png`;
-  link.href = canvas.toDataURL('image/png');
+  link.href = outputCanvas.toDataURL('image/png');
   link.click();
 }
