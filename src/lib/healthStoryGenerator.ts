@@ -1,9 +1,8 @@
 import { HealthDataDTO } from '@/models/DashboardTypes';
-import pica from 'pica';
 
 const BASE_WIDTH = 1080;
 const BASE_HEIGHT = 1920;
-// 2x Retina scale for ultra-crisp, razor-sharp Instagram Story resolution
+// 2x Retina scaling for ultra-sharp, crisp rendering
 const SCALE = 2;
 const WIDTH = BASE_WIDTH * SCALE;
 const HEIGHT = BASE_HEIGHT * SCALE;
@@ -54,7 +53,6 @@ function wrapCleanText(
       lineCount++;
       line = word === '·' ? '' : word;
       if (lineCount >= maxLines - 1) {
-        // Last line: append remaining text or ellipsis
         const remaining = words.slice(i).join(' ');
         let truncated = remaining;
         while (ctx.measureText(`${truncated}...`).width > maxWidth && truncated.length > 0) {
@@ -87,289 +85,293 @@ function formatTurkishDate(dateStr: string): string {
   }
 }
 
-export async function downloadHealthStory(data: HealthDataDTO) {
+export function downloadHealthStory(data: HealthDataDTO) {
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('Hikaye görseli oluşturulamadı.');
 
-  // Enable top-tier crisp rendering
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // Apply 2x Retina scale so all coordinates are based on 1080x1920
+  // Apply 2x Retina scale
   ctx.scale(SCALE, SCALE);
 
-  // ── 1. OBSIDIAN CARBON DARK BACKGROUND ──
-  const bg = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
-  bg.addColorStop(0, '#030609');
-  bg.addColorStop(0.25, '#060b10');
-  bg.addColorStop(0.6, '#04080c');
-  bg.addColorStop(1, '#020305');
-  ctx.fillStyle = bg;
+  // ── 1. SITE-MATCHED PURE DEEP BLACK BACKGROUND (#09090b) ──
+  ctx.fillStyle = '#09090b';
   ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
-  // ── 2. VIBRANT ATMOSPHERIC TURQUOISE GLOW ORBS ──
-  const drawGlow = (x: number, y: number, radius: number, colorInner: string, colorOuter = 'rgba(0,0,0,0)') => {
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    gradient.addColorStop(0, colorInner);
-    gradient.addColorStop(1, colorOuter);
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
-  drawGlow(920, 160, 480, 'rgba(20, 241, 217, 0.18)');
-  drawGlow(100, 680, 420, 'rgba(6, 214, 196, 0.12)');
-  drawGlow(980, 1350, 450, 'rgba(45, 212, 191, 0.14)');
-  drawGlow(200, 1820, 460, 'rgba(20, 241, 217, 0.16)');
-
-  // Futuristic ambient circles
-  ctx.strokeStyle = 'rgba(20, 241, 217, 0.08)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(920, 160, 320, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(150, 1800, 360, 0, Math.PI * 2);
-  ctx.stroke();
+  // Subtle studio lighting vignette (very soft, high-end)
+  const topGlow = ctx.createRadialGradient(540, 0, 0, 540, 0, 700);
+  topGlow.addColorStop(0, 'rgba(142, 193, 59, 0.07)'); // Subtle Lime Glow
+  topGlow.addColorStop(1, 'rgba(9, 9, 11, 0)');
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, BASE_WIDTH, 800);
 
   const pad = 56;
   const contentWidth = BASE_WIDTH - pad * 2;
 
-  // ── 3. HEADER SECTION ──
+  // ── 2. BRAND LOGO HEADER & DATE ──
   let curY = 76;
 
-  // Top Pill Brand Badge
-  ctx.fillStyle = 'rgba(20, 241, 217, 0.10)';
-  drawRoundedRect(ctx, pad, curY, 216, 44, 22);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(20, 241, 217, 0.40)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  // DailyM Waveform Icon (3 vertical rounded bars in Lime Green #8ec13b)
+  const iconX = pad;
+  const iconY = curY;
+  ctx.fillStyle = '#8ec13b';
 
-  // Turquoise Glowing Dot
-  ctx.fillStyle = '#14f1d9';
-  ctx.beginPath();
-  ctx.arc(pad + 22, curY + 22, 5.5, 0, Math.PI * 2);
+  // Bar 1
+  drawRoundedRect(ctx, iconX, iconY + 8, 4, 16, 2);
+  ctx.fill();
+  // Bar 2 (tall center)
+  drawRoundedRect(ctx, iconX + 8, iconY + 2, 4, 28, 2);
+  ctx.fill();
+  // Bar 3
+  drawRoundedRect(ctx, iconX + 16, iconY + 6, 4, 20, 2);
+  ctx.fill();
+  // Bar 4 (connector dot)
+  drawRoundedRect(ctx, iconX + 24, iconY + 11, 4, 10, 2);
   ctx.fill();
 
-  ctx.fillStyle = '#14f1d9';
-  ctx.font = '700 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('DAILYM HEALTH', pad + 38, curY + 28);
+  // DailyM Logo Text
+  ctx.font = '800 28px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('Daily', iconX + 36, curY + 24);
+  const dailyWidth = ctx.measureText('Daily').width;
+  ctx.fillStyle = '#8ec13b';
+  ctx.fillText('M', iconX + 36 + dailyWidth, curY + 24);
 
   // Date on Right
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#94a3b8';
+  ctx.fillStyle = '#a1a1aa';
   ctx.font = '500 20px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const dateFormatted = formatTurkishDate(data.date || new Date().toISOString());
-  ctx.fillText(dateFormatted, BASE_WIDTH - pad, curY + 28);
+  ctx.fillText(dateFormatted, BASE_WIDTH - pad, curY + 24);
   ctx.textAlign = 'left';
 
-  // Keep the headline clearly below the brand badge/date row.
-  curY += 92;
+  curY += 72;
 
-  // Main Headline
+  // ── 3. MAIN SECTION HEADLINE ("Bugünkü Beslenme") ──
   ctx.fillStyle = '#ffffff';
-  ctx.font = '800 42px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('GÜNLÜK BESLENME VE SAĞLIK', pad, curY);
+  ctx.font = '800 44px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('Bugünkü Beslenme', pad, curY);
 
-  curY += 34;
+  curY += 36;
 
-  // ── 4. HERO 3-CARD TRIO (ALINAN | NET DENGE | YAKILAN) ──
-  const heroCardHeight = 195;
+  // ── 4. HERO 3 METRIC CARDS (ALINAN | YAKILAN | NET) - EXACT SITE MATCH ──
+  const heroCardHeight = 210;
   const colWidth = (contentWidth - 24) / 3;
 
   const consumed = data.consumedCalories || 0;
   const burned = data.burnedCalories || 0;
   const net = consumed - burned;
-  const netSign = net > 0 ? '+' : '';
 
-  const drawHeroCard = (
+  // Helper for drawing site-identical matte glass card
+  const drawSiteCard = (
     x: number,
     y: number,
     w: number,
     h: number,
-    title: string,
-    value: string,
-    unit: string,
-    badgeText: string,
-    isHighlight = false,
-    badgeBg = 'rgba(20, 241, 217, 0.12)',
-    badgeColor = '#14f1d9'
+    label: string,
+    labelColor: string,
+    valueNum: number | string,
+    unitText: string,
+    subText: string,
+    subTextColor = '#a1a1aa',
+    valueColor = '#ffffff'
   ) => {
-    // Glass Surface
-    ctx.fillStyle = isHighlight ? 'rgba(7, 26, 32, 0.90)' : 'rgba(10, 18, 26, 0.80)';
-    drawRoundedRect(ctx, x, y, w, h, 24);
+    // Card Background (#141414 / #1c1c1e)
+    ctx.fillStyle = '#141414';
+    drawRoundedRect(ctx, x, y, w, h, 20);
     ctx.fill();
 
-    // Glow Border
-    ctx.strokeStyle = isHighlight ? 'rgba(20, 241, 217, 0.60)' : 'rgba(255, 255, 255, 0.09)';
-    ctx.lineWidth = isHighlight ? 2 : 1;
+    // Border (#27272a / subtle outline)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Title
-    ctx.fillStyle = isHighlight ? '#14f1d9' : '#94a3b8';
-    ctx.font = '700 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(title, x + 20, y + 36);
+    // Top Label
+    ctx.fillStyle = labelColor;
+    ctx.font = '700 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(label.toUpperCase(), x + 24, y + 38);
 
-    // Value
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '800 44px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(value, x + 20, y + 98);
+    // Main Metric Value
+    ctx.fillStyle = valueColor;
+    ctx.font = '800 46px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(String(valueNum), x + 24, y + 104);
 
     // Unit
-    ctx.fillStyle = isHighlight ? '#14f1d9' : '#64748b';
-    ctx.font = '600 17px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(unit, x + 20, y + 128);
+    const valW = ctx.measureText(String(valueNum)).width;
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '500 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(unitText, x + 24 + valW + 8, y + 104);
 
-    // Badge / Subtext Box
-    const badgeW = w - 40;
-    ctx.fillStyle = badgeBg;
-    drawRoundedRect(ctx, x + 20, y + 146, badgeW, 30, 15);
-    ctx.fill();
-
-    ctx.fillStyle = badgeColor;
-    ctx.font = '700 13px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(badgeText, x + 20 + badgeW / 2, y + 166);
-    ctx.textAlign = 'left';
+    // Subtext (e.g. Alınabilecek: 1888)
+    ctx.fillStyle = subTextColor;
+    ctx.font = '400 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(subText, x + 24, y + 158);
   };
 
-  // Card 1: Alınan
-  drawHeroCard(
+  // Card 1: ALINAN (Label: #8ec13b, Value: White)
+  drawSiteCard(
     pad,
     curY,
     colWidth,
     heroCardHeight,
     'ALINAN',
+    '#8ec13b',
     consumed.toLocaleString('tr-TR'),
     'kcal',
-    `Hedef: ${(data.targetCalories || 2000).toLocaleString('tr-TR')}`,
-    false,
-    'rgba(255, 255, 255, 0.06)',
-    '#cbd5e1'
+    `Alınabilecek: ${(data.targetCalories || 2000).toLocaleString('tr-TR')}`
   );
 
-  // Card 2: Net Denge (HIGHLIGHT TURQUOISE)
-  const isSurplus = net > 0;
-  const isDeficit = net < 0;
-  const netLabel = isSurplus ? '▲ Kalori Fazlası' : isDeficit ? '▼ Kalori Açığı' : '● Tam Dengede';
-  drawHeroCard(
+  // Card 2: YAKILAN (Label: #a1a1aa, Value: White)
+  const exerciseCount = (data.exercises || []).length;
+  drawSiteCard(
     pad + colWidth + 12,
     curY,
     colWidth,
     heroCardHeight,
-    'NET DENGE',
-    `${netSign}${net.toLocaleString('tr-TR')}`,
-    'kcal fark',
-    netLabel,
-    true,
-    isSurplus ? 'rgba(20, 241, 217, 0.18)' : 'rgba(56, 189, 248, 0.18)',
-    isSurplus ? '#14f1d9' : '#38bdf8'
+    'YAKILAN',
+    '#a1a1aa',
+    burned.toLocaleString('tr-TR'),
+    'kcal',
+    exerciseCount > 0 ? `${exerciseCount} Egzersiz Kayıtlı` : 'Egzersiz & BMR'
   );
 
-  // Card 3: Yakılan
-  drawHeroCard(
+  // Card 3: NET (Label: #a1a1aa, Value: #8ec13b or White)
+  const netSub = net > 0 ? '▲ Kalori Fazlası' : net < 0 ? '▼ Kalori Açığı' : '● Tam Dengede';
+  drawSiteCard(
     pad + (colWidth + 12) * 2,
     curY,
     colWidth,
     heroCardHeight,
-    'YAKILAN',
-    burned.toLocaleString('tr-TR'),
+    'NET',
+    '#a1a1aa',
+    `${net > 0 ? '+' : ''}${net.toLocaleString('tr-TR')}`,
     'kcal',
-    'Egzersiz & BMR',
-    false,
-    'rgba(255, 255, 255, 0.06)',
-    '#cbd5e1'
+    netSub,
+    '#8ec13b',
+    '#8ec13b'
   );
 
-  curY += heroCardHeight + 24;
+  curY += heroCardHeight + 28;
 
-  // ── 5. MAKRO BESİN DAĞILIMI DASHBOARD ──
-  const macroHeight = 188;
-  ctx.fillStyle = 'rgba(9, 16, 24, 0.85)';
-  drawRoundedRect(ctx, pad, curY, contentWidth, macroHeight, 26);
+  // ── 5. MACROS & HEALTH STRIP (1-TO-1 MATCH WITH SITE MACRO BAR) ──
+  const macroCardH = 150;
+  ctx.fillStyle = '#141414';
+  drawRoundedRect(ctx, pad, curY, contentWidth, macroCardH, 20);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(20, 241, 217, 0.25)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
   ctx.stroke();
-
-  // Title Row
-  ctx.fillStyle = '#14f1d9';
-  ctx.font = '800 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('MAKRO BESİN DAĞILIMI', pad + 24, curY + 36);
 
   const totalGrams = (data.protein || 0) + (data.carbs || 0) + (data.fat || 0) || 1;
   const pPct = Math.round(((data.protein || 0) / totalGrams) * 100);
   const cPct = Math.round(((data.carbs || 0) / totalGrams) * 100);
   const fPct = Math.round(((data.fat || 0) / totalGrams) * 100);
 
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(`Toplam Makro: ${Math.round(totalGrams)}g`, BASE_WIDTH - pad - 24, curY + 36);
-  ctx.textAlign = 'left';
-
-  // 3 Macro Progress Bars
-  const mColW = (contentWidth - 48) / 3;
-
-  const drawMacroItem = (
+  // Draw each Macro block
+  const drawMacroBlock = (
     mx: number,
     label: string,
+    labelColor: string,
     grams: number,
-    pct: number,
-    color1: string,
-    color2: string
+    pct?: number
   ) => {
-    // Grams
+    // Label
+    ctx.fillStyle = labelColor;
+    ctx.font = '700 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(label, mx, curY + 42);
+
+    // Value & Pct
     ctx.fillStyle = '#ffffff';
-    ctx.font = '800 30px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`${grams}g`, mx, curY + 86);
+    ctx.font = '800 32px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`${grams}g`, mx, curY + 92);
 
-    // Label & Percentage
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`${label} · %${pct}`, mx, curY + 114);
-
-    // Progress Bar Track
-    const trackW = mColW - 20;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-    drawRoundedRect(ctx, mx, curY + 132, trackW, 14, 7);
-    ctx.fill();
-
-    // Active Bar
-    const barW = Math.max(12, Math.min(trackW, (trackW * pct) / 100));
-    const grad = ctx.createLinearGradient(mx, 0, mx + barW, 0);
-    grad.addColorStop(0, color1);
-    grad.addColorStop(1, color2);
-    ctx.fillStyle = grad;
-    drawRoundedRect(ctx, mx, curY + 132, barW, 14, 7);
-    ctx.fill();
+    if (pct !== undefined) {
+      const gW = ctx.measureText(`${grams}g`).width;
+      ctx.fillStyle = '#a1a1aa';
+      ctx.font = '500 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`${pct}%`, mx + gW + 8, curY + 92);
+    }
   };
 
-  // Protein (Neon Emerald -> Turquoise)
-  drawMacroItem(pad + 24, 'Protein', data.protein || 0, pPct, '#06d6a0', '#14f1d9');
+  // 1. KARB (Label: #8ec13b)
+  drawMacroBlock(pad + 24, 'KARB', '#8ec13b', data.carbs || 0, cPct);
 
-  // Karbonhidrat (Vibrant Cyan -> Electric Blue)
-  drawMacroItem(pad + 24 + mColW, 'Karbonhidrat', data.carbs || 0, cPct, '#00f2fe', '#38bdf8');
+  // 2. PROTEİN (Label: #ffffff)
+  drawMacroBlock(pad + 170, 'PROTEİN', '#ffffff', data.protein || 0, pPct);
 
-  // Yağ (Teal -> Mint)
-  drawMacroItem(pad + 24 + mColW * 2, 'Yağ', data.fat || 0, fPct, '#2dd4bf', '#14b8a6');
+  // 3. YAĞ (Label: #a1a1aa)
+  drawMacroBlock(pad + 330, 'YAĞ', '#a1a1aa', data.fat || 0, fPct);
 
-  curY += macroHeight + 28;
+  // 4. ŞEKER (Label: #f472b6)
+  drawMacroBlock(pad + 470, 'ŞEKER', '#f472b6', data.sugar || 0);
 
-  // ── 6. "BUGÜN NE YEDİM?" MEALS TIMELINE ──
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '800 24px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('BUGÜN NE YEDİM?', pad, curY);
+  // Vertical Divider Line 1
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad + 600, curY + 24);
+  ctx.lineTo(pad + 600, curY + macroCardH - 24);
+  ctx.stroke();
+
+  // 5. UYKU (Label & Value: #818cf8)
+  const sleepMins = data.sleepMinutes || 0;
+  const sleepHours = Math.floor(sleepMins / 60);
+  const sleepRemainder = sleepMins % 60;
+  ctx.fillStyle = '#818cf8';
+  ctx.font = '700 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('UYKU', pad + 624, curY + 42);
+
+  if (sleepMins > 0) {
+    ctx.fillStyle = '#818cf8';
+    ctx.font = '800 32px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`${sleepHours}s ${sleepRemainder}d`, pad + 624, curY + 92);
+  } else {
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '600 20px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Veri Yok', pad + 624, curY + 90);
+  }
+
+  // Vertical Divider Line 2
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad + 780, curY + 24);
+  ctx.lineTo(pad + 780, curY + macroCardH - 24);
+  ctx.stroke();
+
+  // 6. KİLO (Label & Value: #34d399)
+  ctx.fillStyle = '#34d399';
+  ctx.font = '700 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('KİLO', pad + 804, curY + 42);
+
+  if (data.currentWeight) {
+    ctx.fillStyle = '#34d399';
+    ctx.font = '800 32px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`${data.currentWeight}`, pad + 804, curY + 92);
+    const kW = ctx.measureText(`${data.currentWeight}`).width;
+    ctx.font = '600 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('kg', pad + 804 + kW + 6, curY + 92);
+  } else {
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '600 20px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Veri Yok', pad + 804, curY + 90);
+  }
+
+  curY += macroCardH + 34;
+
+  // ── 6. "ÖĞÜN DETAYLARI" SECTION (EXACT SITE MATCH) ──
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = '700 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('ÖĞÜN DETAYLARI', pad, curY);
 
   const mealCount = (data.meals || []).length;
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#14f1d9';
-  ctx.font = '700 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#8ec13b';
+  ctx.font = '700 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillText(`${mealCount} Öğün Kaydedildi`, BASE_WIDTH - pad, curY);
   ctx.textAlign = 'left';
 
@@ -378,40 +380,40 @@ export async function downloadHealthStory(data: HealthDataDTO) {
   const meals = (data.meals && data.meals.length > 0) ? data.meals.slice(0, 4) : [];
 
   if (meals.length === 0) {
-    const emptyH = 130;
-    ctx.fillStyle = 'rgba(9, 16, 24, 0.65)';
-    drawRoundedRect(ctx, pad, curY, contentWidth, emptyH, 22);
+    const emptyH = 140;
+    ctx.fillStyle = '#141414';
+    drawRoundedRect(ctx, pad, curY, contentWidth, emptyH, 20);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#a1a1aa';
     ctx.font = '500 20px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Bu gün için henüz öğün kaydı girilmedi.', BASE_WIDTH / 2, curY + 72);
+    ctx.fillText('Bu gün için henüz öğün kaydı girilmedi.', BASE_WIDTH / 2, curY + 76);
     ctx.textAlign = 'left';
     curY += emptyH + 20;
   } else {
     for (const meal of meals) {
-      const mealCardH = 132;
+      const mealCardH = 136;
 
-      // Card Body
-      ctx.fillStyle = 'rgba(8, 15, 22, 0.88)';
-      drawRoundedRect(ctx, pad, curY, contentWidth, mealCardH, 22);
+      // Card Background (#141414)
+      ctx.fillStyle = '#141414';
+      drawRoundedRect(ctx, pad, curY, contentWidth, mealCardH, 20);
       ctx.fill();
 
       // Subtle Border
-      ctx.strokeStyle = 'rgba(20, 241, 217, 0.22)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Left Vertical Turquoise Accent Pill
-      ctx.fillStyle = '#14f1d9';
-      drawRoundedRect(ctx, pad + 16, curY + 20, 4.5, mealCardH - 40, 2.25);
+      // Left Vertical Green Accent
+      ctx.fillStyle = '#8ec13b';
+      drawRoundedRect(ctx, pad + 16, curY + 22, 4, mealCardH - 44, 2);
       ctx.fill();
 
-      // Meal Type Title & Icon
+      // Meal Type Title
       const typeLabel =
         meal.type === 'breakfast'
           ? 'KAHVALTI'
@@ -421,24 +423,24 @@ export async function downloadHealthStory(data: HealthDataDTO) {
           ? 'AKŞAM YEMEĞİ'
           : 'ARA ÖĞÜN';
 
-      ctx.fillStyle = '#14f1d9';
-      ctx.font = '800 20px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(typeLabel, pad + 32, curY + 40);
+      ctx.fillStyle = '#8ec13b';
+      ctx.font = '800 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(typeLabel, pad + 32, curY + 42);
 
-      // Calorie Badge on the Right
+      // Calorie on the Right
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
       ctx.font = '800 26px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(`${(meal.calories || 0).toLocaleString('tr-TR')}`, BASE_WIDTH - pad - 22, curY + 40);
+      ctx.fillText(`${(meal.calories || 0).toLocaleString('tr-TR')}`, BASE_WIDTH - pad - 22, curY + 42);
 
-      ctx.fillStyle = '#14f1d9';
-      ctx.font = '700 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('kcal', BASE_WIDTH - pad - 22, curY + 62);
+      ctx.fillStyle = '#a1a1aa';
+      ctx.font = '600 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('kcal', BASE_WIDTH - pad - 22, curY + 64);
       ctx.textAlign = 'left';
 
       // Meal Foods Description (Clean wrapped text with no orphan characters)
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = '400 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#d4d4d8';
+      ctx.font = '400 17px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
       let foodText = '';
       if (meal.foods && meal.foods.length > 0) {
@@ -449,109 +451,92 @@ export async function downloadHealthStory(data: HealthDataDTO) {
         foodText = meal.foodName || 'Kayıtlı yiyecek';
       }
 
-      wrapCleanText(ctx, foodText, pad + 32, curY + 80, contentWidth - 170, 24, 2);
+      wrapCleanText(ctx, foodText, pad + 32, curY + 82, contentWidth - 170, 24, 2);
 
-      curY += mealCardH + 14;
+      curY += mealCardH + 16;
     }
   }
 
-  curY += 10;
+  curY += 12;
 
-  // ── 7. AKTİVİTE, UYKU & DİNLENME DASHBOARD (FILLS THE BOTTOM NICELY) ──
-  const activityCardH = 175;
-  ctx.fillStyle = 'rgba(9, 16, 24, 0.85)';
-  drawRoundedRect(ctx, pad, curY, contentWidth, activityCardH, 26);
+  // ── 7. DAILY GOAL & FITNESS ACTIVITY CARD (PERFECT BOTTOM PROPORTION) ──
+  const bottomCardH = 160;
+  ctx.fillStyle = '#141414';
+  drawRoundedRect(ctx, pad, curY, contentWidth, bottomCardH, 20);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(20, 241, 217, 0.22)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Activity Header
-  ctx.fillStyle = '#14f1d9';
-  ctx.font = '800 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('GÜNLÜK AKTİVİTE & DİNLENME', pad + 24, curY + 36);
+  // Title
+  ctx.fillStyle = '#8ec13b';
+  ctx.font = '700 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('GÜNLÜK HEDEF VE AKTİVİTE DURUMU', pad + 24, curY + 36);
 
-  const actColW = (contentWidth - 48) / 3;
+  const bColW = (contentWidth - 48) / 3;
 
-  // 1. Egzersiz
-  const exerciseMins = data.exerciseMinutes || 0;
+  // 1. Hedef Kalori Oranı
+  const targetCal = data.targetCalories || 2000;
+  const adherencePct = Math.round((consumed / targetCal) * 100);
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 28px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(exerciseMins > 0 ? `${exerciseMins} dk` : '0 dk', pad + 24, curY + 86);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('🏃 Egzersiz Süresi', pad + 24, curY + 116);
-  ctx.fillStyle = '#64748b';
-  ctx.font = '400 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(exerciseMins > 0 ? 'Aktif Egzersiz' : 'Dinlenme Günü', pad + 24, curY + 142);
+  ctx.fillText(`%${adherencePct}`, pad + 24, curY + 82);
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = '500 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('🎯 Hedef Tamamlanma', pad + 24, curY + 110);
+  ctx.fillStyle = '#71717a';
+  ctx.font = '400 13px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(`${consumed} / ${targetCal} kcal`, pad + 24, curY + 132);
 
-  // 2. Uyku
-  const sleepMins = data.sleepMinutes || 0;
-  const sleepHours = Math.floor(sleepMins / 60);
-  const sleepRemainder = sleepMins % 60;
-  const sleepStr = sleepMins > 0 ? `${sleepHours}s ${sleepRemainder > 0 ? `${sleepRemainder}dk` : ''}` : '-';
-
+  // 2. Egzersiz Süresi
+  const exMins = data.exerciseMinutes || 0;
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 28px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(sleepStr, pad + 24 + actColW, curY + 86);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('🌙 Uyku Süresi', pad + 24 + actColW, curY + 116);
-  ctx.fillStyle = '#64748b';
-  ctx.font = '400 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(sleepMins >= 420 ? 'Verimli Dinlenme' : sleepMins > 0 ? 'Kısa Uyku' : 'Kayıt Yok', pad + 24 + actColW, curY + 142);
+  ctx.fillText(exMins > 0 ? `${exMins} dk` : '0 dk', pad + 24 + bColW, curY + 82);
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = '500 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('🏃 Aktif Egzersiz', pad + 24 + bColW, curY + 110);
+  ctx.fillStyle = '#71717a';
+  ctx.font = '400 13px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(exMins > 0 ? `${(data.exercises || []).length} Aktivite Yapıldı` : 'Dinlenme Günü', pad + 24 + bColW, curY + 132);
 
-  // 3. Güncel Kilo veya Hedef Uyum
-  const currentWeight = data.currentWeight;
+  // 3. Beslenme Dengesi
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 28px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(currentWeight ? `${currentWeight} kg` : '%100', pad + 24 + actColW * 2, curY + 86);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 16px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(currentWeight ? '⚖️ Güncel Kilo' : '🎯 Hedef Uyumu', pad + 24 + actColW * 2, curY + 116);
-  ctx.fillStyle = '#64748b';
-  ctx.font = '400 14px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(currentWeight ? 'Vücut Ağırlığı' : 'Günlük Takip', pad + 24 + actColW * 2, curY + 142);
+  ctx.fillText(net <= 0 ? 'Açık' : 'Fazlalık', pad + 24 + bColW * 2, curY + 82);
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = '500 15px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('⚖️ Enerji Dengesi', pad + 24 + bColW * 2, curY + 110);
+  ctx.fillStyle = '#71717a';
+  ctx.font = '400 13px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText(net <= 0 ? `${Math.abs(net)} kcal açık` : `+${net} kcal fazlalık`, pad + 24 + bColW * 2, curY + 132);
 
-  // ── 8. FOOTER BRANDING & STORY HASHTAGS ──
-  const footerY = BASE_HEIGHT - 80;
+  // ── 8. FOOTER BRANDING ──
+  const footerY = BASE_HEIGHT - 74;
 
-  // Thin Neon Turquoise Separator
-  ctx.strokeStyle = 'rgba(20, 241, 217, 0.20)';
-  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(pad, footerY - 24);
-  ctx.lineTo(BASE_WIDTH - pad, footerY - 24);
+  ctx.moveTo(pad, footerY - 20);
+  ctx.lineTo(BASE_WIDTH - pad, footerY - 20);
   ctx.stroke();
 
-  // Left Hashtags
-  ctx.fillStyle = '#14f1d9';
-  ctx.font = '700 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('#dailym  #sağlıklıbeslenme  #fitnesstakibi', pad, footerY + 14);
+  // Left hashtags in lime green
+  ctx.fillStyle = '#8ec13b';
+  ctx.font = '700 17px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('#dailym  #sağlıklıbeslenme  #günlüktakip', pad, footerY + 14);
 
-  // Right Motto
+  // Right signature
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '500 18px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('DailyM ile her gün daha iyiye.', BASE_WIDTH - pad, footerY + 14);
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = '500 17px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('DailyM · Kişisel Sağlık ve Beslenme Takibi', BASE_WIDTH - pad, footerY + 14);
   ctx.textAlign = 'left';
 
-  // ── 9. TRIGGER DOWNLOAD ──
-  // Render at 2x internally, then downsample once to the exact Instagram
-  // Story size. This keeps thin text and borders sharp without exporting a
-  // 2160x3840 image that Instagram has to rescale itself.
-  const outputCanvas = document.createElement('canvas');
-  outputCanvas.width = BASE_WIDTH;
-  outputCanvas.height = BASE_HEIGHT;
-  const outputContext = outputCanvas.getContext('2d', { alpha: false });
-  if (!outputContext) throw new Error('Hikaye görseli oluşturulamadı.');
-  outputContext.imageSmoothingEnabled = true;
-  outputContext.imageSmoothingQuality = 'high';
-  await pica().resize(canvas, outputCanvas, { quality: 3 });
-
+  // ── 9. DOWNLOAD IMAGE ──
   const link = document.createElement('a');
   const dateStr = (data.date || new Date().toISOString()).slice(0, 10);
   link.download = `dailym-beslenme-${dateStr}.png`;
-  link.href = outputCanvas.toDataURL('image/png');
+  link.href = canvas.toDataURL('image/png');
   link.click();
 }
