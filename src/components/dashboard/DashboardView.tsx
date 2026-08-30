@@ -13,6 +13,7 @@ import { FABMenu } from "@/components/dashboard/FABMenu";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { VoiceAssistantFAB } from '@/components/assistant/VoiceAssistantFAB';
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import { ProductTour } from "@/components/onboarding/ProductTour";
 
 // Performans optimizasyonu: Ağır formları ve analiz sayfalarını sadece ihtiyaç anında (tıklandığında) yüklenecek şekilde (Lazy Load) ayırıyoruz.
 const HealthAnalysis = dynamic(() => import("@/components/dashboard/HealthAnalysis").then(m => m.HealthAnalysis), { ssr: false });
@@ -27,6 +28,11 @@ export function DashboardView() {
   
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [sheetPayload, setSheetPayload] = useState<any>(null);
+  const [showProductTour, setShowProductTour] = useState(false);
+
+  React.useEffect(() => {
+    setShowProductTour(localStorage.getItem("dailym-product-tour-completed") !== "1");
+  }, []);
 
   React.useEffect(() => {
     switch (mode) {
@@ -274,6 +280,7 @@ export function DashboardView() {
             </>
           );
         })()}
+        {showProductTour && <ProductTour onFinish={() => setShowProductTour(false)} />}
       </div>
     </PullToRefresh>
   );
