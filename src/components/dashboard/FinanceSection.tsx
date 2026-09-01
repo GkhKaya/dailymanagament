@@ -24,16 +24,41 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(val);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  // Group transactions by date
-  const grouped = data.recentTransactions.reduce((acc, txn) => {
-    const datePart = txn.date.split(',')[0].toUpperCase();
-    if (!acc[datePart]) acc[datePart] = { txns: [], net: 0 };
-    acc[datePart].txns.push(txn);
-    if (txn.type === 'income' || txn.type === 'expense') {
-      acc[datePart].net += txn.type === 'income' ? txn.amount : -txn.amount;
+  // Filter transactions for Overview mode: only selected day and up to 2 previous days within the SAME month
+  const displayedTransactions = React.useMemo(() => {
+    if (!isOverview) {
+      return data.recentTransactions;
     }
-    return acc;
-  }, {} as Record<string, { txns: typeof data.recentTransactions, net: number }>);
+
+    const refDate = currentDate || new Date();
+    const refYear = refDate.getFullYear();
+    const refMonth = refDate.getMonth();
+    const refDay = refDate.getDate();
+
+    // Start from at most 2 days before the reference date, but never cross into the previous month (day >= 1)
+    const startDay = Math.max(1, refDay - 2);
+    const startDate = new Date(refYear, refMonth, startDay, 0, 0, 0, 0);
+    const endDate = new Date(refYear, refMonth, refDay, 23, 59, 59, 999);
+
+    return data.recentTransactions.filter((txn) => {
+      if (!txn.rawDate) return false;
+      const txDate = new Date(txn.rawDate);
+      return txDate >= startDate && txDate <= endDate;
+    });
+  }, [data.recentTransactions, isOverview, currentDate]);
+
+  // Group transactions by date
+  const grouped = React.useMemo(() => {
+    return displayedTransactions.reduce((acc, txn) => {
+      const datePart = txn.date.split(',')[0].toUpperCase();
+      if (!acc[datePart]) acc[datePart] = { txns: [], net: 0 };
+      acc[datePart].txns.push(txn);
+      if (txn.type === 'income' || txn.type === 'expense') {
+        acc[datePart].net += txn.type === 'income' ? txn.amount : -txn.amount;
+      }
+      return acc;
+    }, {} as Record<string, { txns: typeof data.recentTransactions, net: number }>);
+  }, [displayedTransactions]);
 
   return (
     <div className={`flex flex-col gap-[var(--space-6)] w-full max-w-2xl mx-auto animate-slide-up`}>
@@ -115,59 +140,65 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
         </div>
         
         <div className="flex flex-col gap-[var(--space-4)]">
-          {Object.entries(grouped).map(([date, groupData]) => (
-            <div key={date} className="flex flex-col gap-[var(--space-2)]">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-caption text-[var(--on-surface-variant)]">{date}</span>
-                <span className={`text-caption ${groupData.net > 0 ? 'text-[var(--color-income)]' : 'text-[var(--on-surface-variant)]'}`}>
-                  GÜNLÜK: {groupData.net > 0 ? '+' : ''}{fmt(groupData.net)}
-                </span>
-              </div>
-              <div className="flex flex-col gap-[var(--space-1)]">
-                {groupData.txns.map((txn) => {
-                  const isIncome = txn.type === 'income';
-                  const isTransfer = txn.type === 'transfer';
-                  return (
-                    <div 
-                      key={txn.id} 
-                      onClick={() => onOpenSheet && onOpenSheet('edit-transaction', txn)}
-                      className="flex items-center justify-between px-2 py-[var(--space-2)] hover:bg-[rgba(255,255,255,0.02)] rounded-[var(--radius-card)] transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-[var(--space-3)]">
-                        <div className="w-12 h-12 rounded-[var(--radius-input)] bg-[var(--surface-container)] flex items-center justify-center text-[var(--on-surface-variant)]">
-                          {isTransfer ? <Wallet size={18} /> : <TxnIcon title={txn.title} />}
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="text-body font-bold text-white">{txn.title}</span>
-                            {txn.source === 'voice' && (
-                              <div className="flex items-center text-[var(--primary)]" title="Sesli asistan ile eklendi">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                              </div>
-                            )}
+          {Object.entries(grouped).length === 0 ? (
+            <div className="glass-card p-6 text-center text-sm text-[var(--on-surface-variant)]">
+              {isOverview ? "Son günlere ait işlem kaydı bulunmuyor." : "Bu döneme ait işlem kaydı bulunmuyor."}
+            </div>
+          ) : (
+            Object.entries(grouped).map(([date, groupData]) => (
+              <div key={date} className="flex flex-col gap-[var(--space-2)]">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-caption text-[var(--on-surface-variant)]">{date}</span>
+                  <span className={`text-caption ${groupData.net > 0 ? 'text-[var(--color-income)]' : 'text-[var(--on-surface-variant)]'}`}>
+                    GÜNLÜK: {groupData.net > 0 ? '+' : ''}{fmt(groupData.net)}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-[var(--space-1)]">
+                  {groupData.txns.map((txn) => {
+                    const isIncome = txn.type === 'income';
+                    const isTransfer = txn.type === 'transfer';
+                    return (
+                      <div 
+                        key={txn.id} 
+                        onClick={() => onOpenSheet && onOpenSheet('edit-transaction', txn)}
+                        className="flex items-center justify-between px-2 py-[var(--space-2)] hover:bg-[rgba(255,255,255,0.02)] rounded-[var(--radius-card)] transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-[var(--space-3)]">
+                          <div className="w-12 h-12 rounded-[var(--radius-input)] bg-[var(--surface-container)] flex items-center justify-center text-[var(--on-surface-variant)]">
+                            {isTransfer ? <Wallet size={18} /> : <TxnIcon title={txn.title} />}
                           </div>
-                          <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize flex items-center gap-1">
-                            {isTransfer ? `Transfer${txn.relatedAccountName ? ` → ${txn.relatedAccountName}` : ''}` : (txn.category || "Diğer")} 
-                            {txn.accountName && (
-                                <>
-                                  <span className="w-1 h-1 rounded-full bg-[var(--on-surface-variant)] opacity-50"></span>
-                                  {txn.accountName}
-                                </>
-                            )}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-body font-bold text-white">{txn.title}</span>
+                              {txn.source === 'voice' && (
+                                <div className="flex items-center text-[var(--primary)]" title="Sesli asistan ile eklendi">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize flex items-center gap-1">
+                              {isTransfer ? `Transfer${txn.relatedAccountName ? ` → ${txn.relatedAccountName}` : ''}` : (txn.category || "Diğer")} 
+                              {txn.accountName && (
+                                  <>
+                                    <span className="w-1 h-1 rounded-full bg-[var(--on-surface-variant)] opacity-50"></span>
+                                    {txn.accountName}
+                                  </>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`text-headline ${isTransfer ? 'text-[var(--on-surface-variant)]' : isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
+                            {isTransfer ? '' : isIncome ? '+' : '-'}{fmt(txn.amount)}
                           </span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={`text-headline ${isTransfer ? 'text-[var(--on-surface-variant)]' : isIncome ? 'text-[var(--color-income)]' : 'text-[var(--color-expense)]'}`}>
-                          {isTransfer ? '' : isIncome ? '+' : '-'}{fmt(txn.amount)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
       </div>
