@@ -43,6 +43,11 @@ export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; 
 
   const finish = () => {
     localStorage.setItem("dailym-product-tour-completed", "1");
+    if (typeof window !== "undefined" && window.location.search.includes("tour=1")) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("tour");
+      window.history.replaceState({}, "", url.toString());
+    }
     onFinish();
   };
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle } from 'lucide-react';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
@@ -530,6 +530,14 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
               <h3 className="text-lg font-bold text-white mb-4">Diğer</h3>
               
               <div className="flex flex-col gap-2">
+                <button onClick={() => router.push('/dashboard?tour=1')} className="flex items-center justify-between p-4 bg-[var(--surface-container)] hover:bg-[#27272a] rounded-lg transition-colors group border border-transparent hover:border-[var(--outline)]">
+                  <div className="flex items-center gap-3">
+                    <HelpCircle size={18} className="text-[var(--primary)] group-hover:text-white transition-colors" />
+                    <span className="text-white text-sm font-medium">Uygulama Tanıtım Turunu Başlat</span>
+                  </div>
+                  <ChevronRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                </button>
+
                 <button onClick={() => router.push('/profile/about')} className="flex items-center justify-between p-4 bg-[var(--surface-container)] hover:bg-[#27272a] rounded-lg transition-colors group border border-transparent hover:border-[var(--outline)]">
                   <div className="flex items-center gap-3">
                     <Info size={18} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />

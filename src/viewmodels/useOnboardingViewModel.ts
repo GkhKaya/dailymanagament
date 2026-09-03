@@ -54,6 +54,9 @@ export function useOnboardingViewModel() {
 
   // -- Actions --
   const skipToDashboard = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dailym-product-tour-completed');
+    }
     router.push('/dashboard');
   };
 
@@ -111,6 +114,9 @@ export function useOnboardingViewModel() {
   };
 
   const finishOnboarding = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dailym-product-tour-completed');
+    }
     router.push('/dashboard');
   };
 

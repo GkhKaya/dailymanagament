@@ -47,6 +47,9 @@ export function useRegisterViewModel() {
       });
       
       if (data && !signUpError) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dailym-product-tour-completed');
+        }
         Alert.success('Hesap kurma ekranına yönlendiriliyorsunuz...');
         router.push('/onboarding');
       } else {
