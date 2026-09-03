@@ -196,7 +196,7 @@ function drawSummaryStrip(
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(6.5);
     doc.setTextColor(...(col.labelColor || COLORS.textMuted));
-    doc.text(tr(col.label.toUpperCase()), colX + paddingX, y + 6);
+    doc.text(tr(col.label.toUpperCase()), colX + paddingX, y + 5.5);
 
     // Value
     doc.setFont('helvetica', 'bold');
@@ -204,13 +204,13 @@ function drawSummaryStrip(
       doc,
       tr(col.value),
       colX + paddingX,
-      y + 13,
+      y + (col.subtext ? 11.5 : 12),
       maxTextW,
-      10.5,
+      10,
       'left'
     );
 
-    // Subtext
+    // Subtext (comfortably positioned inside box with 4.5mm bottom margin)
     if (col.subtext) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(6.5);
@@ -219,7 +219,7 @@ function drawSummaryStrip(
         doc,
         tr(col.subtext),
         colX + paddingX,
-        y + 18,
+        y + 16.5,
         maxTextW,
         6.5,
         'left'
@@ -227,7 +227,7 @@ function drawSummaryStrip(
     }
   });
 
-  return y + h + 8;
+  return y + h + 6;
 }
 
 /**
@@ -670,11 +670,12 @@ function renderDayPage(
   const netCals = day.totals.calories_consumed - day.totals.total_burned;
   const sleepHrs = day.sleep.duration_minutes ? (day.sleep.duration_minutes / 60).toFixed(1) : '0';
 
-  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
+  // 1. Calorie Balance Strip (3 Columns)
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 21, [
     {
       label: 'Alinan Kalori',
       value: `${day.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
-      subtext: `Protein: ${day.totals.protein_g}g`,
+      subtext: 'Besin Enerjisi',
       labelColor: COLORS.primary,
       valueColor: COLORS.textWhite,
     },
@@ -692,12 +693,33 @@ function renderDayPage(
       labelColor: netCals > 0 ? COLORS.primary : COLORS.blue,
       valueColor: netCals > 0 ? COLORS.primary : COLORS.blue,
     },
+  ]);
+
+  // 2. Macros & Sleep Strip (4 Columns, matching site layout 1-to-1)
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 16, [
     {
-      label: 'Makro & Uyku',
-      value: `K:${day.totals.carbs_g}g | Y:${day.totals.fat_g}g`,
-      subtext: `Uyku: ${sleepHrs} saat`,
+      label: 'Karbonhidrat',
+      value: `${day.totals.carbs_g}g`,
+      labelColor: COLORS.primary,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Protein',
+      value: `${day.totals.protein_g}g`,
+      labelColor: COLORS.textWhite,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Yag',
+      value: `${day.totals.fat_g}g`,
       labelColor: COLORS.textMuted,
       valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Uyku',
+      value: `${sleepHrs} saat`,
+      labelColor: COLORS.blue,
+      valueColor: COLORS.blue,
     },
   ]);
 
