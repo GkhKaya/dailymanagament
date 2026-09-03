@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HelpCircle, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { t } from "@/lib/i18n";
 import { useDashboardViewModel } from "@/viewmodels/useDashboardViewModel";
@@ -139,15 +139,6 @@ export function DashboardView() {
 
           {/* Action icons (Notifications, Settings, Profile) */}
           <div className="flex items-center gap-[var(--space-3)]">
-
-            <button 
-              onClick={() => setShowProductTour(true)}
-              aria-label="Uygulama tanıtım rehberini başlat"
-              title="Tanıtım Rehberi"
-              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-black transition-colors"
-            >
-              <HelpCircle size={16} />
-            </button>
             <button 
               data-tour="profile"
               onClick={() => router.push('/profile')}
