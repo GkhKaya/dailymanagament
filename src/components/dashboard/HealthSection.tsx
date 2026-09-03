@@ -309,6 +309,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
               <span className="hidden sm:inline">Fotoğrafla AI Ekle</span>
             </button>
             <button 
+              data-tour="health-add-meal"
               onClick={() => onOpenSheet && onOpenSheet('meal')}
               aria-label="Öğün ekle"
               className="min-h-11 min-w-11 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"

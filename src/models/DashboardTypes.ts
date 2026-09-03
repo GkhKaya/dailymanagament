@@ -80,6 +80,7 @@ export interface TransactionInfo {
   relatedAccountName?: string;
   relatedAccountId?: string;
   source?: string;
+  createdAt?: string;
 }
 
 export interface CategoryInfo {

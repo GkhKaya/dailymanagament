@@ -235,6 +235,7 @@ export function StocksSection() {
           </button>
           <button
             type="button"
+            data-tour="stocks-buy"
             onClick={() => handleOpenBuy()}
             className="min-h-11 px-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
@@ -242,6 +243,7 @@ export function StocksSection() {
           </button>
           <button
             type="button"
+            data-tour="stocks-sell"
             onClick={() => handleOpenSell()}
             className="min-h-11 px-4 rounded-full bg-transparent hover:bg-white/5 border border-[var(--outline)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >

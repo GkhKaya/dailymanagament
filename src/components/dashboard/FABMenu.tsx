@@ -71,6 +71,7 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
 
       {/* Main FAB */}
       <button 
+        data-tour="quick-add"
         onClick={toggleMenu}
         className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 z-50 relative ${
           isOpen 

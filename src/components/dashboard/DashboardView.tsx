@@ -92,6 +92,7 @@ export function DashboardView() {
             </button>
             <nav className="hidden sm:flex items-center gap-[var(--space-4)]">
               <button
+                data-tour="nav-overview"
                 onClick={() => setMode('overview')}
                 className={`text-body font-medium transition-colors cursor-pointer ${
                   mode === 'overview' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
@@ -100,6 +101,7 @@ export function DashboardView() {
                 {t("dashboard.tabOverview")}
               </button>
               <button
+                data-tour="nav-health"
                 onClick={() => setMode('health')}
                 className={`text-body font-medium transition-colors cursor-pointer ${
                   mode === 'health' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
@@ -108,6 +110,7 @@ export function DashboardView() {
                 {t("dashboard.tabHealth")}
               </button>
               <button
+                data-tour="nav-finance"
                 onClick={() => setMode('finance')}
                 className={`text-body font-medium transition-colors cursor-pointer ${
                   mode === 'finance' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
@@ -116,6 +119,7 @@ export function DashboardView() {
                 {t("dashboard.tabFinance")}
               </button>
               <button
+                data-tour="nav-stocks"
                 onClick={() => setMode('stocks')}
                 className={`text-body font-medium transition-colors cursor-pointer ${
                   mode === 'stocks' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
@@ -130,6 +134,7 @@ export function DashboardView() {
           <div className="flex items-center gap-[var(--space-3)]">
 
             <button 
+              data-tour="profile"
               onClick={() => router.push('/profile')}
               aria-label="Profil ve ayarlar"
               className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
@@ -151,6 +156,7 @@ export function DashboardView() {
           {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
             <div className="grid grid-cols-4 gap-1 w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
               <button
+                data-tour="nav-overview"
                 aria-pressed={mode === 'overview'}
                 onClick={() => setMode('overview')}
                 className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
@@ -160,6 +166,7 @@ export function DashboardView() {
                 Genel
               </button>
               <button
+                data-tour="nav-health"
                 aria-pressed={mode === 'health'}
                 onClick={() => setMode('health')}
                 className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
@@ -169,6 +176,7 @@ export function DashboardView() {
                 Sağlık
               </button>
               <button
+                data-tour="nav-finance"
                 aria-pressed={mode === 'finance'}
                 onClick={() => setMode('finance')}
                 className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
@@ -178,6 +186,7 @@ export function DashboardView() {
                 Cüzdan
               </button>
               <button
+                data-tour="nav-stocks"
                 aria-pressed={mode === 'stocks'}
                 onClick={() => setMode('stocks')}
                 className={`py-2 text-center rounded-full text-xs font-semibold transition-all duration-300 ${
@@ -280,7 +289,7 @@ export function DashboardView() {
             </>
           );
         })()}
-        {showProductTour && <ProductTour onFinish={() => setShowProductTour(false)} />}
+        {showProductTour && <ProductTour onFinish={() => setShowProductTour(false)} onChangeMode={setMode} />}
       </div>
     </PullToRefresh>
   );

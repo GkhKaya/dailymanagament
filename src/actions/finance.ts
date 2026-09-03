@@ -225,11 +225,21 @@ export async function addTransactionAction(data: { type: any; amount: number; da
       credit_card_details: account.credit_card_details ? { current_debt: getCreditCardDebt({ balance: parseFloat(account.balance.toString()), credit_card_details: { current_debt: account.credit_card_details.current_debt ? parseFloat(account.credit_card_details.current_debt.toString()) : null } }) } : undefined
     }, data.type as 'income' | 'expense', data.amount);
 
+    const now = new Date();
+    let txnDate: Date;
+    if (data.date) {
+      const parsed = new Date(data.date);
+      const isToday = parsed.toDateString() === now.toDateString() || data.date === now.toISOString().split('T')[0];
+      txnDate = isToday ? now : parsed;
+    } else {
+      txnDate = now;
+    }
+
     await Transaction.create({
       user_id: userId,
       type: data.type as any,
       amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
-      date: new Date(data.date),
+      date: txnDate,
       description: data.description,
       category_id: new mongoose.Types.ObjectId(data.category_id),
       account_id: new mongoose.Types.ObjectId(data.account_id),

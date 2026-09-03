@@ -1,46 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+import { productTourSteps, type ProductTourMode } from "./product-tour-steps";
 
-const steps = [
-  { title: "DailyM'ye hoş geldin", text: "Bu kısa turda uygulamadaki temel alanları ve butonların ne işe yaradığını göstereceğim.", label: "Başlangıç" },
-  { title: "Genel bakış", text: "Sağlık ve finans durumunu tek ekranda hızlıca görürsün. Günlük özet burada toplanır.", label: "Genel" },
-  { title: "Sağlık", text: "Öğünlerini, kalorilerini, egzersizlerini ve günlük hedeflerini buradan takip edersin.", label: "Sağlık" },
-  { title: "Cüzdan", text: "Gelir, gider, hesap, borç ve aboneliklerini yönetmek için Cüzdan bölümünü kullan.", label: "Cüzdan" },
-  { title: "Borsa", text: "Hisse ve fon alış-satışlarını, açık portföyünü ve gerçekleşen kâr/zararını burada takip edersin.", label: "Borsa" },
-  { title: "Profil", text: "Profil ve ayarlar butonundan kişisel bilgilerini, namaz bildirimlerini ve uygulama ayarlarını yönetebilirsin.", label: "Profil" },
-  { title: "Hızlı ekleme", text: "Sağ alttaki + butonu; öğün, egzersiz, gelir ve gider eklemek için hızlı menüyü açar.", label: "Hızlı işlem" },
-  { title: "Hazırsın", text: "Artık DailyM'yi kullanmaya başlayabilirsin. İstediğin zaman bölümler arasında geçiş yapabilirsin.", label: "Tamamlandı" },
-];
+type Highlight = { top: number; left: number; width: number; height: number } | null;
 
-export function ProductTour({ onFinish }: { onFinish: () => void }) {
-  const [step, setStep] = useState(0);
-  const current = steps[step];
-  const isLast = step === steps.length - 1;
+function findVisibleTarget(target: string): HTMLElement | null {
+  return [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
+    .find((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }) ?? null;
+}
+
+export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; onChangeMode: (mode: ProductTourMode) => void }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [highlight, setHighlight] = useState<Highlight>(null);
+  const current = productTourSteps[stepIndex];
+  const isLast = stepIndex === productTourSteps.length - 1;
+
+  const updateHighlight = useCallback(() => {
+    const element = findVisibleTarget(current.target);
+    if (!element) return setHighlight(null);
+    element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    const rect = element.getBoundingClientRect();
+    const padding = 7;
+    setHighlight({ top: Math.max(6, rect.top - padding), left: Math.max(6, rect.left - padding), width: Math.min(window.innerWidth - 12, rect.width + padding * 2), height: Math.min(window.innerHeight - 12, rect.height + padding * 2) });
+  }, [current.target]);
+
+  useEffect(() => {
+    onChangeMode(current.mode);
+    const timer = window.setTimeout(updateHighlight, 160);
+    window.addEventListener("resize", updateHighlight);
+    window.addEventListener("scroll", updateHighlight, true);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", updateHighlight);
+      window.removeEventListener("scroll", updateHighlight, true);
+    };
+  }, [current.mode, onChangeMode, updateHighlight]);
 
   const finish = () => {
     localStorage.setItem("dailym-product-tour-completed", "1");
     onFinish();
   };
 
+  const tooltipTop = highlight ? Math.min(window.innerHeight - 245, highlight.top + highlight.height + 14) : Math.max(24, window.innerHeight / 2 - 120);
+  const tooltipLeft = highlight ? Math.min(Math.max(16, highlight.left), window.innerWidth - 336) : 16;
+
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 p-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="product-tour-title">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-[var(--primary)]/30 bg-[#11151a] p-6 shadow-[0_0_60px_rgba(142,193,59,0.18)]">
-        <button type="button" onClick={finish} aria-label="Tanıtımı kapat" className="absolute right-3 top-3 flex min-h-11 min-w-11 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"><X size={18} /></button>
-        <div className="mb-7 flex items-center gap-2">
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[var(--primary)] transition-all" style={{ width: `${((step + 1) / steps.length) * 100}%` }} /></div>
-          <span className="text-xs font-bold text-white/50">{step + 1}/{steps.length}</span>
+    <div className="fixed inset-0 z-[160]" role="dialog" aria-modal="true" aria-labelledby="product-tour-title">
+      {!highlight && <div className="absolute inset-0 bg-black/65" />}
+      {highlight && <div className="pointer-events-none fixed z-[161] rounded-2xl border-2 border-[var(--primary)] shadow-[0_0_0_9999px_rgba(0,0,0,0.65),0_0_28px_rgba(142,193,59,0.8)] transition-all duration-200" style={highlight} />}
+      <section className="fixed z-[162] w-[min(320px,calc(100vw-32px))] rounded-3xl border border-[var(--primary)]/35 bg-[#11151a] p-5 shadow-2xl" style={{ top: tooltipTop, left: tooltipLeft }}>
+        <button type="button" onClick={finish} aria-label="Tanıtımı kapat" className="absolute right-2 top-2 flex min-h-11 min-w-11 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white"><X size={18} /></button>
+        <div className="mb-5 flex items-center gap-2 pr-10"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[var(--primary)] transition-all" style={{ width: `${((stepIndex + 1) / productTourSteps.length) * 100}%` }} /></div><span className="text-xs font-bold text-white/50">{stepIndex + 1}/{productTourSteps.length}</span></div>
+        <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-[var(--primary)]">Uygulama rehberi</p>
+        <h2 id="product-tour-title" className="mb-2 text-lg font-bold text-white">{current.title}</h2>
+        <p className="text-sm leading-6 text-[var(--on-surface-variant)]">{current.text}</p>
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <button type="button" onClick={() => setStepIndex((index) => Math.max(0, index - 1))} disabled={stepIndex === 0} className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-white/60 disabled:invisible"><ArrowLeft size={16} /> Geri</button>
+          <button type="button" onClick={isLast ? finish : () => setStepIndex((index) => index + 1)} className="flex min-h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-bold text-black">{isLast ? "Başlayalım" : "Devam"} {isLast ? <Check size={16} /> : <ArrowRight size={16} />}</button>
         </div>
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary)]/15 text-3xl font-black text-[var(--primary)]">{isLast ? <Check size={32} /> : step + 1}</div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">{current.label}</p>
-        <h2 id="product-tour-title" className="mb-3 text-2xl font-bold text-white">{current.title}</h2>
-        <p className="min-h-20 text-sm leading-6 text-[var(--on-surface-variant)]">{current.text}</p>
-        <div className="mt-7 flex items-center justify-between gap-3">
-          <button type="button" onClick={() => setStep((value) => Math.max(0, value - 1))} disabled={step === 0} className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-white/60 transition-colors hover:bg-white/5 hover:text-white disabled:invisible"><ArrowLeft size={16} /> Geri</button>
-          <button type="button" onClick={isLast ? finish : () => setStep((value) => value + 1)} className="flex min-h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-black transition-colors hover:bg-[var(--primary-hover)]">{isLast ? "Başlayalım" : "Sonraki"} {!isLast && <ArrowRight size={16} />}</button>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

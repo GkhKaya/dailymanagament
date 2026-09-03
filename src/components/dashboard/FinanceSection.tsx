@@ -26,24 +26,38 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
 
   // Filter transactions for Overview mode: only selected day and up to 2 previous days within the SAME month
   const displayedTransactions = React.useMemo(() => {
-    if (!isOverview) {
-      return data.recentTransactions;
+    let list = data.recentTransactions;
+    if (isOverview) {
+      const refDate = currentDate || new Date();
+      const refYear = refDate.getFullYear();
+      const refMonth = refDate.getMonth();
+      const refDay = refDate.getDate();
+
+      // Start from at most 2 days before the reference date, but never cross into the previous month (day >= 1)
+      const startDay = Math.max(1, refDay - 2);
+      const startDate = new Date(refYear, refMonth, startDay, 0, 0, 0, 0);
+      const endDate = new Date(refYear, refMonth, refDay, 23, 59, 59, 999);
+
+      list = data.recentTransactions.filter((txn) => {
+        if (!txn.rawDate) return false;
+        const txDate = new Date(txn.rawDate);
+        return txDate >= startDate && txDate <= endDate;
+      });
     }
 
-    const refDate = currentDate || new Date();
-    const refYear = refDate.getFullYear();
-    const refMonth = refDate.getMonth();
-    const refDay = refDate.getDate();
-
-    // Start from at most 2 days before the reference date, but never cross into the previous month (day >= 1)
-    const startDay = Math.max(1, refDay - 2);
-    const startDate = new Date(refYear, refMonth, startDay, 0, 0, 0, 0);
-    const endDate = new Date(refYear, refMonth, refDay, 23, 59, 59, 999);
-
-    return data.recentTransactions.filter((txn) => {
-      if (!txn.rawDate) return false;
-      const txDate = new Date(txn.rawDate);
-      return txDate >= startDate && txDate <= endDate;
+    // Strictly sort newest first (latest transaction of the day first, down to oldest)
+    return [...list].sort((a, b) => {
+      const timeA = new Date(a.rawDate || a.date).getTime();
+      const timeB = new Date(b.rawDate || b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeB !== timeA) {
+        return timeB - timeA;
+      }
+      const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (createA !== createB) {
+        return createB - createA;
+      }
+      return b.id.localeCompare(a.id);
     });
   }, [data.recentTransactions, isOverview, currentDate]);
 
@@ -130,6 +144,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           <div className="flex items-center gap-[var(--space-2)]">
             <h3 className="text-caption text-[var(--on-surface-variant)]">İŞLEM GEÇMİŞİ</h3>
             <button 
+              data-tour="finance-add-transaction"
               onClick={() => onOpenSheet && onOpenSheet('transaction')}
               className="w-5 h-5 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
             >

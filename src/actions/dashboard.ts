@@ -262,8 +262,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       syncSubscriptions(session.user.id),
       Account.find({ user_id: userId }).lean(),
       Transaction.find({ user_id: userId })
-        .sort({ date: -1 })
-        .limit(50)
+        .sort({ date: -1, created_at: -1, _id: -1 })
+        .limit(100)
         .populate("category_id")
         .populate("account_id")
         .populate("related_account_id")
@@ -303,7 +303,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       // Date formatting for UI (e.g. "Bugün, 14:30")
       const txDate = new Date(tx.date);
       const isToday = new Date().setHours(0,0,0,0) === new Date(txDate).setHours(0,0,0,0);
-      const timeString = txDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+      const timeSource = tx.created_at ? new Date(tx.created_at) : txDate;
+      const timeString = timeSource.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
       const dateStr = isToday ? `Bugün, ${timeString}` : `${txDate.getDate()} ${txDate.toLocaleString('tr-TR', {month:'short'})}, ${timeString}`;
 
       return {
@@ -319,7 +320,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         accountId: tx.account_id?._id?.toString(),
         relatedAccountName: tx.related_account_id?.name,
         relatedAccountId: tx.related_account_id?._id?.toString(),
-        source: tx.source
+        source: tx.source,
+        createdAt: tx.created_at ? new Date(tx.created_at).toISOString() : undefined
       };
     });
 
