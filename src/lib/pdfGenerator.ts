@@ -17,25 +17,20 @@ function tr(text: string | number | undefined | null): string {
   return str.replace(/[çÇğĞıİöÖşŞüÜ]/g, match => map[match] || match);
 }
 
-// Colors palette matching the DailyM website theme tokens
+// Design system colors matching the DailyM website tokens
 const COLORS = {
   primary: [142, 193, 59] as [number, number, number],       // Lime Green #8ec13b
-  primaryDark: [121, 170, 50] as [number, number, number],
   darkBg: [9, 9, 11] as [number, number, number],            // Deep Black #09090b
-  cardBg: [20, 20, 22] as [number, number, number],          // Card Surface #141414
-  cardBgAlt: [28, 28, 30] as [number, number, number],       // Alternate row #1c1c1e
+  surface: [16, 16, 18] as [number, number, number],         // Surface #101012
+  surfaceAlt: [22, 22, 25] as [number, number, number],      // Alternate #161619
   border: [39, 39, 42] as [number, number, number],          // Subtle border #27272a
-  borderLight: [63, 63, 70] as [number, number, number],     // Zinc-700
-  textWhite: [255, 255, 255] as [number, number, number],    // White
+  borderSubtle: [28, 28, 30] as [number, number, number],
+  textWhite: [255, 255, 255] as [number, number, number],    // Crisp White
   textMuted: [161, 161, 170] as [number, number, number],    // Zinc-400
   textSubtle: [113, 113, 122] as [number, number, number],   // Zinc-500
   gain: [52, 211, 153] as [number, number, number],          // Emerald #34d399
   loss: [251, 113, 133] as [number, number, number],         // Rose #fb7185
-  blue: [129, 140, 248] as [number, number, number],         // Indigo/Blue #818cf8
-  breakfast: [59, 130, 246] as [number, number, number],     // Blue
-  lunch: [245, 158, 11] as [number, number, number],         // Amber
-  dinner: [16, 185, 129] as [number, number, number],        // Emerald
-  snack: [168, 85, 247] as [number, number, number],         // Purple
+  blue: [129, 140, 248] as [number, number, number],         // Indigo #818cf8
 };
 
 function paintDailyMBackground(doc: jsPDF) {
@@ -44,192 +39,210 @@ function paintDailyMBackground(doc: jsPDF) {
 }
 
 /**
- * Draws the signature DailyM Brand Header Banner on any page
+ * Fits text safely within maxW by scaling font size down if necessary
  */
-function drawDailyMBrandHeader(
+function drawSafeText(
   doc: jsPDF,
-  title: string,
-  categoryBadge: string,
+  text: string,
+  x: number,
+  y: number,
+  maxW: number,
+  defaultSize: number,
+  align: 'left' | 'center' | 'right' = 'left'
+) {
+  let size = defaultSize;
+  doc.setFontSize(size);
+  while (doc.getTextWidth(text) > maxW && size > 6) {
+    size -= 0.5;
+    doc.setFontSize(size);
+  }
+  doc.text(text, x, y, { align });
+}
+
+/**
+ * Clean, Executive-level DailyM Brand Header (No boxy AI container)
+ */
+function drawDailyMHeader(
+  doc: jsPDF,
+  reportTitle: string,
+  categoryName: string,
   userName: string,
   dateRangeStr: string,
-  startY = 12
-) {
+  startY = 14
+): number {
   const marginX = 14;
-  const headerW = 182;
-  const headerH = 22;
+  const contentW = 182;
 
-  // Background card
-  doc.setFillColor(...COLORS.cardBg);
-  doc.setDrawColor(...COLORS.border);
-  doc.roundedRect(marginX, startY, headerW, headerH, 2.5, 2.5, 'FD');
-
-  // Bottom lime accent line
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(marginX, startY + headerH - 1, headerW, 1, 'F');
-
-  // Equalizer waveform icon (4 vertical bars in lime green)
-  const iconX = marginX + 5;
-  const iconY = startY + 5.5;
+  // Waveform Mark: 4 lime green vertical bars
+  const iconX = marginX;
+  const iconY = startY;
   doc.setFillColor(...COLORS.primary);
   doc.roundedRect(iconX, iconY + 2.5, 1.2, 5, 0.6, 0.6, 'F');
   doc.roundedRect(iconX + 2.4, iconY, 1.2, 10, 0.6, 0.6, 'F');
   doc.roundedRect(iconX + 4.8, iconY + 1.5, 1.2, 7, 0.6, 0.6, 'F');
   doc.roundedRect(iconX + 7.2, iconY + 3.5, 1.2, 3, 0.6, 0.6, 'F');
 
-  // DailyM text logo
+  // DailyM Logo Text
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setTextColor(...COLORS.textWhite);
   doc.text('Daily', iconX + 11, iconY + 7);
   const dailyW = doc.getTextWidth('Daily');
   doc.setTextColor(...COLORS.primary);
   doc.text('M', iconX + 11 + dailyW, iconY + 7);
 
-  // Category Pill below logo
+  // Category Tag
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.5);
+  doc.setFontSize(7);
   doc.setTextColor(...COLORS.primary);
-  doc.text(tr(categoryBadge.toUpperCase()), iconX + 11, iconY + 11.5);
+  doc.text(`·  ${tr(categoryName.toUpperCase())}`, iconX + 11 + dailyW + 6, iconY + 7);
 
-  // Center / Main Report Title
+  // Right-aligned Metadata (User, Date)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.textMuted);
+  doc.text(tr(`Kullanici: ${userName}`), marginX + contentW, iconY + 4, { align: 'right' });
+  doc.text(tr(`Tarih: ${dateRangeStr}`), marginX + contentW, iconY + 8.5, { align: 'right' });
+
+  // Main Report Title
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(14);
   doc.setTextColor(...COLORS.textWhite);
-  doc.text(tr(title), marginX + 48, startY + 10);
+  doc.text(tr(reportTitle), marginX, startY + 18);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...COLORS.textMuted);
-  doc.text(tr(`Kullanici: ${userName}`), marginX + 48, startY + 15);
+  // Clean separator rule with lime green accent segment
+  const ruleY = startY + 22;
+  doc.setDrawColor(...COLORS.border);
+  doc.setLineWidth(0.3);
+  doc.line(marginX, ruleY, marginX + contentW, ruleY);
 
-  // Right Metadata (Date & Generation time)
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...COLORS.textMuted);
-  doc.text(tr(`Tarih: ${dateRangeStr}`), marginX + headerW - 5, startY + 10, { align: 'right' });
-  doc.setFontSize(6.5);
-  doc.setTextColor(...COLORS.textSubtle);
-  doc.text(tr(`DailyM PDF Rapor Servisi`), marginX + headerW - 5, startY + 15, { align: 'right' });
+  doc.setDrawColor(...COLORS.primary);
+  doc.setLineWidth(0.8);
+  doc.line(marginX, ruleY, marginX + 24, ruleY);
 
-  return startY + headerH + 6;
+  return ruleY + 6;
 }
 
 /**
- * Draws a sleek site-matching metric card
+ * Typographic section heading (Clean icon dot + Title + count badge)
  */
-function drawMetricCard(
+function drawSectionHeading(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  title: string,
+  badgeText?: string
+): number {
+  // Lime accent dot
+  doc.setFillColor(...COLORS.primary);
+  doc.circle(x + 1.5, y - 1.2, 1.2, 'F');
+
+  // Title text
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...COLORS.textWhite);
+  doc.text(tr(title.toUpperCase()), x + 5, y);
+
+  // Optional count/badge text
+  if (badgeText) {
+    const titleW = doc.getTextWidth(tr(title.toUpperCase()));
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(`(${tr(badgeText)})`, x + 5 + titleW + 3, y);
+  }
+
+  return y + 4;
+}
+
+/**
+ * Clean Unified Summary Strip (Divided columns inside a single elegant container)
+ */
+function drawSummaryStrip(
   doc: jsPDF,
   x: number,
   y: number,
   w: number,
   h: number,
-  label: string,
-  value: string,
-  subtext: string,
-  labelColor = COLORS.textMuted,
-  valueColor = COLORS.textWhite,
-  subtextColor = COLORS.textSubtle
-) {
-  // Card base
-  doc.setFillColor(...COLORS.cardBg);
+  columns: Array<{
+    label: string;
+    value: string;
+    subtext?: string;
+    labelColor?: [number, number, number];
+    valueColor?: [number, number, number];
+    subtextColor?: [number, number, number];
+  }>
+): number {
+  // Single subtle background banner
+  doc.setFillColor(...COLORS.surface);
   doc.setDrawColor(...COLORS.border);
   doc.roundedRect(x, y, w, h, 2, 2, 'FD');
 
-  // Label
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.5);
-  doc.setTextColor(...labelColor);
-  doc.text(tr(label.toUpperCase()), x + 3.5, y + 5);
+  const colW = w / columns.length;
 
-  // Value
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(...valueColor);
-  doc.text(tr(value), x + 3.5, y + 11.5);
+  columns.forEach((col, idx) => {
+    const colX = x + idx * colW;
+    const paddingX = 5;
+    const maxTextW = colW - paddingX * 2;
 
-  // Subtext
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.setTextColor(...subtextColor);
-  doc.text(tr(subtext), x + 3.5, y + 16.5);
-}
+    // Draw vertical column divider (except first column)
+    if (idx > 0) {
+      doc.setDrawColor(...COLORS.borderSubtle);
+      doc.setLineWidth(0.25);
+      doc.line(colX, y + 3, colX, y + h - 3);
+    }
 
-/**
- * Draws a section header with left accent bar
- */
-function drawSectionHeader(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  w: number,
-  title: string,
-  badgeText?: string
-) {
-  const h = 7;
-  doc.setFillColor(...COLORS.cardBg);
-  doc.setDrawColor(...COLORS.border);
-  doc.roundedRect(x, y, w, h, 1.5, 1.5, 'FD');
-
-  // Left vertical lime accent
-  doc.setFillColor(...COLORS.primary);
-  doc.roundedRect(x + 1.2, y + 1.2, 1.5, h - 2.4, 0.6, 0.6, 'F');
-
-  // Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.textWhite);
-  doc.text(tr(title), x + 5, y + 4.7);
-
-  if (badgeText) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr(badgeText), x + w - 4, y + 4.7, { align: 'right' });
-  }
-
-  return y + h + 3;
-}
-
-/**
- * Adds page footers and numbers across all pages of a document
- */
-function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
-  const pageCount = (doc as any).internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    // Footer separator line
-    doc.setDrawColor(...COLORS.border);
-    doc.setLineWidth(0.25);
-    doc.line(14, 285, 196, 285);
-
-    // Left hashtag branding
-    doc.setFontSize(7.5);
+    // Label
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...COLORS.primary);
-    doc.text('#dailym  #kisisel-yonetim', 14, 290);
+    doc.setFontSize(6.5);
+    doc.setTextColor(...(col.labelColor || COLORS.textMuted));
+    doc.text(tr(col.label.toUpperCase()), colX + paddingX, y + 6);
 
-    // Center page indicator
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr(`Sayfa ${i} / ${pageCount}`), 105, 290, { align: 'center' });
+    // Value
+    doc.setFont('helvetica', 'bold');
+    drawSafeText(
+      doc,
+      tr(col.value),
+      colX + paddingX,
+      y + 13,
+      maxTextW,
+      10.5,
+      'left'
+    );
 
-    // Right report title
-    doc.text(tr(reportTitle), 196, 290, { align: 'right' });
-  }
+    // Subtext
+    if (col.subtext) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(...(col.subtextColor || COLORS.textSubtle));
+      drawSafeText(
+        doc,
+        tr(col.subtext),
+        colX + paddingX,
+        y + 18,
+        maxTextW,
+        6.5,
+        'left'
+      );
+    }
+  });
+
+  return y + h + 8;
 }
 
-// Standard table styles matching DailyM design
+/**
+ * Standard table styling matching DailyM dark UI
+ */
 const TABLE_STYLES = {
   theme: 'plain' as const,
   styles: {
     fontSize: 7.5,
-    cellPadding: { top: 2, bottom: 2, left: 2.5, right: 2.5 },
+    cellPadding: { top: 2.2, bottom: 2.2, left: 3, right: 3 },
     font: 'helvetica',
     textColor: COLORS.textWhite,
-    fillColor: COLORS.cardBg,
-    lineColor: COLORS.border,
-    lineWidth: 0.2,
+    fillColor: COLORS.surface,
+    lineColor: COLORS.borderSubtle,
+    lineWidth: 0.15,
   },
   headStyles: {
     fillColor: [24, 24, 28] as [number, number, number],
@@ -237,16 +250,40 @@ const TABLE_STYLES = {
     fontStyle: 'bold' as const,
     fontSize: 7.5,
     lineColor: COLORS.primary,
-    lineWidth: { bottom: 0.5 },
+    lineWidth: { bottom: 0.6 },
   },
   alternateRowStyles: {
-    fillColor: [16, 16, 18] as [number, number, number],
+    fillColor: [13, 13, 15] as [number, number, number],
   },
 };
 
 /**
- * PDF 1: Daily Report (1 Page)
+ * Page footers with branding & pagination
  */
+function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...COLORS.border);
+    doc.setLineWidth(0.2);
+    doc.line(14, 286, 196, 286);
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.primary);
+    doc.text('#dailym  #kisisel-yonetim', 14, 291);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(tr(`Sayfa ${i} / ${pageCount}`), 105, 291, { align: 'center' });
+
+    doc.text(tr(reportTitle), 196, 291, { align: 'right' });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PDF 1: Daily Health Report (1 Page)
+// ─────────────────────────────────────────────────────────────────
 export function generateDailyPDF(userName: string, day: ExportDayData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   renderDayPage(doc, userName, day, 1, 1, 'GUNLUK BESLENME VE SAGLIK RAPORU');
@@ -254,16 +291,14 @@ export function generateDailyPDF(userName: string, day: ExportDayData) {
   doc.save(`Beslenme_Raporu_${day.date}.pdf`);
 }
 
-/**
- * PDF 2: Weekly Report (7 Pages - 1 Page Per Day)
- */
+// ─────────────────────────────────────────────────────────────────
+// PDF 2: Weekly Health Report (7 Pages)
+// ─────────────────────────────────────────────────────────────────
 export function generateWeeklyPDF(userName: string, startDateStr: string, endDateStr: string, days: ExportDayData[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const totalPages = days.length;
   days.forEach((day, index) => {
-    if (index > 0) {
-      doc.addPage();
-    }
+    if (index > 0) doc.addPage();
     const headerTitle = `HAFTALIK BESLENME RAPORU (${startDateStr} - ${endDateStr})`;
     renderDayPage(doc, userName, day, index + 1, totalPages, headerTitle);
   });
@@ -281,102 +316,72 @@ export function generateDateRangePDF(userName: string, startDateStr: string, end
   doc.save(`Beslenme_Raporu_${days[0]?.date || 'tarih_araligi'}_${days[days.length - 1]?.date || ''}.pdf`);
 }
 
-/**
- * PDF 3: Monthly Report (4 Pages - 1 Page Per Week Summary)
- */
+// ─────────────────────────────────────────────────────────────────
+// PDF 3: Monthly Health Summary
+// ─────────────────────────────────────────────────────────────────
 export function generateMonthlyPDF(userName: string, monthName: string, weeks: ExportWeekSummary[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const totalPages = weeks.length;
   weeks.forEach((week, index) => {
-    if (index > 0) {
-      doc.addPage();
-    }
+    if (index > 0) doc.addPage();
     renderWeekPage(doc, userName, monthName, week, index + 1, totalPages);
   });
   addDailyMPDFDecorations(doc, `DailyM Aylik Ozet (${monthName})`);
   doc.save(`Aylik_Beslenme_Ozeti_${tr(monthName).replace(/\s+/g, '_')}.pdf`);
 }
 
-/**
- * PDF 4: Finance Report
- */
+// ─────────────────────────────────────────────────────────────────
+// PDF 4: Finance Report
+// ─────────────────────────────────────────────────────────────────
 export function generateFinancePDF(userName: string, data: FinanceExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   paintDailyMBackground(doc);
   const marginX = 14;
+  const contentW = 182;
 
-  let currentY = drawDailyMBrandHeader(
+  let currentY = drawDailyMHeader(
     doc,
-    'FINANSAL DURUM VE ISLEM RAPORU',
-    'DAILYM FINANCE',
+    'Finansal Durum ve Islem Raporu',
+    'Cuzdan & Finans',
     userName,
     `${data.startDate} - ${data.endDate}`
   );
 
-  // 4 Metric Summary Cards
-  const cardW = (182 - 9) / 4;
+  // Single Elegant Summary Strip
   const net = data.income - data.expense;
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
+    {
+      label: 'Toplam Gelir',
+      value: `+${data.income.toLocaleString('tr-TR')} TL`,
+      subtext: 'Donem Gelirleri',
+      labelColor: COLORS.gain,
+      valueColor: COLORS.gain,
+    },
+    {
+      label: 'Toplam Gider',
+      value: `-${data.expense.toLocaleString('tr-TR')} TL`,
+      subtext: 'Donem Harcamalari',
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Net Durum',
+      value: `${net >= 0 ? '+' : ''}${net.toLocaleString('tr-TR')} TL`,
+      subtext: net >= 0 ? 'Net Arti Bakiye' : 'Net Butce Acigi',
+      labelColor: net >= 0 ? COLORS.primary : COLORS.loss,
+      valueColor: net >= 0 ? COLORS.primary : COLORS.loss,
+    },
+    {
+      label: 'Islem Sayisi',
+      value: `${data.transactions.length} Islem`,
+      subtext: 'Filtrelenmis Kayit',
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+  ]);
 
-  drawMetricCard(
-    doc,
-    marginX,
-    currentY,
-    cardW,
-    19,
-    'TOPLAM GELIR',
-    `+${data.income.toLocaleString('tr-TR')} TL`,
-    'Donem Gelirleri',
-    COLORS.gain,
-    COLORS.gain
-  );
-  drawMetricCard(
-    doc,
-    marginX + cardW + 3,
-    currentY,
-    cardW,
-    19,
-    'TOPLAM GIDER',
-    `-${data.expense.toLocaleString('tr-TR')} TL`,
-    'Donem Harcamalari',
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 2,
-    currentY,
-    cardW,
-    19,
-    'NET DURUM',
-    `${net >= 0 ? '+' : ''}${net.toLocaleString('tr-TR')} TL`,
-    net >= 0 ? 'Net Arti Bakiye' : 'Net Butce Acigi',
-    net >= 0 ? COLORS.primary : COLORS.loss,
-    net >= 0 ? COLORS.primary : COLORS.loss
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 3,
-    currentY,
-    cardW,
-    19,
-    'ISLEM SAYISI',
-    `${data.transactions.length}`,
-    'Filtrelenmis Hareket',
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
-
-  currentY += 25;
-
-  // Transactions Table Section
-  currentY = drawSectionHeader(
-    doc,
-    marginX,
-    currentY,
-    182,
-    'ISLEM GECMISI',
-    `${data.transactions.length} Kayit`
-  );
+  // Section Heading
+  currentY = drawSectionHeading(doc, marginX, currentY, 'Islem Gecmisi', `${data.transactions.length} Kayit`);
 
   // Sort transactions newest to oldest
   const sortedTransactions = [...data.transactions].sort((a, b) => {
@@ -423,84 +428,57 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
   doc.save(`Finans_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
-/**
- * PDF 5: Stocks & Portfolio Report
- */
+// ─────────────────────────────────────────────────────────────────
+// PDF 5: Stocks & Portfolio Report
+// ─────────────────────────────────────────────────────────────────
 export function generateStocksPDF(userName: string, data: StocksExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   paintDailyMBackground(doc);
   const marginX = 14;
+  const contentW = 182;
 
-  let currentY = drawDailyMBrandHeader(
+  let currentY = drawDailyMHeader(
     doc,
-    'BORSA VE PORTFOY RAPORU',
-    'DAILYM STOCKS',
+    'Borsa ve Portfoy Raporu',
+    'Borsa & Yatirim',
     userName,
     `${data.startDate} - ${data.endDate}`
   );
 
-  // 4 Top Metric Cards
-  const cardW = (182 - 9) / 4;
-  drawMetricCard(
-    doc,
-    marginX,
-    currentY,
-    cardW,
-    19,
-    'PORTFOY DEGERI',
-    `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-    `Maliyet: ${data.totals.totalInvestedCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-    COLORS.primary,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + cardW + 3,
-    currentY,
-    cardW,
-    19,
-    'POTANSIYEL K/Z',
-    `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-    `Getiri: %${data.totals.totalUnrealizedPnlPercent.toFixed(1)}`,
-    data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
-    data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 2,
-    currentY,
-    cardW,
-    19,
-    'GERCEKLESEN K/Z',
-    `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-    `Oran: %${data.totals.totalRealizedPnlPercent.toFixed(1)}`,
-    data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
-    data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 3,
-    currentY,
-    cardW,
-    19,
-    'KAZANMA ORANI',
-    `%${data.totals.winRate.toFixed(1)}`,
-    `${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar`,
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
+  // Single Elegant Summary Strip
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
+    {
+      label: 'Portfoy Degeri',
+      value: `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      subtext: `Maliyet: ${data.totals.totalInvestedCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      labelColor: COLORS.primary,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Potansiyel K/Z',
+      value: `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      subtext: `Getiri: %${data.totals.totalUnrealizedPnlPercent.toFixed(1)}`,
+      labelColor: data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+      valueColor: data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+    },
+    {
+      label: 'Gerceklesen K/Z',
+      value: `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      subtext: `Oran: %${data.totals.totalRealizedPnlPercent.toFixed(1)}`,
+      labelColor: data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+      valueColor: data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+    },
+    {
+      label: 'Kazanma Orani',
+      value: `%${data.totals.winRate.toFixed(1)}`,
+      subtext: `${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar`,
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+  ]);
 
-  currentY += 24;
-
-  // Table 1: Open Positions
-  currentY = drawSectionHeader(
-    doc,
-    marginX,
-    currentY,
-    182,
-    'ACIK PORTFOY POZISYONLARI',
-    `${data.positions.length} Varlik`
-  );
+  // ── Table 1: Open Positions ──
+  currentY = drawSectionHeading(doc, marginX, currentY, 'Acik Portfoy Pozisyonlari', `${data.positions.length} Varlik`);
 
   if (data.positions.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
@@ -551,22 +529,15 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
     currentY = 14;
   }
 
-  // Table 2: Realized Trades (Closed Profits/Losses)
-  // Ensure STRICT DESCENDING ORDER (newest sale first, down to oldest sale)
+  // ── Table 2: Realized Trades (Closed Profits/Losses) ──
+  // STRICT DESCENDING ORDER (newest sale first, down to oldest sale)
   const sortedRealizedTrades = [...data.realizedTrades].sort((a, b) => {
     const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
     if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
     return 0;
   });
 
-  currentY = drawSectionHeader(
-    doc,
-    marginX,
-    currentY,
-    182,
-    'GERCEKLESEN KAR / ZARAR ISLEMLERI',
-    `${sortedRealizedTrades.length} Satis Kaydi`
-  );
+  currentY = drawSectionHeading(doc, marginX, currentY, 'Gerceklesen Kar / Zarar Islemleri', `${sortedRealizedTrades.length} Satis Kaydi`);
 
   if (sortedRealizedTrades.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
@@ -617,22 +588,15 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
     currentY = 14;
   }
 
-  // Table 3: Order Book (All Trades)
-  // Ensure STRICT DESCENDING ORDER (newest trade first)
+  // ── Table 3: Order Book (All Trades) ──
+  // STRICT DESCENDING ORDER (newest trade first)
   const sortedAllTrades = [...data.allTrades].sort((a, b) => {
     const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
     if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
     return 0;
   });
 
-  currentY = drawSectionHeader(
-    doc,
-    marginX,
-    currentY,
-    182,
-    'EMIR DEFTERI VE ISLEM GECMISI',
-    `${sortedAllTrades.length} Islem`
-  );
+  currentY = drawSectionHeading(doc, marginX, currentY, 'Emir Defteri ve Islem Gecmisi', `${sortedAllTrades.length} Islem`);
 
   if (sortedAllTrades.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
@@ -679,9 +643,9 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
   doc.save(`Borsa_Portfoy_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
-/**
- * Render a Single Day Page (Used for Daily and Weekly PDF)
- */
+// ─────────────────────────────────────────────────────────────────
+// Page Renderer: Day Page (Daily & Weekly Health PDF)
+// ─────────────────────────────────────────────────────────────────
 function renderDayPage(
   doc: jsPDF,
   userName: string,
@@ -692,118 +656,57 @@ function renderDayPage(
 ) {
   paintDailyMBackground(doc);
   const marginX = 14;
+  const contentW = 182;
 
-  let currentY = drawDailyMBrandHeader(
+  let currentY = drawDailyMHeader(
     doc,
     titleHeader,
-    'DAILYM HEALTH',
+    'Beslenme & Saglik',
     userName,
     day.dateFormatted
   );
 
-  // 3 Hero Metric Cards
-  const cardW = (182 - 6) / 3;
+  // Calorie & Balance Summary Strip
   const netCals = day.totals.calories_consumed - day.totals.total_burned;
-
-  drawMetricCard(
-    doc,
-    marginX,
-    currentY,
-    cardW,
-    19,
-    'ALINAN KALORI',
-    `${day.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
-    'Gunluk Alinan',
-    COLORS.primary,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + cardW + 3,
-    currentY,
-    cardW,
-    19,
-    'YAKILAN KALORI',
-    `${day.totals.total_burned.toLocaleString('tr-TR')} kcal`,
-    `BMR: ${day.totals.calories_burned_bmr || 0} kcal`,
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 2,
-    currentY,
-    cardW,
-    19,
-    'NET DENGE',
-    `${netCals > 0 ? '+' : ''}${netCals.toLocaleString('tr-TR')} kcal`,
-    netCals > 0 ? '▲ Kalori Fazlasi' : '▼ Kalori Acigi',
-    netCals > 0 ? COLORS.primary : COLORS.blue,
-    netCals > 0 ? COLORS.primary : COLORS.blue
-  );
-
-  currentY += 23;
-
-  // Macro & Health Strip (Matching the site's exact horizontal strip)
-  const macroW = (182 - 9) / 4;
-  drawMetricCard(
-    doc,
-    marginX,
-    currentY,
-    macroW,
-    15,
-    'PROTEIN',
-    `${day.totals.protein_g}g`,
-    'Gunluk Makro',
-    COLORS.textWhite,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + macroW + 3,
-    currentY,
-    macroW,
-    15,
-    'KARBONHIDRAT',
-    `${day.totals.carbs_g}g`,
-    'Gunluk Makro',
-    COLORS.primary,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + (macroW + 3) * 2,
-    currentY,
-    macroW,
-    15,
-    'YAG',
-    `${day.totals.fat_g}g`,
-    'Gunluk Makro',
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
   const sleepHrs = day.sleep.duration_minutes ? (day.sleep.duration_minutes / 60).toFixed(1) : '0';
-  drawMetricCard(
-    doc,
-    marginX + (macroW + 3) * 3,
-    currentY,
-    macroW,
-    15,
-    'UYKU',
-    `${sleepHrs} saat`,
-    'Dinlenme',
-    COLORS.blue,
-    COLORS.blue
-  );
 
-  currentY += 19;
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
+    {
+      label: 'Alinan Kalori',
+      value: `${day.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
+      subtext: `Protein: ${day.totals.protein_g}g`,
+      labelColor: COLORS.primary,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Yakilan Kalori',
+      value: `${day.totals.total_burned.toLocaleString('tr-TR')} kcal`,
+      subtext: `BMR: ${day.totals.calories_burned_bmr || 0} kcal`,
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Net Denge',
+      value: `${netCals > 0 ? '+' : ''}${netCals.toLocaleString('tr-TR')} kcal`,
+      subtext: netCals > 0 ? '▲ Kalori Fazlasi' : '▼ Kalori Acigi',
+      labelColor: netCals > 0 ? COLORS.primary : COLORS.blue,
+      valueColor: netCals > 0 ? COLORS.primary : COLORS.blue,
+    },
+    {
+      label: 'Makro & Uyku',
+      value: `K:${day.totals.carbs_g}g | Y:${day.totals.fat_g}g`,
+      subtext: `Uyku: ${sleepHrs} saat`,
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+  ]);
 
   // Meals Section
   const mealSections = [
-    { title: 'Kahvalti', items: day.meals.breakfast, color: COLORS.breakfast },
-    { title: 'Ogle Yemegi', items: day.meals.lunch, color: COLORS.lunch },
-    { title: 'Aksam Yemegi', items: day.meals.dinner, color: COLORS.dinner },
-    { title: 'Ara Ogunler / Atistirmalik', items: day.meals.snack, color: COLORS.snack },
+    { title: 'Kahvalti', items: day.meals.breakfast },
+    { title: 'Ogle Yemegi', items: day.meals.lunch },
+    { title: 'Aksam Yemegi', items: day.meals.dinner },
+    { title: 'Ara Ogunler / Atistirmalik', items: day.meals.snack },
   ];
 
   let hasFood = false;
@@ -811,7 +714,7 @@ function renderDayPage(
   mealSections.forEach(section => {
     if (section.items && section.items.length > 0) {
       hasFood = true;
-      currentY = drawSectionHeader(doc, marginX, currentY, 182, section.title);
+      currentY = drawSectionHeading(doc, marginX, currentY, section.title, `${section.items.length} Kalem`);
 
       const tableData = section.items.map(f => [
         tr(f.name),
@@ -838,7 +741,7 @@ function renderDayPage(
         }
       });
 
-      currentY = (doc as any).lastAutoTable.finalY + 4;
+      currentY = (doc as any).lastAutoTable.finalY + 5;
     }
   });
 
@@ -850,7 +753,7 @@ function renderDayPage(
   }
 
   // Section: Burned Calories & Activities
-  currentY = drawSectionHeader(doc, marginX, currentY, 182, 'Yakilan Kalori & Aktivite Detaylari (BMR / Uyku / Egzersiz)');
+  currentY = drawSectionHeading(doc, marginX, currentY, 'Yakilan Kalori & Aktivite Detaylari');
 
   const burnedRows = [];
   burnedRows.push([
@@ -887,9 +790,9 @@ function renderDayPage(
   });
 }
 
-/**
- * Render a Single Week Summary Page (Used for Monthly PDF - 4 Weeks = 4 Pages)
- */
+// ─────────────────────────────────────────────────────────────────
+// Page Renderer: Week Page (Monthly Health PDF)
+// ─────────────────────────────────────────────────────────────────
 function renderWeekPage(
   doc: jsPDF,
   userName: string,
@@ -900,76 +803,50 @@ function renderWeekPage(
 ) {
   paintDailyMBackground(doc);
   const marginX = 14;
+  const contentW = 182;
 
-  let currentY = drawDailyMBrandHeader(
+  let currentY = drawDailyMHeader(
     doc,
-    `AYLIK BESLENME OZETI - ${week.weekName.toUpperCase()} (${monthName.toUpperCase()})`,
-    'DAILYM HEALTH',
+    `Aylik Ozet - ${week.weekName} (${monthName})`,
+    'Beslenme & Saglik',
     userName,
     `${week.startDate} - ${week.endDate}`
   );
 
-  // 4 Summary Metric Cards
-  const cardW = (182 - 9) / 4;
-  drawMetricCard(
-    doc,
-    marginX,
-    currentY,
-    cardW,
-    19,
-    'HAFTALIK ALINAN',
-    `${week.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
-    `Ort: ${week.dailyAverages.calories_consumed} kcal/gun`,
-    COLORS.primary,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + cardW + 3,
-    currentY,
-    cardW,
-    19,
-    'HAFTALIK YAKILAN',
-    `${week.totals.calories_burned.toLocaleString('tr-TR')} kcal`,
-    `Ort: ${week.dailyAverages.calories_burned} kcal/gun`,
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 2,
-    currentY,
-    cardW,
-    19,
-    'TOPLAM PROTEIN',
-    `${week.totals.protein_g}g`,
-    `Ort: ${week.dailyAverages.protein_g}g/gun`,
-    COLORS.textWhite,
-    COLORS.textWhite
-  );
-  drawMetricCard(
-    doc,
-    marginX + (cardW + 3) * 3,
-    currentY,
-    cardW,
-    19,
-    'TOPLAM KARB & YAG',
-    `K:${week.totals.carbs_g}g`,
-    `Y:${week.totals.fat_g}g`,
-    COLORS.textMuted,
-    COLORS.textWhite
-  );
+  // Single Elegant Summary Strip
+  currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
+    {
+      label: 'Haftalik Alinan',
+      value: `${week.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
+      subtext: `Ort: ${week.dailyAverages.calories_consumed} kcal/gun`,
+      labelColor: COLORS.primary,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Haftalik Yakilan',
+      value: `${week.totals.calories_burned.toLocaleString('tr-TR')} kcal`,
+      subtext: `Ort: ${week.dailyAverages.calories_burned} kcal/gun`,
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Toplam Protein',
+      value: `${week.totals.protein_g}g`,
+      subtext: `Ort: ${week.dailyAverages.protein_g}g/gun`,
+      labelColor: COLORS.textWhite,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Toplam Karb & Yag',
+      value: `K:${week.totals.carbs_g}g`,
+      subtext: `Y:${week.totals.fat_g}g`,
+      labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+  ]);
 
-  currentY += 25;
-
-  // Table: Day by Day Breakdown for this week
-  currentY = drawSectionHeader(
-    doc,
-    marginX,
-    currentY,
-    182,
-    `${week.weekName} Gunluk Kalori ve Makro Tablosu`
-  );
+  // Day by day table
+  currentY = drawSectionHeading(doc, marginX, currentY, `${week.weekName} Gunluk Kalori ve Makro Tablosu`);
 
   const tableBody = week.days.map(d => [
     tr(d.dayName),
