@@ -3,7 +3,7 @@ export type PortfolioTrend = "gain" | "loss" | "neutral";
 type RealizedTradeFilter = 'all' | 'stock' | 'fund';
 type RealizedPeriodFilter = 'all' | 'week' | 'month';
 
-export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; rawDate: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()) {
+export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; rawDate: string; created_at?: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()) {
   const start = new Date(now);
   if (period === 'week') {
     const dayOfWeek = start.getDay() || 7;
@@ -11,7 +11,15 @@ export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; ra
     start.setHours(0, 0, 0, 0);
   }
   if (period === 'month') start.setMonth(start.getMonth() - 1);
-  return trades.filter((trade) => (assetFilter === 'all' || trade.assetType === assetFilter) && (period === 'all' || new Date(trade.rawDate) >= start));
+  return trades
+    .filter((trade) => (assetFilter === 'all' || trade.assetType === assetFilter) && (period === 'all' || new Date(trade.rawDate) >= start))
+    .sort((a, b) => {
+      const timeDiff = new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime();
+      if (timeDiff !== 0) return timeDiff;
+      const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return createB - createA;
+    });
 }
 
 export function summarizeRealizedTrades(trades: Array<{ realized_pnl?: number }>) {

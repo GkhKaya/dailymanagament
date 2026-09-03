@@ -270,10 +270,16 @@ export function calculateStockPortfolio(
     }
   }
 
-  // Realized sells list sorted by date DESC
+  // Realized sells list sorted by date DESC, then created_at DESC (newest first)
   const realizedTrades = computedTrades
     .filter((t) => t.type === 'sell')
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort((a, b) => {
+      const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (timeDiff !== 0) return timeDiff;
+      const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return createB - createA;
+    });
 
   // Aggregate totals
   const totalInvestedCost = openPositions.reduce((sum, p) => sum + p.total_cost, 0);

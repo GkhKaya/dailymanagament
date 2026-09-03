@@ -269,8 +269,19 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
     };
 
     const filterByAsset = (assetType: string | undefined) => assetFilter === 'all' || (assetType || 'stock') === assetFilter;
-    const filteredRealized = portfolio.realizedTrades.filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType));
-    const filteredAllTrades = portfolio.allTrades.filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType));
+    const newestFirst = (a: { rawDate?: string; date: string; created_at?: string }, b: { rawDate?: string; date: string; created_at?: string }) => {
+      const timeDiff = new Date(b.rawDate || b.date).getTime() - new Date(a.rawDate || a.date).getTime();
+      if (timeDiff !== 0) return timeDiff;
+      const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return createB - createA;
+    };
+    const filteredRealized = portfolio.realizedTrades
+      .filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType))
+      .sort(newestFirst);
+    const filteredAllTrades = portfolio.allTrades
+      .filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType))
+      .sort(newestFirst);
     const filteredPositions = portfolio.positions.filter(p => filterByAsset(p.assetType));
 
     const positions: StocksExportPosition[] = filteredPositions.map(p => ({

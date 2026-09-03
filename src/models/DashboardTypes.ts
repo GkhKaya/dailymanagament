@@ -134,6 +134,7 @@ export interface StockTradeDTO {
   realized_pnl?: number;
   realized_pnl_percent?: number;
   holding_days?: number;
+  created_at?: string;
 }
 
 export interface StockPositionDTO {

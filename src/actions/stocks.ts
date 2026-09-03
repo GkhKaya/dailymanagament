@@ -130,32 +130,21 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     last_trade_date: p.last_trade_date,
   }));
 
-  const realizedTradesDTO: StockTradeDTO[] = calc.realizedTrades.map((t) => ({
-    id: t._id || t.id,
-    symbol: t.symbol,
-    name: t.name,
-    assetType: t.assetType || 'stock',
-    type: t.type,
-    lots: t.lots,
-    price: t.price,
-    total_amount: t.total_amount || 0,
-    date: new Date(t.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    rawDate: new Date(t.date).toISOString(),
-    notes: t.notes,
-    cost_basis: t.cost_basis,
-    total_cost: t.total_cost,
-    realized_pnl: t.realized_pnl,
-    realized_pnl_percent: t.realized_pnl_percent,
-    holding_days: t.holding_days,
-  }));
+  const sortByNewest = (a: { date: Date | string; created_at?: Date | string }, b: { date: Date | string; created_at?: Date | string }) => {
+    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return createB - createA;
+  };
 
-  const allTradesDTO: StockTradeDTO[] = calc.computedTrades
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const realizedTradesDTO: StockTradeDTO[] = calc.realizedTrades
+    .sort(sortByNewest)
     .map((t) => ({
       id: t._id || t.id,
       symbol: t.symbol,
-    name: t.name,
-    assetType: t.assetType || 'stock',
+      name: t.name,
+      assetType: t.assetType || 'stock',
       type: t.type,
       lots: t.lots,
       price: t.price,
@@ -168,6 +157,29 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       realized_pnl: t.realized_pnl,
       realized_pnl_percent: t.realized_pnl_percent,
       holding_days: t.holding_days,
+      created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
+    }));
+
+  const allTradesDTO: StockTradeDTO[] = calc.computedTrades
+    .sort(sortByNewest)
+    .map((t) => ({
+      id: t._id || t.id,
+      symbol: t.symbol,
+      name: t.name,
+      assetType: t.assetType || 'stock',
+      type: t.type,
+      lots: t.lots,
+      price: t.price,
+      total_amount: t.total_amount || 0,
+      date: new Date(t.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      rawDate: new Date(t.date).toISOString(),
+      notes: t.notes,
+      cost_basis: t.cost_basis,
+      total_cost: t.total_cost,
+      realized_pnl: t.realized_pnl,
+      realized_pnl_percent: t.realized_pnl_percent,
+      holding_days: t.holding_days,
+      created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
     }));
 
   // Build known stocks dictionary: User's historical symbols + POPULAR_BIST_STOCKS

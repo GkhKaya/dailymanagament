@@ -17,20 +17,231 @@ function tr(text: string | number | undefined | null): string {
   return str.replace(/[çÇğĞıİöÖşŞüÜ]/g, match => map[match] || match);
 }
 
-// Colors palette for PDF
+// Colors palette matching the DailyM website theme tokens
 const COLORS = {
-  primary: [16, 185, 129] as [number, number, number], // Emerald green #10B981
-  darkBg: [24, 24, 38] as [number, number, number],
-  headerBg: [30, 41, 59] as [number, number, number], // Slate 800
-  headerText: [255, 255, 255] as [number, number, number],
-  textDark: [15, 23, 42] as [number, number, number], // Slate 900
-  textMuted: [100, 116, 139] as [number, number, number], // Slate 500
-  lightBg: [248, 250, 252] as [number, number, number], // Slate 50
-  border: [226, 232, 240] as [number, number, number], // Slate 200
-  breakfast: [59, 130, 246] as [number, number, number], // Blue
-  lunch: [245, 158, 11] as [number, number, number], // Amber
-  dinner: [16, 185, 129] as [number, number, number], // Emerald
-  snack: [168, 85, 247] as [number, number, number], // Purple
+  primary: [142, 193, 59] as [number, number, number],       // Lime Green #8ec13b
+  primaryDark: [121, 170, 50] as [number, number, number],
+  darkBg: [9, 9, 11] as [number, number, number],            // Deep Black #09090b
+  cardBg: [20, 20, 22] as [number, number, number],          // Card Surface #141414
+  cardBgAlt: [28, 28, 30] as [number, number, number],       // Alternate row #1c1c1e
+  border: [39, 39, 42] as [number, number, number],          // Subtle border #27272a
+  borderLight: [63, 63, 70] as [number, number, number],     // Zinc-700
+  textWhite: [255, 255, 255] as [number, number, number],    // White
+  textMuted: [161, 161, 170] as [number, number, number],    // Zinc-400
+  textSubtle: [113, 113, 122] as [number, number, number],   // Zinc-500
+  gain: [52, 211, 153] as [number, number, number],          // Emerald #34d399
+  loss: [251, 113, 133] as [number, number, number],         // Rose #fb7185
+  blue: [129, 140, 248] as [number, number, number],         // Indigo/Blue #818cf8
+  breakfast: [59, 130, 246] as [number, number, number],     // Blue
+  lunch: [245, 158, 11] as [number, number, number],         // Amber
+  dinner: [16, 185, 129] as [number, number, number],        // Emerald
+  snack: [168, 85, 247] as [number, number, number],         // Purple
+};
+
+function paintDailyMBackground(doc: jsPDF) {
+  doc.setFillColor(...COLORS.darkBg);
+  doc.rect(0, 0, 210, 297, 'F');
+}
+
+/**
+ * Draws the signature DailyM Brand Header Banner on any page
+ */
+function drawDailyMBrandHeader(
+  doc: jsPDF,
+  title: string,
+  categoryBadge: string,
+  userName: string,
+  dateRangeStr: string,
+  startY = 12
+) {
+  const marginX = 14;
+  const headerW = 182;
+  const headerH = 22;
+
+  // Background card
+  doc.setFillColor(...COLORS.cardBg);
+  doc.setDrawColor(...COLORS.border);
+  doc.roundedRect(marginX, startY, headerW, headerH, 2.5, 2.5, 'FD');
+
+  // Bottom lime accent line
+  doc.setFillColor(...COLORS.primary);
+  doc.rect(marginX, startY + headerH - 1, headerW, 1, 'F');
+
+  // Equalizer waveform icon (4 vertical bars in lime green)
+  const iconX = marginX + 5;
+  const iconY = startY + 5.5;
+  doc.setFillColor(...COLORS.primary);
+  doc.roundedRect(iconX, iconY + 2.5, 1.2, 5, 0.6, 0.6, 'F');
+  doc.roundedRect(iconX + 2.4, iconY, 1.2, 10, 0.6, 0.6, 'F');
+  doc.roundedRect(iconX + 4.8, iconY + 1.5, 1.2, 7, 0.6, 0.6, 'F');
+  doc.roundedRect(iconX + 7.2, iconY + 3.5, 1.2, 3, 0.6, 0.6, 'F');
+
+  // DailyM text logo
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...COLORS.textWhite);
+  doc.text('Daily', iconX + 11, iconY + 7);
+  const dailyW = doc.getTextWidth('Daily');
+  doc.setTextColor(...COLORS.primary);
+  doc.text('M', iconX + 11 + dailyW, iconY + 7);
+
+  // Category Pill below logo
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COLORS.primary);
+  doc.text(tr(categoryBadge.toUpperCase()), iconX + 11, iconY + 11.5);
+
+  // Center / Main Report Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...COLORS.textWhite);
+  doc.text(tr(title), marginX + 48, startY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COLORS.textMuted);
+  doc.text(tr(`Kullanici: ${userName}`), marginX + 48, startY + 15);
+
+  // Right Metadata (Date & Generation time)
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COLORS.textMuted);
+  doc.text(tr(`Tarih: ${dateRangeStr}`), marginX + headerW - 5, startY + 10, { align: 'right' });
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COLORS.textSubtle);
+  doc.text(tr(`DailyM PDF Rapor Servisi`), marginX + headerW - 5, startY + 15, { align: 'right' });
+
+  return startY + headerH + 6;
+}
+
+/**
+ * Draws a sleek site-matching metric card
+ */
+function drawMetricCard(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  label: string,
+  value: string,
+  subtext: string,
+  labelColor = COLORS.textMuted,
+  valueColor = COLORS.textWhite,
+  subtextColor = COLORS.textSubtle
+) {
+  // Card base
+  doc.setFillColor(...COLORS.cardBg);
+  doc.setDrawColor(...COLORS.border);
+  doc.roundedRect(x, y, w, h, 2, 2, 'FD');
+
+  // Label
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...labelColor);
+  doc.text(tr(label.toUpperCase()), x + 3.5, y + 5);
+
+  // Value
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...valueColor);
+  doc.text(tr(value), x + 3.5, y + 11.5);
+
+  // Subtext
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...subtextColor);
+  doc.text(tr(subtext), x + 3.5, y + 16.5);
+}
+
+/**
+ * Draws a section header with left accent bar
+ */
+function drawSectionHeader(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  title: string,
+  badgeText?: string
+) {
+  const h = 7;
+  doc.setFillColor(...COLORS.cardBg);
+  doc.setDrawColor(...COLORS.border);
+  doc.roundedRect(x, y, w, h, 1.5, 1.5, 'FD');
+
+  // Left vertical lime accent
+  doc.setFillColor(...COLORS.primary);
+  doc.roundedRect(x + 1.2, y + 1.2, 1.5, h - 2.4, 0.6, 0.6, 'F');
+
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.textWhite);
+  doc.text(tr(title), x + 5, y + 4.7);
+
+  if (badgeText) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(tr(badgeText), x + w - 4, y + 4.7, { align: 'right' });
+  }
+
+  return y + h + 3;
+}
+
+/**
+ * Adds page footers and numbers across all pages of a document
+ */
+function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    // Footer separator line
+    doc.setDrawColor(...COLORS.border);
+    doc.setLineWidth(0.25);
+    doc.line(14, 285, 196, 285);
+
+    // Left hashtag branding
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.primary);
+    doc.text('#dailym  #kisisel-yonetim', 14, 290);
+
+    // Center page indicator
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COLORS.textMuted);
+    doc.text(tr(`Sayfa ${i} / ${pageCount}`), 105, 290, { align: 'center' });
+
+    // Right report title
+    doc.text(tr(reportTitle), 196, 290, { align: 'right' });
+  }
+}
+
+// Standard table styles matching DailyM design
+const TABLE_STYLES = {
+  theme: 'plain' as const,
+  styles: {
+    fontSize: 7.5,
+    cellPadding: { top: 2, bottom: 2, left: 2.5, right: 2.5 },
+    font: 'helvetica',
+    textColor: COLORS.textWhite,
+    fillColor: COLORS.cardBg,
+    lineColor: COLORS.border,
+    lineWidth: 0.2,
+  },
+  headStyles: {
+    fillColor: [24, 24, 28] as [number, number, number],
+    textColor: COLORS.textWhite,
+    fontStyle: 'bold' as const,
+    fontSize: 7.5,
+    lineColor: COLORS.primary,
+    lineWidth: { bottom: 0.5 },
+  },
+  alternateRowStyles: {
+    fillColor: [16, 16, 18] as [number, number, number],
+  },
 };
 
 /**
@@ -38,9 +249,8 @@ const COLORS = {
  */
 export function generateDailyPDF(userName: string, day: ExportDayData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
   renderDayPage(doc, userName, day, 1, 1, 'GUNLUK BESLENME VE SAGLIK RAPORU');
-
+  addDailyMPDFDecorations(doc, 'DailyM Gunluk Beslenme Raporu');
   doc.save(`Beslenme_Raporu_${day.date}.pdf`);
 }
 
@@ -49,16 +259,15 @@ export function generateDailyPDF(userName: string, day: ExportDayData) {
  */
 export function generateWeeklyPDF(userName: string, startDateStr: string, endDateStr: string, days: ExportDayData[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
   const totalPages = days.length;
   days.forEach((day, index) => {
     if (index > 0) {
       doc.addPage();
     }
-    const headerTitle = `HAFTALIK RAPOR (${startDateStr} - ${endDateStr})`;
+    const headerTitle = `HAFTALIK BESLENME RAPORU (${startDateStr} - ${endDateStr})`;
     renderDayPage(doc, userName, day, index + 1, totalPages, headerTitle);
   });
-
+  addDailyMPDFDecorations(doc, 'DailyM Haftalik Beslenme Raporu');
   doc.save(`Haftalik_Beslenme_Raporu_${days[0]?.date || 'hafta'}.pdf`);
 }
 
@@ -66,111 +275,242 @@ export function generateDateRangePDF(userName: string, startDateStr: string, end
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   days.forEach((day, index) => {
     if (index > 0) doc.addPage();
-    renderDayPage(doc, userName, day, index + 1, days.length, `TARIH ARALIGI RAPORU (${startDateStr} - ${endDateStr})`);
+    renderDayPage(doc, userName, day, index + 1, days.length, `BESLENME RAPORU (${startDateStr} - ${endDateStr})`);
   });
+  addDailyMPDFDecorations(doc, 'DailyM Tarih Araligi Raporu');
   doc.save(`Beslenme_Raporu_${days[0]?.date || 'tarih_araligi'}_${days[days.length - 1]?.date || ''}.pdf`);
 }
 
+/**
+ * PDF 3: Monthly Report (4 Pages - 1 Page Per Week Summary)
+ */
+export function generateMonthlyPDF(userName: string, monthName: string, weeks: ExportWeekSummary[]) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const totalPages = weeks.length;
+  weeks.forEach((week, index) => {
+    if (index > 0) {
+      doc.addPage();
+    }
+    renderWeekPage(doc, userName, monthName, week, index + 1, totalPages);
+  });
+  addDailyMPDFDecorations(doc, `DailyM Aylik Ozet (${monthName})`);
+  doc.save(`Aylik_Beslenme_Ozeti_${tr(monthName).replace(/\s+/g, '_')}.pdf`);
+}
+
+/**
+ * PDF 4: Finance Report
+ */
 export function generateFinancePDF(userName: string, data: FinanceExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  paintDailyMBackground(doc);
   const marginX = 14;
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, 14, 182, 22, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('FINANS RAPORU', marginX + 6, 23);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(tr(`Kullanici: ${userName}  |  Tarih Araligi: ${data.startDate} - ${data.endDate}`), marginX + 6, 30);
 
-  doc.setTextColor(...COLORS.textDark);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text(tr(`Toplam Gelir: ${data.income.toLocaleString('tr-TR')} TL`), marginX, 48);
-  doc.text(tr(`Toplam Gider: ${data.expense.toLocaleString('tr-TR')} TL`), marginX, 55);
-  doc.text(tr(`Net Durum: ${(data.income - data.expense).toLocaleString('tr-TR')} TL`), marginX, 62);
+  let currentY = drawDailyMBrandHeader(
+    doc,
+    'FINANSAL DURUM VE ISLEM RAPORU',
+    'DAILYM FINANCE',
+    userName,
+    `${data.startDate} - ${data.endDate}`
+  );
+
+  // 4 Metric Summary Cards
+  const cardW = (182 - 9) / 4;
+  const net = data.income - data.expense;
+
+  drawMetricCard(
+    doc,
+    marginX,
+    currentY,
+    cardW,
+    19,
+    'TOPLAM GELIR',
+    `+${data.income.toLocaleString('tr-TR')} TL`,
+    'Donem Gelirleri',
+    COLORS.gain,
+    COLORS.gain
+  );
+  drawMetricCard(
+    doc,
+    marginX + cardW + 3,
+    currentY,
+    cardW,
+    19,
+    'TOPLAM GIDER',
+    `-${data.expense.toLocaleString('tr-TR')} TL`,
+    'Donem Harcamalari',
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 2,
+    currentY,
+    cardW,
+    19,
+    'NET DURUM',
+    `${net >= 0 ? '+' : ''}${net.toLocaleString('tr-TR')} TL`,
+    net >= 0 ? 'Net Arti Bakiye' : 'Net Butce Acigi',
+    net >= 0 ? COLORS.primary : COLORS.loss,
+    net >= 0 ? COLORS.primary : COLORS.loss
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 3,
+    currentY,
+    cardW,
+    19,
+    'ISLEM SAYISI',
+    `${data.transactions.length}`,
+    'Filtrelenmis Hareket',
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
+
+  currentY += 25;
+
+  // Transactions Table Section
+  currentY = drawSectionHeader(
+    doc,
+    marginX,
+    currentY,
+    182,
+    'ISLEM GECMISI',
+    `${data.transactions.length} Kayit`
+  );
+
+  // Sort transactions newest to oldest
+  const sortedTransactions = [...data.transactions].sort((a, b) => {
+    const timeA = new Date(a.date).getTime();
+    const timeB = new Date(b.date).getTime();
+    if (isNaN(timeA) || isNaN(timeB)) return 0;
+    return timeB - timeA;
+  });
 
   autoTable(doc, {
-    startY: 70,
+    ...TABLE_STYLES,
+    startY: currentY,
     head: [[tr('Tarih'), tr('Aciklama'), tr('Hesap'), tr('Kategori'), tr('Tur'), tr('Tutar')]],
-    body: data.transactions.map(item => [
-      tr(item.date), tr(item.description), tr(item.accountName), tr(item.categoryName),
-      item.type === 'income' ? 'Gelir' : item.type === 'expense' ? 'Gider' : 'Kart odemesi',
+    body: sortedTransactions.map(item => [
+      tr(item.date),
+      tr(item.description),
+      tr(item.accountName),
+      tr(item.categoryName),
+      item.type === 'income' ? 'Gelir' : item.type === 'expense' ? 'Gider' : 'Transfer',
       `${item.type === 'income' ? '+' : item.type === 'expense' ? '-' : ''}${item.amount.toLocaleString('tr-TR')} TL`
     ]),
-    theme: 'striped',
-    margin: { left: marginX, right: marginX },
-    styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
-    headStyles: { fillColor: COLORS.headerBg, textColor: COLORS.headerText, fontStyle: 'bold' },
-    columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 42 }, 2: { cellWidth: 30 }, 3: { cellWidth: 30 }, 4: { cellWidth: 22 }, 5: { cellWidth: 28, halign: 'right' } }
+    margin: { left: marginX, right: marginX, bottom: 18 },
+    columnStyles: {
+      0: { cellWidth: 26 },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 32 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 20 },
+      5: { cellWidth: 26, halign: 'right', fontStyle: 'bold' }
+    },
+    didParseCell: (dataCell) => {
+      if (dataCell.section === 'body' && dataCell.column.index === 5) {
+        const text = String(dataCell.cell.raw || '');
+        if (text.startsWith('+')) {
+          dataCell.cell.styles.textColor = COLORS.gain;
+        } else if (text.startsWith('-')) {
+          dataCell.cell.styles.textColor = COLORS.textWhite;
+        }
+      }
+    }
   });
+
+  addDailyMPDFDecorations(doc, 'DailyM Finans Raporu');
   doc.save(`Finans_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
+/**
+ * PDF 5: Stocks & Portfolio Report
+ */
 export function generateStocksPDF(userName: string, data: StocksExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  paintDailyMBackground(doc);
   const marginX = 14;
-  let currentY = 14;
 
-  // Header Banner
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 22, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text(tr('BORSA VE PORTFOY RAPORU'), marginX + 6, currentY + 9);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(tr(`Kullanici: ${userName}  |  Tarih Araligi: ${data.startDate} - ${data.endDate}  |  Olusturuldu: ${data.generatedAt}`), marginX + 6, currentY + 16);
+  let currentY = drawDailyMBrandHeader(
+    doc,
+    'BORSA VE PORTFOY RAPORU',
+    'DAILYM STOCKS',
+    userName,
+    `${data.startDate} - ${data.endDate}`
+  );
 
-  currentY += 28;
+  // 4 Top Metric Cards
+  const cardW = (182 - 9) / 4;
+  drawMetricCard(
+    doc,
+    marginX,
+    currentY,
+    cardW,
+    19,
+    'PORTFOY DEGERI',
+    `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+    `Maliyet: ${data.totals.totalInvestedCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+    COLORS.primary,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + cardW + 3,
+    currentY,
+    cardW,
+    19,
+    'POTANSIYEL K/Z',
+    `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+    `Getiri: %${data.totals.totalUnrealizedPnlPercent.toFixed(1)}`,
+    data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+    data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 2,
+    currentY,
+    cardW,
+    19,
+    'GERCEKLESEN K/Z',
+    `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+    `Oran: %${data.totals.totalRealizedPnlPercent.toFixed(1)}`,
+    data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
+    data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 3,
+    currentY,
+    cardW,
+    19,
+    'KAZANMA ORANI',
+    `%${data.totals.winRate.toFixed(1)}`,
+    `${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar`,
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
 
-  // Summary Metrics Box
-  doc.setFillColor(...COLORS.lightBg);
-  doc.setDrawColor(...COLORS.border);
-  doc.rect(marginX, currentY, 182, 26, 'FD');
-
-  doc.setTextColor(...COLORS.textDark);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(tr('PORTFOY OZET GOSTERGELERI'), marginX + 4, currentY + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  const investedStr = `${data.totals.totalInvestedCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
-  const currValStr = `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
-  const unrealizedStr = `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (${data.totals.totalUnrealizedPnlPercent >= 0 ? '+' : ''}%${data.totals.totalUnrealizedPnlPercent.toFixed(1)})`;
-  const realizedStr = `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (${data.totals.totalRealizedPnlPercent >= 0 ? '+' : ''}%${data.totals.totalRealizedPnlPercent.toFixed(1)})`;
-  const winRateStr = `%${data.totals.winRate.toFixed(1)} (${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar)`;
-
-  doc.text(tr(`Toplam Maliyet: ${investedStr}`), marginX + 4, currentY + 12);
-  doc.text(tr(`Guncel Portfoy Degeri: ${currValStr}`), marginX + 4, currentY + 17);
-  doc.text(tr(`Potansiyel Kar/Zarar: ${unrealizedStr}`), marginX + 4, currentY + 22);
-
-  doc.text(tr(`Gerceklesen Net Kar/Zarar: ${realizedStr}`), marginX + 96, currentY + 12);
-  doc.text(tr(`Kazanma Orani: ${winRateStr}`), marginX + 96, currentY + 17);
-  doc.text(tr(`Toplam Hacim: Alis ${data.totals.totalBuyVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL | Satis ${data.totals.totalSellVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`), marginX + 96, currentY + 22);
-
-  currentY += 32;
+  currentY += 24;
 
   // Table 1: Open Positions
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`Aclik Portfoy Pozisyonlari (${data.positions.length} Varlik)`), marginX + 4, currentY + 4.2);
-  currentY += 7;
+  currentY = drawSectionHeader(
+    doc,
+    marginX,
+    currentY,
+    182,
+    'ACIK PORTFOY POZISYONLARI',
+    `${data.positions.length} Varlik`
+  );
 
   if (data.positions.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
-    doc.text(tr('Portfoyde acik hisse veya fon pozisyonu bulunmuyor.'), marginX + 4, currentY + 5);
+    doc.text(tr('Portfoyde acik hisse veya fon pozisyonu bulunmuyor.'), marginX + 4, currentY + 4);
     currentY += 10;
   } else {
     autoTable(doc, {
+      ...TABLE_STYLES,
       startY: currentY,
       head: [[tr('Sembol'), tr('Sirket / Tanim'), tr('Tur'), tr('Lot'), tr('Ort. Maliyet'), tr('Top. Maliyet'), tr('Guncel Fiyat'), tr('Potansiyel K/Z')]],
       body: data.positions.map(p => [
@@ -183,51 +523,64 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
         p.current_price ? `${p.current_price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL` : '-',
         p.unrealized_pnl !== undefined ? `${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(p.unrealized_pnl_percent || 0).toFixed(1)})` : '-'
       ]),
-      theme: 'striped',
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
-      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      margin: { left: marginX, right: marginX, bottom: 18 },
       columnStyles: {
-        0: { cellWidth: 18 },
+        0: { cellWidth: 18, fontStyle: 'bold' },
         1: { cellWidth: 38 },
         2: { cellWidth: 14 },
         3: { cellWidth: 16, halign: 'right' },
         4: { cellWidth: 24, halign: 'right' },
         5: { cellWidth: 24, halign: 'right' },
         6: { cellWidth: 22, halign: 'right' },
-        7: { cellWidth: 26, halign: 'right' },
+        7: { cellWidth: 26, halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (dataCell) => {
+        if (dataCell.section === 'body' && dataCell.column.index === 7) {
+          const text = String(dataCell.cell.raw || '');
+          dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
+        }
       }
     });
     currentY = (doc as any).lastAutoTable.finalY + 8;
   }
 
   // Check if new page is needed before Table 2
-  if (currentY > 230) {
+  if (currentY > 215) {
     doc.addPage();
+    paintDailyMBackground(doc);
     currentY = 14;
   }
 
   // Table 2: Realized Trades (Closed Profits/Losses)
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`Gerceklesen Kar / Zarar Kayitlari (${data.realizedTrades.length} Satis)`), marginX + 4, currentY + 4.2);
-  currentY += 7;
+  // Ensure STRICT DESCENDING ORDER (newest sale first, down to oldest sale)
+  const sortedRealizedTrades = [...data.realizedTrades].sort((a, b) => {
+    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
+    return 0;
+  });
 
-  if (data.realizedTrades.length === 0) {
+  currentY = drawSectionHeader(
+    doc,
+    marginX,
+    currentY,
+    182,
+    'GERCEKLESEN KAR / ZARAR ISLEMLERI',
+    `${sortedRealizedTrades.length} Satis Kaydi`
+  );
+
+  if (sortedRealizedTrades.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
-    doc.text(tr('Secilen tarih araliginda gerceklesen satis kaydi bulunmuyor.'), marginX + 4, currentY + 5);
+    doc.text(tr('Secilen tarih araliginda gerceklesen satis kaydi bulunmuyor.'), marginX + 4, currentY + 4);
     currentY += 10;
   } else {
     autoTable(doc, {
+      ...TABLE_STYLES,
       startY: currentY,
       head: [[tr('Tarih'), tr('Sembol'), tr('Tur'), tr('Satilan Lot'), tr('Alis Maliyeti'), tr('Satis Fiyati'), tr('Toplam Tutar'), tr('Net Kar/Zarar')]],
-      body: data.realizedTrades.map(t => [
-        tr(`${t.date} (${t.holding_days ?? 0} gun)`),
+      body: sortedRealizedTrades.map(t => [
+        tr(`${t.date} (${t.holding_days ?? 0}g)`),
         tr(t.symbol),
         t.assetType === 'fund' ? 'FON' : 'HISSE',
         t.lots.toLocaleString('tr-TR'),
@@ -236,97 +589,94 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
         `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
         `${(t.realized_pnl || 0) >= 0 ? '+' : ''}${(t.realized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(t.realized_pnl_percent || 0).toFixed(1)})`
       ]),
-      theme: 'striped',
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
-      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      margin: { left: marginX, right: marginX, bottom: 18 },
       columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 18 },
+        0: { cellWidth: 22 },
+        1: { cellWidth: 18, fontStyle: 'bold' },
         2: { cellWidth: 14 },
         3: { cellWidth: 18, halign: 'right' },
         4: { cellWidth: 24, halign: 'right' },
         5: { cellWidth: 24, halign: 'right' },
         6: { cellWidth: 28, halign: 'right' },
-        7: { cellWidth: 36, halign: 'right' },
+        7: { cellWidth: 34, halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (dataCell) => {
+        if (dataCell.section === 'body' && dataCell.column.index === 7) {
+          const text = String(dataCell.cell.raw || '');
+          dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
+        }
       }
     });
     currentY = (doc as any).lastAutoTable.finalY + 8;
   }
 
   // Check if new page is needed before Table 3
-  if (currentY > 230) {
+  if (currentY > 215) {
     doc.addPage();
+    paintDailyMBackground(doc);
     currentY = 14;
   }
 
-  // Table 3: All Trade Orders
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`Emir Defteri ve Islem Gecmisi (${data.allTrades.length} Emir)`), marginX + 4, currentY + 4.2);
-  currentY += 7;
+  // Table 3: Order Book (All Trades)
+  // Ensure STRICT DESCENDING ORDER (newest trade first)
+  const sortedAllTrades = [...data.allTrades].sort((a, b) => {
+    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
+    return 0;
+  });
 
-  if (data.allTrades.length > 0) {
+  currentY = drawSectionHeader(
+    doc,
+    marginX,
+    currentY,
+    182,
+    'EMIR DEFTERI VE ISLEM GECMISI',
+    `${sortedAllTrades.length} Islem`
+  );
+
+  if (sortedAllTrades.length === 0) {
+    doc.setTextColor(...COLORS.textMuted);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text(tr('Secilen tarih araliginda emir kaydi bulunmuyor.'), marginX + 4, currentY + 4);
+    currentY += 10;
+  } else {
     autoTable(doc, {
+      ...TABLE_STYLES,
       startY: currentY,
-      head: [[tr('Tarih'), tr('Sembol'), tr('Varlik'), tr('Islem'), tr('Lot'), tr('Birim Fiyat'), tr('Toplam Tutar'), tr('Not')]],
-      body: data.allTrades.map(t => [
+      head: [[tr('Tarih'), tr('Sembol'), tr('Islem'), tr('Tur'), tr('Lot'), tr('Birim Fiyat'), tr('Toplam Tutar'), tr('Not')]],
+      body: sortedAllTrades.map(t => [
         tr(t.date),
         tr(t.symbol),
-        t.assetType === 'fund' ? 'FON' : 'HISSE',
         t.type === 'buy' ? 'ALIS' : 'SATIS',
+        t.assetType === 'fund' ? 'FON' : 'HISSE',
         t.lots.toLocaleString('tr-TR'),
         `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
         `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
         tr(t.notes || '-')
       ]),
-      theme: 'striped',
-      margin: { left: marginX, right: marginX },
-      styles: { fontSize: 7.5, cellPadding: 2, font: 'helvetica' },
-      headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+      margin: { left: marginX, right: marginX, bottom: 18 },
       columnStyles: {
         0: { cellWidth: 20 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 14 },
+        1: { cellWidth: 18, fontStyle: 'bold' },
+        2: { cellWidth: 16, fontStyle: 'bold' },
         3: { cellWidth: 14 },
         4: { cellWidth: 16, halign: 'right' },
         5: { cellWidth: 24, halign: 'right' },
         6: { cellWidth: 26, halign: 'right' },
-        7: { cellWidth: 50 },
+        7: { cellWidth: 48 },
+      },
+      didParseCell: (dataCell) => {
+        if (dataCell.section === 'body' && dataCell.column.index === 2) {
+          const text = String(dataCell.cell.raw || '');
+          dataCell.cell.styles.textColor = text === 'ALIS' ? COLORS.primary : COLORS.loss;
+        }
       }
     });
   }
 
-  // Add Page Numbers to all pages
-  const pageCount = (doc as any).internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr(`Sayfa ${i} / ${pageCount} - DailyM Borsa & Portfoy Raporu`), 105, 290, { align: 'center' });
-  }
-
+  addDailyMPDFDecorations(doc, 'DailyM Borsa & Portfoy Raporu');
   doc.save(`Borsa_Portfoy_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
-}
-
-/**
- * PDF 3: Monthly Report (4 Pages - 1 Page Per Week Summary)
- */
-export function generateMonthlyPDF(userName: string, monthName: string, weeks: ExportWeekSummary[]) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-  const totalPages = weeks.length;
-  weeks.forEach((week, index) => {
-    if (index > 0) {
-      doc.addPage();
-    }
-    renderWeekPage(doc, userName, monthName, week, index + 1, totalPages);
-  });
-
-  doc.save(`Aylik_Beslenme_Ozeti_${tr(monthName).replace(/\s+/g, '_')}.pdf`);
 }
 
 /**
@@ -340,25 +690,115 @@ function renderDayPage(
   totalPages: number,
   titleHeader: string
 ) {
+  paintDailyMBackground(doc);
   const marginX = 14;
-  let currentY = 14;
 
-  // Header Banner
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 22, 'F');
+  let currentY = drawDailyMBrandHeader(
+    doc,
+    titleHeader,
+    'DAILYM HEALTH',
+    userName,
+    day.dateFormatted
+  );
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(titleHeader), marginX + 6, currentY + 9);
+  // 3 Hero Metric Cards
+  const cardW = (182 - 6) / 3;
+  const netCals = day.totals.calories_consumed - day.totals.total_burned;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Kullanici: ${userName}  |  Tarih: ${day.dateFormatted}`), marginX + 6, currentY + 16);
+  drawMetricCard(
+    doc,
+    marginX,
+    currentY,
+    cardW,
+    19,
+    'ALINAN KALORI',
+    `${day.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
+    'Gunluk Alinan',
+    COLORS.primary,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + cardW + 3,
+    currentY,
+    cardW,
+    19,
+    'YAKILAN KALORI',
+    `${day.totals.total_burned.toLocaleString('tr-TR')} kcal`,
+    `BMR: ${day.totals.calories_burned_bmr || 0} kcal`,
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 2,
+    currentY,
+    cardW,
+    19,
+    'NET DENGE',
+    `${netCals > 0 ? '+' : ''}${netCals.toLocaleString('tr-TR')} kcal`,
+    netCals > 0 ? '▲ Kalori Fazlasi' : '▼ Kalori Acigi',
+    netCals > 0 ? COLORS.primary : COLORS.blue,
+    netCals > 0 ? COLORS.primary : COLORS.blue
+  );
 
-  currentY += 28;
+  currentY += 23;
 
-  // Meal Tables (Kahvalti, Ogle, Aksam, Ara Ogun)
+  // Macro & Health Strip (Matching the site's exact horizontal strip)
+  const macroW = (182 - 9) / 4;
+  drawMetricCard(
+    doc,
+    marginX,
+    currentY,
+    macroW,
+    15,
+    'PROTEIN',
+    `${day.totals.protein_g}g`,
+    'Gunluk Makro',
+    COLORS.textWhite,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + macroW + 3,
+    currentY,
+    macroW,
+    15,
+    'KARBONHIDRAT',
+    `${day.totals.carbs_g}g`,
+    'Gunluk Makro',
+    COLORS.primary,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + (macroW + 3) * 2,
+    currentY,
+    macroW,
+    15,
+    'YAG',
+    `${day.totals.fat_g}g`,
+    'Gunluk Makro',
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
+  const sleepHrs = day.sleep.duration_minutes ? (day.sleep.duration_minutes / 60).toFixed(1) : '0';
+  drawMetricCard(
+    doc,
+    marginX + (macroW + 3) * 3,
+    currentY,
+    macroW,
+    15,
+    'UYKU',
+    `${sleepHrs} saat`,
+    'Dinlenme',
+    COLORS.blue,
+    COLORS.blue
+  );
+
+  currentY += 19;
+
+  // Meals Section
   const mealSections = [
     { title: 'Kahvalti', items: day.meals.breakfast, color: COLORS.breakfast },
     { title: 'Ogle Yemegi', items: day.meals.lunch, color: COLORS.lunch },
@@ -371,13 +811,7 @@ function renderDayPage(
   mealSections.forEach(section => {
     if (section.items && section.items.length > 0) {
       hasFood = true;
-      doc.setFillColor(...section.color);
-      doc.rect(marginX, currentY, 182, 6, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text(tr(section.title), marginX + 4, currentY + 4.5);
-      currentY += 7;
+      currentY = drawSectionHeader(doc, marginX, currentY, 182, section.title);
 
       const tableData = section.items.map(f => [
         tr(f.name),
@@ -389,13 +823,11 @@ function renderDayPage(
       ]);
 
       autoTable(doc, {
+        ...TABLE_STYLES,
         startY: currentY,
         head: [[tr('Besin Urunu'), tr('Miktar'), tr('Kalori'), tr('Protein'), tr('Karb'), tr('Yag')]],
         body: tableData,
-        theme: 'striped',
-        margin: { left: marginX, right: marginX },
-        styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
-        headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+        margin: { left: marginX, right: marginX, bottom: 18 },
         columnStyles: {
           0: { cellWidth: 70 },
           1: { cellWidth: 36 },
@@ -411,97 +843,48 @@ function renderDayPage(
   });
 
   if (!hasFood) {
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr('Bu gun icin kaydedilmis ogun kaydi bulunmamaktadir.'), marginX, currentY + 4);
-    currentY += 10;
+    doc.text(tr('Bu gun icin kaydedilmis ogun kaydi bulunmamaktadir.'), marginX + 4, currentY + 4);
+    currentY += 8;
   }
 
   // Section: Burned Calories & Activities
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr('Yakilan Kalori & Aktivite Detaylari (BMR / Uyku / Egzersiz)'), marginX + 4, currentY + 4.5);
-  currentY += 7;
+  currentY = drawSectionHeader(doc, marginX, currentY, 182, 'Yakilan Kalori & Aktivite Detaylari (BMR / Uyku / Egzersiz)');
 
   const burnedRows = [];
-
-  // BMR
   burnedRows.push([
     tr('Bazal Metabolizma Hizi (BMR)'),
     tr('24 Saatlik Dinlenme Tuketimi'),
     `${day.totals.calories_burned_bmr > 0 ? day.totals.calories_burned_bmr : '-'} kcal`
   ]);
 
-  // Sleep
-  const sleepHrs = day.sleep.duration_minutes ? (day.sleep.duration_minutes / 60).toFixed(1) : '0';
   burnedRows.push([
     tr('Uyku Harcamasi'),
     tr(`${sleepHrs} saat uyku (BMR dahilinde)`),
-    `${day.sleep.calories_burned} kcal`
+    `${day.totals.calories_burned_sleep > 0 ? day.totals.calories_burned_sleep : '-'} kcal`
   ]);
 
-  // Exercises
-  if (day.exercises && day.exercises.length > 0) {
-    day.exercises.forEach(ex => {
-      burnedRows.push([
-        tr(`Egzersiz: ${ex.name}`),
-        tr(`${ex.duration_minutes} dakika`),
-        `${ex.calories_burned} kcal`
-      ]);
-    });
-  } else {
+  day.exercises.forEach(ex => {
     burnedRows.push([
-      tr('Egzersiz Kaydi'),
-      tr('Egzersiz girilmedi'),
-      '0 kcal'
+      tr(ex.name),
+      tr(`${ex.duration_minutes} dk`),
+      `${ex.calories_burned} kcal`
     ]);
-  }
-
-  autoTable(doc, {
-    startY: currentY,
-    head: [[tr('Aktivite / Kategori'), tr('Sure / Aciklama'), tr('Yakilan Kalori')]],
-    body: burnedRows,
-    theme: 'plain',
-    margin: { left: marginX, right: marginX },
-    styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
-    headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { cellWidth: 65 },
-      2: { cellWidth: 37, halign: 'right' }
-    }
   });
 
-  currentY = (doc as any).lastAutoTable.finalY + 6;
-
-  // Summary Card / Totals
-  doc.setFillColor(...COLORS.lightBg);
-  doc.setDrawColor(...COLORS.border);
-  doc.rect(marginX, currentY, 182, 24, 'FD');
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...COLORS.textDark);
-  doc.text(tr('GUNLUK NET OZET VE MAKRO DAĞILIMI'), marginX + 4, currentY + 6);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Alinan Kalori: ${day.totals.calories_consumed} kcal`), marginX + 4, currentY + 12);
-  doc.text(tr(`Toplam Yakilan: ${day.totals.total_burned} kcal`), marginX + 60, currentY + 12);
-  const netCals = day.totals.calories_consumed - day.totals.total_burned;
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`Net Kalori Denge: ${netCals > 0 ? '+' : ''}${netCals} kcal`), marginX + 120, currentY + 12);
-
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Protein: ${day.totals.protein_g}g  |  Karb: ${day.totals.carbs_g}g  |  Yag: ${day.totals.fat_g}g`), marginX + 4, currentY + 19);
-
-  // Footer / Page Number
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.textMuted);
-  doc.text(tr(`Sayfa ${pageNum} / ${totalPages}`), 105, 290, { align: 'center' });
+  autoTable(doc, {
+    ...TABLE_STYLES,
+    startY: currentY,
+    head: [[tr('Aktivite / Kaynak'), tr('Sure / Detay'), tr('Yakilan Kalori')]],
+    body: burnedRows,
+    margin: { left: marginX, right: marginX, bottom: 18 },
+    columnStyles: {
+      0: { cellWidth: 80 },
+      1: { cellWidth: 62 },
+      2: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+    }
+  });
 }
 
 /**
@@ -515,63 +898,78 @@ function renderWeekPage(
   pageNum: number,
   totalPages: number
 ) {
+  paintDailyMBackground(doc);
   const marginX = 14;
-  let currentY = 14;
 
-  // Header Banner
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 22, 'F');
+  let currentY = drawDailyMBrandHeader(
+    doc,
+    `AYLIK BESLENME OZETI - ${week.weekName.toUpperCase()} (${monthName.toUpperCase()})`,
+    'DAILYM HEALTH',
+    userName,
+    `${week.startDate} - ${week.endDate}`
+  );
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`AYLIK OZET - ${week.weekName.toUpperCase()} (${monthName.toUpperCase()})`), marginX + 6, currentY + 9);
+  // 4 Summary Metric Cards
+  const cardW = (182 - 9) / 4;
+  drawMetricCard(
+    doc,
+    marginX,
+    currentY,
+    cardW,
+    19,
+    'HAFTALIK ALINAN',
+    `${week.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
+    `Ort: ${week.dailyAverages.calories_consumed} kcal/gun`,
+    COLORS.primary,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + cardW + 3,
+    currentY,
+    cardW,
+    19,
+    'HAFTALIK YAKILAN',
+    `${week.totals.calories_burned.toLocaleString('tr-TR')} kcal`,
+    `Ort: ${week.dailyAverages.calories_burned} kcal/gun`,
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 2,
+    currentY,
+    cardW,
+    19,
+    'TOPLAM PROTEIN',
+    `${week.totals.protein_g}g`,
+    `Ort: ${week.dailyAverages.protein_g}g/gun`,
+    COLORS.textWhite,
+    COLORS.textWhite
+  );
+  drawMetricCard(
+    doc,
+    marginX + (cardW + 3) * 3,
+    currentY,
+    cardW,
+    19,
+    'TOPLAM KARB & YAG',
+    `K:${week.totals.carbs_g}g`,
+    `Y:${week.totals.fat_g}g`,
+    COLORS.textMuted,
+    COLORS.textWhite
+  );
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Kullanici: ${userName}  |  Tarih Araligi: ${week.startDate} - ${week.endDate}`), marginX + 6, currentY + 16);
-
-  currentY += 28;
-
-  // Weekly Overview Cards
-  doc.setFillColor(...COLORS.lightBg);
-  doc.setDrawColor(...COLORS.border);
-  doc.rect(marginX, currentY, 88, 28, 'FD');
-  doc.rect(marginX + 94, currentY, 88, 28, 'FD');
-
-  // Card 1: Totals
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...COLORS.textDark);
-  doc.text(tr('HAFTALIK TOPLAM DEGERLER'), marginX + 4, currentY + 7);
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Alinan Toplam Kalori: ${week.totals.calories_consumed} kcal`), marginX + 4, currentY + 13);
-  doc.text(tr(`Yakilan Toplam Kalori: ${week.totals.calories_burned} kcal`), marginX + 4, currentY + 18);
-  doc.text(tr(`Makrolar: P:${week.totals.protein_g}g | K:${week.totals.carbs_g}g | Y:${week.totals.fat_g}g`), marginX + 4, currentY + 23);
-
-  // Card 2: Daily Averages
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr('GUNLUK ORTALAMALAR'), marginX + 98, currentY + 7);
-
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text(tr(`Ort. Alinan Kalori: ${week.dailyAverages.calories_consumed} kcal/gun`), marginX + 98, currentY + 13);
-  doc.text(tr(`Ort. Yakilan Kalori: ${week.dailyAverages.calories_burned} kcal/gun`), marginX + 98, currentY + 18);
-  doc.text(tr(`Ort. Makrolar: P:${week.dailyAverages.protein_g}g | K:${week.dailyAverages.carbs_g}g | Y:${week.dailyAverages.fat_g}g`), marginX + 98, currentY + 23);
-
-  currentY += 34;
+  currentY += 25;
 
   // Table: Day by Day Breakdown for this week
-  doc.setFillColor(...COLORS.headerBg);
-  doc.rect(marginX, currentY, 182, 6, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tr(`${week.weekName} Gunluk Kalori ve Makro Tablosu`), marginX + 4, currentY + 4.5);
-  currentY += 7;
+  currentY = drawSectionHeader(
+    doc,
+    marginX,
+    currentY,
+    182,
+    `${week.weekName} Gunluk Kalori ve Makro Tablosu`
+  );
 
   const tableBody = week.days.map(d => [
     tr(d.dayName),
@@ -584,26 +982,25 @@ function renderWeekPage(
   ]);
 
   autoTable(doc, {
+    ...TABLE_STYLES,
     startY: currentY,
     head: [[tr('Gun'), tr('Alinan'), tr('Yakilan'), tr('Net Denge'), tr('Protein'), tr('Karb'), tr('Yag')]],
     body: tableBody,
-    theme: 'striped',
-    margin: { left: marginX, right: marginX },
-    styles: { fontSize: 8.5, cellPadding: 3, font: 'helvetica' },
-    headStyles: { fillColor: [241, 245, 249], textColor: COLORS.textDark, fontStyle: 'bold' },
+    margin: { left: marginX, right: marginX, bottom: 18 },
     columnStyles: {
-      0: { cellWidth: 40 },
+      0: { cellWidth: 38 },
       1: { cellWidth: 24, halign: 'right' },
       2: { cellWidth: 24, halign: 'right' },
-      3: { cellWidth: 26, halign: 'right' },
+      3: { cellWidth: 26, halign: 'right', fontStyle: 'bold' },
       4: { cellWidth: 22, halign: 'right' },
       5: { cellWidth: 22, halign: 'right' },
-      6: { cellWidth: 24, halign: 'right' },
+      6: { cellWidth: 26, halign: 'right' },
+    },
+    didParseCell: (dataCell) => {
+      if (dataCell.section === 'body' && dataCell.column.index === 3) {
+        const text = String(dataCell.cell.raw || '');
+        dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
+      }
     }
   });
-
-  // Footer / Page Number
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.textMuted);
-  doc.text(tr(`Sayfa ${pageNum} / ${totalPages}`), 105, 290, { align: 'center' });
 }
