@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -20,13 +22,25 @@ export async function GET(request: Request) {
 
   try {
     await connectDB();
+    const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+    const userId = session?.user?.id || null;
 
     const trimmed = query.trim();
     const safeRegex = escapeRegex(trimmed);
 
+    // Filter to ensure users only see global foods + their own custom foods
+    const userFilter = userId
+      ? { $or: [{ user_id: null }, { user_id: { $exists: false } }, { user_id: userId }] }
+      : { $or: [{ user_id: null }, { user_id: { $exists: false } }] };
+
     // 1. Text search (Türkçe/İngilizce)
     let foods = await FoodCache.find(
-      { $text: { $search: trimmed } },
+      {
+        $and: [
+          { $text: { $search: trimmed } },
+          userFilter
+        ]
+      },
       { score: { $meta: 'textScore' } }
     )
       .sort({ score: { $meta: 'textScore' } })
@@ -36,11 +50,16 @@ export async function GET(request: Request) {
     // 2. Eğer text search az sonuç döndürdüyse regex ile de ara
     if (foods.length < 10) {
       const regexResults = await FoodCache.find({
-        $or: [
-          { food_name: { $regex: safeRegex, $options: 'i' } },
-          { food_name_en: { $regex: safeRegex, $options: 'i' } },
-          { search_tags: { $regex: safeRegex, $options: 'i' } },
-          { brand_name: { $regex: safeRegex, $options: 'i' } }
+        $and: [
+          {
+            $or: [
+              { food_name: { $regex: safeRegex, $options: 'i' } },
+              { food_name_en: { $regex: safeRegex, $options: 'i' } },
+              { search_tags: { $regex: safeRegex, $options: 'i' } },
+              { brand_name: { $regex: safeRegex, $options: 'i' } }
+            ]
+          },
+          userFilter
         ]
       })
         .limit(30)
@@ -59,29 +78,40 @@ export async function GET(request: Request) {
       const aName = (a.food_name || '').toLocaleLowerCase('tr-TR');
       const bName = (b.food_name || '').toLocaleLowerCase('tr-TR');
       
-      // Tam eşleşme en üstte
+      const aIsCustom = Boolean(userId && a.user_id && a.user_id.toString() === userId);
+      const bIsCustom = Boolean(userId && b.user_id && b.user_id.toString() === userId);
+
+      // Tam eşleşme en üstte (Kullanıcının kendi eklediği tam eşleşme en üsttedir)
       const aExact = aName === queryLower;
       const bExact = bName === queryLower;
       if (aExact && !bExact) return -1;
       if (!aExact && bExact) return 1;
+      if (aExact && bExact) {
+        if (aIsCustom && !bIsCustom) return -1;
+        if (!aIsCustom && bIsCustom) return 1;
+      }
       
       // Aranan kelime ile başlayanlar ikinci sırada
       const aStartsWith = aName.startsWith(queryLower);
       const bStartsWith = bName.startsWith(queryLower);
       if (aStartsWith && !bStartsWith) return -1;
       if (!aStartsWith && bStartsWith) return 1;
+
+      // Özel besinler genel ürünlerden önce gelsin
+      if (aIsCustom && !bIsCustom) return -1;
+      if (!aIsCustom && bIsCustom) return 1;
       
       // MongoDB textScore'a göre sırala (varsa)
       const aScore = a.score || 0;
       const bScore = b.score || 0;
       if (aScore !== bScore) return bScore - aScore;
       
-      // Son çare olarak ismin kısalığına göre sırala (daha kısa, daha sade isimler üste)
+      // Son çare olarak ismin kısalığına göre sırala
       return aName.length - bName.length;
     });
 
-    // En iyi 15 sonucu al
-    foods = foods.slice(0, 15);
+    // En iyi 20 sonucu al
+    foods = foods.slice(0, 20);
 
     const formatted = foods.map((f: any) => ({
       id: f._id.toString(),
@@ -96,9 +126,11 @@ export async function GET(request: Request) {
         sugar_g: f.per_unit?.sugar_g || 0,
         fiber_g: f.per_unit?.fiber_g || 0
       },
+      portions: Array.isArray(f.portions) ? f.portions : [],
       brand_name: f.brand_name || null,
       source: f.source,
       provider: f.ai_provider || null,
+      is_custom: Boolean(userId && f.user_id && f.user_id.toString() === userId),
       nutrition_basis: f.nutrition_basis || (f.unit_type === 'gram' ? 'per_gram' : 'per_unit')
     }));
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -21,22 +21,85 @@ const MACRO_COLORS = {
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading';
 
+interface FoodPortionOption {
+  name: string;
+  gram_weight: number;
+  label?: string;
+  isRawGram?: boolean;
+}
+
 interface DBFoodResult {
   id: string;
   food_name: string;
   food_name_en: string | null;
   unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
   per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; fiber_g?: number };
+  portions?: Array<{ name: string; gram_weight: number; label?: string }>;
   brand_name: string | null;
   source: string;
   provider?: 'gemini' | 'openrouter' | null;
+  is_custom?: boolean;
 }
 
 interface SelectedFood {
   id: string | null;
   name: string;
   unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
-  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number };
+  per_unit: { calories: number; protein_g: number; carbs_g: number; fat_g: number; sugar_g?: number; fiber_g?: number };
+  portions?: Array<{ name: string; gram_weight: number; label?: string }>;
+  brand_name?: string | null;
+  is_custom?: boolean;
+}
+
+function getPortionOptions(food: SelectedFood): FoodPortionOption[] {
+  const options: FoodPortionOption[] = [];
+
+  if (food.unit_type === 'gram') {
+    // 1. Food specific predefined portions
+    if (food.portions && food.portions.length > 0) {
+      for (const p of food.portions) {
+        if (!options.some(o => o.name.toLowerCase() === p.name.toLowerCase())) {
+          options.push({ name: p.name, gram_weight: p.gram_weight, label: p.label });
+        }
+      }
+    }
+
+    // 2. Standard gram options
+    options.push({ name: '100 Gram (Standart)', gram_weight: 100, isRawGram: true });
+    options.push({ name: '1 Gram (Özel Gramaj)', gram_weight: 1, isRawGram: true });
+
+    // 3. Common Turkish household measurements
+    const defaults: FoodPortionOption[] = [
+      { name: '1 Porsiyon (200g)', gram_weight: 200 },
+      { name: '1 Su Bardağı (200g)', gram_weight: 200 },
+      { name: '1 Çay Bardağı (100g)', gram_weight: 100 },
+      { name: '1 Kase (250g)', gram_weight: 250 },
+      { name: '1 Yemek Kaşığı (15g)', gram_weight: 15 },
+      { name: '1 Tatlı Kaşığı (8g)', gram_weight: 8 },
+      { name: '1 Çay Kaşığı (4g)', gram_weight: 4 },
+      { name: '1 Dilim (30g)', gram_weight: 30 }
+    ];
+
+    for (const d of defaults) {
+      if (!options.some(o => o.name.toLowerCase() === d.name.toLowerCase())) {
+        options.push(d);
+      }
+    }
+  } else {
+    options.push({ name: `1 ${food.unit_type}`, gram_weight: 1 });
+    options.push({ name: `Yarım (0.5 ${food.unit_type})`, gram_weight: 0.5 });
+    options.push({ name: '1 Porsiyon', gram_weight: 1 });
+
+    if (food.portions && food.portions.length > 0) {
+      for (const p of food.portions) {
+        if (!options.some(o => o.name.toLowerCase() === p.name.toLowerCase())) {
+          options.push({ name: p.name, gram_weight: p.gram_weight, label: p.label });
+        }
+      }
+    }
+  }
+
+  return options;
 }
 
 interface SessionAddedMeal {
@@ -83,7 +146,13 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [searchResults, setSearchResults] = useState<DBFoodResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState<SelectedFood | null>(null);
+  const [selectedPortionIdx, setSelectedPortionIdx] = useState<number>(0);
   const [amount, setAmount] = useState('100');
+
+  const availablePortions = useMemo(() => {
+    if (!selectedFood) return [];
+    return getPortionOptions(selectedFood);
+  }, [selectedFood]);
   const [geminiResult, setGeminiResult] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(true);
   const [manualBrand, setManualBrand] = useState('');
@@ -137,38 +206,66 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     return () => clearTimeout(searchTimer.current);
   }, [searchQuery, selectedFood]);
 
-  // Miktar değişince makroları yeniden hesapla
+  // Miktar veya porsiyon değişince makroları yeniden hesapla
   useEffect(() => {
     if (!selectedFood) return;
     const qty = parseFloat(amount) || 0;
     const p = selectedFood.per_unit;
-    setCalories(Math.round(p.calories * qty).toString());
-    setProtein((Math.round(p.protein_g * qty * 10) / 10).toString());
-    setCarbs((Math.round(p.carbs_g * qty * 10) / 10).toString());
-    setFat((Math.round(p.fat_g * qty * 10) / 10).toString());
-    setSugar((Math.round((p.sugar_g || 0) * qty * 10) / 10).toString());
-    setQuantity(qty.toString());
-    setServingDescription(`${qty} ${unitType}`);
-  }, [amount, selectedFood, unitType]);
+
+    const opt = availablePortions[selectedPortionIdx];
+    let effectiveMultiplier = qty;
+    let desc = `${qty} ${unitType}`;
+
+    if (selectedFood.unit_type === 'gram') {
+      if (opt && !opt.isRawGram) {
+        effectiveMultiplier = qty * opt.gram_weight;
+        desc = qty === 1 ? opt.name : `${qty} x ${opt.name} (${Math.round(effectiveMultiplier)}g)`;
+      } else {
+        effectiveMultiplier = qty;
+        desc = `${qty} gram`;
+      }
+    } else {
+      effectiveMultiplier = qty * (opt?.gram_weight || 1);
+      desc = qty === 1 ? (opt?.name || `1 ${unitType}`) : `${qty} ${unitType}`;
+    }
+
+    setCalories(Math.round(p.calories * effectiveMultiplier).toString());
+    setProtein((Math.round(p.protein_g * effectiveMultiplier * 10) / 10).toString());
+    setCarbs((Math.round(p.carbs_g * effectiveMultiplier * 10) / 10).toString());
+    setFat((Math.round(p.fat_g * effectiveMultiplier * 10) / 10).toString());
+    setSugar((Math.round((p.sugar_g || 0) * effectiveMultiplier * 10) / 10).toString());
+    setQuantity(effectiveMultiplier.toString());
+    setServingDescription(desc);
+  }, [amount, selectedFood, selectedPortionIdx, availablePortions, unitType]);
 
   const handleSelectFromDB = (food: DBFoodResult) => {
-    setSelectedFood({
+    const sel: SelectedFood = {
       id: food.id,
       name: food.food_name,
       unit_type: food.unit_type,
       per_unit: { 
-          calories: food.per_unit.calories, 
-          protein_g: food.per_unit.protein_g, 
-          carbs_g: food.per_unit.carbs_g, 
-          fat_g: food.per_unit.fat_g,
-          sugar_g: food.per_unit.sugar_g || 0
-      }
-    });
+        calories: food.per_unit.calories, 
+        protein_g: food.per_unit.protein_g, 
+        carbs_g: food.per_unit.carbs_g, 
+        fat_g: food.per_unit.fat_g,
+        sugar_g: food.per_unit.sugar_g || 0,
+        fiber_g: food.per_unit.fiber_g || 0
+      },
+      portions: food.portions || [],
+      brand_name: food.brand_name || null,
+      is_custom: food.is_custom
+    };
+    setSelectedFood(sel);
     setFoodName(food.food_name);
     setFoodCacheId(food.id);
     setGeminiResult(food.provider ? { provider: food.provider, cached: true } : null);
     setUnitType(food.unit_type);
-    setAmount(food.unit_type === 'gram' ? '100' : '1');
+
+    const opts = getPortionOptions(sel);
+    setSelectedPortionIdx(0);
+    const firstOpt = opts[0];
+    setAmount(firstOpt?.isRawGram ? '100' : '1');
+
     setShowDropdown(false);
     setSearchStep('idle');
   };
@@ -588,12 +685,24 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                           className="px-4 py-3 hover:bg-[rgba(255,255,255,0.06)] cursor-pointer border-b border-[rgba(255,255,255,0.04)] last:border-0 transition-colors flex items-center justify-between gap-3"
                         >
                           <div className="flex flex-col min-w-0">
-                            <div className="text-[13px] font-semibold text-white truncate">
-                              {food.food_name}
-                              {food.brand_name && <span className="text-[var(--primary)] ml-1.5 font-normal text-[11px]">({food.brand_name})</span>}
+                            <div className="text-[13px] font-semibold text-white truncate flex items-center gap-1.5 flex-wrap">
+                              {food.is_custom && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                                  Özelim
+                                </span>
+                              )}
+                              <span className="truncate">{food.food_name}</span>
+                              {food.brand_name && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--primary)]/15 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
+                                  {food.brand_name}
+                                </span>
+                              )}
                             </div>
-                            <div className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-                              {food.unit_type === 'gram' ? '100g' : '1 adet'} — {Math.round((food.per_unit?.calories || 0) * (food.unit_type === 'gram' ? 100 : 1))} kcal
+                            <div className="text-[11px] text-[var(--on-surface-variant)] mt-0.5 flex items-center gap-2">
+                              <span>{food.unit_type === 'gram' ? '100g' : '1 adet'} — {Math.round((food.per_unit?.calories || 0) * (food.unit_type === 'gram' ? 100 : 1))} kcal</span>
+                              {food.portions && food.portions.length > 0 && (
+                                <span className="text-[10px] text-emerald-400">({food.portions[0].name})</span>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-1.5 shrink-0">
@@ -842,9 +951,21 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               {/* Seçilen yemek başlığı */}
               <div className="flex items-center gap-3 p-3 bg-[rgba(255,255,255,0.04)] rounded-2xl border border-[rgba(255,255,255,0.08)]">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-semibold text-white truncate">{selectedFood.name}</div>
+                  <div className="text-[14px] font-semibold text-white truncate flex items-center gap-1.5 flex-wrap">
+                    {selectedFood.is_custom && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                        Özelim
+                      </span>
+                    )}
+                    <span className="truncate">{selectedFood.name}</span>
+                    {selectedFood.brand_name && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--primary)]/15 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
+                        {selectedFood.brand_name}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-[11px] text-[var(--primary)] mt-0.5">
-                    {geminiResult ? `AI tahmini${geminiResult.provider ? `: ${geminiResult.provider}` : ''}. Değerleri kontrol edin.` : 'Veritabanından'}
+                    {geminiResult ? `AI tahmini${geminiResult.provider ? `: ${geminiResult.provider}` : ''}. Değerleri kontrol edin.` : 'Veritabanından (Doğrulanmış)'}
                   </div>
                 </div>
                 <button
@@ -856,11 +977,43 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                 </button>
               </div>
 
-              {/* Miktar + Birim */}
-              <div className="flex gap-2 items-end">
-                <div className="flex flex-col gap-1.5 flex-1">
+              {/* Porsiyon & Ölçü Birimi Seçici (FatSecret Tarzı) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
-                    {selectedFood.unit_type === 'gram' ? 'Miktar (gram)' : 'Adet'}
+                    Ölçü Birimi / Porsiyon
+                  </label>
+                  <select
+                    value={selectedPortionIdx}
+                    onChange={(e) => {
+                      const idx = parseInt(e.target.value, 10);
+                      setSelectedPortionIdx(idx);
+                      const opt = availablePortions[idx];
+                      if (opt && opt.isRawGram) {
+                        setAmount(opt.gram_weight === 100 ? '100' : '1');
+                      } else {
+                        setAmount('1');
+                      }
+                    }}
+                    className="w-full bg-[#1A1A26] border border-[rgba(255,255,255,0.12)] rounded-xl py-3 px-3 text-sm font-semibold text-white focus:outline-none focus:border-[var(--primary)] transition-all cursor-pointer"
+                  >
+                    {availablePortions.map((opt, i) => (
+                      <option key={i} value={i} className="bg-[#1A1A26] text-white">
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Miktar */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold flex items-center justify-between">
+                    <span>{availablePortions[selectedPortionIdx]?.isRawGram ? 'Miktar (Gram)' : 'Adet / Çarpan'}</span>
+                    {availablePortions[selectedPortionIdx] && !availablePortions[selectedPortionIdx].isRawGram && (
+                      <span className="text-emerald-400 normal-case font-medium">
+                        ≈ {Math.round((parseFloat(amount) || 0) * availablePortions[selectedPortionIdx].gram_weight)}g
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -868,11 +1021,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                     step="any"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    className="w-full bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl py-3.5 px-4 text-[16px] font-bold text-white focus:outline-none focus:border-[var(--primary)] transition-all"
+                    className="w-full bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl py-2.5 px-4 text-[16px] font-bold text-white focus:outline-none focus:border-[var(--primary)] transition-all"
                   />
-                </div>
-                <div className="py-3.5 px-4 bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl text-[13px] text-[var(--on-surface-variant)] font-medium min-w-[64px] text-center">
-                  {selectedFood.unit_type}
                 </div>
               </div>
 
