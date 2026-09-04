@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera } from 'lucide-react';
+import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { deleteMealAction } from '@/actions/health';
@@ -148,6 +148,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [selectedFood, setSelectedFood] = useState<SelectedFood | null>(null);
   const [selectedPortionIdx, setSelectedPortionIdx] = useState<number>(0);
   const [amount, setAmount] = useState('100');
+  const [isPortionMenuOpen, setIsPortionMenuOpen] = useState(false);
+  const portionSelectRef = useRef<HTMLDivElement>(null);
 
   const availablePortions = useMemo(() => {
     if (!selectedFood) return [];
@@ -167,6 +169,21 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const searchRef = useRef<HTMLInputElement>(null);
   const ocrInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Ölçü birimi menüsü dışına tıklanınca kapat
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (portionSelectRef.current && !portionSelectRef.current.contains(event.target as Node)) {
+        setIsPortionMenuOpen(false);
+      }
+    };
+    if (isPortionMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isPortionMenuOpen]);
 
   // Otomatik öğün seçimi
   useEffect(() => {
@@ -977,52 +994,195 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                 </button>
               </div>
 
-              {/* Porsiyon & Ölçü Birimi Seçici (FatSecret Tarzı) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
-                    Ölçü Birimi / Porsiyon
-                  </label>
-                  <select
-                    value={selectedPortionIdx}
-                    onChange={(e) => {
-                      const idx = parseInt(e.target.value, 10);
-                      setSelectedPortionIdx(idx);
-                      const opt = availablePortions[idx];
-                      if (opt && opt.isRawGram) {
-                        setAmount(opt.gram_weight === 100 ? '100' : '1');
-                      } else {
-                        setAmount('1');
-                      }
-                    }}
-                    className="w-full bg-[#1A1A26] border border-[rgba(255,255,255,0.12)] rounded-xl py-3 px-3 text-sm font-semibold text-white focus:outline-none focus:border-[var(--primary)] transition-all cursor-pointer"
+              {/* Porsiyon & Ölçü Birimi Seçici (FatSecret Tarzı Modern Tasarım) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Ölçü Birimi / Porsiyon Özel Dropdown */}
+                <div className="flex flex-col gap-1.5 relative" ref={portionSelectRef}>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                      <Scale size={13} className="text-[var(--primary)]" />
+                      Ölçü Birimi / Porsiyon
+                    </label>
+                    {availablePortions[selectedPortionIdx] && (
+                      <span className="text-[11px] text-[var(--primary)] font-medium">
+                        {availablePortions[selectedPortionIdx].isRawGram
+                          ? 'Serbest Gram'
+                          : `${availablePortions[selectedPortionIdx].gram_weight}g / birim`}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsPortionMenuOpen(!isPortionMenuOpen)}
+                    className={`w-full min-h-[48px] bg-[#14141E] border rounded-xl py-2.5 px-3.5 text-left flex items-center justify-between gap-2.5 transition-all outline-none ${
+                      isPortionMenuOpen
+                        ? 'border-[var(--primary)] ring-1 ring-[var(--primary)]/30 bg-[#191926]'
+                        : 'border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] hover:bg-[#181826]'
+                    }`}
                   >
-                    {availablePortions.map((opt, i) => (
-                      <option key={i} value={i} className="bg-[#1A1A26] text-white">
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-[rgba(var(--primary-rgb),0.12)] border border-[rgba(var(--primary-rgb),0.2)] flex items-center justify-center shrink-0 text-sm">
+                        {(() => {
+                          const n = availablePortions[selectedPortionIdx]?.name || '';
+                          if (n.includes('Bardak')) return '🥛';
+                          if (n.includes('Kase')) return '🥣';
+                          if (n.includes('Kaşık')) return '🥄';
+                          if (n.includes('Dilim')) return '🍞';
+                          if (availablePortions[selectedPortionIdx]?.isRawGram) return '⚖️';
+                          return '🍽️';
+                        })()}
+                      </div>
+                      <span className="text-[14px] font-bold text-white truncate">
+                        {availablePortions[selectedPortionIdx]?.name || 'Ölçü Seçin'}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={17}
+                      className={`text-[var(--on-surface-variant)] shrink-0 transition-transform duration-200 ${
+                        isPortionMenuOpen ? 'rotate-180 text-[var(--primary)]' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {/* Açılır Menü */}
+                  {isPortionMenuOpen && (
+                    <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#161624] border border-[rgba(255,255,255,0.12)] rounded-2xl shadow-2xl backdrop-blur-xl p-1.5 max-h-64 overflow-y-auto space-y-1 animate-fade-in">
+                      <div className="px-2.5 py-1 text-[10px] uppercase tracking-wider font-semibold text-[var(--on-surface-variant)]">
+                        Kullanılabilir Porsiyonlar ({availablePortions.length})
+                      </div>
+                      {availablePortions.map((opt, i) => {
+                        const isSelected = i === selectedPortionIdx;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPortionIdx(i);
+                              setIsPortionMenuOpen(false);
+                              if (opt.isRawGram) {
+                                setAmount(opt.gram_weight === 100 ? '100' : '1');
+                              } else {
+                                setAmount('1');
+                              }
+                            }}
+                            className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between gap-2 transition-all ${
+                              isSelected
+                                ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[var(--primary)] border border-[rgba(var(--primary-rgb),0.3)] font-bold'
+                                : 'hover:bg-[rgba(255,255,255,0.06)] text-white/90 border border-transparent font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-sm shrink-0">
+                                {opt.name.includes('Bardak') ? '🥛' : opt.name.includes('Kase') ? '🥣' : opt.name.includes('Kaşık') ? '🥄' : opt.name.includes('Dilim') ? '🍞' : opt.isRawGram ? '⚖️' : '🍽️'}
+                              </span>
+                              <span className="text-[13px] truncate">{opt.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {!opt.isRawGram && (
+                                <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${
+                                  isSelected ? 'bg-[var(--primary)]/20 text-[var(--primary)]' : 'bg-white/5 text-white/70'
+                                }`}>
+                                  {opt.gram_weight}g
+                                </span>
+                              )}
+                              {isSelected && <Check size={14} className="text-[var(--primary)]" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Hızlı Ölçü Çipleri (Pills) */}
+                  {availablePortions.length > 1 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 no-scrollbar">
+                      {availablePortions.slice(0, 4).map((opt, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPortionIdx(i);
+                            setIsPortionMenuOpen(false);
+                            if (opt.isRawGram) {
+                              setAmount(opt.gram_weight === 100 ? '100' : '1');
+                            } else {
+                              setAmount('1');
+                            }
+                          }}
+                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all whitespace-nowrap shrink-0 ${
+                            selectedPortionIdx === i
+                              ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
+                              : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
+                          }`}
+                        >
+                          {opt.name.split(' (')[0]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Miktar */}
+                {/* Miktar Girişi */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold flex items-center justify-between">
-                    <span>{availablePortions[selectedPortionIdx]?.isRawGram ? 'Miktar (Gram)' : 'Adet / Çarpan'}</span>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                      <Utensils size={13} className="text-[var(--primary)]" />
+                      <span>{availablePortions[selectedPortionIdx]?.isRawGram ? 'Miktar (Gram)' : 'Miktar / Çarpan'}</span>
+                    </label>
                     {availablePortions[selectedPortionIdx] && !availablePortions[selectedPortionIdx].isRawGram && (
-                      <span className="text-emerald-400 normal-case font-medium">
+                      <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         ≈ {Math.round((parseFloat(amount) || 0) * availablePortions[selectedPortionIdx].gram_weight)}g
                       </span>
                     )}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="w-full bg-[rgba(255,255,255,0.04)] border-2 border-[rgba(255,255,255,0.08)] rounded-xl py-2.5 px-4 text-[16px] font-bold text-white focus:outline-none focus:border-[var(--primary)] transition-all"
-                  />
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      className="w-full min-h-[48px] bg-[#14141E] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/30 rounded-xl py-2.5 pl-3.5 pr-12 text-[16px] font-bold text-white focus:outline-none transition-all"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-[var(--on-surface-variant)] pointer-events-none uppercase">
+                      {availablePortions[selectedPortionIdx]?.isRawGram ? 'g' : 'adet'}
+                    </span>
+                  </div>
+
+                  {/* Hızlı Miktar Düğmeleri */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    {availablePortions[selectedPortionIdx]?.isRawGram
+                      ? ['50', '100', '150', '200'].map(val => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setAmount(val)}
+                            className={`flex-1 text-[11px] py-1 rounded-lg border transition-all text-center font-semibold ${
+                              amount === val
+                                ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
+                                : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
+                            }`}
+                          >
+                            {val}g
+                          </button>
+                        ))
+                      : ['0.5', '1', '1.5', '2'].map(val => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setAmount(val)}
+                            className={`flex-1 text-[11px] py-1 rounded-lg border transition-all text-center font-semibold ${
+                              amount === val
+                                ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
+                                : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
+                            }`}
+                          >
+                            {val}x
+                          </button>
+                        ))}
+                  </div>
                 </div>
               </div>
 
