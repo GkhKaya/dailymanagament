@@ -9,6 +9,8 @@ import { StockPosition } from "@/models/StockPosition";
 import { StockTradeType } from "@/models/Enums";
 import { calculateStockPortfolio, RawTrade, POPULAR_BIST_STOCKS } from "@/lib/stock-engine";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
+import { fetchMarketQuote, searchBistDirectory, POPULAR_TEFAS_FUNDS, MarketQuote } from "@/lib/market-service";
+import { BIST_COMPANIES } from "@/lib/bist-directory";
 import { revalidatePath } from "next/cache";
 
 async function getUserId() {
@@ -30,10 +32,12 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     .sort({ date: 1, created_at: 1 })
     .lean();
 
-  // Fetch existing position records to preserve any manually entered current prices
+  // Fetch existing position records to preserve any current prices and market metadata
   const existingPositions = await StockPosition.find({ user_id: userId }).lean();
   const currentPriceMap: Record<string, number> = {};
+  const existingPositionMap: Record<string, any> = {};
   for (const pos of existingPositions) {
+    existingPositionMap[pos.symbol] = pos;
     if (pos.current_price && pos.current_price > 0) {
       currentPriceMap[pos.symbol] = pos.current_price;
     }
@@ -100,35 +104,49 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
   }
 
   // Format DTOs
-  const positionsDTO: StockPositionDTO[] = calc.openPositions.map((p) => ({
-    id: p.symbol,
-    symbol: p.symbol,
-    name: p.name,
-    assetType: p.assetType,
-    total_lots: p.total_lots,
-    average_cost: p.average_cost,
-    total_cost: p.total_cost,
-    current_price: p.current_price,
-    current_value: p.current_value,
-    unrealized_pnl: p.unrealized_pnl,
-    unrealized_pnl_percent: p.unrealized_pnl_percent,
-    last_trade_date: p.last_trade_date,
-  }));
+  const positionsDTO: StockPositionDTO[] = calc.openPositions.map((p) => {
+    const ex = existingPositionMap[p.symbol];
+    return {
+      id: p.symbol,
+      symbol: p.symbol,
+      name: p.name,
+      assetType: p.assetType,
+      total_lots: p.total_lots,
+      average_cost: p.average_cost,
+      total_cost: p.total_cost,
+      current_price: p.current_price,
+      open_price: ex?.open_price || 0,
+      close_price: ex?.close_price || 0,
+      day_change_percent: ex?.day_change_percent || 0,
+      price_updated_at: ex?.price_updated_at ? new Date(ex.price_updated_at).toISOString() : undefined,
+      current_value: p.current_value,
+      unrealized_pnl: p.unrealized_pnl,
+      unrealized_pnl_percent: p.unrealized_pnl_percent,
+      last_trade_date: p.last_trade_date,
+    };
+  });
 
-  const closedPositionsDTO: StockPositionDTO[] = calc.closedPositions.map((p) => ({
-    id: p.symbol,
-    symbol: p.symbol,
-    name: p.name,
-    assetType: p.assetType,
-    total_lots: p.total_lots,
-    average_cost: p.average_cost,
-    total_cost: p.total_cost,
-    current_price: p.current_price,
-    current_value: p.current_value,
-    unrealized_pnl: p.unrealized_pnl,
-    unrealized_pnl_percent: p.unrealized_pnl_percent,
-    last_trade_date: p.last_trade_date,
-  }));
+  const closedPositionsDTO: StockPositionDTO[] = calc.closedPositions.map((p) => {
+    const ex = existingPositionMap[p.symbol];
+    return {
+      id: p.symbol,
+      symbol: p.symbol,
+      name: p.name,
+      assetType: p.assetType,
+      total_lots: p.total_lots,
+      average_cost: p.average_cost,
+      total_cost: p.total_cost,
+      current_price: p.current_price,
+      open_price: ex?.open_price || 0,
+      close_price: ex?.close_price || 0,
+      day_change_percent: ex?.day_change_percent || 0,
+      price_updated_at: ex?.price_updated_at ? new Date(ex.price_updated_at).toISOString() : undefined,
+      current_value: p.current_value,
+      unrealized_pnl: p.unrealized_pnl,
+      unrealized_pnl_percent: p.unrealized_pnl_percent,
+      last_trade_date: p.last_trade_date,
+    };
+  });
 
   const sortByNewest = (a: { date: Date | string; created_at?: Date | string }, b: { date: Date | string; created_at?: Date | string }) => {
     const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -182,7 +200,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
     }));
 
-  // Build known stocks dictionary: User's historical symbols + POPULAR_BIST_STOCKS
+  // Build known stocks dictionary: User's historical symbols + Known Funds + Complete BIST Companies
   const userKnownSymbols = new Map<string, string>();
   for (const t of rawTrades) {
     if (t.symbol) {
@@ -190,7 +208,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       if (t.name) {
         userKnownSymbols.set(sym, t.name);
       } else if (!userKnownSymbols.has(sym)) {
-        userKnownSymbols.set(sym, POPULAR_BIST_STOCKS[sym] || '');
+        userKnownSymbols.set(sym, POPULAR_TEFAS_FUNDS[sym] || POPULAR_BIST_STOCKS[sym] || '');
       }
     }
   }
@@ -201,17 +219,28 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
   for (const [sym, nm] of userKnownSymbols.entries()) {
     knownStocksDTO.push({
       symbol: sym,
-      name: nm || POPULAR_BIST_STOCKS[sym] || sym,
+      name: nm || POPULAR_TEFAS_FUNDS[sym] || POPULAR_BIST_STOCKS[sym] || sym,
       isCustom: true,
     });
   }
 
-  // 2. Then add remaining popular stocks that user hasn't traded yet
-  for (const [sym, nm] of Object.entries(POPULAR_BIST_STOCKS)) {
-    if (!userKnownSymbols.has(sym)) {
+  // 2. Add popular TEFAS funds
+  for (const [code, title] of Object.entries(POPULAR_TEFAS_FUNDS)) {
+    if (!userKnownSymbols.has(code)) {
       knownStocksDTO.push({
-        symbol: sym,
-        name: nm,
+        symbol: code,
+        name: title,
+        isCustom: false,
+      });
+    }
+  }
+
+  // 3. Add all BIST companies from directory
+  for (const item of BIST_COMPANIES) {
+    if (!userKnownSymbols.has(item.symbol)) {
+      knownStocksDTO.push({
+        symbol: item.symbol,
+        name: item.name,
         isCustom: false,
       });
     }
@@ -225,6 +254,101 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     knownStocks: knownStocksDTO,
     totals: calc.totals,
   };
+}
+
+/**
+ * Automatically fetch and update latest market quotes for user's open positions
+ */
+async function refreshOpenPositionPrices(userId: string) {
+  try {
+    const openPositions = await StockPosition.find({
+      user_id: userId,
+      total_lots: { $gt: 0 },
+    }).lean();
+
+    if (!openPositions || openPositions.length === 0) return;
+
+    for (const pos of openPositions) {
+      try {
+        const quote = await fetchMarketQuote(pos.symbol, pos.asset_type as 'stock' | 'fund');
+        if (quote && quote.currentPrice > 0) {
+          const updateFields: any = {
+            current_price: quote.currentPrice,
+            open_price: quote.openPrice || quote.currentPrice,
+            close_price: quote.closePrice || quote.currentPrice,
+            day_change_percent: quote.dayChangePercent || 0,
+            price_updated_at: new Date(),
+          };
+          if (!pos.name && quote.name) {
+            updateFields.name = quote.name;
+          }
+          await StockPosition.updateOne(
+            { user_id: userId, symbol: pos.symbol },
+            { $set: updateFields }
+          );
+        }
+      } catch (err) {
+        console.error(`Error refreshing price for ${pos.symbol}:`, err);
+      }
+    }
+  } catch (error) {
+    console.error("refreshOpenPositionPrices error:", error);
+  }
+}
+
+/**
+ * Force manual refresh of market prices for all open positions
+ */
+export async function syncStockMarketPricesAction(): Promise<{ success: boolean; updatedCount?: number; error?: string }> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    await refreshOpenPositionPrices(userId);
+    const portfolio = await syncAndCalculatePortfolio(userId);
+    revalidatePath('/');
+    return { success: true, updatedCount: portfolio.positions.length };
+  } catch (error: any) {
+    console.error("syncStockMarketPricesAction error:", error);
+    return { success: false, error: error.message || "Piyasa fiyatları güncellenemedi." };
+  }
+}
+
+/**
+ * Fetch a single market quote (for autocomplete / modal autofill)
+ */
+export async function fetchMarketQuoteAction(
+  symbol: string,
+  assetType?: 'stock' | 'fund'
+): Promise<{ success: boolean; data?: MarketQuote; error?: string }> {
+  try {
+    const cleanSymbol = symbol?.trim().toUpperCase();
+    if (!cleanSymbol) {
+      return { success: false, error: "Sembol belirtilmedi." };
+    }
+    const quote = await fetchMarketQuote(cleanSymbol, assetType);
+    if (!quote) {
+      return { success: false, error: "Fiyat bilgisi bulunamadı." };
+    }
+    return { success: true, data: quote };
+  } catch (error: any) {
+    console.error("fetchMarketQuoteAction error:", error);
+    return { success: false, error: error.message || "Fiyat alınamadı." };
+  }
+}
+
+/**
+ * Autocomplete search across 800+ BIST stocks and TEFAS funds
+ */
+export async function searchBistDirectoryAction(
+  query: string
+): Promise<{ success: boolean; data: Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' }> }> {
+  try {
+    const results = searchBistDirectory(query);
+    return { success: true, data: results };
+  } catch (error: any) {
+    console.error("searchBistDirectoryAction error:", error);
+    return { success: false, data: [] };
+  }
 }
 
 /**
@@ -269,7 +393,25 @@ export async function updateStockSymbolNameAction(
  */
 export async function getStockPortfolioAction(): Promise<{ success: boolean; data?: StockPortfolioDTO; error?: string }> {
   try {
+    await connectDB();
     const userId = await getUserId();
+
+    // Check if any open positions need price refresh (no current_price, or price_updated_at > 30 minutes ago)
+    const stalePositions = await StockPosition.find({
+      user_id: userId,
+      total_lots: { $gt: 0 },
+      $or: [
+        { current_price: { $lte: 0 } },
+        { current_price: { $exists: false } },
+        { price_updated_at: { $exists: false } },
+        { price_updated_at: { $lt: new Date(Date.now() - 30 * 60 * 1000) } },
+      ],
+    }).limit(1).lean();
+
+    if (stalePositions.length > 0) {
+      await refreshOpenPositionPrices(userId);
+    }
+
     const portfolio = await syncAndCalculatePortfolio(userId);
     return { success: true, data: portfolio };
   } catch (error: any) {
@@ -326,10 +468,21 @@ export async function addStockTradeAction(data: {
       }
     }
 
+    // Auto-resolve stock/fund name if not explicitly provided
+    let resolvedName = data.name?.trim();
+    if (!resolvedName) {
+      const bistMatch = BIST_COMPANIES.find(b => b.symbol === symbol);
+      if (bistMatch) {
+        resolvedName = bistMatch.name;
+      } else if (POPULAR_TEFAS_FUNDS[symbol]) {
+        resolvedName = POPULAR_TEFAS_FUNDS[symbol];
+      }
+    }
+
     await StockTrade.create({
       user_id: userId,
       symbol,
-      name: data.name?.trim() || undefined,
+      name: resolvedName || undefined,
       asset_type: data.assetType === 'fund' ? 'fund' : 'stock',
       type: data.type === 'sell' ? StockTradeType.SELL : StockTradeType.BUY,
       lots,
@@ -338,6 +491,32 @@ export async function addStockTradeAction(data: {
       date: tradeDate,
       notes: data.notes?.trim() || undefined,
     });
+
+    // Check if position already has a current market price; if not, fetch it now
+    const existingPos = await StockPosition.findOne({ user_id: userId, symbol }).lean();
+    if (!existingPos || !existingPos.current_price || existingPos.current_price <= 0) {
+      try {
+        const quote = await fetchMarketQuote(symbol, data.assetType);
+        if (quote && quote.currentPrice > 0) {
+          await StockPosition.findOneAndUpdate(
+            { user_id: userId, symbol },
+            {
+              $set: {
+                name: resolvedName || quote.name,
+                current_price: quote.currentPrice,
+                open_price: quote.openPrice || quote.currentPrice,
+                close_price: quote.closePrice || quote.currentPrice,
+                day_change_percent: quote.dayChangePercent || 0,
+                price_updated_at: new Date(),
+              }
+            },
+            { upsert: true }
+          );
+        }
+      } catch (err) {
+        console.error(`Could not pre-fetch quote for new trade ${symbol}:`, err);
+      }
+    }
 
     await syncAndCalculatePortfolio(userId);
     revalidatePath('/');

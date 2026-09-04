@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, CheckCircle2, TrendingUp } from "lucide-react";
-import { updateStockCurrentPriceAction } from "@/actions/stocks";
+import { X, CheckCircle2, TrendingUp, Sparkles, RefreshCw } from "lucide-react";
+import { updateStockCurrentPriceAction, fetchMarketQuoteAction } from "@/actions/stocks";
 import { StockPositionDTO } from "@/models/DashboardTypes";
 import toast from "react-hot-toast";
 
@@ -23,6 +23,41 @@ export function UpdateStockPriceModal({
     position?.current_price && position.current_price > 0 ? String(position.current_price) : ""
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingQuote, setIsFetchingQuote] = useState(false);
+  const [marketInfo, setMarketInfo] = useState<{
+    openPrice: number;
+    closePrice: number;
+    dayChangePercent: number;
+  } | null>(
+    position?.open_price || position?.close_price ? {
+      openPrice: position.open_price || 0,
+      closePrice: position.close_price || 0,
+      dayChangePercent: position.day_change_percent || 0
+    } : null
+  );
+
+  const handleFetchMarketPrice = async () => {
+    if (!position) return;
+    setIsFetchingQuote(true);
+    try {
+      const res = await fetchMarketQuoteAction(position.symbol, position.assetType);
+      if (res.success && res.data) {
+        setPrice(String(res.data.currentPrice));
+        setMarketInfo({
+          openPrice: res.data.openPrice,
+          closePrice: res.data.closePrice,
+          dayChangePercent: res.data.dayChangePercent,
+        });
+        toast.success(`${position.symbol} piyasa fiyatı getirildi: ${res.data.currentPrice} ₺`);
+      } else {
+        toast.error(res.error || "Piyasa fiyatı çekilemedi.");
+      }
+    } catch {
+      toast.error("Piyasa fiyatı alınamadı.");
+    } finally {
+      setIsFetchingQuote(false);
+    }
+  };
 
   if (!isOpen || !position) return null;
 
@@ -80,9 +115,20 @@ export function UpdateStockPriceModal({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı (₺)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı (₺)
+              </label>
+              <button
+                type="button"
+                disabled={isFetchingQuote}
+                onClick={handleFetchMarketPrice}
+                className="text-[11px] font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw size={11} className={isFetchingQuote ? "animate-spin" : ""} />
+                {isFetchingQuote ? "Piyasa Alınıyor..." : "Piyasadan Getir"}
+              </button>
+            </div>
             <input
               type="number"
               step="any"
@@ -95,6 +141,23 @@ export function UpdateStockPriceModal({
               className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-base text-white font-extrabold focus:outline-none focus:border-[var(--primary)]"
             />
           </div>
+
+          {/* Market Quote Details Badge */}
+          {marketInfo && (marketInfo.openPrice > 0 || marketInfo.closePrice > 0) && (
+            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 text-[11px]">
+              <div className="flex items-center justify-between text-[var(--on-surface-variant)]">
+                <span>Piyasa Bilgisi:</span>
+                <span className={`font-bold ${marketInfo.dayChangePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {marketInfo.dayChangePercent >= 0 ? '▲ +' : '▼ '}
+                  {marketInfo.dayChangePercent.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-white/70">
+                <span>Açılış: <b className="text-white">{marketInfo.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>Kapanış: <b className="text-white">{marketInfo.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+              </div>
+            </div>
+          )}
 
           {numPrice > 0 && (
             <div className={`p-3 rounded-xl border flex items-center justify-between text-xs ${

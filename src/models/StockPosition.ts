@@ -9,6 +9,10 @@ export interface IStockPosition extends Document {
   average_cost: number;
   total_cost: number;
   current_price?: number;
+  open_price?: number;
+  close_price?: number;
+  day_change_percent?: number;
+  price_updated_at?: Date;
   current_value?: number;
   unrealized_pnl?: number;
   unrealized_pnl_percent?: number;
@@ -25,6 +29,10 @@ const StockPositionSchema: Schema = new Schema({
   average_cost: { type: Number, required: true, default: 0 },
   total_cost: { type: Number, required: true, default: 0 },
   current_price: { type: Number, default: 0 },
+  open_price: { type: Number, default: 0 },
+  close_price: { type: Number, default: 0 },
+  day_change_percent: { type: Number, default: 0 },
+  price_updated_at: { type: Date },
   current_value: { type: Number, default: 0 },
   unrealized_pnl: { type: Number, default: 0 },
   unrealized_pnl_percent: { type: Number, default: 0 },

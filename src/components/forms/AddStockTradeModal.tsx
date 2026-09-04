@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
-import { addStockTradeAction, updateStockTradeAction } from "@/actions/stocks";
+import { addStockTradeAction, updateStockTradeAction, fetchMarketQuoteAction } from "@/actions/stocks";
 import { StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
 import toast from "react-hot-toast";
 
@@ -40,6 +40,43 @@ export function AddStockTradeModal({
   );
   const [notes, setNotes] = useState(editTrade?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingQuote, setIsFetchingQuote] = useState(false);
+  const [marketQuote, setMarketQuote] = useState<{
+    currentPrice: number;
+    openPrice: number;
+    closePrice: number;
+    dayChangePercent: number;
+  } | null>(null);
+
+  const fetchMarketPrice = async (targetSymbol: string, targetAssetType: 'stock' | 'fund') => {
+    const clean = targetSymbol.trim().toUpperCase();
+    if (!clean) return;
+    setIsFetchingQuote(true);
+    try {
+      const res = await fetchMarketQuoteAction(clean, targetAssetType);
+      if (res.success && res.data) {
+        setMarketQuote({
+          currentPrice: res.data.currentPrice,
+          openPrice: res.data.openPrice,
+          closePrice: res.data.closePrice,
+          dayChangePercent: res.data.dayChangePercent,
+        });
+        if (!price || parseFloat(price) <= 0) {
+          setPrice(String(res.data.currentPrice));
+        }
+        if (!name && res.data.name) {
+          setName(res.data.name);
+        }
+        if (res.data.assetType) {
+          setAssetType(res.data.assetType);
+        }
+      }
+    } catch (err) {
+      console.error("fetchMarketPrice error:", err);
+    } finally {
+      setIsFetchingQuote(false);
+    }
+  };
 
   useEffect(() => {
     if (editTrade) {
@@ -51,13 +88,16 @@ export function AddStockTradeModal({
       setPrice(String(editTrade.price));
       setDate(editTrade.rawDate ? editTrade.rawDate.slice(0, 10) : new Date().toISOString().slice(0, 10));
       setNotes(editTrade.notes || '');
+      setMarketQuote(null);
     } else {
       setTradeType(initialType);
       setAssetType('stock');
+      setMarketQuote(null);
       if (initialSymbol) {
         setSymbol(initialSymbol);
         const match = knownStocks.find(k => k.symbol.toUpperCase() === initialSymbol.toUpperCase());
         if (match && match.name) setName(match.name);
+        fetchMarketPrice(initialSymbol, 'stock');
       }
     }
   }, [isOpen, editTrade, initialType, initialSymbol]);
@@ -70,12 +110,13 @@ export function AddStockTradeModal({
   const filteredSuggestions = knownStocks.filter(k => {
     if (!cleanSymbol) return false;
     return k.symbol.toUpperCase().includes(cleanSymbol) || k.name.toLowerCase().includes(symbol.toLowerCase());
-  }).slice(0, 6);
+  }).slice(0, 8);
 
   const handleSelectSuggestion = (k: KnownStockDTO) => {
     setSymbol(k.symbol);
     setName(k.name);
     setShowSuggestions(false);
+    fetchMarketPrice(k.symbol, assetType);
   };
 
   const numLots = parseFloat(lots) || 0;
@@ -304,6 +345,9 @@ export function AddStockTradeModal({
                   if (match && match.name && !name) {
                     setName(match.name);
                   }
+                  if (cleanSymbol && !price) {
+                    fetchMarketPrice(cleanSymbol, assetType);
+                  }
                 }}
                 placeholder={assetType === 'fund' ? 'Örn: TTE, MAC' : 'Örn: THYAO, ASELS'}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold tracking-wider placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all uppercase"
@@ -376,7 +420,7 @@ export function AddStockTradeModal({
                   <button
                     type="button"
                     onClick={() => setLots(String(matchedPos.total_lots))}
-                    className="text-[10px] text-rose-400 hover:text-rose-300 font-bold underline"
+                    className="text-[10px] text-rose-400 hover:text-rose-300 font-bold underline cursor-pointer"
                   >
                     Tümünü Sat ({matchedPos.total_lots})
                   </button>
@@ -395,9 +439,22 @@ export function AddStockTradeModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Birim Fiyat (₺) *
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                  Birim Fiyat (₺) *
+                </label>
+                {cleanSymbol && (
+                  <button
+                    type="button"
+                    disabled={isFetchingQuote}
+                    onClick={() => fetchMarketPrice(cleanSymbol, assetType)}
+                    className="text-[10px] font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    <Sparkles size={11} className={isFetchingQuote ? "animate-spin" : ""} />
+                    {isFetchingQuote ? "Fiyat Alınıyor..." : "Piyasa Fiyatı Al"}
+                  </button>
+                )}
+              </div>
               <input
                 type="number"
                 step="any"
@@ -410,6 +467,39 @@ export function AddStockTradeModal({
               />
             </div>
           </div>
+
+          {/* Market Quote Details Card */}
+          {marketQuote && (marketQuote.openPrice > 0 || marketQuote.closePrice > 0) && (
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 text-xs animate-fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--on-surface-variant)] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Piyasa Fiyatı: <b className="text-white text-sm">{marketQuote.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b>
+                </span>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  marketQuote.dayChangePercent >= 0
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                }`}>
+                  {marketQuote.dayChangePercent >= 0 ? '▲ +' : '▼ '}
+                  {marketQuote.dayChangePercent.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-white/60 pt-1 border-t border-white/5">
+                <span>Günün Açılışı: <b className="text-white/90">{marketQuote.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>Gün Sonu / Kapanış: <b className="text-white/90">{marketQuote.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+              </div>
+              {price !== String(marketQuote.currentPrice) && (
+                <button
+                  type="button"
+                  onClick={() => setPrice(String(marketQuote.currentPrice))}
+                  className="mt-1 py-1 px-2.5 text-[10px] font-bold rounded-lg bg-[var(--primary)]/20 text-[var(--primary)] hover:bg-[var(--primary)]/30 transition-colors w-fit self-end cursor-pointer"
+                >
+                  Piyasa Fiyatını Uygula ({marketQuote.currentPrice} ₺)
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Date & Note Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

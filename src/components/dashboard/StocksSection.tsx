@@ -16,9 +16,10 @@ import {
   MoreHorizontal,
   Download,
   X,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
-import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
+import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction, syncStockMarketPricesAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
 import { AddStockTradeModal } from "@/components/forms/AddStockTradeModal";
 import { UpdateStockPriceModal } from "@/components/forms/UpdateStockPriceModal";
@@ -32,6 +33,7 @@ import toast from "react-hot-toast";
 export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void } = {}) {
   const [portfolio, setPortfolio] = useState<StockPortfolioDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncingPrices, setIsSyncingPrices] = useState(false);
   const [activeTab, setActiveTab] = useState<'positions' | 'realized' | 'trades'>('positions');
   const [searchQuery, setSearchQuery] = useState('');
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
@@ -73,6 +75,23 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   useEffect(() => {
     fetchPortfolio();
   }, [fetchPortfolio]);
+
+  const handleSyncPrices = async () => {
+    setIsSyncingPrices(true);
+    try {
+      const res = await syncStockMarketPricesAction();
+      if (res.success) {
+        toast.success(`Piyasa fiyatları güncellendi! (${res.updatedCount || 0} varlık) ✨`);
+        await fetchPortfolio();
+      } else {
+        toast.error(res.error || "Piyasa fiyatları güncellenemedi.");
+      }
+    } catch {
+      toast.error("Piyasa fiyatları güncellenirken hata oluştu.");
+    } finally {
+      setIsSyncingPrices(false);
+    }
+  };
 
   const handleOpenBuy = (symbol = '') => {
     setEditTrade(null);
@@ -215,6 +234,16 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
           <div className="flex items-center gap-1 sm:hidden">
             <button 
               type="button" 
+              disabled={isSyncingPrices}
+              onClick={handleSyncPrices} 
+              aria-label="Piyasa fiyatlarını yenile" 
+              title="Piyasa Fiyatlarını Yenile" 
+              className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 transition-colors hover:bg-emerald-500/25 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw size={16} className={isSyncingPrices ? "animate-spin" : ""} />
+            </button>
+            <button 
+              type="button" 
               data-tour="stocks-pdf-btn"
               onClick={() => setIsPdfModalOpen(true)} 
               aria-label="Borsa raporunu PDF olarak indir" 
@@ -240,6 +269,17 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            disabled={isSyncingPrices}
+            onClick={handleSyncPrices}
+            aria-label="Piyasa fiyatlarını yenile"
+            title="Piyasa Fiyatlarını Güncelle"
+            className="hidden sm:flex min-h-11 px-3.5 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold transition-colors hover:bg-emerald-500/25 cursor-pointer disabled:opacity-50 mr-1 gap-1.5"
+          >
+            <RefreshCw size={14} className={isSyncingPrices ? "animate-spin" : ""} />
+            <span>{isSyncingPrices ? "Güncelleniyor..." : "Fiyatları Yenile"}</span>
+          </button>
           <button
             type="button"
             data-tour="stocks-pdf-btn"
@@ -466,26 +506,48 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                       </span>
                     </div>
 
-                    {/* Current Price & Potential PnL */}
-                    <div className="col-span-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Güncel:</span>
-                        {pos.current_price && pos.current_price > 0 ? (
-                          <span className="font-bold text-white">{formatStockCurrency(pos.current_price)}</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPriceModal(pos)}
-                            className="min-h-9 px-2 text-xs text-[var(--primary)] hover:underline font-semibold cursor-pointer"
-                          >
-                            + Fiyat Gir
-                          </button>
+                    {/* Current Price & Day Change */}
+                    <div className="col-span-2 pt-2 border-t border-white/5 flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Güncel:</span>
+                          {pos.current_price && pos.current_price > 0 ? (
+                            <span className="font-bold text-white text-sm">{formatStockCurrency(pos.current_price)}</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPriceModal(pos)}
+                              className="min-h-9 px-2 text-xs text-[var(--primary)] hover:underline font-semibold cursor-pointer"
+                            >
+                              + Fiyat Gir
+                            </button>
+                          )}
+                        </div>
+
+                        {typeof pos.day_change_percent === 'number' && pos.day_change_percent !== 0 && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
+                            pos.day_change_percent > 0
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                          }`}>
+                            {pos.day_change_percent > 0 ? '▲ +' : '▼ '}
+                            {pos.day_change_percent.toFixed(2)}%
+                          </span>
                         )}
                       </div>
 
+                      {/* Open & Close Prices */}
+                      {((pos.open_price ?? 0) > 0 || (pos.close_price ?? 0) > 0) && (
+                        <div className="flex items-center justify-between text-[10px] text-[var(--on-surface-variant)] pt-1 border-t border-white/5">
+                          <span>Açılış: <b className="text-white/80">{pos.open_price ? formatStockCurrency(pos.open_price) : '-'}</b></span>
+                          <span>Kapanış: <b className="text-white/80">{pos.close_price ? formatStockCurrency(pos.close_price) : '-'}</b></span>
+                        </div>
+                      )}
+
                       {pos.current_price && pos.current_price > 0 && (
-                        <div className="text-right">
-                          <span className={`text-[11px] font-extrabold ${
+                        <div className="flex items-center justify-between pt-1 border-t border-white/5 text-xs">
+                          <span className="text-[10px] text-[var(--on-surface-variant)]">Toplam K/Z:</span>
+                          <span className={`text-xs font-extrabold ${
                             (pos.unrealized_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
                           }`}>
                             {(pos.unrealized_pnl || 0) >= 0 ? '+' : ''}

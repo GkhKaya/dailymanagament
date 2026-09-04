@@ -147,6 +147,10 @@ export interface StockPositionDTO {
   average_cost: number;
   total_cost: number;
   current_price?: number;
+  open_price?: number;
+  close_price?: number;
+  day_change_percent?: number;
+  price_updated_at?: string;
   current_value?: number;
   unrealized_pnl?: number;
   unrealized_pnl_percent?: number;

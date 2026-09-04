@@ -24,6 +24,7 @@ export const connectDB = async () => {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: process.env.MONGODB_DB_NAME || 'dailymanagament',
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
