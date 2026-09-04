@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle, ExternalLink } from 'lucide-react';
+import { getExerciseVideoUrl } from '@/lib/workout-utils';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
@@ -436,15 +437,31 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                         {/* Expanded Exercises */}
                         {isExpanded && day.exercises && day.exercises.length > 0 && (
                           <div className="flex flex-col border-t border-[rgba(255,255,255,0.06)] bg-[#12121D] p-3 gap-2">
+                            <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] text-[var(--on-surface-variant)] font-medium">
+                              <PlayCircle size={12} className="text-[var(--primary)]" />
+                              <span>Videolu yapılış anlatımını açmak için harekete tıklayın</span>
+                            </div>
                             {day.exercises.map((ex: any, idx: number) => (
-                              <div key={ex.id || idx} className="flex items-center justify-between p-2.5 bg-[#181826] rounded-lg border border-[rgba(255,255,255,0.04)]">
-                                <div className="flex items-center gap-2.5">
+                              <a
+                                key={ex.id || idx}
+                                href={getExerciseVideoUrl(ex.name)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between p-2.5 bg-[#181826] hover:bg-[#202032] rounded-lg border border-[rgba(255,255,255,0.04)] hover:border-[var(--primary)]/40 transition-all group/ex cursor-pointer"
+                                title={`"${ex.name}" hareketinin videosunu izle`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                   <span className="w-6 h-6 rounded-md bg-[var(--primary)]/15 text-[var(--primary)] text-xs font-bold flex items-center justify-center shrink-0">
                                     {idx + 1}
                                   </span>
-                                  <span className="text-xs font-semibold text-white">{ex.name}</span>
+                                  <span className="text-xs font-semibold text-white truncate group-hover/ex:text-[var(--primary)] transition-colors">
+                                    {ex.name}
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--primary)] bg-[var(--primary)]/10 px-1.5 py-0.5 rounded opacity-75 group-hover/ex:opacity-100 transition-opacity shrink-0">
+                                    <PlayCircle size={11} /> Video
+                                  </span>
                                 </div>
-                                <div className="flex items-center gap-2.5">
+                                <div className="flex items-center gap-2 shrink-0">
                                   <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
                                     {ex.sets} Set {ex.reps ? `x ${ex.reps}` : ''}
                                   </span>
@@ -453,8 +470,9 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                                       ({ex.weight_kg} kg)
                                     </span>
                                   ) : null}
+                                  <ExternalLink size={13} className="text-[var(--on-surface-variant)] group-hover/ex:text-white transition-colors ml-0.5" />
                                 </div>
-                              </div>
+                              </a>
                             ))}
                           </div>
                         )}

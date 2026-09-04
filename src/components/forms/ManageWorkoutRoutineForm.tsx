@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Dumbbell, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Dumbbell, Sparkles, PlayCircle } from 'lucide-react';
 import { saveWorkoutDayAction, deleteWorkoutDayAction } from '@/actions/workout';
+import { getExerciseVideoUrl } from '@/lib/workout-utils';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -163,6 +164,17 @@ export function ManageWorkoutRoutineForm({
                   className="flex-1 bg-transparent text-[13px] font-semibold text-white focus:outline-none border-b border-transparent focus:border-[var(--primary)] transition-colors py-0.5"
                   required
                 />
+                {row.name.trim() && (
+                  <a
+                    href={getExerciseVideoUrl(row.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 text-[var(--primary)] hover:text-white hover:bg-[var(--primary)]/20 rounded-lg transition-colors shrink-0"
+                    title={`"${row.name}" hareketinin videosunu izle`}
+                  >
+                    <PlayCircle size={15} />
+                  </a>
+                )}
                 <button
                   type="button"
                   onClick={() => handleRemoveRow(idx)}
