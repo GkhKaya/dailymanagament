@@ -486,8 +486,8 @@ export function AddStockTradeModal({
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] text-white/60 pt-1 border-t border-white/5">
-                <span>Günün Açılışı: <b className="text-white/90">{marketQuote.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
-                <span>Gün Sonu / Kapanış: <b className="text-white/90">{marketQuote.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>Açılış: <b className="text-white/90">{marketQuote.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>Önceki Kapanış: <b className="text-white/90">{marketQuote.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
               </div>
               {price !== String(marketQuote.currentPrice) && (
                 <button

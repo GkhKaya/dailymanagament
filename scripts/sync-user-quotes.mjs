@@ -20,23 +20,27 @@ async function fetchYahoo(symbol) {
   const quotes = json.chart?.result?.[0]?.indicators?.quote?.[0];
   if (!meta) return null;
 
-  const currentPrice = Number(meta.regularMarketPrice) || 0;
-  let openPrice = Number(meta.regularMarketOpen) || 0;
-  if (openPrice <= 0 && quotes?.open) {
-    const valid = quotes.open.filter(v => typeof v === 'number' && v > 0);
-    if (valid.length > 0) openPrice = valid[valid.length - 1];
-  }
+  const validCloses = quotes?.close ? quotes.close.filter(v => typeof v === 'number' && v > 0) : [];
+  const validOpens = quotes?.open ? quotes.open.filter(v => typeof v === 'number' && v > 0) : [];
+
+  const currentPrice = Number(meta.regularMarketPrice) || (validCloses.length > 0 ? validCloses[validCloses.length - 1] : 0);
+  if (currentPrice <= 0) return null;
+
+  let openPrice = validOpens.length > 0 ? validOpens[validOpens.length - 1] : (Number(meta.regularMarketOpen) || currentPrice);
   if (openPrice <= 0) openPrice = currentPrice;
 
-  let closePrice = Number(meta.chartPreviousClose) || Number(meta.previousClose) || 0;
-  if (closePrice <= 0 && quotes?.close && quotes.close.length > 1) {
-    const valid = quotes.close.filter(v => typeof v === 'number' && v > 0);
-    if (valid.length > 1) closePrice = valid[valid.length - 2];
+  let closePrice = 0;
+  if (validCloses.length >= 2) {
+    closePrice = validCloses[validCloses.length - 2];
+  } else if (typeof meta.fulldayChange === 'number' && meta.fulldayChange !== 0) {
+    closePrice = currentPrice - meta.fulldayChange;
+  } else if (Number(meta.previousClose) > 0) {
+    closePrice = Number(meta.previousClose);
   }
   if (closePrice <= 0) closePrice = openPrice;
 
   let dayChangePercent = Number(meta.regularMarketChangePercent) || 0;
-  if (dayChangePercent === 0 && closePrice > 0) {
+  if ((dayChangePercent === 0 || !Number.isFinite(dayChangePercent)) && closePrice > 0) {
     dayChangePercent = Math.round(((currentPrice - closePrice) / closePrice) * 10000) / 100;
   }
 

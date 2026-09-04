@@ -510,7 +510,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <div className="col-span-2 pt-2 border-t border-white/5 flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Güncel:</span>
+                          <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Son / Kapanış:</span>
                           {pos.current_price && pos.current_price > 0 ? (
                             <span className="font-bold text-white text-sm">{formatStockCurrency(pos.current_price)}</span>
                           ) : (
@@ -540,7 +540,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                       {((pos.open_price ?? 0) > 0 || (pos.close_price ?? 0) > 0) && (
                         <div className="flex items-center justify-between text-[10px] text-[var(--on-surface-variant)] pt-1 border-t border-white/5">
                           <span>Açılış: <b className="text-white/80">{pos.open_price ? formatStockCurrency(pos.open_price) : '-'}</b></span>
-                          <span>Kapanış: <b className="text-white/80">{pos.close_price ? formatStockCurrency(pos.close_price) : '-'}</b></span>
+                          <span>Önceki Kapanış: <b className="text-white/80">{pos.close_price ? formatStockCurrency(pos.close_price) : '-'}</b></span>
                         </div>
                       )}
 

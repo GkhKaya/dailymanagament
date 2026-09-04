@@ -154,7 +154,7 @@ export function UpdateStockPriceModal({
               </div>
               <div className="flex items-center justify-between text-white/70">
                 <span>Açılış: <b className="text-white">{marketInfo.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
-                <span>Kapanış: <b className="text-white">{marketInfo.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>Önceki Kapanış: <b className="text-white">{marketInfo.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
               </div>
             </div>
           )}
