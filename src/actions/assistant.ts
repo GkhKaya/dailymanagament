@@ -8,32 +8,29 @@ import { Account } from '@/models/Account';
 import { Category } from '@/models/Category';
 import { addTransactionAction } from '@/actions/finance';
 import { addMealsAction } from '@/actions/health';
+import { toUserFacingError } from '@/lib/error-management';
+import { enrichAssistantFoodsWithDB } from '@/lib/assistant-db-matcher';
 
-type TransactionType = 'expense' | 'income';
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type NutritionBasis = 'per_gram' | 'per_unit';
+export type {
+  TransactionType,
+  MealType,
+  NutritionBasis,
+  FinanceDraft,
+  AssistantFoodItem,
+  HealthDraft,
+  AssistantFood
+} from '@/lib/assistant-helpers';
 
-interface FinanceDraft {
-  transaction_type: TransactionType;
-  amount: number;
-  description: string;
-  date: string;
-  account_id: string | null;
-  category_id: string | null;
-  accounts: Array<{ id: string; name: string }>;
-  categories: Array<{ id: string; name: string }>;
-}
-
-interface AssistantFood {
-  name: string;
-  quantity: number;
-  unit: string;
-  nutrition_basis: NutritionBasis;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import {
+  type MealType,
+  type AssistantFood,
+  type FinanceDraft,
+  type HealthDraft,
+  validNumber,
+  buildHealthDraftFromFoods,
+  validateHealthDraft,
+  validateFinanceDraft
+} from '@/lib/assistant-helpers';
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -52,11 +49,6 @@ function matchByKeyword<T extends { name: string }>(items: T[], keyword: string 
   if (exact) return exact;
   const matches = items.filter((item) => normalizeText(item.name).includes(normalized) || normalized.includes(normalizeText(item.name)));
   return matches.length === 1 ? matches[0] : null;
-}
-
-function validNumber(value: unknown, max: number) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 && number <= max ? number : null;
 }
 
 function voiceSchema() {
@@ -89,17 +81,16 @@ function voiceSchema() {
                 name: { type: Type.STRING },
                 quantity: { type: Type.NUMBER, minimum: 0 },
                 unit: { type: Type.STRING },
-                nutrition_basis: { type: Type.STRING, enum: ['per_gram', 'per_unit'] },
-                calories: { type: Type.NUMBER, minimum: 0 },
-                protein_g: { type: Type.NUMBER, minimum: 0 },
-                carbs_g: { type: Type.NUMBER, minimum: 0 },
-                fat_g: { type: Type.NUMBER, minimum: 0 }
+                total_calories: { type: Type.NUMBER, minimum: 0 },
+                total_protein_g: { type: Type.NUMBER, minimum: 0 },
+                total_carbs_g: { type: Type.NUMBER, minimum: 0 },
+                total_fat_g: { type: Type.NUMBER, minimum: 0 }
               },
-              required: ['name', 'quantity', 'unit', 'nutrition_basis', 'calories', 'protein_g', 'carbs_g', 'fat_g']
+              required: ['name', 'quantity', 'unit', 'total_calories', 'total_protein_g', 'total_carbs_g', 'total_fat_g']
             }
           }
         },
-        required: ['meal_type', 'foods']
+        required: ['foods']
       }
     },
     required: ['type']
@@ -110,24 +101,59 @@ async function parseVoiceCommand(text: string) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY tanımlı değil.');
   const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.1-flash-lite',
-    contents: `Türkçe kişisel finans ve yemek günlüğü komutunu JSON'a çevir.
-Finans için yalnız söylenen bilgileri çıkar. Bilinmeyen hesabı veya kategoriyi uydurma.
-Yemek için gram söylendiyse quantity gerçek gram sayısı, nutrition_basis per_gram, nutrition değerleri 1 gram için olmalı.
-Adet, dilim, porsiyon veya bardak için nutrition_basis per_unit, değerler 1 birim için olmalı.
+
+  const primaryModel = 'gemini-3.6-flash';
+  const fallbackModel = 'gemini-3.1-flash-lite';
+
+  const generateWithModel = async (model: string) => {
+    const response = await ai.models.generateContent({
+      model,
+      contents: `Türkçe kişisel finans ve beslenme komutunu JSON'a dönüştür.
+
+FİNANS KURALLARI:
+- Yalnız söylenen bilgileri çıkar. Bilinmeyen hesabı veya kategoriyi uydurma.
+
+BESLENME KURALLARI:
+1. Eğer öğün türü (kahvaltı, öğle, akşam, ara öğün) komutta varsa meal_type olarak belirt ('breakfast'|'lunch'|'dinner'|'snack'). Belirtilmemişse yiyecek türüne göre en uygun öğünü seç veya null bırak.
+2. Türkçe ölçü birimlerini eksiksiz ve doğru yorumla:
+   - "kilogram", "kilo", "kg" dendiğinde grama çevir (örn: 1 kilo = 1000 gram, yarım kilo = 500 gram), unit="gram".
+   - "gram", "gr", "g" dendiğinde quantity=söylenen gram, unit="gram".
+   - "adet", "tane", "yumurta", "elma" dendiğinde quantity=adet, unit="adet".
+   - "dilim" dendiğinde quantity=dilim, unit="dilim".
+   - "porsiyon", "tabak" dendiğinde quantity=porsiyon, unit="porsiyon".
+   - "bardak", "su bardağı" dendiğinde quantity=bardak, unit="bardak".
+   - "çay bardağı" dendiğinde quantity=çay bardağı, unit="çay bardağı".
+   - "kase" dendiğinde quantity=kase, unit="kase".
+   - "kaşık", "yemek kaşığı", "tatlı kaşığı", "çay kaşığı" dendiğinde unit olarak bunu yaz.
+3. Komutta birden fazla yiyecek varsa hepsini ayrı ayrı foods dizisine ekle.
+4. total_calories, total_protein_g, total_carbs_g, total_fat_g alanlarına belirtilen MİKTARIN TAMAMI için toplam besin değerlerini yaz. (Örn: 2 yumurta için ~140 kcal, 100g peynir için ~260 kcal, 2 dilim ekmek için ~130 kcal). Pozitif ve gerçekçi değerler ver.
+
 Kullanıcı komutu: "${text}"`,
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: voiceSchema(),
-      temperature: 0.1
-    }
-  });
-  if (!response.text) throw new Error('Yapay zeka boş yanıt döndürdü.');
-  return JSON.parse(response.text) as Record<string, unknown>;
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: voiceSchema(),
+        temperature: 0.1
+      }
+    });
+    if (!response.text) throw new Error('Yapay zeka boş yanıt döndürdü.');
+    return JSON.parse(response.text) as Record<string, unknown>;
+  };
+
+  try {
+    return await generateWithModel(primaryModel);
+  } catch (err) {
+    console.warn(`[Assistant] ${primaryModel} hatası, ${fallbackModel} deneniyor:`, err);
+    return await generateWithModel(fallbackModel);
+  }
 }
 
-export async function processAssistantVoiceAction(text: string, currentDateStr?: string) {
+
+export type ProcessVoiceResult =
+  | { success: true; action: 'finance_preview'; draft: FinanceDraft; error?: undefined }
+  | { success: true; action: 'health_preview'; draft: HealthDraft; error?: undefined }
+  | { success: false; error: string; action?: undefined; draft?: undefined };
+
+export async function processAssistantVoiceAction(text: string, currentDateStr?: string): Promise<ProcessVoiceResult> {
   try {
     if (!text.trim() || text.length > 500) return { success: false, error: 'Komut boş veya fazla uzun.' };
 
@@ -161,52 +187,43 @@ export async function processAssistantVoiceAction(text: string, currentDateStr?:
         accounts: accounts.map((account) => ({ id: account._id.toString(), name: account.name })),
         categories: categories.map((category) => ({ id: category._id.toString(), name: category.name }))
       };
-      return { success: true, action: 'finance_preview' as const, draft };
+      return { success: true, action: 'finance_preview', draft };
     }
 
     if (parsed.type === 'health') {
       const health = parsed.health_data as { meal_type?: MealType; foods?: AssistantFood[] } | undefined;
-      if (!health || !['breakfast', 'lunch', 'dinner', 'snack'].includes(health.meal_type || '') || !Array.isArray(health.foods) || health.foods.length === 0) {
-        return { success: false, error: 'Öğün bilgisi anlaşılmadı.' };
+      if (!health || !Array.isArray(health.foods) || health.foods.length === 0) {
+        return { success: false, error: 'Besin bilgisi anlaşılmadı. Lütfen ne yediğinizi (örn: "2 yumurta ve 100 gram peynir yedim") açıkça söyleyin.' };
       }
 
-      const foods = health.foods.map((food) => {
-        const quantity = validNumber(food.quantity, 10_000);
-        const calories = validNumber(food.calories, 10_000);
-        if (!food.name?.trim() || !quantity || calories === null || !['per_gram', 'per_unit'].includes(food.nutrition_basis)) throw new Error('Öğün içindeki besin bilgisi geçersiz.');
-        const multiplier = quantity;
-        return {
-          food_name: food.name.trim().slice(0, 120),
-          serving_description: `${quantity} ${food.unit || (food.nutrition_basis === 'per_gram' ? 'gram' : 'adet')}`,
-          quantity,
-          unit_type: food.nutrition_basis === 'per_gram' ? 'gram' : 'adet',
-          calories: Math.round(calories * multiplier),
-          protein_g: Math.round(Math.max(0, Number(food.protein_g) || 0) * multiplier * 10) / 10,
-          carbs_g: Math.round(Math.max(0, Number(food.carbs_g) || 0) * multiplier * 10) / 10,
-          fat_g: Math.round(Math.max(0, Number(food.fat_g) || 0) * multiplier * 10) / 10
-        };
-      });
+      // Önce veritabanımızdaki FoodCache koleksiyonunda var mı diye bakılır
+      const enrichedFoods = await enrichAssistantFoodsWithDB(health.foods, userId);
+      const draft = buildHealthDraftFromFoods({ ...health, foods: enrichedFoods }, text, currentDateStr);
 
-      const mealResult = await addMealsAction(foods.map((food) => ({ date: currentDateStr || new Date().toISOString(), type: health.meal_type!, ...food })));
-      if (!mealResult.success) return { success: false, error: mealResult.error || 'Öğün kaydı tamamlanamadı. Tekrar deneyin.' };
-      return { success: true, action: 'health_saved' as const, message: `Öğüne eklendi: ${foods.map((food) => food.serving_description + ' ' + food.food_name).join(', ')}` };
+      return {
+        success: true,
+        action: 'health_preview',
+        draft
+      };
     }
 
-    return { success: false, error: 'Komut anlaşılmadı. Finans veya yenilen besini açıkça söyleyin.' };
+    return { success: false, error: 'Komut anlaşılmadı. Finans harcamanızı veya yediğiniz besinleri net bir şekilde ifade edin.' };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Yapay zeka komutu işleyemedi.';
-    return { success: false, error: message };
+    console.error('[Assistant] processAssistantVoiceAction error:', error);
+    return { success: false, error: toUserFacingError(error, 'Yapay zeka asistanı komutu işleyemedi. Lütfen tekrar deneyin.') };
   }
 }
 
+
 export async function confirmAssistantFinanceAction(draft: Pick<FinanceDraft, 'transaction_type' | 'amount' | 'description' | 'date' | 'account_id' | 'category_id'>) {
   try {
+    const validation = validateFinanceDraft(draft);
+    if (!validation.valid || !validation.amount) {
+      return { success: false, error: validation.error || 'Tutar, hesap ve kategori seçilmelidir.' };
+    }
+
     const userId = await getUserId();
     await connectDB();
-    const amount = validNumber(draft.amount, 1_000_000);
-    if (!amount || !draft.account_id || !draft.category_id || (draft.transaction_type !== 'income' && draft.transaction_type !== 'expense')) {
-      return { success: false, error: 'Tutar, hesap ve kategori seçilmelidir.' };
-    }
 
     const [account, category] = await Promise.all([
       Account.findOne({ _id: draft.account_id, user_id: userId, is_active: true }).lean(),
@@ -216,7 +233,7 @@ export async function confirmAssistantFinanceAction(draft: Pick<FinanceDraft, 't
 
     return await addTransactionAction({
       type: draft.transaction_type,
-      amount,
+      amount: validation.amount,
       account_id: account._id.toString(),
       category_id: category._id.toString(),
       date: draft.date,
@@ -224,6 +241,40 @@ export async function confirmAssistantFinanceAction(draft: Pick<FinanceDraft, 't
       source: 'voice'
     });
   } catch (error: unknown) {
-    return { success: false, error: error instanceof Error ? error.message : 'Finans işlemi kaydedilemedi.' };
+    console.error('[Assistant] confirmAssistantFinanceAction error:', error);
+    return { success: false, error: toUserFacingError(error, 'Finans işlemi kaydedilemedi. Lütfen tekrar deneyin.') };
+  }
+}
+
+export async function confirmAssistantHealthAction(draft: HealthDraft) {
+  try {
+    const validation = validateHealthDraft(draft);
+    if (!validation.valid || !validation.foods) {
+      return { success: false, error: validation.error || 'Besin verisi geçersiz.' };
+    }
+
+    await getUserId();
+    await connectDB();
+
+    const mealResult = await addMealsAction(validation.foods);
+    if (!mealResult.success) {
+      return { success: false, error: mealResult.error || 'Öğün kaydı tamamlanamadı.' };
+    }
+
+    const mealLabel = draft.meal_type === 'breakfast'
+      ? 'Kahvaltı'
+      : draft.meal_type === 'lunch'
+      ? 'Öğle Yemeği'
+      : draft.meal_type === 'dinner'
+      ? 'Akşam Yemeği'
+      : 'Ara Öğün';
+
+    return {
+      success: true,
+      message: `${draft.foods.length} besin ${mealLabel} öğününe eklendi.`
+    };
+  } catch (error: unknown) {
+    console.error('[Assistant] confirmAssistantHealthAction error:', error);
+    return { success: false, error: toUserFacingError(error, 'Besin kaydı sırasında bir hata oluştu. Lütfen tekrar deneyin.') };
   }
 }
