@@ -81,7 +81,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     try {
       const res = await syncStockMarketPricesAction();
       if (res.success) {
-        toast.success(`Piyasa fiyatları güncellendi! (${res.updatedCount || 0} varlık) ✨`);
+        toast.success(`Piyasa fiyatları güncellendi! (${res.updatedCount || 0} varlık)`);
         await fetchPortfolio();
       } else {
         toast.error(res.error || "Piyasa fiyatları güncellenemedi.");

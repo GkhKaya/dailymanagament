@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Camera, Sparkles, Upload, Check, Trash2, RefreshCw, X, Database, Bot } from "lucide-react";
+import { Camera, Sparkles, Upload, Check, Trash2, RefreshCw, X, Database, Bot, Home, Utensils, Leaf, Flame } from "lucide-react";
 import { addMealsAction } from "@/actions/health";
 import toast from "react-hot-toast";
 
@@ -185,7 +185,7 @@ export function AIPhotoMealModal({
     try {
       const res = await addMealsAction(payload);
       if (res.success) {
-        toast.success(`AI ile ${selectedItems.length} besin öğüne eklendi! ✨`);
+        toast.success(`AI ile ${selectedItems.length} besin öğüne eklendi!`);
         onSuccess();
         onClose();
       } else {
@@ -272,11 +272,12 @@ export function AIPhotoMealModal({
             {/* Quick Presets */}
             <div className="flex flex-wrap gap-1.5 pt-1">
               {[
-                { label: '🏠 Anne Yemeği / Ev Yapımı', text: 'anne yemeği ev yapımı' },
-                { label: '🍽️ Restoran Yemeği', text: 'restoran yemeği dışarıda' },
-                { label: '🥗 Az Yağlı / Diyet', text: 'az yağlı diyet yemeği' },
-                { label: '🧈 Bol Tereyağlı', text: 'bol tereyağlı yağlı' },
+                { label: 'Anne Yemeği / Ev Yapımı', text: 'anne yemeği ev yapımı', icon: Home },
+                { label: 'Restoran Yemeği', text: 'restoran yemeği dışarıda', icon: Utensils },
+                { label: 'Az Yağlı / Diyet', text: 'az yağlı diyet yemeği', icon: Leaf },
+                { label: 'Bol Tereyağlı', text: 'bol tereyağlı yağlı', icon: Flame },
               ].map(preset => {
+                const Icon = preset.icon;
                 const isActive = userDirective.toLowerCase().includes(preset.text.split(' ')[0]);
                 return (
                   <button
@@ -289,12 +290,13 @@ export function AIPhotoMealModal({
                         analyzePhoto(imagePreview, newDirective);
                       }
                     }}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all cursor-pointer ${
+                    className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                        : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10'
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-200 font-semibold'
+                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                     }`}
                   >
+                    <Icon size={12} className={isActive ? 'text-purple-300' : 'text-white/60'} />
                     {preset.label}
                   </button>
                 );

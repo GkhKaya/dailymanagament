@@ -206,7 +206,7 @@ export function AddStockTradeModal({
 
         if (res.success) {
           const actionText = tradeType === 'buy' ? 'Alış emri' : 'Satış emri';
-          toast.success(`${cleanSymbol} ${actionText} başarıyla kaydedildi! ✨`);
+          toast.success(`${cleanSymbol} ${actionText} başarıyla kaydedildi!`);
           onSuccess();
           onClose();
         } else {
@@ -561,8 +561,18 @@ export function AddStockTradeModal({
                     : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
                 }`}>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-[11px] uppercase tracking-wider">
-                      {realizedPnlPreview >= 0 ? "💰 Gerçekleşen Net Kâr" : "📉 Gerçekleşen Net Zarar"}
+                    <span className="font-semibold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                      {realizedPnlPreview >= 0 ? (
+                        <>
+                          <TrendingUp size={13} className="text-emerald-400" />
+                          <span>Gerçekleşen Net Kâr</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingDown size={13} className="text-rose-400" />
+                          <span>Gerçekleşen Net Zarar</span>
+                        </>
+                      )}
                     </span>
                     <span className="text-base font-extrabold">
                       {realizedPnlPreview >= 0 ? '+' : ''}

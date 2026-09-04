@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils } from 'lucide-react';
+import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils, UtensilsCrossed, Sunrise, Sun, Moon, Apple, GlassWater, Soup, PenTool, BookmarkCheck } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { deleteMealAction } from '@/actions/health';
@@ -115,12 +115,21 @@ interface SessionAddedMeal {
   sugar_g: number;
   type: string;
 }
-const MEAL_OPTIONS: { id: MealType; label: string; icon: string }[] = [
-  { id: 'breakfast', label: 'Kahvaltı', icon: '🌅' },
-  { id: 'lunch', label: 'Öğle', icon: '☀️' },
-  { id: 'dinner', label: 'Akşam', icon: '🌙' },
-  { id: 'snack', label: 'Ara Öğün', icon: '🍎' }
+const MEAL_OPTIONS: { id: MealType; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  { id: 'breakfast', label: 'Kahvaltı', icon: Sunrise },
+  { id: 'lunch', label: 'Öğle', icon: Sun },
+  { id: 'dinner', label: 'Akşam', icon: Moon },
+  { id: 'snack', label: 'Ara Öğün', icon: Apple }
 ];
+
+function getPortionIcon(name: string, isRaw?: boolean) {
+  if (name.includes('Bardak')) return <GlassWater size={15} className="text-blue-400 shrink-0" />;
+  if (name.includes('Kase')) return <Soup size={15} className="text-amber-400 shrink-0" />;
+  if (name.includes('Kaşık')) return <Utensils size={15} className="text-orange-400 shrink-0" />;
+  if (name.includes('Dilim')) return <UtensilsCrossed size={15} className="text-yellow-400 shrink-0" />;
+  if (isRaw) return <Scale size={15} className="text-[var(--primary)] shrink-0" />;
+  return <Utensils size={15} className="text-[var(--primary)] shrink-0" />;
+}
 
 export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: { onClose: () => void; onSuccess: () => void; currentDate?: string; onOpenAIPhoto?: () => void }) {
   const {
@@ -604,21 +613,25 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
 
       {/* ── ÖĞÜN SEÇİMİ ── */}
       <div className="flex gap-2">
-        {MEAL_OPTIONS.map(m => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => { setMealType(m.id); setShowDropdown(true); }}
-            className={`flex-1 py-2.5 flex flex-col items-center gap-0.5 rounded-2xl text-[11px] font-semibold transition-all ${
-              mealType === m.id
-                ? 'bg-[rgba(255,255,255,0.12)] text-white ring-1 ring-[rgba(255,255,255,0.2)]'
-                : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'
-            }`}
-          >
-            <span className="text-base">{m.icon}</span>
-            <span>{m.label}</span>
-          </button>
-        ))}
+        {MEAL_OPTIONS.map(m => {
+          const IconComp = m.icon;
+          const isSelected = mealType === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => { setMealType(m.id); setShowDropdown(true); }}
+              className={`flex-1 py-2.5 flex flex-col items-center gap-1 rounded-2xl text-[11px] font-semibold transition-all ${
+                isSelected
+                  ? 'bg-[rgba(255,255,255,0.12)] text-white ring-1 ring-[rgba(255,255,255,0.2)]'
+                  : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'
+              }`}
+            >
+              <IconComp size={18} className={isSelected ? 'text-[var(--primary)]' : 'text-[var(--on-surface-variant)]'} />
+              <span>{m.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {activeTab === 'new' ? (
@@ -742,7 +755,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                           onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
                         >
-                          <span className="text-[16px] shrink-0">✍️</span>
+                          <PenTool size={16} className="text-emerald-400 shrink-0" />
                           <span className="text-[12px] font-medium">Manuel Ekle</span>
                         </div>
                       </div>
@@ -764,7 +777,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                           onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
                         >
-                          <span className="text-[16px] shrink-0">✍️</span>
+                          <PenTool size={16} className="text-emerald-400 shrink-0" />
                           <span className="text-[12px] font-medium">Manuel Ekle</span>
                         </div>
                       </div>
@@ -845,7 +858,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               {searchStep === 'manual_form' && (
                 <div className="flex flex-col gap-3 p-4 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl animate-fade-in">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[16px]">✍️</span>
+                    <PenTool size={16} className="text-emerald-400 shrink-0" />
                     <span className="text-[13px] font-semibold text-white">Yemeği Manuel Olarak Ekle</span>
                   </div>
 
@@ -1022,16 +1035,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-[rgba(var(--primary-rgb),0.12)] border border-[rgba(var(--primary-rgb),0.2)] flex items-center justify-center shrink-0 text-sm">
-                        {(() => {
-                          const n = availablePortions[selectedPortionIdx]?.name || '';
-                          if (n.includes('Bardak')) return '🥛';
-                          if (n.includes('Kase')) return '🥣';
-                          if (n.includes('Kaşık')) return '🥄';
-                          if (n.includes('Dilim')) return '🍞';
-                          if (availablePortions[selectedPortionIdx]?.isRawGram) return '⚖️';
-                          return '🍽️';
-                        })()}
+                      <div className="w-7 h-7 rounded-lg bg-[rgba(var(--primary-rgb),0.12)] border border-[rgba(var(--primary-rgb),0.2)] flex items-center justify-center shrink-0">
+                        {getPortionIcon(availablePortions[selectedPortionIdx]?.name || '', availablePortions[selectedPortionIdx]?.isRawGram)}
                       </div>
                       <span className="text-[14px] font-bold text-white truncate">
                         {availablePortions[selectedPortionIdx]?.name || 'Ölçü Seçin'}
@@ -1073,9 +1078,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <span className="text-sm shrink-0">
-                                {opt.name.includes('Bardak') ? '🥛' : opt.name.includes('Kase') ? '🥣' : opt.name.includes('Kaşık') ? '🥄' : opt.name.includes('Dilim') ? '🍞' : opt.isRawGram ? '⚖️' : '🍽️'}
-                              </span>
+                              {getPortionIcon(opt.name, opt.isRawGram)}
                               <span className="text-[13px] truncate">{opt.name}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -1276,8 +1279,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               );
             })
           ) : (
-            <div className="text-center text-[13px] text-[var(--on-surface-variant)] py-8">
-              <div className="text-3xl mb-2">🥗</div>
+            <div className="flex flex-col items-center justify-center text-center text-[13px] text-[var(--on-surface-variant)] py-8">
+              <BookmarkCheck size={36} className="text-[var(--on-surface-variant)]/40 mb-2.5" />
               Henüz kaydedilmiş yemeğiniz yok.
               <br />Yeni öğün eklerken "Favorilerime ekle" seçeneğini işaretleyebilirsiniz.
             </div>

@@ -25,6 +25,23 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   const [expandedMeals, setExpandedMeals] = useState<string[]>([]);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isBurnedModalOpen, setIsBurnedModalOpen] = useState(false);
+  const [isStoryMenuOpen, setIsStoryMenuOpen] = useState(false);
+  const [isDownloadingStory, setIsDownloadingStory] = useState(false);
+  const storyMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (storyMenuRef.current && !storyMenuRef.current.contains(event.target as Node)) {
+        setIsStoryMenuOpen(false);
+      }
+    };
+    if (isStoryMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isStoryMenuOpen]);
 
   const totalBurned = data.burnedCalories;
   const netCalories = data.consumedCalories - totalBurned;
@@ -136,22 +153,72 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           >
             <Download size={16} className="text-white" />
           </button>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await downloadHealthStory(data);
-                toast.success("Instagram hikaye görseli indirildi.");
-              } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Hikaye görseli oluşturulamadı.");
-              }
-            }}
-            aria-label="Instagram hikaye görselini indir"
-            className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#14b8a6]/20 hover:bg-[#14b8a6]/35 border border-[#5eead4]/30 text-white transition-colors"
-            title="Instagram Hikaye Görseli İndir"
-          >
-            <ImageDown size={16} />
-          </button>
+          <div className="relative" ref={storyMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsStoryMenuOpen(!isStoryMenuOpen)}
+              disabled={isDownloadingStory}
+              aria-label="Instagram hikaye görselini indir"
+              className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#14b8a6]/20 hover:bg-[#14b8a6]/35 border border-[#5eead4]/30 text-white transition-colors disabled:opacity-50"
+              title="Instagram Hikaye Görseli İndir (1080x1920)"
+            >
+              <ImageDown size={16} />
+            </button>
+
+            {isStoryMenuOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 min-w-[210px] rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[#161622] p-1.5 shadow-2xl backdrop-blur-xl animate-fade-in space-y-1">
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--on-surface-variant)]">
+                  Hikaye Dili (1080x1920)
+                </div>
+                <button
+                  type="button"
+                  disabled={isDownloadingStory}
+                  onClick={async () => {
+                    setIsStoryMenuOpen(false);
+                    setIsDownloadingStory(true);
+                    try {
+                      await downloadHealthStory(data, 'tr');
+                      toast.success("Türkçe hikaye görseli (1080x1920) indirildi.");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Hikaye görseli oluşturulamadı.");
+                    } finally {
+                      setIsDownloadingStory(false);
+                    }
+                  }}
+                  className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">TR</span>
+                    <span>Türkçe İndir</span>
+                  </div>
+                  <span className="text-[10px] opacity-60">Story</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isDownloadingStory}
+                  onClick={async () => {
+                    setIsStoryMenuOpen(false);
+                    setIsDownloadingStory(true);
+                    try {
+                      await downloadHealthStory(data, 'en');
+                      toast.success("English story image (1080x1920) downloaded.");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Story image could not be created.");
+                    } finally {
+                      setIsDownloadingStory(false);
+                    }
+                  }}
+                  className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-blue-400">EN</span>
+                    <span>Download English</span>
+                  </div>
+                  <span className="text-[10px] opacity-60">Story</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

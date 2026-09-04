@@ -222,7 +222,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
                     : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'
                 }`}
               >
-                <span>🇹🇷</span> Türkçe
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold">TR</span> Türkçe
               </button>
               <button
                 type="button"
@@ -233,7 +233,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
                     : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'
                 }`}
               >
-                <span>🇬🇧</span> English
+                <span className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold">EN</span> English
               </button>
             </div>
           </div>
