@@ -1065,34 +1065,6 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                       })}
                     </div>
                   )}
-
-                  {/* Hızlı Ölçü Çipleri (Pills) */}
-                  {availablePortions.length > 1 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 no-scrollbar">
-                      {availablePortions.slice(0, 4).map((opt, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPortionIdx(i);
-                            setIsPortionMenuOpen(false);
-                            if (opt.isRawGram) {
-                              setAmount(opt.gram_weight === 100 ? '100' : '1');
-                            } else {
-                              setAmount('1');
-                            }
-                          }}
-                          className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all whitespace-nowrap shrink-0 ${
-                            selectedPortionIdx === i
-                              ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
-                              : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
-                          }`}
-                        >
-                          {opt.name.split(' (')[0]}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Miktar Girişi */}
@@ -1121,39 +1093,6 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-bold text-[var(--on-surface-variant)] pointer-events-none uppercase">
                       {availablePortions[selectedPortionIdx]?.isRawGram ? 'g' : 'adet'}
                     </span>
-                  </div>
-
-                  {/* Hızlı Miktar Düğmeleri */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    {availablePortions[selectedPortionIdx]?.isRawGram
-                      ? ['50', '100', '150', '200'].map(val => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setAmount(val)}
-                            className={`flex-1 text-[11px] py-1 rounded-lg border transition-all text-center font-semibold ${
-                              amount === val
-                                ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
-                                : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
-                            }`}
-                          >
-                            {val}g
-                          </button>
-                        ))
-                      : ['0.5', '1', '1.5', '2'].map(val => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setAmount(val)}
-                            className={`flex-1 text-[11px] py-1 rounded-lg border transition-all text-center font-semibold ${
-                              amount === val
-                                ? 'bg-[var(--primary)] text-black border-[var(--primary)] shadow-sm'
-                                : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:text-white'
-                            }`}
-                          >
-                            {val}x
-                          </button>
-                        ))}
                   </div>
                 </div>
               </div>
