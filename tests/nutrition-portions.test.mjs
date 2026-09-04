@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { detectFoodCategory, getSmartPortionOptions } from '../src/lib/food-portions.ts';
 
 // Helper function simulating the portion calculation logic
 function calculatePortionMacros(perUnit, amount, portion) {
@@ -45,4 +46,63 @@ test('calculatePortionMacros computes multiplier for 2 yemek kaşığı (15g eac
   assert.equal(res.calories, 265);
   assert.equal(res.fat, 30);
   assert.equal(res.effectiveWeight, 30);
+});
+
+test('Tavuk Göğsü portions do NOT contain su bardağı or yemek kaşığı', () => {
+  const cat = detectFoodCategory('Tavuk Göğsü (Çiğ)');
+  assert.equal(cat, 'meat');
+
+  const options = getSmartPortionOptions({ name: 'Tavuk Göğsü (Çiğ)' });
+  const names = options.map(o => o.name);
+
+  // Must have realistic meat portions
+  assert.ok(names.some(n => n.includes('Porsiyon')));
+  assert.ok(names.some(n => n.includes('Fileto') || n.includes('Parça')));
+  assert.ok(names.some(n => n.includes('Avuç İçi')));
+
+  // Must NOT have absurd liquid/grain portions
+  assert.ok(!names.some(n => n.includes('Su Bardağı')));
+  assert.ok(!names.some(n => n.includes('Çay Bardağı')));
+  assert.ok(!names.some(n => n.includes('Yemek Kaşığı')));
+  assert.ok(!names.some(n => n.includes('Tatlı Kaşığı')));
+  assert.ok(!names.some(n => n.includes('Çay Kaşığı')));
+});
+
+test('Pirinç portions contain su bardağı and porsiyon', () => {
+  const cat = detectFoodCategory('Baldo Pirinç');
+  assert.equal(cat, 'grain');
+
+  const options = getSmartPortionOptions({ name: 'Baldo Pirinç' });
+  const names = options.map(o => o.name);
+
+  assert.ok(names.some(n => n.includes('Su Bardağı')));
+  assert.ok(names.some(n => n.includes('Porsiyon')));
+  assert.ok(!names.some(n => n.includes('Dilim')));
+});
+
+test('Zeytinyağı portions contain yemek kaşığı and tatlı kaşığı, NOT su bardağı or dilim', () => {
+  const cat = detectFoodCategory('Riviera Zeytinyağı');
+  assert.equal(cat, 'oil_spread');
+
+  const options = getSmartPortionOptions({ name: 'Riviera Zeytinyağı' });
+  const names = options.map(o => o.name);
+
+  assert.ok(names.some(n => n.includes('Yemek Kaşığı')));
+  assert.ok(names.some(n => n.includes('Tatlı Kaşığı')));
+  assert.ok(names.some(n => n.includes('Çay Kaşığı')));
+  assert.ok(!names.some(n => n.includes('Su Bardağı')));
+  assert.ok(!names.some(n => n.includes('Dilim')));
+  assert.ok(!names.some(n => n.includes('Kase')));
+});
+
+test('Ekmek portions contain dilim, NOT su bardağı or kase', () => {
+  const cat = detectFoodCategory('Tam Buğday Ekmeği');
+  assert.equal(cat, 'bread');
+
+  const options = getSmartPortionOptions({ name: 'Tam Buğday Ekmeği' });
+  const names = options.map(o => o.name);
+
+  assert.ok(names.some(n => n.includes('Dilim')));
+  assert.ok(!names.some(n => n.includes('Su Bardağı')));
+  assert.ok(!names.some(n => n.includes('Kase')));
 });

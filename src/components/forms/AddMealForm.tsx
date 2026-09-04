@@ -21,12 +21,7 @@ const MACRO_COLORS = {
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading';
 
-interface FoodPortionOption {
-  name: string;
-  gram_weight: number;
-  label?: string;
-  isRawGram?: boolean;
-}
+import { getSmartPortionOptions, type FoodPortionOption } from '@/lib/food-portions';
 
 interface DBFoodResult {
   id: string;
@@ -52,44 +47,13 @@ interface SelectedFood {
 }
 
 function getPortionOptions(food: SelectedFood): FoodPortionOption[] {
-  const options: FoodPortionOption[] = [];
-
-  if (food.unit_type === 'gram') {
-    // 1. Food specific predefined portions
-    if (food.portions && food.portions.length > 0) {
-      for (const p of food.portions) {
-        if (!options.some(o => o.name.toLowerCase() === p.name.toLowerCase())) {
-          options.push({ name: p.name, gram_weight: p.gram_weight, label: p.label });
-        }
-      }
-    }
-
-    // 2. Standard gram options
-    options.push({ name: '100 Gram (Standart)', gram_weight: 100, isRawGram: true });
-    options.push({ name: '1 Gram (Özel Gramaj)', gram_weight: 1, isRawGram: true });
-
-    // 3. Common Turkish household measurements
-    const defaults: FoodPortionOption[] = [
-      { name: '1 Porsiyon (200g)', gram_weight: 200 },
-      { name: '1 Su Bardağı (200g)', gram_weight: 200 },
-      { name: '1 Çay Bardağı (100g)', gram_weight: 100 },
-      { name: '1 Kase (250g)', gram_weight: 250 },
-      { name: '1 Yemek Kaşığı (15g)', gram_weight: 15 },
-      { name: '1 Tatlı Kaşığı (8g)', gram_weight: 8 },
-      { name: '1 Çay Kaşığı (4g)', gram_weight: 4 },
-      { name: '1 Dilim (30g)', gram_weight: 30 }
+  if (food.unit_type !== 'gram') {
+    const options: FoodPortionOption[] = [
+      { name: `1 ${food.unit_type}`, gram_weight: 1 },
+      { name: `Yarım (0.5 ${food.unit_type})`, gram_weight: 0.5 },
+      { name: '1 Porsiyon', gram_weight: 1 }
     ];
 
-    for (const d of defaults) {
-      if (!options.some(o => o.name.toLowerCase() === d.name.toLowerCase())) {
-        options.push(d);
-      }
-    }
-  } else {
-    options.push({ name: `1 ${food.unit_type}`, gram_weight: 1 });
-    options.push({ name: `Yarım (0.5 ${food.unit_type})`, gram_weight: 0.5 });
-    options.push({ name: '1 Porsiyon', gram_weight: 1 });
-
     if (food.portions && food.portions.length > 0) {
       for (const p of food.portions) {
         if (!options.some(o => o.name.toLowerCase() === p.name.toLowerCase())) {
@@ -97,9 +61,14 @@ function getPortionOptions(food: SelectedFood): FoodPortionOption[] {
         }
       }
     }
+    return options;
   }
 
-  return options;
+  return getSmartPortionOptions({
+    name: food.name,
+    unit_type: food.unit_type,
+    portions: food.portions
+  });
 }
 
 interface SessionAddedMeal {
