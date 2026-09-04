@@ -122,12 +122,13 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
               <button type="button" aria-label="Sonraki gün" onClick={onNextDay} className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white">
                 <ChevronRight size={20} />
               </button>
-              <button type="button" aria-label="Detaylı sağlık analizi" onClick={onShowAnalysis} className="ml-1 min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]" title="Detaylı Analiz">
+              <button type="button" data-tour="health-analysis-btn" aria-label="Detaylı sağlık analizi" onClick={onShowAnalysis} className="ml-1 min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]" title="Detaylı Analiz">
                 <Activity size={18} />
               </button>
             </>
           )}
           <button 
+            data-tour="health-pdf-btn"
             onClick={() => setIsPdfModalOpen(true)} 
             aria-label="Beslenme raporunu PDF olarak indir"
             className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-white transition-colors"
@@ -299,6 +300,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           <h3 className="text-caption text-[var(--on-surface-variant)]">ÖĞÜN DETAYLARI</h3>
           <div className="flex items-center gap-2">
             <button 
+              data-tour="health-ai-meal"
               onClick={() => onOpenSheet && onOpenSheet('aiPhotoMeal')}
               aria-label="Fotoğraf ile AI besin ekle"
               className="px-3 py-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 flex items-center gap-1.5 hover:bg-emerald-500 hover:text-black text-xs font-bold transition-all shadow-md cursor-pointer"

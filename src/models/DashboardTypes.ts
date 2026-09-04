@@ -7,7 +7,7 @@ import {
   StockTradeType
 } from './Enums';
 
-export type DashboardMode = 'overview' | 'health' | 'finance' | 'stocks' | 'health-analysis' | 'finance-analysis';
+export type DashboardMode = 'overview' | 'health' | 'finance' | 'stocks' | 'health-analysis' | 'finance-analysis' | 'stocks-analysis';
 
 // ── Health Data Models ──
 export interface MealInfo {

@@ -18,6 +18,7 @@ import { ProductTour } from "@/components/onboarding/ProductTour";
 // Performans optimizasyonu: Ağır formları ve analiz sayfalarını sadece ihtiyaç anında (tıklandığında) yüklenecek şekilde (Lazy Load) ayırıyoruz.
 const HealthAnalysis = dynamic(() => import("@/components/dashboard/HealthAnalysis").then(m => m.HealthAnalysis), { ssr: false });
 const FinanceAnalysis = dynamic(() => import("@/components/dashboard/FinanceAnalysis").then(m => m.FinanceAnalysis), { ssr: false });
+const StocksAnalysis = dynamic(() => import("@/components/dashboard/StocksAnalysis").then(m => m.StocksAnalysis), { ssr: false });
 const StocksSection = dynamic(() => import("@/components/dashboard/StocksSection").then(m => m.StocksSection), { ssr: false });
 
 import { DashboardSheetManager } from "@/components/dashboard/DashboardSheetManager";
@@ -60,6 +61,9 @@ export function DashboardView() {
         break;
       case 'finance-analysis':
         document.title = "Finans Analizi | DailyM";
+        break;
+      case 'stocks-analysis':
+        document.title = "Borsa Analizi | DailyM";
         break;
     }
   }, [mode]);
@@ -249,7 +253,11 @@ export function DashboardView() {
           )}
 
           {mode === 'stocks' && (
-            <StocksSection />
+            <StocksSection onShowAnalysis={() => setMode('stocks-analysis')} />
+          )}
+
+          {mode === 'stocks-analysis' && (
+            <StocksAnalysis onBack={() => setMode('stocks')} />
           )}
 
           {mode === 'health-analysis' && (
@@ -272,7 +280,7 @@ export function DashboardView() {
         </footer>
 
         {/* ── FAB Menu ── */}
-        {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
+        {mode !== 'health-analysis' && mode !== 'finance-analysis' && mode !== 'stocks-analysis' && (
           <FABMenu mode={mode} onOpenSheet={handleOpenSheet} />
         )}
 

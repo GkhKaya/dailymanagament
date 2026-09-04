@@ -15,7 +15,8 @@ import {
   ArrowDownRight,
   MoreHorizontal,
   Download,
-  X
+  X,
+  Activity
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -28,7 +29,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
 
-export function StocksSection() {
+export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void } = {}) {
   const [portfolio, setPortfolio] = useState<StockPortfolioDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'positions' | 'realized' | 'trades'>('positions');
@@ -211,21 +212,37 @@ export function StocksSection() {
               Portföyün bugün nasıl?
             </p>
           </div>
-          <button 
-            type="button" 
-            onClick={() => setIsPdfModalOpen(true)} 
-            aria-label="Borsa raporunu PDF olarak indir" 
-            title="PDF Raporu İndir" 
-            className="sm:hidden min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer"
-          >
-            <Download size={18} className="text-white" />
-          </button>
+          <div className="flex items-center gap-1 sm:hidden">
+            <button 
+              type="button" 
+              data-tour="stocks-pdf-btn"
+              onClick={() => setIsPdfModalOpen(true)} 
+              aria-label="Borsa raporunu PDF olarak indir" 
+              title="PDF Raporu İndir" 
+              className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer"
+            >
+              <Download size={18} className="text-white" />
+            </button>
+            {onShowAnalysis && (
+              <button
+                type="button"
+                data-tour="stocks-analysis-btn"
+                onClick={onShowAnalysis}
+                aria-label="Detaylı borsa analizi"
+                title="Detaylı Analiz"
+                className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)] cursor-pointer"
+              >
+                <Activity size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
+            data-tour="stocks-pdf-btn"
             onClick={() => setIsPdfModalOpen(true)}
             aria-label="Borsa raporunu PDF olarak indir"
             title="PDF Raporu İndir"
@@ -233,6 +250,18 @@ export function StocksSection() {
           >
             <Download size={16} className="text-white" />
           </button>
+          {onShowAnalysis && (
+            <button
+              type="button"
+              data-tour="stocks-analysis-btn"
+              onClick={onShowAnalysis}
+              aria-label="Detaylı borsa analizi"
+              title="Detaylı Analiz"
+              className="hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)] cursor-pointer mr-1"
+            >
+              <Activity size={18} />
+            </button>
+          )}
           <button
             type="button"
             data-tour="stocks-buy"
@@ -252,7 +281,7 @@ export function StocksSection() {
         </div>
       </div>
 
-      <section aria-label="Portföy özeti" className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <section data-tour="stocks-summary" aria-label="Portföy özeti" className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <div className={`glass-card col-span-2 p-4 border ${performanceSurface}`}>
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -281,7 +310,7 @@ export function StocksSection() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         
         {/* Navigation Tabs */}
-        <div className="grid grid-cols-3 p-1 bg-[var(--surface-container-low)] rounded-[var(--radius-card)] border border-[var(--outline)] w-full sm:w-auto">
+        <div data-tour="stocks-tabs" className="grid grid-cols-3 p-1 bg-[var(--surface-container-low)] rounded-[var(--radius-card)] border border-[var(--outline)] w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('positions')}
