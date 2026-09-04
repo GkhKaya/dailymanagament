@@ -613,3 +613,51 @@ function mapDailyLogToExportDay(log: any, dateObj: Date): ExportDayData {
     }
   };
 }
+
+/**
+ * Server action to translate nutrition export data to English using Google Translate
+ */
+export async function translateNutritionExportDataAction(payload: {
+  type: 'daily' | 'weekly' | 'monthly' | 'range';
+  dailyData?: ExportDayData;
+  weeklyDays?: ExportDayData[];
+  days?: ExportDayData[];
+  weeks?: ExportWeekSummary[];
+}): Promise<{
+  success: boolean;
+  dailyData?: ExportDayData;
+  weeklyDays?: ExportDayData[];
+  days?: ExportDayData[];
+  weeks?: ExportWeekSummary[];
+  error?: string;
+}> {
+  try {
+    const { translateDayDataToEnglish, translateWeekSummariesToEnglish } = await import('@/lib/translation-service');
+
+    if (payload.type === 'daily' && payload.dailyData) {
+      const translated = await translateDayDataToEnglish(payload.dailyData);
+      return { success: true, dailyData: translated };
+    }
+
+    if (payload.type === 'weekly' && payload.weeklyDays) {
+      const translatedDays = await Promise.all(payload.weeklyDays.map(d => translateDayDataToEnglish(d)));
+      return { success: true, weeklyDays: translatedDays };
+    }
+
+    if (payload.type === 'range' && payload.days) {
+      const translatedDays = await Promise.all(payload.days.map(d => translateDayDataToEnglish(d)));
+      return { success: true, days: translatedDays };
+    }
+
+    if (payload.type === 'monthly' && payload.weeks) {
+      const translatedWeeks = await translateWeekSummariesToEnglish(payload.weeks);
+      return { success: true, weeks: translatedWeeks };
+    }
+
+    return { success: false, error: 'Geçersiz veri türü.' };
+  } catch (err: any) {
+    console.error('translateNutritionExportDataAction error:', err);
+    return { success: false, error: err.message || 'Çeviri gerçekleştirilemedi.' };
+  }
+}
+

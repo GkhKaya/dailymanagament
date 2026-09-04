@@ -2,9 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, CalendarRange, Download, FileText, Layers, X, TrendingUp } from 'lucide-react';
-import { getExportDataAction, getExportRangeDataAction, getFinanceExportDataAction, getStocksExportDataAction } from '@/actions/export';
-import { generateDailyPDF, generateDateRangePDF, generateFinancePDF, generateMonthlyPDF, generateWeeklyPDF, generateStocksPDF } from '@/lib/pdfGenerator';
+import { Calendar, CalendarRange, Download, FileText, Globe, Layers, X, TrendingUp } from 'lucide-react';
+import {
+  getExportDataAction,
+  getExportRangeDataAction,
+  getFinanceExportDataAction,
+  getStocksExportDataAction,
+  translateNutritionExportDataAction
+} from '@/actions/export';
+import {
+  generateDailyPDF,
+  generateDateRangePDF,
+  generateFinancePDF,
+  generateMonthlyPDF,
+  generateWeeklyPDF,
+  generateStocksPDF
+} from '@/lib/pdfGenerator';
 import toast from 'react-hot-toast';
 
 interface ExportPdfModalProps {
@@ -40,6 +53,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [selectedType, setSelectedType] = useState<'daily' | 'weekly' | 'monthly' | 'range'>('daily');
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
+  const [language, setLanguage] = useState<'tr' | 'en'>('tr');
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -80,19 +94,62 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
       } else if (selectedType === 'range') {
         const res = await getExportRangeDataAction(startDate, endDate);
         if (!res.success || !res.days) throw new Error(res.error || 'Rapor verileri alınamadı.');
-        generateDateRangePDF(res.userName || 'Kullanıcı', res.startDateStr || startDate, res.endDateStr || endDate, res.days);
+        let days = res.days;
+        if (language === 'en') {
+          toast.loading('Google Çeviri ile İngilizceye çevriliyor...', { id: 'pdf-translate' });
+          const trRes = await translateNutritionExportDataAction({ type: 'range', days });
+          toast.dismiss('pdf-translate');
+          if (trRes.success && trRes.days) {
+            days = trRes.days;
+          }
+        }
+        generateDateRangePDF(res.userName || 'Kullanıcı', res.startDateStr || startDate, res.endDateStr || endDate, days, language);
       } else {
         const dateStr = inputDate(currentDate || new Date());
         const res = await getExportDataAction(selectedType, dateStr);
         if (!res.success) throw new Error(res.error || 'Rapor verileri alınamadı.');
         const userName = res.userName || 'Kullanıcı';
-        if (res.type === 'daily' && res.dailyData) generateDailyPDF(userName, res.dailyData);
-        if (res.type === 'weekly' && res.weeklyDays) generateWeeklyPDF(userName, res.startDateStr || '', res.endDateStr || '', res.weeklyDays);
-        if (res.type === 'monthly' && res.weeks) generateMonthlyPDF(userName, res.monthName || '', res.weeks);
+        if (res.type === 'daily' && res.dailyData) {
+          let dailyData = res.dailyData;
+          if (language === 'en') {
+            toast.loading('Google Çeviri ile İngilizceye çevriliyor...', { id: 'pdf-translate' });
+            const trRes = await translateNutritionExportDataAction({ type: 'daily', dailyData });
+            toast.dismiss('pdf-translate');
+            if (trRes.success && trRes.dailyData) {
+              dailyData = trRes.dailyData;
+            }
+          }
+          generateDailyPDF(userName, dailyData, language);
+        }
+        if (res.type === 'weekly' && res.weeklyDays) {
+          let weeklyDays = res.weeklyDays;
+          if (language === 'en') {
+            toast.loading('Google Çeviri ile İngilizceye çevriliyor...', { id: 'pdf-translate' });
+            const trRes = await translateNutritionExportDataAction({ type: 'weekly', weeklyDays });
+            toast.dismiss('pdf-translate');
+            if (trRes.success && trRes.weeklyDays) {
+              weeklyDays = trRes.weeklyDays;
+            }
+          }
+          generateWeeklyPDF(userName, res.startDateStr || '', res.endDateStr || '', weeklyDays, language);
+        }
+        if (res.type === 'monthly' && res.weeks) {
+          let weeks = res.weeks;
+          if (language === 'en') {
+            toast.loading('Google Çeviri ile İngilizceye çevriliyor...', { id: 'pdf-translate' });
+            const trRes = await translateNutritionExportDataAction({ type: 'monthly', weeks });
+            toast.dismiss('pdf-translate');
+            if (trRes.success && trRes.weeks) {
+              weeks = trRes.weeks;
+            }
+          }
+          generateMonthlyPDF(userName, res.monthName || '', weeks, language);
+        }
       }
-      toast.success('PDF raporu oluşturuldu.');
+      toast.success(language === 'en' ? 'İngilizce PDF raporu oluşturuldu.' : 'PDF raporu oluşturuldu.');
       onClose();
     } catch (err: unknown) {
+      toast.dismiss('pdf-translate');
       const error = err as Error;
       toast.error(`PDF oluşturulamadı: ${error.message || 'Bilinmeyen hata'}`);
     } finally {
@@ -141,6 +198,47 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
           </div>
         )}
 
+        {/* Language Selector (Health/Nutrition Only) */}
+        {!isFinance && !isStocks && (
+          <div className="flex flex-col gap-2 rounded-xl border border-[rgba(255,255,255,0.06)] bg-white/[0.02] p-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-white">
+                <Globe size={14} className="text-[var(--primary)]" />
+                Rapor Dili
+              </span>
+              {language === 'en' && (
+                <span className="flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                  Google Translate API
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLanguage('tr')}
+                className={`flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-semibold transition-all ${
+                  language === 'tr'
+                    ? 'border-[var(--primary)] bg-[var(--primary)]/15 text-white shadow-sm'
+                    : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'
+                }`}
+              >
+                <span>🇹🇷</span> Türkçe
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`flex min-h-10 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-semibold transition-all ${
+                  language === 'en'
+                    ? 'border-emerald-500 bg-emerald-500/15 text-white shadow-sm'
+                    : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'
+                }`}
+              >
+                <span>🇬🇧</span> English
+              </button>
+            </div>
+          </div>
+        )}
+
         {isRange && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-2 text-sm font-medium text-white">
             Başlangıç tarihi
@@ -164,13 +262,28 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
         </div>}
 
         <p className="rounded-xl bg-white/[0.03] px-3 py-2.5 text-xs leading-5 text-[var(--on-surface-variant)]">
-          {isStocks ? 'Seçilen dönemdeki hisse/fon işlemleri, gerçekleşen kâr/zararlar ve açık portföy özeti rapora eklenir.' : isFinance ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.' : selectedType === 'range' ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.' : selectedType === 'daily' ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.' : selectedType === 'weekly' ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.' : 'Seçili ayın dört haftalık özeti hazırlanır.'}
+          {isStocks
+            ? 'Seçilen dönemdeki hisse/fon işlemleri, gerçekleşen kâr/zararlar ve açık portföy özeti rapora eklenir.'
+            : isFinance
+            ? 'Gelir, gider ve kart borcu ödeme işlemleri rapora eklenir.'
+            : language === 'en'
+            ? 'Besin isimleri, porsiyonlar, aktiviteler ve tüm rapor başlıkları Google Çeviri ile İngilizceye çevrilerek PDF oluşturulur.'
+            : selectedType === 'range'
+            ? 'Seçilen aralıktaki her gün ayrı sayfada yer alır.'
+            : selectedType === 'daily'
+            ? 'Seçili günün detaylı beslenme ve sağlık özeti hazırlanır.'
+            : selectedType === 'weekly'
+            ? 'Seçili günü içeren haftanın 7 günlük raporu hazırlanır.'
+            : 'Seçili ayın dört haftalık özeti hazırlanır.'}
         </p>
 
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
           <button type="button" onClick={onClose} className="min-h-11 rounded-xl px-4 text-sm font-semibold text-[var(--on-surface-variant)] hover:bg-white/5 hover:text-white">İptal</button>
           <button type="button" onClick={handleExport} disabled={isLoading} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 text-sm font-bold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50">
-            <Download size={16} /> {isLoading ? 'PDF indiriliyor...' : 'PDF indir'}
+            <Download size={16} />
+            {isLoading
+              ? (language === 'en' && !isFinance && !isStocks ? 'Çevriliyor ve İndiriliyor...' : 'PDF İndiriliyor...')
+              : (language === 'en' && !isFinance && !isStocks ? 'English PDF İndir' : 'PDF İndir')}
           </button>
         </div>
       </div>

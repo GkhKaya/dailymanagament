@@ -68,7 +68,8 @@ function drawDailyMHeader(
   categoryName: string,
   userName: string,
   dateRangeStr: string,
-  startY = 14
+  startY = 14,
+  language: 'tr' | 'en' = 'tr'
 ): number {
   const marginX = 14;
   const contentW = 182;
@@ -101,8 +102,10 @@ function drawDailyMHeader(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...COLORS.textMuted);
-  doc.text(tr(`Kullanici: ${userName}`), marginX + contentW, iconY + 4, { align: 'right' });
-  doc.text(tr(`Tarih: ${dateRangeStr}`), marginX + contentW, iconY + 8.5, { align: 'right' });
+  const userPrefix = language === 'en' ? 'User' : 'Kullanici';
+  const datePrefix = language === 'en' ? 'Date' : 'Tarih';
+  doc.text(tr(`${userPrefix}: ${userName}`), marginX + contentW, iconY + 4, { align: 'right' });
+  doc.text(tr(`${datePrefix}: ${dateRangeStr}`), marginX + contentW, iconY + 8.5, { align: 'right' });
 
   // Main Report Title
   doc.setFont('helvetica', 'bold');
@@ -260,7 +263,7 @@ const TABLE_STYLES = {
 /**
  * Page footers with branding & pagination
  */
-function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
+function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string, language: 'tr' | 'en' = 'tr') {
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
@@ -271,11 +274,12 @@ function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.primary);
-    doc.text('#dailym  #kisisel-yonetim', 14, 291);
+    doc.text(language === 'en' ? '#dailym  #health-nutrition' : '#dailym  #kisisel-yonetim', 14, 291);
 
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr(`Sayfa ${i} / ${pageCount}`), 105, 291, { align: 'center' });
+    const pageStr = language === 'en' ? `Page ${i} / ${pageCount}` : `Sayfa ${i} / ${pageCount}`;
+    doc.text(tr(pageStr), 105, 291, { align: 'center' });
 
     doc.text(tr(reportTitle), 196, 291, { align: 'right' });
   }
@@ -284,50 +288,77 @@ function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string) {
 // ─────────────────────────────────────────────────────────────────
 // PDF 1: Daily Health Report (1 Page)
 // ─────────────────────────────────────────────────────────────────
-export function generateDailyPDF(userName: string, day: ExportDayData) {
+export function generateDailyPDF(userName: string, day: ExportDayData, language: 'tr' | 'en' = 'tr') {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  renderDayPage(doc, userName, day, 1, 1, 'GUNLUK BESLENME VE SAGLIK RAPORU');
-  addDailyMPDFDecorations(doc, 'DailyM Gunluk Beslenme Raporu');
-  doc.save(`Beslenme_Raporu_${day.date}.pdf`);
+  const isEn = language === 'en';
+  const reportHeader = isEn ? 'DAILY NUTRITION AND HEALTH REPORT' : 'GUNLUK BESLENME VE SAGLIK RAPORU';
+  renderDayPage(doc, userName, day, 1, 1, reportHeader, language);
+  addDailyMPDFDecorations(doc, isEn ? 'DailyM Daily Nutrition Report' : 'DailyM Gunluk Beslenme Raporu', language);
+  doc.save(isEn ? `Nutrition_Report_${day.date}_EN.pdf` : `Beslenme_Raporu_${day.date}.pdf`);
 }
 
 // ─────────────────────────────────────────────────────────────────
 // PDF 2: Weekly Health Report (7 Pages)
 // ─────────────────────────────────────────────────────────────────
-export function generateWeeklyPDF(userName: string, startDateStr: string, endDateStr: string, days: ExportDayData[]) {
+export function generateWeeklyPDF(
+  userName: string,
+  startDateStr: string,
+  endDateStr: string,
+  days: ExportDayData[],
+  language: 'tr' | 'en' = 'tr'
+) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const isEn = language === 'en';
   const totalPages = days.length;
   days.forEach((day, index) => {
     if (index > 0) doc.addPage();
-    const headerTitle = `HAFTALIK BESLENME RAPORU (${startDateStr} - ${endDateStr})`;
-    renderDayPage(doc, userName, day, index + 1, totalPages, headerTitle);
+    const headerTitle = isEn
+      ? `WEEKLY NUTRITION REPORT (${startDateStr} - ${endDateStr})`
+      : `HAFTALIK BESLENME RAPORU (${startDateStr} - ${endDateStr})`;
+    renderDayPage(doc, userName, day, index + 1, totalPages, headerTitle, language);
   });
-  addDailyMPDFDecorations(doc, 'DailyM Haftalik Beslenme Raporu');
-  doc.save(`Haftalik_Beslenme_Raporu_${days[0]?.date || 'hafta'}.pdf`);
+  addDailyMPDFDecorations(doc, isEn ? 'DailyM Weekly Nutrition Report' : 'DailyM Haftalik Beslenme Raporu', language);
+  doc.save(isEn ? `Weekly_Nutrition_Report_${days[0]?.date || 'week'}_EN.pdf` : `Haftalik_Beslenme_Raporu_${days[0]?.date || 'hafta'}.pdf`);
 }
 
-export function generateDateRangePDF(userName: string, startDateStr: string, endDateStr: string, days: ExportDayData[]) {
+export function generateDateRangePDF(
+  userName: string,
+  startDateStr: string,
+  endDateStr: string,
+  days: ExportDayData[],
+  language: 'tr' | 'en' = 'tr'
+) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const isEn = language === 'en';
   days.forEach((day, index) => {
     if (index > 0) doc.addPage();
-    renderDayPage(doc, userName, day, index + 1, days.length, `BESLENME RAPORU (${startDateStr} - ${endDateStr})`);
+    const headerTitle = isEn
+      ? `NUTRITION REPORT (${startDateStr} - ${endDateStr})`
+      : `BESLENME RAPORU (${startDateStr} - ${endDateStr})`;
+    renderDayPage(doc, userName, day, index + 1, days.length, headerTitle, language);
   });
-  addDailyMPDFDecorations(doc, 'DailyM Tarih Araligi Raporu');
-  doc.save(`Beslenme_Raporu_${days[0]?.date || 'tarih_araligi'}_${days[days.length - 1]?.date || ''}.pdf`);
+  addDailyMPDFDecorations(doc, isEn ? 'DailyM Date Range Nutrition Report' : 'DailyM Tarih Araligi Raporu', language);
+  doc.save(isEn ? `Nutrition_Report_${days[0]?.date || 'range'}_${days[days.length - 1]?.date || ''}_EN.pdf` : `Beslenme_Raporu_${days[0]?.date || 'tarih_araligi'}_${days[days.length - 1]?.date || ''}.pdf`);
 }
 
 // ─────────────────────────────────────────────────────────────────
 // PDF 3: Monthly Health Summary
 // ─────────────────────────────────────────────────────────────────
-export function generateMonthlyPDF(userName: string, monthName: string, weeks: ExportWeekSummary[]) {
+export function generateMonthlyPDF(
+  userName: string,
+  monthName: string,
+  weeks: ExportWeekSummary[],
+  language: 'tr' | 'en' = 'tr'
+) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const isEn = language === 'en';
   const totalPages = weeks.length;
   weeks.forEach((week, index) => {
     if (index > 0) doc.addPage();
-    renderWeekPage(doc, userName, monthName, week, index + 1, totalPages);
+    renderWeekPage(doc, userName, monthName, week, index + 1, totalPages, language);
   });
-  addDailyMPDFDecorations(doc, `DailyM Aylik Ozet (${monthName})`);
-  doc.save(`Aylik_Beslenme_Ozeti_${tr(monthName).replace(/\s+/g, '_')}.pdf`);
+  addDailyMPDFDecorations(doc, isEn ? `DailyM Monthly Summary (${monthName})` : `DailyM Aylik Ozet (${monthName})`, language);
+  doc.save(isEn ? `Monthly_Nutrition_Summary_${tr(monthName).replace(/\s+/g, '_')}_EN.pdf` : `Aylik_Beslenme_Ozeti_${tr(monthName).replace(/\s+/g, '_')}.pdf`);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -652,8 +683,10 @@ function renderDayPage(
   day: ExportDayData,
   pageNum: number,
   totalPages: number,
-  titleHeader: string
+  titleHeader: string,
+  language: 'tr' | 'en' = 'tr'
 ) {
+  const isEn = language === 'en';
   paintDailyMBackground(doc);
   const marginX = 14;
   const contentW = 182;
@@ -661,9 +694,11 @@ function renderDayPage(
   let currentY = drawDailyMHeader(
     doc,
     titleHeader,
-    'Beslenme & Saglik',
+    isEn ? 'Nutrition & Health' : 'Beslenme & Saglik',
     userName,
-    day.dateFormatted
+    day.dateFormatted,
+    14,
+    language
   );
 
   // Calorie & Balance Summary Strip
@@ -673,23 +708,23 @@ function renderDayPage(
   // 1. Calorie Balance Strip (3 Columns)
   currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 21, [
     {
-      label: 'Alinan Kalori',
+      label: isEn ? 'Consumed Calories' : 'Alinan Kalori',
       value: `${day.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
-      subtext: 'Besin Enerjisi',
+      subtext: isEn ? 'Food Energy' : 'Besin Enerjisi',
       labelColor: COLORS.primary,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Yakilan Kalori',
+      label: isEn ? 'Burned Calories' : 'Yakilan Kalori',
       value: `${day.totals.total_burned.toLocaleString('tr-TR')} kcal`,
       subtext: `BMR: ${day.totals.calories_burned_bmr || 0} kcal`,
       labelColor: COLORS.textMuted,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Net Denge',
+      label: isEn ? 'Net Balance' : 'Net Denge',
       value: `${netCals > 0 ? '+' : ''}${netCals.toLocaleString('tr-TR')} kcal`,
-      subtext: netCals > 0 ? '▲ Kalori Fazlasi' : '▼ Kalori Acigi',
+      subtext: netCals > 0 ? (isEn ? '▲ Calorie Surplus' : '▲ Kalori Fazlasi') : (isEn ? '▼ Calorie Deficit' : '▼ Kalori Acigi'),
       labelColor: netCals > 0 ? COLORS.primary : COLORS.blue,
       valueColor: netCals > 0 ? COLORS.primary : COLORS.blue,
     },
@@ -698,26 +733,26 @@ function renderDayPage(
   // 2. Macros & Sleep Strip (4 Columns, matching site layout 1-to-1)
   currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 16, [
     {
-      label: 'Karbonhidrat',
+      label: isEn ? 'Carbohydrates' : 'Karbonhidrat',
       value: `${day.totals.carbs_g}g`,
       labelColor: COLORS.primary,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Protein',
+      label: isEn ? 'Protein' : 'Protein',
       value: `${day.totals.protein_g}g`,
       labelColor: COLORS.textWhite,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Yag',
+      label: isEn ? 'Fat' : 'Yag',
       value: `${day.totals.fat_g}g`,
       labelColor: COLORS.textMuted,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Uyku',
-      value: `${sleepHrs} saat`,
+      label: isEn ? 'Sleep' : 'Uyku',
+      value: `${sleepHrs} ${isEn ? 'hours' : 'saat'}`,
       labelColor: COLORS.blue,
       valueColor: COLORS.blue,
     },
@@ -725,10 +760,10 @@ function renderDayPage(
 
   // Meals Section
   const mealSections = [
-    { title: 'Kahvalti', items: day.meals.breakfast },
-    { title: 'Ogle Yemegi', items: day.meals.lunch },
-    { title: 'Aksam Yemegi', items: day.meals.dinner },
-    { title: 'Ara Ogunler / Atistirmalik', items: day.meals.snack },
+    { title: isEn ? 'Breakfast' : 'Kahvalti', items: day.meals.breakfast },
+    { title: isEn ? 'Lunch' : 'Ogle Yemegi', items: day.meals.lunch },
+    { title: isEn ? 'Dinner' : 'Aksam Yemegi', items: day.meals.dinner },
+    { title: isEn ? 'Snacks / In-Between Meals' : 'Ara Ogunler / Atistirmalik', items: day.meals.snack },
   ];
 
   let hasFood = false;
@@ -736,7 +771,7 @@ function renderDayPage(
   mealSections.forEach(section => {
     if (section.items && section.items.length > 0) {
       hasFood = true;
-      currentY = drawSectionHeading(doc, marginX, currentY, section.title, `${section.items.length} Kalem`);
+      currentY = drawSectionHeading(doc, marginX, currentY, section.title, `${section.items.length} ${isEn ? 'Items' : 'Kalem'}`);
 
       const tableData = section.items.map(f => [
         tr(f.name),
@@ -750,7 +785,9 @@ function renderDayPage(
       autoTable(doc, {
         ...TABLE_STYLES,
         startY: currentY,
-        head: [[tr('Besin Urunu'), tr('Miktar'), tr('Kalori'), tr('Protein'), tr('Karb'), tr('Yag')]],
+        head: isEn
+          ? [[tr('Food Item'), tr('Portion / Amount'), tr('Calories'), tr('Protein'), tr('Carbs'), tr('Fat')]]
+          : [[tr('Besin Urunu'), tr('Miktar'), tr('Kalori'), tr('Protein'), tr('Karb'), tr('Yag')]],
         body: tableData,
         margin: { left: marginX, right: marginX, bottom: 18 },
         columnStyles: {
@@ -770,30 +807,30 @@ function renderDayPage(
   if (!hasFood) {
     doc.setFontSize(8.5);
     doc.setTextColor(...COLORS.textMuted);
-    doc.text(tr('Bu gun icin kaydedilmis ogun kaydi bulunmamaktadir.'), marginX + 4, currentY + 4);
+    doc.text(tr(isEn ? 'No meals recorded for this day.' : 'Bu gun icin kaydedilmis ogun kaydi bulunmamaktadir.'), marginX + 4, currentY + 4);
     currentY += 8;
   }
 
   // Section: Burned Calories & Activities
-  currentY = drawSectionHeading(doc, marginX, currentY, 'Yakilan Kalori & Aktivite Detaylari');
+  currentY = drawSectionHeading(doc, marginX, currentY, isEn ? 'Burned Calories & Activity Details' : 'Yakilan Kalori & Aktivite Detaylari');
 
   const burnedRows = [];
   burnedRows.push([
-    tr('Bazal Metabolizma Hizi (BMR)'),
-    tr('24 Saatlik Dinlenme Tuketimi'),
+    tr(isEn ? 'Basal Metabolic Rate (BMR)' : 'Bazal Metabolizma Hizi (BMR)'),
+    tr(isEn ? '24-Hour Resting Consumption' : '24 Saatlik Dinlenme Tuketimi'),
     `${day.totals.calories_burned_bmr > 0 ? day.totals.calories_burned_bmr : '-'} kcal`
   ]);
 
   burnedRows.push([
-    tr('Uyku Harcamasi'),
-    tr(`${sleepHrs} saat uyku (BMR dahilinde)`),
+    tr(isEn ? 'Sleep Expenditure' : 'Uyku Harcamasi'),
+    tr(isEn ? `${sleepHrs} hrs sleep (Included in BMR)` : `${sleepHrs} saat uyku (BMR dahilinde)`),
     `${day.totals.calories_burned_sleep > 0 ? day.totals.calories_burned_sleep : '-'} kcal`
   ]);
 
   day.exercises.forEach(ex => {
     burnedRows.push([
       tr(ex.name),
-      tr(`${ex.duration_minutes} dk`),
+      tr(`${ex.duration_minutes} ${isEn ? 'min' : 'dk'}`),
       `${ex.calories_burned} kcal`
     ]);
   });
@@ -801,7 +838,9 @@ function renderDayPage(
   autoTable(doc, {
     ...TABLE_STYLES,
     startY: currentY,
-    head: [[tr('Aktivite / Kaynak'), tr('Sure / Detay'), tr('Yakilan Kalori')]],
+    head: isEn
+      ? [[tr('Activity / Source'), tr('Duration / Detail'), tr('Burned Calories')]]
+      : [[tr('Aktivite / Kaynak'), tr('Sure / Detay'), tr('Yakilan Kalori')]],
     body: burnedRows,
     margin: { left: marginX, right: marginX, bottom: 18 },
     columnStyles: {
@@ -821,54 +860,58 @@ function renderWeekPage(
   monthName: string,
   week: ExportWeekSummary,
   pageNum: number,
-  totalPages: number
+  totalPages: number,
+  language: 'tr' | 'en' = 'tr'
 ) {
+  const isEn = language === 'en';
   paintDailyMBackground(doc);
   const marginX = 14;
   const contentW = 182;
 
   let currentY = drawDailyMHeader(
     doc,
-    `Aylik Ozet - ${week.weekName} (${monthName})`,
-    'Beslenme & Saglik',
+    isEn ? `Monthly Summary - ${week.weekName} (${monthName})` : `Aylik Ozet - ${week.weekName} (${monthName})`,
+    isEn ? 'Nutrition & Health' : 'Beslenme & Saglik',
     userName,
-    `${week.startDate} - ${week.endDate}`
+    `${week.startDate} - ${week.endDate}`,
+    14,
+    language
   );
 
   // Single Elegant Summary Strip
   currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
     {
-      label: 'Haftalik Alinan',
+      label: isEn ? 'Weekly Consumed' : 'Haftalik Alinan',
       value: `${week.totals.calories_consumed.toLocaleString('tr-TR')} kcal`,
-      subtext: `Ort: ${week.dailyAverages.calories_consumed} kcal/gun`,
+      subtext: isEn ? `Avg: ${week.dailyAverages.calories_consumed} kcal/day` : `Ort: ${week.dailyAverages.calories_consumed} kcal/gun`,
       labelColor: COLORS.primary,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Haftalik Yakilan',
+      label: isEn ? 'Weekly Burned' : 'Haftalik Yakilan',
       value: `${week.totals.calories_burned.toLocaleString('tr-TR')} kcal`,
-      subtext: `Ort: ${week.dailyAverages.calories_burned} kcal/gun`,
+      subtext: isEn ? `Avg: ${week.dailyAverages.calories_burned} kcal/day` : `Ort: ${week.dailyAverages.calories_burned} kcal/gun`,
       labelColor: COLORS.textMuted,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Toplam Protein',
+      label: isEn ? 'Total Protein' : 'Toplam Protein',
       value: `${week.totals.protein_g}g`,
-      subtext: `Ort: ${week.dailyAverages.protein_g}g/gun`,
+      subtext: isEn ? `Avg: ${week.dailyAverages.protein_g}g/day` : `Ort: ${week.dailyAverages.protein_g}g/gun`,
       labelColor: COLORS.textWhite,
       valueColor: COLORS.textWhite,
     },
     {
-      label: 'Toplam Karb & Yag',
-      value: `K:${week.totals.carbs_g}g`,
-      subtext: `Y:${week.totals.fat_g}g`,
+      label: isEn ? 'Total Carbs & Fat' : 'Toplam Karb & Yag',
+      value: `C:${week.totals.carbs_g}g`,
+      subtext: `F:${week.totals.fat_g}g`,
       labelColor: COLORS.textMuted,
       valueColor: COLORS.textWhite,
     },
   ]);
 
   // Day by day table
-  currentY = drawSectionHeading(doc, marginX, currentY, `${week.weekName} Gunluk Kalori ve Makro Tablosu`);
+  currentY = drawSectionHeading(doc, marginX, currentY, isEn ? `${week.weekName} Daily Calorie & Macro Table` : `${week.weekName} Gunluk Kalori ve Makro Tablosu`);
 
   const tableBody = week.days.map(d => [
     tr(d.dayName),
@@ -883,7 +926,9 @@ function renderWeekPage(
   autoTable(doc, {
     ...TABLE_STYLES,
     startY: currentY,
-    head: [[tr('Gun'), tr('Alinan'), tr('Yakilan'), tr('Net Denge'), tr('Protein'), tr('Karb'), tr('Yag')]],
+    head: isEn
+      ? [[tr('Day'), tr('Consumed'), tr('Burned'), tr('Net Balance'), tr('Protein'), tr('Carbs'), tr('Fat')]]
+      : [[tr('Gun'), tr('Alinan'), tr('Yakilan'), tr('Net Denge'), tr('Protein'), tr('Karb'), tr('Yag')]],
     body: tableBody,
     margin: { left: marginX, right: marginX, bottom: 18 },
     columnStyles: {
