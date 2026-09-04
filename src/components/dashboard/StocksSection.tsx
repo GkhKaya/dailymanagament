@@ -196,7 +196,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   });
 
   return (
-    <div className="flex flex-col gap-[var(--space-4)] w-full max-w-6xl mx-auto animate-fade-in">
+    <div className="flex flex-col gap-[var(--space-4)] w-full max-w-[1600px] mx-auto animate-fade-in">
       
       {/* ── HEADER BANNER ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -400,7 +400,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {openPositions.map((pos) => (
                 <div 
                   key={pos.symbol}

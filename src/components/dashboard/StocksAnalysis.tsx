@@ -222,7 +222,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
   return (
     <div 
       data-tour="stocks-analysis-view"
-      className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up"
+      className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-24 animate-slide-up"
     >
       {/* ── HEADER ── */}
       <div className="flex flex-col gap-4 mb-1">

@@ -39,7 +39,7 @@ export function HealthAnalysis({ onBack }: { onBack: () => void }) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
+    <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

@@ -48,7 +48,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
   const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
+    <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
       {/* Header */}
       <div className="flex flex-col gap-4 mb-2">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">

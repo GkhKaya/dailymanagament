@@ -212,7 +212,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
 
   return (
     <div className="min-h-screen bg-[var(--background)] py-8 px-4 sm:px-6 lg:px-8 flex justify-center">
-      <div className="w-full max-w-5xl animate-fade-in">
+      <div className="w-full max-w-[1600px] animate-fade-in">
         
         {/* Header */}
         <div className="flex flex-col mb-10">
@@ -231,10 +231,10 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Left Column */}
-          <div className="md:col-span-4 flex flex-col gap-6">
+          <div className="lg:col-span-4 flex flex-col gap-6">
             
             {/* Kişisel Bilgiler Card */}
             <div className="bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-xl p-6 shadow-xl">
@@ -294,7 +294,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
           </div>
 
           {/* Right Column */}
-          <div className="md:col-span-8 flex flex-col gap-6">
+          <div className="lg:col-span-8 flex flex-col gap-6">
             
             {/* Fiziksel Veriler Card */}
             <PrayerView />

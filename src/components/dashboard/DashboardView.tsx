@@ -94,70 +94,72 @@ export function DashboardView() {
       <div className="min-h-screen bg-[var(--background)] text-[var(--on-surface)] flex flex-col font-sans relative selection:bg-[var(--primary)] selection:text-black">
         <a className="skip-link" href="#main-content">Ana içeriğe geç</a>
         {/* ── Top App Bar / Header ── */}
-        <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] flex items-center justify-between border-b border-[rgba(255,255,255,0)] bg-transparent backdrop-blur-xl sticky top-0 z-30">
-          <div className="flex items-center gap-[var(--space-6)]">
-            {/* Logo & Brand */}
-            <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setMode('overview')}>
-              <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" width={32} height={32} style={{ maxHeight: "32px" }} />
-              <span className="text-xl font-bold tracking-tight text-white">Daily<span className="text-[var(--primary)]">M</span></span>
-            </button>
-            <nav className="hidden sm:flex items-center gap-[var(--space-4)]">
-              <button
-                data-tour="nav-overview"
-                onClick={() => setMode('overview')}
-                className={`text-body font-medium transition-colors cursor-pointer ${
-                  mode === 'overview' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
-                }`}
-              >
-                {t("dashboard.tabOverview")}
+        <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] border-b border-[rgba(255,255,255,0)] bg-transparent backdrop-blur-xl sticky top-0 z-30">
+          <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-[var(--space-6)]">
+              {/* Logo & Brand */}
+              <button type="button" aria-label="Genel bakışa git" className="flex items-center gap-2.5 cursor-pointer" onClick={() => setMode('overview')}>
+                <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" width={32} height={32} style={{ maxHeight: "32px" }} />
+                <span className="text-xl font-bold tracking-tight text-white">Daily<span className="text-[var(--primary)]">M</span></span>
               </button>
-              <button
-                data-tour="nav-health"
-                onClick={() => setMode('health')}
-                className={`text-body font-medium transition-colors cursor-pointer ${
-                  mode === 'health' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
-                }`}
-              >
-                {t("dashboard.tabHealth")}
-              </button>
-              <button
-                data-tour="nav-finance"
-                onClick={() => setMode('finance')}
-                className={`text-body font-medium transition-colors cursor-pointer ${
-                  mode === 'finance' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
-                }`}
-              >
-                {t("dashboard.tabFinance")}
-              </button>
-              <button
-                data-tour="nav-stocks"
-                onClick={() => setMode('stocks')}
-                className={`text-body font-medium transition-colors cursor-pointer ${
-                  mode === 'stocks' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
-                }`}
-              >
-                Borsa
-              </button>
-            </nav>
-          </div>
+              <nav className="hidden sm:flex items-center gap-[var(--space-4)]">
+                <button
+                  data-tour="nav-overview"
+                  onClick={() => setMode('overview')}
+                  className={`text-body font-medium transition-colors cursor-pointer ${
+                    mode === 'overview' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                  }`}
+                >
+                  {t("dashboard.tabOverview")}
+                </button>
+                <button
+                  data-tour="nav-health"
+                  onClick={() => setMode('health')}
+                  className={`text-body font-medium transition-colors cursor-pointer ${
+                    mode === 'health' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                  }`}
+                >
+                  {t("dashboard.tabHealth")}
+                </button>
+                <button
+                  data-tour="nav-finance"
+                  onClick={() => setMode('finance')}
+                  className={`text-body font-medium transition-colors cursor-pointer ${
+                    mode === 'finance' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                  }`}
+                >
+                  {t("dashboard.tabFinance")}
+                </button>
+                <button
+                  data-tour="nav-stocks"
+                  onClick={() => setMode('stocks')}
+                  className={`text-body font-medium transition-colors cursor-pointer ${
+                    mode === 'stocks' ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] pb-1 font-bold' : 'text-[var(--on-surface-variant)] hover:text-white pb-1'
+                  }`}
+                >
+                  Borsa
+                </button>
+              </nav>
+            </div>
 
-          {/* Action icons (Notifications, Settings, Profile) */}
-          <div className="flex items-center gap-[var(--space-3)]">
-            <button 
-              data-tour="profile"
-              onClick={() => router.push('/profile')}
-              aria-label="Profil ve ayarlar"
-              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
-            >
-              <User size={16} />
-            </button>
-            <button 
-              onClick={handleLogout}
-              aria-label="Oturumu kapat"
-              className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-red-500 hover:text-white transition-colors"
-            >
-              <LogOut size={16} />
-            </button>
+            {/* Action icons (Notifications, Settings, Profile) */}
+            <div className="flex items-center gap-[var(--space-3)]">
+              <button 
+                data-tour="profile"
+                onClick={() => router.push('/profile')}
+                aria-label="Profil ve ayarlar"
+                className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
+              >
+                <User size={16} />
+              </button>
+              <button 
+                onClick={handleLogout}
+                aria-label="Oturumu kapat"
+                className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-red-500 hover:text-white transition-colors"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </header>
 

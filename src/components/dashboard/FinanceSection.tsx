@@ -75,7 +75,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
   }, [displayedTransactions]);
 
   return (
-    <div className={`flex flex-col gap-[var(--space-6)] w-full max-w-2xl mx-auto animate-slide-up`}>
+    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'max-w-2xl' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
       
       {/* Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -92,10 +92,9 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
         </div>
       </div>
 
-      {/* Metrics & Management */}
-      <div className="flex flex-col md:flex-row gap-[var(--space-2)]">
-        {/* Left Side: Main Metric Cards */}
-        <div className="flex flex-col gap-[var(--space-2)] flex-1">
+      <div className={isOverview ? "flex flex-col gap-[var(--space-4)]" : "grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"}>
+        {/* Left Side: Metrics, Management & Accounts */}
+        <div className={isOverview ? "w-full flex flex-col gap-[var(--space-2)]" : "lg:col-span-5 xl:col-span-4 flex flex-col gap-4"}>
           {/* TOPLAM BAKIYE */}
           <div className="glass-card p-[var(--space-4)] flex flex-col justify-center">
             <div className="flex items-center justify-between">
@@ -117,29 +116,59 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
               <span className="text-headline text-[var(--color-expense)]">-{fmt(data.monthlyExpense)}</span>
             </div>
           </div>
+
+          {/* Management Buttons */}
+          {!isOverview && (
+            <div className="grid w-full grid-cols-2 gap-2">
+              <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+                Hesaplar <Wallet size={16} className="text-[var(--on-surface-variant)]" />
+              </button>
+              <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+                Kategoriler <Tag size={16} className="text-[var(--on-surface-variant)]" />
+              </button>
+              <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+                Borçlar <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
+              </button>
+              <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+                Abonelikler <Repeat size={16} className="text-[var(--on-surface-variant)]" />
+              </button>
+            </div>
+          )}
+
+          {/* Accounts List on Desktop (when full view) */}
+          {!isOverview && data.accounts && data.accounts.length > 0 && (
+            <div className="glass-card p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">HESAPLARIM ({data.accounts.length})</span>
+                <button 
+                  onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} 
+                  className="text-xs text-[var(--primary)] hover:underline font-semibold"
+                >
+                  Yönet
+                </button>
+              </div>
+              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {data.accounts.map(acc => (
+                  <div key={acc.id} className="flex items-center justify-between p-2.5 bg-white/[0.02] rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center shrink-0">
+                        <Wallet size={15} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-white truncate">{acc.name}</p>
+                        <p className="text-[10px] text-[var(--on-surface-variant)] capitalize">{acc.type}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white shrink-0 ml-2">{fmt(acc.balance)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right Side: Management Buttons */}
-        {!isOverview && (
-          <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-48 md:flex-col">
-            <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
-              Hesaplar <Wallet size={16} className="text-[var(--on-surface-variant)]" />
-            </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
-              Kategoriler <Tag size={16} className="text-[var(--on-surface-variant)]" />
-            </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
-              Borçlar <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
-            </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white md:flex-1">
-              Abonelikler <Repeat size={16} className="text-[var(--on-surface-variant)]" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Transactions List */}
-      <div className="mt-[var(--space-4)]">
+        {/* Right Side: Transactions List */}
+        <div className={isOverview ? "w-full mt-[var(--space-2)]" : "lg:col-span-7 xl:col-span-8 flex flex-col"}>
         <div className="flex items-center justify-between mb-[var(--space-3)]">
           <div className="flex items-center gap-[var(--space-2)]">
             <h3 className="text-caption text-[var(--on-surface-variant)]">İŞLEM GEÇMİŞİ</h3>
@@ -216,6 +245,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           )}
         </div>
 
+      </div>
       </div>
 
       {!isOverview && <div className="h-24"></div>}

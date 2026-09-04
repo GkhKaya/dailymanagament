@@ -106,7 +106,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   };
 
   return (
-    <div className={`flex flex-col gap-[var(--space-6)] w-full max-w-2xl mx-auto animate-slide-up`}>
+    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'max-w-2xl' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
       
       {/* Title & Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -156,7 +156,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       </div>
 
       {/* Main Metric Cards */}
-      <div className="grid grid-cols-3 gap-2 md:gap-[var(--space-2)] items-stretch">
+      <div className={`grid ${isOverview ? 'grid-cols-3' : 'grid-cols-3 lg:grid-cols-5'} gap-2 md:gap-[var(--space-3)] items-stretch`}>
         {/* ALINAN */}
         <div className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start overflow-hidden h-full">
           <span className="text-[11px] md:text-caption text-[var(--primary)] truncate">ALINAN</span>
@@ -198,7 +198,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <div className="mt-1 md:mt-2" onClick={(e) => e.stopPropagation()}>
               <button 
                 onClick={onAddBmr}
-                className="w-full text-center text-[11px] md:text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-1 md:px-2 py-1 md:py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)] truncate"
+                className="w-full text-center text-[11px] md:text-[10px] bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white px-1 md:px-2 py-1 md:py-1.5 rounded-md transition-colors border border-[rgba(255,255,255,0.1)] truncate cursor-pointer"
                 title="Günlük Bazal Metabolizma (BMR) kalorinizi ekleyin"
               >
                 + BMR Ekle
@@ -215,87 +215,136 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <span className="text-[11px] md:text-body text-[var(--on-surface-variant)]">kcal</span>
           </div>
         </div>
+
+        {/* UYKU & KİLO (Desktop view when full health) */}
+        {!isOverview && (
+          <>
+            <div 
+              onClick={() => onOpenSheet && onOpenSheet('addSleep')}
+              className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start overflow-hidden h-full cursor-pointer hover:bg-white/5 transition-all"
+              title="Uyku verisi ekle veya düzenle"
+            >
+              <span className="text-[11px] md:text-caption text-[#818cf8] truncate">UYKU</span>
+              <div className="flex items-baseline gap-1 mt-1 truncate">
+                {data.sleepMinutes > 0 ? (
+                  <>
+                    <span className="text-xl md:text-metric text-white font-bold">{Math.floor(data.sleepMinutes / 60)}s</span>
+                    <span className="text-[11px] md:text-body text-[var(--on-surface-variant)]">{data.sleepMinutes % 60}d</span>
+                  </>
+                ) : (
+                  <span className="text-sm md:text-base font-bold text-[var(--on-surface-variant)] mt-1">Veri Yok</span>
+                )}
+              </div>
+              <div className="mt-1 truncate">
+                <span className="text-[10px] text-[#818cf8]/80">{data.sleepCalories ? `${data.sleepCalories} kcal yakım` : 'Tıkla ve Ekle ›'}</span>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => onOpenSheet && onOpenSheet('addWeight', { currentWeight: data.currentWeight, weightHistory: data.weightHistory })}
+              className="glass-card p-2 md:p-[var(--space-3)] flex flex-col justify-start overflow-hidden h-full cursor-pointer hover:bg-white/5 transition-all"
+              title="Kilo verisi ekle veya güncelle"
+            >
+              <span className="text-[11px] md:text-caption text-[#34d399] truncate">KİLO</span>
+              <div className="flex items-baseline gap-1 mt-1 truncate">
+                {data.currentWeight ? (
+                  <>
+                    <span className="text-xl md:text-metric text-white font-bold">{data.currentWeight}</span>
+                    <span className="text-[11px] md:text-body text-[var(--on-surface-variant)]">kg</span>
+                  </>
+                ) : (
+                  <span className="text-sm md:text-base font-bold text-[var(--on-surface-variant)] mt-1">Veri Yok</span>
+                )}
+              </div>
+              <div className="mt-1 truncate">
+                <span className="text-[10px] text-[#34d399]/80">Tıkla ve Güncelle ›</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Macros */}
-      <div className="flex flex-wrap items-center gap-y-[var(--space-4)] gap-x-[var(--space-4)] mt-[var(--space-2)]">
-        <div className="flex flex-col">
-          <span className="text-caption text-[var(--primary)]">KARB</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-headline text-white">{data.carbs || 0}g</span>
-            <span className="text-caption text-[var(--on-surface-variant)]">52%</span>
+      {/* Overview Macros Row (When in overview) */}
+      {isOverview && (
+        <div className="flex flex-wrap items-center gap-y-[var(--space-4)] gap-x-[var(--space-4)] mt-[var(--space-2)]">
+          <div className="flex flex-col">
+            <span className="text-caption text-[var(--primary)]">KARB</span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-headline text-white">{data.carbs || 0}g</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">52%</span>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-caption text-white">PROTEİN</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-headline text-white">{data.protein || 0}g</span>
-            <span className="text-caption text-[var(--on-surface-variant)]">33%</span>
+          <div className="flex flex-col">
+            <span className="text-caption text-white">PROTEİN</span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-headline text-white">{data.protein || 0}g</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">33%</span>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-caption text-white">YAĞ</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-headline text-white">{data.fat || 0}g</span>
-            <span className="text-caption text-[var(--on-surface-variant)]">15%</span>
+          <div className="flex flex-col">
+            <span className="text-caption text-white">YAĞ</span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-headline text-white">{data.fat || 0}g</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">15%</span>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-caption text-pink-300">ŞEKER</span>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-headline text-white">{data.sugar || 0}g</span>
+          <div className="flex flex-col">
+            <span className="text-caption text-pink-300">ŞEKER</span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-headline text-white">{data.sugar || 0}g</span>
+            </div>
           </div>
-        </div>
-        
-        {/* Right Aligned Health Blocks */}
-        <div className="flex items-center gap-[var(--space-4)] md:ml-auto w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[rgba(255,255,255,0.1)]">
-          {/* Minimalist Sleep block */}
-          <button type="button"
-            aria-label="Uyku verisi ekle"
-            className="flex flex-col text-left border-l border-[rgba(255,255,255,0.1)] pl-[var(--space-4)] cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => onOpenSheet && onOpenSheet('addSleep')}
-          >
-            <span className="text-caption text-[#818cf8] tracking-wider">UYKU</span>
-            <div className="flex flex-col mt-1">
-              {data.sleepMinutes > 0 ? (
-                <>
-                  <div className="flex items-baseline gap-1 text-[#818cf8]">
-                    <span className="text-headline">{Math.floor(data.sleepMinutes / 60)}s</span>
-                    <span className="text-caption">{data.sleepMinutes % 60}d</span>
+          
+          {/* Right Aligned Health Blocks */}
+          <div className="flex items-center gap-[var(--space-4)] md:ml-auto w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[rgba(255,255,255,0.1)]">
+            <button type="button"
+              aria-label="Uyku verisi ekle"
+              className="flex flex-col text-left border-l border-[rgba(255,255,255,0.1)] pl-[var(--space-4)] cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onOpenSheet && onOpenSheet('addSleep')}
+            >
+              <span className="text-caption text-[#818cf8] tracking-wider">UYKU</span>
+              <div className="flex flex-col mt-1">
+                {data.sleepMinutes > 0 ? (
+                  <>
+                    <div className="flex items-baseline gap-1 text-[#818cf8]">
+                      <span className="text-headline">{Math.floor(data.sleepMinutes / 60)}s</span>
+                      <span className="text-caption">{data.sleepMinutes % 60}d</span>
+                    </div>
+                    {(data.sleepCalories || 0) > 0 && <span className="text-[10px] text-[#818cf8]/70 uppercase mt-0.5">{data.sleepCalories} kcal</span>}
+                  </>
+                ) : (
+                  <span className="text-sm font-medium text-[var(--on-surface-variant)] mt-1 whitespace-nowrap">Veri Yok</span>
+                )}
+              </div>
+            </button>
+
+            <button type="button"
+              aria-label="Kilo verisi ekle veya güncelle"
+              className="flex flex-col text-left border-l border-[rgba(255,255,255,0.1)] pl-[var(--space-4)] cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onOpenSheet && onOpenSheet('addWeight', { currentWeight: data.currentWeight, weightHistory: data.weightHistory })}
+            >
+              <span className="text-caption text-[#34d399] tracking-wider">KİLO</span>
+              <div className="flex flex-col mt-1">
+                {data.currentWeight ? (
+                  <div className="flex items-baseline gap-1 text-[#34d399]">
+                    <span className="text-headline">{data.currentWeight}</span>
+                    <span className="text-caption">kg</span>
                   </div>
-                  {(data.sleepCalories || 0) > 0 && <span className="text-[10px] text-[#818cf8]/70 uppercase mt-0.5">{data.sleepCalories} kcal</span>}
-                </>
-              ) : (
-                <span className="text-sm font-medium text-[var(--on-surface-variant)] mt-1 whitespace-nowrap">Veri Yok</span>
-              )}
-            </div>
-          </button>
-
-          {/* Minimalist Weight block */}
-          <button type="button"
-            aria-label="Kilo verisi ekle veya güncelle"
-            className="flex flex-col text-left border-l border-[rgba(255,255,255,0.1)] pl-[var(--space-4)] cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => onOpenSheet && onOpenSheet('addWeight', { currentWeight: data.currentWeight, weightHistory: data.weightHistory })}
-          >
-            <span className="text-caption text-[#34d399] tracking-wider">KİLO</span>
-            <div className="flex flex-col mt-1">
-              {data.currentWeight ? (
-                <div className="flex items-baseline gap-1 text-[#34d399]">
-                  <span className="text-headline">{data.currentWeight}</span>
-                  <span className="text-caption">kg</span>
-                </div>
-              ) : (
-                <span className="text-sm font-medium text-[var(--on-surface-variant)] mt-1 whitespace-nowrap">Veri Yok</span>
-              )}
-            </div>
-          </button>
+                ) : (
+                  <span className="text-sm font-medium text-[var(--on-surface-variant)] mt-1 whitespace-nowrap">Veri Yok</span>
+                )}
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-
-
-      {/* Meal Details */}
-      <div className="mt-[var(--space-4)]">
+      {/* Main Content Layout: 2-Column on Desktop when !isOverview */}
+      <div className={isOverview ? "flex flex-col gap-[var(--space-4)]" : "grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"}>
+        {/* Left / Main Column: Meals */}
+        <div className={isOverview ? "w-full" : "lg:col-span-7 xl:col-span-8 flex flex-col"}>
+          {/* Meal Details */}
+          <div className="mt-[var(--space-2)]">
         <div className="flex items-center justify-between mb-[var(--space-3)]">
           <h3 className="text-caption text-[var(--on-surface-variant)]">ÖĞÜN DETAYLARI</h3>
           <div className="flex items-center gap-2">
@@ -394,8 +443,234 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
           })}
         </div>
       </div>
+    </div>
 
-      {!isOverview && <div className="h-24"></div>}
+    {/* Right Column: Only on desktop / full health page */}
+    {!isOverview && (
+      <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6">
+        {/* Makro Besin Dağılımı */}
+        <div className="glass-card p-5 rounded-2xl flex flex-col gap-4 border border-[rgba(255,255,255,0.06)]">
+          <div className="flex items-center justify-between">
+            <h3 className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">MAKRO BESİN DAĞILIMI</h3>
+            <span className="text-xs text-[var(--on-surface-variant)] font-medium">Toplam {(data.carbs || 0) + (data.protein || 0) + (data.fat || 0)}g</span>
+          </div>
+
+          {/* Stacked Macro Bar */}
+          <div className="h-3.5 w-full rounded-full bg-white/5 overflow-hidden flex">
+            {((data.carbs || 0) + (data.protein || 0) + (data.fat || 0) > 0) ? (
+              <>
+                <div 
+                  style={{ width: `${Math.round(((data.carbs || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` }} 
+                  className="bg-[#60a5fa] h-full"
+                  title={`Karbonhidrat: ${data.carbs || 0}g`}
+                />
+                <div 
+                  style={{ width: `${Math.round(((data.protein || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` }} 
+                  className="bg-[#8ec13b] h-full"
+                  title={`Protein: ${data.protein || 0}g`}
+                />
+                <div 
+                  style={{ width: `${Math.round(((data.fat || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` }} 
+                  className="bg-[#facc15] h-full"
+                  title={`Yağ: ${data.fat || 0}g`}
+                />
+              </>
+            ) : (
+              <div className="w-full h-full bg-white/10" />
+            )}
+          </div>
+
+          {/* Macro Breakdown Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#60a5fa]">KARBONHİDRAT</span>
+                <span className="text-[11px] text-[var(--on-surface-variant)]">
+                  {((data.carbs || 0) + (data.protein || 0) + (data.fat || 0) > 0) ? `${Math.round(((data.carbs || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` : '0%'}
+                </span>
+              </div>
+              <span className="text-xl font-bold text-white mt-1">{data.carbs || 0}<span className="text-xs text-[var(--on-surface-variant)] ml-0.5">g</span></span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#8ec13b]">PROTEİN</span>
+                <span className="text-[11px] text-[var(--on-surface-variant)]">
+                  {((data.carbs || 0) + (data.protein || 0) + (data.fat || 0) > 0) ? `${Math.round(((data.protein || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` : '0%'}
+                </span>
+              </div>
+              <span className="text-xl font-bold text-white mt-1">{data.protein || 0}<span className="text-xs text-[var(--on-surface-variant)] ml-0.5">g</span></span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#facc15]">YAĞ</span>
+                <span className="text-[11px] text-[var(--on-surface-variant)]">
+                  {((data.carbs || 0) + (data.protein || 0) + (data.fat || 0) > 0) ? `${Math.round(((data.fat || 0) / ((data.carbs || 0) + (data.protein || 0) + (data.fat || 0))) * 100)}%` : '0%'}
+                </span>
+              </div>
+              <span className="text-xl font-bold text-white mt-1">{data.fat || 0}<span className="text-xs text-[var(--on-surface-variant)] ml-0.5">g</span></span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-pink-400">ŞEKER</span>
+                <span className="text-[11px] text-[var(--on-surface-variant)]">Limit</span>
+              </div>
+              <span className="text-xl font-bold text-white mt-1">{data.sugar || 0}<span className="text-xs text-[var(--on-surface-variant)] ml-0.5">g</span></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Günün Kalori Yakımı & Egzersizleri */}
+        <div className="glass-card p-5 rounded-2xl flex flex-col gap-4 border border-[rgba(255,255,255,0.06)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">KALORİ YAKIMI & AKTİVİTELER</h3>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-2xl font-bold text-white">{totalBurned}</span>
+                <span className="text-xs text-[var(--on-surface-variant)]">kcal toplam</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenSheet && onOpenSheet('exercise')}
+              className="px-3 py-1.5 rounded-xl bg-[#8ec13b] hover:bg-[#79aa32] text-white text-xs font-bold transition-all shadow flex items-center gap-1 cursor-pointer"
+            >
+              <Plus size={14} /> Egzersiz Ekle
+            </button>
+          </div>
+
+          {/* Breakdown Pills */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col">
+              <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Egzersizler</span>
+              <span className="text-sm font-bold text-[#8ec13b] mt-0.5">
+                {data.exercises?.reduce((acc, e) => acc + (e.calories_burned || 0), 0) || 0} <span className="text-[10px] font-normal text-white/60">kcal</span>
+              </span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col">
+              <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">BMR</span>
+              <span className="text-sm font-bold text-blue-400 mt-0.5">
+                {data.caloriesBurnedBmr || 0} <span className="text-[10px] font-normal text-white/60">kcal</span>
+              </span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col">
+              <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Uyku</span>
+              <span className="text-sm font-bold text-[#818cf8] mt-0.5">
+                {data.sleepCalories || 0} <span className="text-[10px] font-normal text-white/60">kcal</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Exercises list */}
+          {data.exercises && data.exercises.length > 0 ? (
+            <div className="flex flex-col gap-2 pt-2 border-t border-white/[0.06]">
+              <span className="text-[11px] font-semibold text-[var(--on-surface-variant)] uppercase">Kayıtlı Egzersizler ({data.exercises.length})</span>
+              <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {data.exercises.map((ex) => {
+                  const isStep = ex.name === 'Adım Sayısı' || (ex.step_count && ex.step_count > 0);
+                  return (
+                    <div key={ex.id} className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.05] flex items-center justify-between transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-[#8ec13b]/15 border border-[#8ec13b]/20 flex items-center justify-center text-[#8ec13b] shrink-0">
+                          {isStep ? <Footprints size={15} /> : ex.name.includes('Ağırlık') ? <Dumbbell size={15} /> : <Flame size={15} />}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-white capitalize">{ex.name}</span>
+                          <span className="text-[11px] text-[var(--on-surface-variant)]">
+                            {ex.duration_minutes > 0 ? `${ex.duration_minutes} dk` : ''}
+                            {ex.step_count && ex.step_count > 0 ? ` • ${ex.step_count.toLocaleString('tr-TR')} adım` : ''}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[#8ec13b]">+{ex.calories_burned} kcal</span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenSheet && onOpenSheet('exercise', ex)}
+                          className="p-1 rounded text-white/50 hover:text-white transition-colors"
+                          title="Düzenle"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExercise(ex.id)}
+                          className="p-1 rounded text-red-400/50 hover:text-red-400 transition-colors"
+                          title="Sil"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] flex flex-col items-center text-center gap-1.5 py-6">
+              <Flame size={22} className="text-white/30 mb-1" />
+              <span className="text-xs font-medium text-white/80">Bugün henüz egzersiz kaydı yok</span>
+              <span className="text-[11px] text-[var(--on-surface-variant)]">Adımlarınızı ve antrenmanlarınızı ekleyerek kalori yakımınızı takip edin.</span>
+            </div>
+          )}
+        </div>
+
+        {/* Sağlık Ölçümleri (Uyku & Kilo) */}
+        <div className="grid grid-cols-2 gap-4">
+          <div 
+            onClick={() => onOpenSheet && onOpenSheet('addSleep')}
+            className="glass-card p-4 rounded-2xl border border-[rgba(255,255,255,0.06)] flex flex-col justify-between cursor-pointer hover:border-[#818cf8]/40 transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#818cf8] uppercase tracking-wider">UYKU</span>
+              <Pencil size={12} className="text-white/30 group-hover:text-white/70 transition-colors" />
+            </div>
+            <div className="mt-3">
+              {data.sleepMinutes > 0 ? (
+                <div className="flex flex-col">
+                  <div className="flex items-baseline gap-1 text-[#818cf8]">
+                    <span className="text-xl font-bold">{Math.floor(data.sleepMinutes / 60)}</span>
+                    <span className="text-xs">sa</span>
+                    <span className="text-xl font-bold ml-1">{data.sleepMinutes % 60}</span>
+                    <span className="text-xs">dk</span>
+                  </div>
+                  {(data.sleepCalories || 0) > 0 && (
+                    <span className="text-[10px] text-[#818cf8]/70 mt-0.5">{data.sleepCalories} kcal</span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs text-[var(--on-surface-variant)] font-medium">Kayıt Yok</span>
+              )}
+            </div>
+          </div>
+
+          <div 
+            onClick={() => onOpenSheet && onOpenSheet('addWeight', { currentWeight: data.currentWeight, weightHistory: data.weightHistory })}
+            className="glass-card p-4 rounded-2xl border border-[rgba(255,255,255,0.06)] flex flex-col justify-between cursor-pointer hover:border-[#34d399]/40 transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-[#34d399] uppercase tracking-wider">KİLO</span>
+              <Pencil size={12} className="text-white/30 group-hover:text-white/70 transition-colors" />
+            </div>
+            <div className="mt-3">
+              {data.currentWeight ? (
+                <div className="flex items-baseline gap-1 text-[#34d399]">
+                  <span className="text-xl font-bold">{data.currentWeight}</span>
+                  <span className="text-xs">kg</span>
+                </div>
+              ) : (
+                <span className="text-xs text-[var(--on-surface-variant)] font-medium">Kayıt Yok</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+
+  {!isOverview && <div className="h-24"></div>}
 
       <ExportPdfModal 
         isOpen={isPdfModalOpen} 
