@@ -8,34 +8,49 @@ import { PrayerLocation } from '@/models/PrayerLocation';
 import { PrayerTime } from '@/models/PrayerTime';
 import { PrayerNotification } from '@/models/PrayerNotification';
 import { getDiyanetDistricts, getMonthlyPrayerTimes, resolveDiyanetDistrictId } from '@/lib/prayer-provider-diyanet';
-import { buildPrayerNotifications, getPrayerNotificationKey } from '@/lib/prayer-times';
+import { buildPrayerNotifications, getPrayerNotificationKey, PRAYER_AUTHORIZED_EMAIL } from '@/lib/prayer-times';
 
-async function userId() { const session = await auth.api.getSession({ headers: await headers() }); return session?.user?.id || null; }
+async function getAuthorizedPrayerUser() {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id || !session?.user?.email) return null;
+    if (session.user.email.trim().toLowerCase() !== PRAYER_AUTHORIZED_EMAIL.toLowerCase()) {
+      return null;
+    }
+    return session.user;
+  } catch (error) {
+    console.error('getAuthorizedPrayerUser error:', error);
+    return null;
+  }
+}
 
 export async function getPrayerDistrictsAction(province: string) {
-  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
+  const user = await getAuthorizedPrayerUser();
+  if (!user) return { success: false, error: 'Bu özellik sadece yetkili hesaba açıktır.' };
   if (!province?.trim()) return { success: true, districts: [] };
   try { return { success: true, districts: await getDiyanetDistricts(province) }; }
   catch (error) { console.error('getPrayerDistrictsAction error:', error); return { success: false, error: 'İlçeler alınamadı.' }; }
 }
 
 export async function getPrayerDataAction(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
-  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
+  const user = await getAuthorizedPrayerUser();
+  if (!user) return { success: false, error: 'Bu özellik sadece yetkili hesaba açıktır.' };
   await connectDB();
-  const location = await PrayerLocation.findOne({ user_id: id }).lean();
+  const location = await PrayerLocation.findOne({ user_id: user.id }).lean();
   const locationKey = location ? `${location.province}/${location.district}` : null;
-  const times = await PrayerTime.find({ user_id: id, location_key: locationKey || '__none__', date: { $regex: `^${year}-${String(month).padStart(2, '0')}` } }).sort({ date: 1 }).lean();
+  const times = await PrayerTime.find({ user_id: user.id, location_key: locationKey || '__none__', date: { $regex: `^${year}-${String(month).padStart(2, '0')}` } }).sort({ date: 1 }).lean();
   return { success: true, location: location ? { province: location.province, district: location.district } : null, times: JSON.parse(JSON.stringify(times)) };
 }
 
 export async function savePrayerLocationAction(input: { province: string; district: string }) {
-  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
+  const user = await getAuthorizedPrayerUser();
+  if (!user) return { success: false, error: 'Bu özellik sadece yetkili hesaba açıktır.' };
   if (!input.province?.trim() || !input.district?.trim()) return { success: false, error: 'İl ve ilçe seçin.' };
   await connectDB();
-  await PrayerNotification.updateMany({ user_id: id, status: 'pending' }, { $set: { status: 'cancelled' } });
+  await PrayerNotification.updateMany({ user_id: user.id, status: 'pending' }, { $set: { status: 'cancelled' } });
   const providerDistrictId = await resolveDiyanetDistrictId(input.province, input.district);
-  await PrayerLocation.findOneAndUpdate({ user_id: id }, { user_id: id, country: 'Türkiye', province: input.province, district: input.district, provider_city: providerDistrictId, timezone: 'Europe/Istanbul' }, { upsert: true, new: true });
-  const now = new Date(); await syncPrayerMonthForUser(id, now.getFullYear(), now.getMonth() + 1);
+  await PrayerLocation.findOneAndUpdate({ user_id: user.id }, { user_id: user.id, country: 'Türkiye', province: input.province, district: input.district, provider_city: providerDistrictId, timezone: 'Europe/Istanbul' }, { upsert: true, new: true });
+  const now = new Date(); await syncPrayerMonthForUser(user.id, now.getFullYear(), now.getMonth() + 1);
   revalidatePath('/profile'); return { success: true };
 }
 
@@ -53,9 +68,10 @@ export async function syncPrayerMonthForUser(id: string, year: number, month: nu
 }
 
 export async function savePushSubscriptionAction(subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
-  const id = await userId(); if (!id) return { success: false, error: 'Oturum gerekli.' };
+  const user = await getAuthorizedPrayerUser();
+  if (!user) return { success: false, error: 'Bu özellik sadece yetkili hesaba açıktır.' };
   if (!subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) return { success: false, error: 'Geçersiz bildirim aboneliği.' };
   await connectDB(); const { PushSubscription } = await import('@/models/PushSubscription');
-  await PushSubscription.findOneAndUpdate({ endpoint: subscription.endpoint }, { user_id: id, ...subscription, active: true, last_error: null }, { upsert: true });
+  await PushSubscription.findOneAndUpdate({ endpoint: subscription.endpoint }, { user_id: user.id, ...subscription, active: true, last_error: null }, { upsert: true });
   return { success: true };
 }

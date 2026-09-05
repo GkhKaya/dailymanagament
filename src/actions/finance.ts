@@ -10,8 +10,10 @@ import { Category } from "@/models/Category";
 import { Debt } from "@/models/Debt";
 import { DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
+import { User } from "@/models/User";
 import { revalidatePath } from "next/cache";
 import { applyTransactionEffect, getCreditCardDebt, validateTransfer } from "@/lib/finance-rules";
+import { localizeCategoryName } from "@/lib/category-helpers";
 
 // Helper to check session
 async function getUserId() {
@@ -376,10 +378,24 @@ export async function getCategoriesAction() {
     await connectDB();
     const userId = await getUserId();
 
+    const user = await User.findById(userId).select('settings').lean();
+    const isAbroadOrEn = Boolean(user?.settings?.is_abroad || user?.settings?.language === 'en');
+
     // Ensure the user has categories. If 0, seed them specifically for this user.
     const userCategoryCount = await Category.countDocuments({ user_id: userId });
     if (userCategoryCount === 0) {
-      const defaultCats = [
+      const defaultCats = isAbroadOrEn ? [
+        { user_id: userId, name: 'Groceries', type: 'expense', icon: 'cart', color: '#ef4444', is_default: false },
+        { user_id: userId, name: 'Transportation', type: 'expense', icon: 'car', color: '#f59e0b', is_default: false },
+        { user_id: userId, name: 'Entertainment', type: 'expense', icon: 'film', color: '#8b5cf6', is_default: false },
+        { user_id: userId, name: 'Dining Out', type: 'expense', icon: 'coffee', color: '#f43f5e', is_default: false },
+        { user_id: userId, name: 'Bills & Utilities', type: 'expense', icon: 'zap', color: '#0ea5e9', is_default: false },
+        { user_id: userId, name: 'Rent & Housing', type: 'expense', icon: 'home', color: '#10b981', is_default: false },
+        { user_id: userId, name: 'Healthcare', type: 'expense', icon: 'heart', color: '#ec4899', is_default: false },
+        { user_id: userId, name: 'Salary', type: 'income', icon: 'briefcase', color: '#22c55e', is_default: false },
+        { user_id: userId, name: 'Investments', type: 'income', icon: 'trending', color: '#3b82f6', is_default: false },
+        { user_id: userId, name: 'Other Income', type: 'income', icon: 'gift', color: '#14b8a6', is_default: false },
+      ] : [
         { user_id: userId, name: 'Market', type: 'expense', icon: 'cart', color: '#ef4444', is_default: false },
         { user_id: userId, name: 'Ulaşım', type: 'expense', icon: 'car', color: '#f59e0b', is_default: false },
         { user_id: userId, name: 'Eğlence', type: 'expense', icon: 'film', color: '#8b5cf6', is_default: false },
@@ -399,6 +415,7 @@ export async function getCategoriesAction() {
       ...cat,
       _id: cat._id.toString(),
       id: cat._id.toString(),
+      name: isAbroadOrEn ? localizeCategoryName(cat.name, true) : cat.name,
       user_id: cat.user_id?.toString()
     }));
     return { success: true, categories };

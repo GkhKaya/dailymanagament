@@ -82,7 +82,11 @@ export async function findBestFoodInDB(rawName: string, userId?: string | null):
           $or: [
             { food_name: { $regex: '^' + escapeRegex(corePhrase) + '$', $options: 'i' } },
             { food_name: { $regex: '^' + escapeRegex(corePhrase) + ' ', $options: 'i' } },
-            { food_name: { $regex: '^' + escapeRegex(corePhrase) + ' \\(', $options: 'i' } }
+            { food_name: { $regex: '^' + escapeRegex(corePhrase) + ' \\(', $options: 'i' } },
+            { food_name_en: { $regex: '^' + escapeRegex(corePhrase) + '$', $options: 'i' } },
+            { food_name_en: { $regex: '^' + escapeRegex(corePhrase) + ' ', $options: 'i' } },
+            { food_name_en: { $regex: '^' + escapeRegex(corePhrase) + ' \\(', $options: 'i' } },
+            { search_tags: { $regex: '^' + escapeRegex(corePhrase) + '$', $options: 'i' } }
           ]
         },
         userFilter
@@ -99,7 +103,11 @@ export async function findBestFoodInDB(rawName: string, userId?: string | null):
   // 2. All core words match
   if (coreWords.length > 1) {
     const wordConditions = coreWords.map((w) => ({
-      food_name: { $regex: escapeRegex(w), $options: 'i' }
+      $or: [
+        { food_name: { $regex: escapeRegex(w), $options: 'i' } },
+        { food_name_en: { $regex: escapeRegex(w), $options: 'i' } },
+        { search_tags: { $regex: escapeRegex(w), $options: 'i' } }
+      ]
     }));
     const candidates = (await FoodCache.find({
       $and: [...wordConditions, userFilter]
@@ -115,8 +123,18 @@ export async function findBestFoodInDB(rawName: string, userId?: string | null):
 
   // 3. First core word match
   if (coreWords.length > 0) {
+    const firstWord = escapeRegex(coreWords[0]);
     const candidates = (await FoodCache.find({
-      $and: [{ food_name: { $regex: '^' + escapeRegex(coreWords[0]), $options: 'i' } }, userFilter]
+      $and: [
+        {
+          $or: [
+            { food_name: { $regex: '^' + firstWord, $options: 'i' } },
+            { food_name_en: { $regex: '^' + firstWord, $options: 'i' } },
+            { search_tags: { $regex: '^' + firstWord, $options: 'i' } }
+          ]
+        },
+        userFilter
+      ]
     })
       .limit(5)
       .lean()) as unknown as IFoodCache[];

@@ -6,6 +6,7 @@ import { saveWorkoutDayAction, deleteWorkoutDayAction } from '@/actions/workout'
 import { getExerciseVideoUrl } from '@/lib/workout-utils';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ExerciseRow {
   name: string;
@@ -23,6 +24,9 @@ export function ManageWorkoutRoutineForm({
   onSuccess?: () => void;
   initialData?: any;
 }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
+
   const [dayName, setDayName] = useState(initialData?.day_name || '');
   const [exercises, setExercises] = useState<ExerciseRow[]>(() => {
     if (initialData?.exercises && initialData.exercises.length > 0) {
@@ -46,7 +50,7 @@ export function ManageWorkoutRoutineForm({
 
   const handleRemoveRow = (index: number) => {
     if (exercises.length === 1) {
-      toast.error('En az 1 hareket girmelisiniz.');
+      toast.error(isEn ? 'You must enter at least 1 exercise.' : 'En az 1 hareket girmelisiniz.');
       return;
     }
     setExercises(prev => prev.filter((_, i) => i !== index));
@@ -63,13 +67,13 @@ export function ManageWorkoutRoutineForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!dayName.trim()) {
-      toast.error('Lütfen gün adını girin (Örn: Pazartesi veya Push Day).');
+      toast.error(isEn ? 'Please enter a day name (e.g. Monday or Push Day).' : 'Lütfen gün adını girin (Örn: Pazartesi veya Push Day).');
       return;
     }
 
     const validExercises = exercises.filter(ex => ex.name.trim() !== '');
     if (validExercises.length === 0) {
-      toast.error('Lütfen en az 1 hareket ismi girin.');
+      toast.error(isEn ? 'Please enter at least 1 exercise name.' : 'Lütfen en az 1 hareket ismi girin.');
       return;
     }
 
@@ -82,14 +86,16 @@ export function ManageWorkoutRoutineForm({
       });
 
       if (res.success) {
-        toast.success(initialData?.id ? 'Antrenman günü güncellendi!' : 'Yeni antrenman günü eklendi!');
+        toast.success(initialData?.id 
+          ? (isEn ? 'Workout day updated!' : 'Antrenman günü güncellendi!') 
+          : (isEn ? 'New workout day added!' : 'Yeni antrenman günü eklendi!'));
         onSuccess && onSuccess();
         onClose();
       } else {
-        toast.error(res.error || 'Kaydedilirken hata oluştu.');
+        toast.error(res.error || (isEn ? 'An error occurred while saving.' : 'Kaydedilirken hata oluştu.'));
       }
     } catch (e: any) {
-      toast.error(e.message || 'Bir hata oluştu.');
+      toast.error(e.message || (isEn ? 'An error occurred.' : 'Bir hata oluştu.'));
     } finally {
       setIsLoading(false);
     }
@@ -97,17 +103,20 @@ export function ManageWorkoutRoutineForm({
 
   const handleDeleteDay = async () => {
     if (!initialData?.id) return;
-    if (!window.confirm(`"${dayName}" gününü ve hareketlerini silmek istediğinize emin misiniz?`)) return;
+    const confirmMsg = isEn 
+      ? `Are you sure you want to delete "${dayName}" and its exercises?` 
+      : `"${dayName}" gününü ve hareketlerini silmek istediğinize emin misiniz?`;
+    if (!window.confirm(confirmMsg)) return;
 
     setIsLoading(true);
     try {
       const res = await deleteWorkoutDayAction(initialData.id);
       if (res.success) {
-        toast.success('Antrenman günü silindi.');
+        toast.success(isEn ? 'Workout day deleted.' : 'Antrenman günü silindi.');
         onSuccess && onSuccess();
         onClose();
       } else {
-        toast.error(res.error || 'Silinirken hata oluştu.');
+        toast.error(res.error || (isEn ? 'An error occurred while deleting.' : 'Silinirken hata oluştu.'));
       }
     } catch (e: any) {
       toast.error(e.message);
@@ -121,12 +130,12 @@ export function ManageWorkoutRoutineForm({
       {/* Gün Adı */}
       <div className="flex flex-col gap-2">
         <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-          GÜN ADI VEYA PROGRAM BÖLGESİ
+          {isEn ? 'DAY NAME OR SPLIT' : 'GÜN ADI VEYA PROGRAM BÖLGESİ'}
         </label>
         <div className="relative">
           <input
             type="text"
-            placeholder="Örn: Pazartesi (Göğüs & Triceps) veya Push Day"
+            placeholder={isEn ? 'e.g. Monday (Chest & Triceps) or Push Day' : 'Örn: Pazartesi (Göğüs & Triceps) veya Push Day'}
             value={dayName}
             onChange={(e) => setDayName(e.target.value)}
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3.5 px-4 text-[14px] text-white font-semibold focus:outline-none focus:border-[var(--primary)] transition-all"
@@ -139,10 +148,10 @@ export function ManageWorkoutRoutineForm({
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1.5">
-            <Dumbbell size={14} className="text-[var(--primary)]" /> Hareketler ve Set Sayıları
+            <Dumbbell size={14} className="text-[var(--primary)]" /> {isEn ? 'Exercises and Sets' : 'Hareketler ve Set Sayıları'}
           </label>
           <span className="text-[11px] text-[var(--on-surface-variant)] font-medium">
-            {exercises.length} Hareket
+            {isEn ? `${exercises.length} Exercise${exercises.length === 1 ? '' : 's'}` : `${exercises.length} Hareket`}
           </span>
         </div>
 
@@ -158,7 +167,7 @@ export function ManageWorkoutRoutineForm({
                 </span>
                 <input
                   type="text"
-                  placeholder="Hareket adı (Örn: Bench Press)"
+                  placeholder={isEn ? 'Exercise name (e.g. Bench Press)' : 'Hareket adı (Örn: Bench Press)'}
                   value={row.name}
                   onChange={(e) => handleRowChange(idx, 'name', e.target.value)}
                   className="flex-1 bg-transparent text-[13px] font-semibold text-white focus:outline-none border-b border-transparent focus:border-[var(--primary)] transition-colors py-0.5"
@@ -170,7 +179,7 @@ export function ManageWorkoutRoutineForm({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 text-[var(--primary)] hover:text-white hover:bg-[var(--primary)]/20 rounded-lg transition-colors shrink-0"
-                    title={`"${row.name}" hareketinin videosunu izle`}
+                    title={isEn ? `Watch video for "${row.name}"` : `"${row.name}" hareketinin videosunu izle`}
                   >
                     <PlayCircle size={15} />
                   </a>
@@ -179,7 +188,7 @@ export function ManageWorkoutRoutineForm({
                   type="button"
                   onClick={() => handleRemoveRow(idx)}
                   className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded-lg transition-colors shrink-0"
-                  title="Hareketi Sil"
+                  title={isEn ? 'Delete Exercise' : 'Hareketi Sil'}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -189,7 +198,7 @@ export function ManageWorkoutRoutineForm({
               <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[rgba(255,255,255,0.04)]">
                 {/* Set Sayısı */}
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">Set</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">{isEn ? 'Sets' : 'Set'}</span>
                   <input
                     type="number"
                     min="1"
@@ -202,10 +211,10 @@ export function ManageWorkoutRoutineForm({
 
                 {/* Tekrar */}
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">Tekrar</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">{isEn ? 'Reps' : 'Tekrar'}</span>
                   <input
                     type="text"
-                    placeholder="Örn: 8-12"
+                    placeholder={isEn ? 'e.g. 8-12' : 'Örn: 8-12'}
                     value={row.reps}
                     onChange={(e) => handleRowChange(idx, 'reps', e.target.value)}
                     className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl py-1.5 px-2.5 text-[12px] font-bold text-white text-center focus:outline-none focus:border-[var(--primary)]"
@@ -214,12 +223,12 @@ export function ManageWorkoutRoutineForm({
 
                 {/* Ağırlık (kg) */}
                 <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">Ağırlık (kg)</span>
+                  <span className="text-[10px] text-[var(--on-surface-variant)] uppercase font-semibold">{isEn ? 'Weight (kg)' : 'Ağırlık (kg)'}</span>
                   <input
                     type="number"
                     step="0.5"
                     min="0"
-                    placeholder="Opsiyonel"
+                    placeholder={isEn ? 'Optional' : 'Opsiyonel'}
                     value={row.weight_kg || ''}
                     onChange={(e) => handleRowChange(idx, 'weight_kg', parseFloat(e.target.value) || 0)}
                     className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl py-1.5 px-2.5 text-[12px] font-bold text-white text-center focus:outline-none focus:border-[var(--primary)]"
@@ -235,7 +244,7 @@ export function ManageWorkoutRoutineForm({
           onClick={handleAddRow}
           className="py-2.5 rounded-2xl bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.07)] border border-dashed border-[rgba(255,255,255,0.15)] text-[12px] font-semibold text-emerald-400 hover:text-emerald-300 transition-all flex items-center justify-center gap-1.5 mt-1"
         >
-          <Plus size={16} /> + Hareket Ekle
+          <Plus size={16} /> {isEn ? '+ Add Exercise' : '+ Hareket Ekle'}
         </button>
       </div>
 
@@ -246,7 +255,7 @@ export function ManageWorkoutRoutineForm({
           onClick={onClose}
           className="flex-1 py-3.5 rounded-2xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.09)] text-white text-[13px] font-semibold transition-colors"
         >
-          İptal
+          {isEn ? 'Cancel' : 'İptal'}
         </button>
         {initialData?.id && (
           <button
@@ -255,7 +264,7 @@ export function ManageWorkoutRoutineForm({
             disabled={isLoading}
             className="py-3.5 px-4 rounded-2xl border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[13px] font-semibold transition-colors"
           >
-            Sil
+            {isEn ? 'Delete' : 'Sil'}
           </button>
         )}
         <button
@@ -263,7 +272,7 @@ export function ManageWorkoutRoutineForm({
           disabled={isLoading}
           className="flex-[2] py-3.5 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-[13px] font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
         >
-          {isLoading ? <LoadingSpinner size="sm" /> : initialData?.id ? 'Değişiklikleri Kaydet' : 'Programı Kaydet'}
+          {isLoading ? <LoadingSpinner size="sm" /> : initialData?.id ? (isEn ? 'Save Changes' : 'Değişiklikleri Kaydet') : (isEn ? 'Save Routine' : 'Programı Kaydet')}
         </button>
       </div>
     </form>

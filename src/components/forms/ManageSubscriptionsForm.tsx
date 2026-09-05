@@ -1,8 +1,12 @@
-import { t } from '@/lib/i18n';
+"use client";
+
 import React, { useState } from 'react';
-import { CalendarClock, PlaySquare, Music, Dumbbell, Plus } from 'lucide-react';
+import { CalendarClock, PlaySquare, Plus } from 'lucide-react';
 import { useManageSubscriptionsViewModel } from '@/viewmodels/useManageSubscriptionsViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useTranslation } from '@/hooks/useTranslation';
+import { getCurrencySymbol, formatCurrency } from '@/lib/i18n';
+import { localizeCategoryName } from '@/lib/category-helpers';
 
 export function ManageSubscriptionsForm({ 
   onClose, onSuccess, onOpenEdit, subscriptions, categories, accounts 
@@ -10,6 +14,9 @@ export function ManageSubscriptionsForm({
   onClose: () => void, onSuccess: () => void, onOpenEdit?: (id: string) => void, subscriptions: { id: string, name: string, amount: number, nextBillingDate: string }[], categories: { id: string, name: string, type: string, icon?: string }[], accounts: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean }[] 
 }) {
   const [isAdding, setIsAdding] = useState(false);
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+  const currencySym = getCurrencySymbol(locale, userAbroad);
   
   const {
     name, setName,
@@ -23,8 +30,6 @@ export function ManageSubscriptionsForm({
     onSuccess();
   });
 
-  const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
-
   const totalMonthly = subscriptions.reduce((acc, sub) => acc + sub.amount, 0);
 
   return (
@@ -32,8 +37,10 @@ export function ManageSubscriptionsForm({
       {!isAdding ? (
         <>
           <div className="glass-item p-4 flex flex-col items-center justify-center border-l-4 border-l-[#c0c1ff]">
-            <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Aylık Toplam Gider</span>
-            <span className="text-2xl font-bold text-white">{fmt(totalMonthly)}</span>
+            <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">
+              {isEn ? "Monthly Total Subscriptions" : "Aylık Toplam Gider"}
+            </span>
+            <span className="text-2xl font-bold text-white">{formatCurrency(totalMonthly, locale, userAbroad)}</span>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -46,13 +53,13 @@ export function ManageSubscriptionsForm({
                   <div className="flex flex-col">
                     <span className="text-body font-medium">{sub.name}</span>
                     <span className="text-caption text-[var(--on-surface-variant)] flex items-center gap-1">
-                      <CalendarClock size={12} /> Sonraki ödeme: {new Date(sub.nextBillingDate).toLocaleDateString('tr-TR')}
+                      <CalendarClock size={12} /> {isEn ? "Next billing" : "Sonraki ödeme"}: {new Date(sub.nextBillingDate).toLocaleDateString(isEn ? 'en-US' : 'tr-TR')}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-body font-bold text-white">
-                    {fmt(sub.amount)}
+                    {formatCurrency(sub.amount, locale, userAbroad)}
                   </span>
                 </div>
               </div>
@@ -60,56 +67,60 @@ export function ManageSubscriptionsForm({
           </div>
 
           <div className="mt-2 flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-              Kapat
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors cursor-pointer">
+              {isEn ? "Close" : "Kapat"}
             </button>
-            <button type="button" onClick={() => setIsAdding(true)} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2">
+            <button type="button" onClick={() => setIsAdding(true)} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer">
               <Plus size={20} />
-              <span>Abonelik Ekle</span>
+              <span>{isEn ? "Add Subscription" : "Abonelik Ekle"}</span>
             </button>
           </div>
         </>
       ) : (
-        /* Yeni Abonelik Ekleme Formu */
+        /* New Subscription Form */
         <form onSubmit={handleAdd} className="flex flex-col gap-4 animate-fade-in">
-          
-
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Abonelik Adı</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? "Subscription Name" : "Abonelik Adı"}
+            </label>
             <input 
               type="text" 
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Örn: Netflix, Spotify..." 
+              placeholder={isEn ? "e.g. Netflix, Spotify..." : "Örn: Netflix, Spotify..."} 
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{t('forms.category')}</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? "Category" : "Kategori"}
+            </label>
             <select 
               required
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
             >
-              <option value="" disabled>Kategori seçiniz...</option>
+              <option value="" disabled>{isEn ? "Select category..." : "Kategori seçiniz..."}</option>
               {categories.filter(c => c.type === 'expense').map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>{localizeCategoryName(cat.name, isEn)}</option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Ödenecek Hesap</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? "Payment Account" : "Ödenecek Hesap"}
+            </label>
             <select 
               required
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all appearance-none"
             >
-              <option value="" disabled>Hesap seçiniz...</option>
+              <option value="" disabled>{isEn ? "Select account..." : "Hesap seçiniz..."}</option>
               {accounts.map(acc => (
                 <option key={acc.id} value={acc.id}>{acc.name}</option>
               ))}
@@ -118,11 +129,15 @@ export function ManageSubscriptionsForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Aylık Ücret</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                {isEn ? "Monthly Fee" : "Aylık Ücret"}
+              </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">
+                  {currencySym}
+                </span>
                 <input 
-                  type="number"
+                  type="number" 
                   step="0.01" 
                   required
                   value={amount}
@@ -134,7 +149,9 @@ export function ManageSubscriptionsForm({
             </div>
             
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kesim Günü</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                {isEn ? "Billing Day" : "Kesim Günü"}
+              </label>
               <div className="relative">
                 <CalendarClock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
                 <input 
@@ -151,11 +168,11 @@ export function ManageSubscriptionsForm({
           </div>
 
           <div className="flex gap-2 mt-4">
-            <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-              İptal
+            <button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors cursor-pointer">
+              {isEn ? "Cancel" : "İptal"}
             </button>
-            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
-              {isLoading ? <LoadingSpinner size="sm" /> : "Kaydet"}
+            <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50">
+              {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? "Save" : "Kaydet")}
             </button>
           </div>
         </form>

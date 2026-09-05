@@ -2,13 +2,14 @@ import React from 'react';
 import { useAddWeightViewModel } from '@/viewmodels/useAddWeightViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTranslation } from '@/hooks/useTranslation';
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, isEn }: any) => {
   if (active && payload && payload.length) {
     const item = payload[0].payload;
     const d = new Date(item.date);
-    const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-    const timeStr = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = d.toLocaleDateString(isEn ? 'en-US' : 'tr-TR', { day: 'numeric', month: 'short' });
+    const timeStr = d.toLocaleTimeString(isEn ? 'en-US' : 'tr-TR', { hour: '2-digit', minute: '2-digit' });
     return (
       <div className="bg-[#161622] border border-[#4ade80]/30 rounded-xl p-2 shadow-2xl">
         <div className="text-[10px] text-gray-400 font-medium">{dateStr} {timeStr !== '00:00' ? timeStr : ''}</div>
@@ -32,6 +33,8 @@ export function AddWeightForm({
   currentDate: string;
   weightHistory: { id?: string; date: string; weight: number; note?: string }[];
 }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
   const viewModel = useAddWeightViewModel(currentWeight, currentDate, onSuccess);
 
   return (
@@ -42,7 +45,7 @@ export function AddWeightForm({
             <LineChart data={weightHistory} margin={{ top: 18, right: 10, left: -10, bottom: 0 }}>
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(val) => new Date(val).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} 
+                tickFormatter={(val) => new Date(val).toLocaleDateString(isEn ? 'en-US' : 'tr-TR', { day: 'numeric', month: 'short' })} 
                 stroke="rgba(255,255,255,0.2)" 
                 fontSize={10}
                 tickMargin={8}
@@ -57,7 +60,7 @@ export function AddWeightForm({
                 tickLine={false}
                 width={28}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip isEn={isEn} />} />
               <Line 
                 type="monotone" 
                 dataKey="weight" 
@@ -73,37 +76,39 @@ export function AddWeightForm({
       ) : (
         <div className="text-center py-4 px-2 mb-2 bg-[rgba(255,255,255,0.02)] rounded-xl border border-[rgba(255,255,255,0.05)]">
           <p className="text-caption text-[var(--on-surface-variant)]">
-            Henüz grafik oluşturacak kadar kilo geçmişiniz yok. Yeni kilonuzu kaydettikçe burada değişim grafiği oluşacaktır.
+            {isEn 
+              ? 'Not enough weight history to display a chart yet. As you log your weight, your progress trend will appear here.'
+              : 'Henüz grafik oluşturacak kadar kilo geçmişiniz yok. Yeni kilonuzu kaydettikçe burada değişim grafiği oluşacaktır.'}
           </p>
         </div>
       )}
 
       <form onSubmit={viewModel.handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <label className="text-body font-medium text-white">Güncel Kilonuz (kg)</label>
+        <label className="text-body font-medium text-white">{isEn ? 'Current Weight (kg)' : 'Güncel Kilonuz (kg)'}</label>
         <input 
           type="number"
           step="0.1"
           className="form-input text-[var(--font-headline)]"
-          placeholder="Örn: 75.5"
+          placeholder={isEn ? 'e.g. 75.5' : 'Örn: 75.5'}
           value={viewModel.weight}
           onChange={(e) => viewModel.setWeight(e.target.value)}
           required
           autoFocus
         />
         <p className="text-caption text-[var(--on-surface-variant)] mt-1">
-          Kilonuzu güncellediğinizde günlük hedef kaloriniz (TDEE) otomatik olarak yeniden hesaplanacaktır.
+          {isEn
+            ? 'Updating your weight will automatically recalculate your daily target calories (TDEE).'
+            : 'Kilonuzu güncellediğinizde günlük hedef kaloriniz (TDEE) otomatik olarak yeniden hesaplanacaktır.'}
         </p>
       </div>
-
-      
 
       <button 
         type="submit" 
         className="btn-primary mt-2"
         disabled={viewModel.loading}
       >
-        {viewModel.loading ? <LoadingSpinner size="sm" /> : 'Kaydet'}
+        {viewModel.loading ? <LoadingSpinner size="sm" /> : (isEn ? 'Save' : 'Kaydet')}
       </button>
     </form>
     </div>

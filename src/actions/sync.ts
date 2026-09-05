@@ -18,13 +18,28 @@ import mongoose from "mongoose";
  * mid-way, the subscription will be reprocessed on next load — acceptable
  * for this use case.
  */
-export async function syncSubscriptions(userId: string) {
+// In-memory throttle: avoid querying subscriptions on every single dashboard load/screen switch
+const subscriptionSyncThrottleMap = new Map<string, number>();
+const SYNC_THROTTLE_MS = 15 * 60 * 1000; // 15 minutes
+
+export async function invalidateSubscriptionSyncThrottle(userId: string) {
+  subscriptionSyncThrottleMap.delete(userId);
+  return { success: true };
+}
+
+export async function syncSubscriptions(userId: string, force = false) {
   try {
-    const start = Date.now();
-    console.log(`[syncSubscriptions] Starting...`);
-    await connectDB();
-    console.log(`[syncSubscriptions] DB connected. (${Date.now() - start}ms)`);
     const now = new Date();
+    const nowMs = now.getTime();
+    const lastSync = subscriptionSyncThrottleMap.get(userId) || 0;
+
+    if (!force && (nowMs - lastSync) < SYNC_THROTTLE_MS) {
+      return { success: true, processed: 0, skipped: true };
+    }
+    subscriptionSyncThrottleMap.set(userId, nowMs);
+
+    const start = Date.now();
+    await connectDB();
 
     // Find all active subscriptions whose next run date has passed
     const dueSubscriptions = await Subscription.find({
@@ -32,7 +47,6 @@ export async function syncSubscriptions(userId: string) {
       is_active: true,
       next_run_date: { $lte: now }
     });
-    console.log(`[syncSubscriptions] Found ${dueSubscriptions.length} due subscriptions. (${Date.now() - start}ms)`);
 
     if (dueSubscriptions.length === 0) return { success: true, processed: 0 };
 

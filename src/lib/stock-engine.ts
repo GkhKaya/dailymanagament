@@ -64,7 +64,9 @@ export interface RawTrade {
   id?: string;
   symbol: string;
   name?: string;
-  assetType?: 'stock' | 'fund';
+  assetType?: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -89,7 +91,9 @@ export interface ComputedTrade extends RawTrade {
 export interface ComputedPosition {
   symbol: string;
   name?: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -162,16 +166,20 @@ export function calculateStockPortfolio(
     let currentLots = 0;
     let totalInvestedCost = 0;
     let symbolLastName = '';
-    let symbolAssetType: 'stock' | 'fund' = 'stock';
+    let symbolAssetType: 'stock' | 'fund' | 'crypto' = 'stock';
+    let symbolMarket: 'bist' | 'us' | 'crypto' = 'bist';
+    let symbolCurrency: string = 'TRY';
     let lastTradeDate: string | undefined;
-    let totalPurchaseTime = 0;
+    let totalPurchaseTime = 0; // for weighted holding period
 
     for (const trade of symTrades) {
+      if (trade.name) symbolLastName = trade.name;
+      if (trade.assetType) symbolAssetType = trade.assetType;
+      if (trade.market) symbolMarket = trade.market;
+      if (trade.currency) symbolCurrency = trade.currency;
       const lots = Number(trade.lots) || 0;
       const price = Number(trade.price) || 0;
       const tradeAmount = lots * price;
-      if (trade.name) symbolLastName = trade.name;
-      if (trade.assetType) symbolAssetType = trade.assetType;
       lastTradeDate = new Date(trade.date).toISOString();
 
       let costBasis = 0;
@@ -243,6 +251,8 @@ export function calculateStockPortfolio(
       symbol,
       name: symbolLastName,
       assetType: symbolAssetType,
+      market: symbolMarket,
+      currency: symbolCurrency,
       total_lots: Math.round(currentLots * 10000) / 10000,
       average_cost: roundedAvgCost,
       total_cost: roundedTotalCost,

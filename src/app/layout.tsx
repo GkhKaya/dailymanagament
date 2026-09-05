@@ -34,26 +34,55 @@ export const viewport: Viewport = {
 };
 
 import { Toaster } from 'react-hot-toast';
-
+import { cookies } from 'next/headers';
 import { Inter, Bricolage_Grotesque } from 'next/font/google';
+import { GoogleTranslateProvider } from '@/components/providers/GoogleTranslateProvider';
+import { I18nProvider } from '@/components/providers/I18nProvider';
+import { setServerLocale, type Locale } from '@/lib/i18n';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let initialLocale: Locale = 'tr';
+  let initialIsAbroad = false;
+  let initialCountry = 'TR';
+
+  try {
+    const cookieStore = await cookies();
+    const loc = cookieStore.get('NEXT_LOCALE')?.value;
+    if (loc === 'tr' || loc === 'en') {
+      initialLocale = loc;
+    }
+    const abroadVal = cookieStore.get('IS_ABROAD')?.value;
+    if (abroadVal === '1') {
+      initialIsAbroad = true;
+      if (!loc) initialLocale = 'en';
+    }
+    const countryVal = cookieStore.get('USER_COUNTRY')?.value;
+    if (countryVal) {
+      initialCountry = countryVal;
+    }
+  } catch {}
+
+  setServerLocale(initialLocale, initialIsAbroad, initialCountry);
+
   return (
     <html
-      lang="tr"
+      lang={initialLocale}
       className={`h-full antialiased ${inter.variable} ${bricolage.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans">
-        {children}
-        <Toaster position="top-center" />
+        <I18nProvider initialLocale={initialLocale} initialIsAbroad={initialIsAbroad} initialCountry={initialCountry}>
+          {children}
+          <Toaster position="top-center" />
+          <GoogleTranslateProvider />
+        </I18nProvider>
       </body>
     </html>
   );

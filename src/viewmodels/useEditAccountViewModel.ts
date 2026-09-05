@@ -1,8 +1,12 @@
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { updateAccountAction, deleteAccountAction, payCreditCardDebtAction } from '@/actions/finance';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function useEditAccountViewModel(initialData: { id: string, name: string, balance: number, type: string, include_in_total_balance?: boolean, credit_card_details?: any } | undefined, onSuccess?: () => void) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
+
   const [accountName, setAccountName] = useState(initialData?.name || '');
   const initialType = initialData?.type === 'credit_card' ? 'credit' : initialData?.type === 'bank_account' ? 'bank' : initialData?.type || 'bank';
   const [accountType, setAccountType] = useState<'bank' | 'credit' | 'cash'>(initialType as 'bank' | 'credit' | 'cash');
@@ -19,7 +23,6 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
   const [isExternalPayment, setIsExternalPayment] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  
 
   const handleUpdate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -44,11 +47,11 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        toast.error(res.error || "Güncelleme başarısız.");
+        toast.error(res.error || (isEn ? 'Update failed.' : 'Güncelleme başarısız.'));
       }
     } catch (e: unknown) {
       const err = e as Error;
-      toast.error(err.message || "Bir hata oluştu.");
+      toast.error(err.message || (isEn ? 'An error occurred.' : 'Bir hata oluştu.'));
     } finally {
       setIsLoading(false);
     }
@@ -65,16 +68,16 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
         isExternalPayment
       });
       if (!res.success) {
-        toast.error(res.error || 'Ödeme yapılamadı.');
+        toast.error(res.error || (isEn ? 'Payment failed.' : 'Ödeme yapılamadı.'));
         return;
       }
       setPaymentAmount('');
       setPaymentAccountId('');
-      toast.success('Kart borcu ödendi.');
+      toast.success(isEn ? 'Card debt paid.' : 'Kart borcu ödendi.');
       onSuccess?.();
     } catch (e: unknown) {
       const err = e as Error;
-      toast.error(err.message || 'Ödeme yapılamadı.');
+      toast.error(err.message || (isEn ? 'Payment failed.' : 'Ödeme yapılamadı.'));
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +85,10 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
-    if (!window.confirm("Bu hesabı silmek istediğinize emin misiniz? (Tüm bağlı işlemler silinebilir)")) return;
+    const confirmMessage = isEn 
+      ? 'Are you sure you want to delete this account? (All associated transactions may be deleted)' 
+      : 'Bu hesabı silmek istediğinize emin misiniz? (Tüm bağlı işlemler silinebilir)';
+    if (!window.confirm(confirmMessage)) return;
     
     setIsLoading(true);
     
@@ -91,11 +97,11 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
       if (res.success) {
         onSuccess && onSuccess();
       } else {
-        toast.error(res.error || "Silme işlemi başarısız.");
+        toast.error(res.error || (isEn ? 'Delete failed.' : 'Silme işlemi başarısız.'));
       }
     } catch (e: unknown) {
       const err = e as Error;
-      toast.error(err.message || "Bir hata oluştu.");
+      toast.error(err.message || (isEn ? 'An error occurred.' : 'Bir hata oluştu.'));
     } finally {
       setIsLoading(false);
     }

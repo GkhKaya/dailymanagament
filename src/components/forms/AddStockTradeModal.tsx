@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
-import { addStockTradeAction, updateStockTradeAction, fetchMarketQuoteAction } from "@/actions/stocks";
+import { addStockTradeAction, updateStockTradeAction, fetchMarketQuoteAction, getUserMarketsAction, searchMultiMarketAssetsAction } from "@/actions/stocks";
 import { StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
+import { useTranslation } from "@/hooks/useTranslation";
+import { isAbroad } from "@/lib/i18n";
+import { formatStockCurrency, getStockCurrencySymbol } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
 
 interface AddStockTradeModalProps {
@@ -28,11 +31,17 @@ export function AddStockTradeModal({
   positions = [],
   knownStocks = [],
 }: AddStockTradeModalProps) {
+  const { locale, isAbroad: abroadFromHook } = useTranslation();
+  const isEn = abroadFromHook || locale === 'en' || isAbroad();
+  const [userActiveMarkets, setUserActiveMarkets] = useState<string[]>(['bist']);
+  const [market, setMarket] = useState<'bist' | 'us' | 'crypto'>((editTrade as any)?.market || 'bist');
+  const [currency, setCurrency] = useState<'TRY' | 'USD'>((editTrade as any)?.currency || 'TRY');
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>(editTrade?.type || initialType);
-  const [assetType, setAssetType] = useState<'stock' | 'fund'>(editTrade?.assetType || 'stock');
+  const [assetType, setAssetType] = useState<'stock' | 'fund' | 'crypto'>((editTrade?.assetType as any) || 'stock');
   const [symbol, setSymbol] = useState(editTrade?.symbol || initialSymbol || '');
   const [name, setName] = useState(editTrade?.name || '');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [multiSuggestions, setMultiSuggestions] = useState<Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' | 'crypto'; market: 'bist' | 'us' | 'crypto'; currency: 'TRY' | 'USD' }>>([]);
   const [lots, setLots] = useState<string>(editTrade ? String(editTrade.lots) : '');
   const [price, setPrice] = useState<string>(editTrade ? String(editTrade.price) : '');
   const [date, setDate] = useState<string>(
@@ -46,21 +55,40 @@ export function AddStockTradeModal({
     openPrice: number;
     closePrice: number;
     dayChangePercent: number;
+    currency?: string;
   } | null>(null);
 
-  const fetchMarketPrice = async (targetSymbol: string, targetAssetType: 'stock' | 'fund') => {
+  useEffect(() => {
+    getUserMarketsAction().then(res => {
+      if (res.success && res.active_markets && res.active_markets.length > 0) {
+        setUserActiveMarkets(res.active_markets);
+        if (!editTrade && !res.active_markets.includes('bist')) {
+          const firstMarket = res.active_markets[0] as 'bist' | 'us' | 'crypto';
+          setMarket(firstMarket);
+          setCurrency(firstMarket === 'us' || firstMarket === 'crypto' ? 'USD' : 'TRY');
+          if (firstMarket === 'crypto') setAssetType('crypto');
+        }
+      }
+    });
+  }, [editTrade]);
+
+  const fetchMarketPrice = async (targetSymbol: string, targetAssetType: 'stock' | 'fund' | 'crypto', targetMarket?: 'bist' | 'us' | 'crypto') => {
     const clean = targetSymbol.trim().toUpperCase();
     if (!clean) return;
     setIsFetchingQuote(true);
     try {
-      const res = await fetchMarketQuoteAction(clean, targetAssetType);
+      const res = await fetchMarketQuoteAction(clean, targetAssetType, targetMarket || market);
       if (res.success && res.data) {
         setMarketQuote({
           currentPrice: res.data.currentPrice,
           openPrice: res.data.openPrice,
           closePrice: res.data.closePrice,
           dayChangePercent: res.data.dayChangePercent,
+          currency: res.data.currency,
         });
+        if (res.data.currency) {
+          setCurrency(res.data.currency as 'TRY' | 'USD');
+        }
         if (!price || parseFloat(price) <= 0) {
           setPrice(String(res.data.currentPrice));
         }
@@ -69,6 +97,9 @@ export function AddStockTradeModal({
         }
         if (res.data.assetType) {
           setAssetType(res.data.assetType);
+        }
+        if (res.data.market) {
+          setMarket(res.data.market);
         }
       }
     } catch (err) {
@@ -80,8 +111,13 @@ export function AddStockTradeModal({
 
   useEffect(() => {
     if (editTrade) {
+      const editAssetType = (editTrade.assetType as 'stock' | 'fund' | 'crypto') || 'stock';
+      const editMarket = (editTrade.market as 'bist' | 'us' | 'crypto') || (editAssetType === 'crypto' ? 'crypto' : 'bist');
+      const editCurrency = (editTrade.currency as 'TRY' | 'USD') || (editMarket === 'us' || editAssetType === 'crypto' ? 'USD' : 'TRY');
       setTradeType(editTrade.type);
-      setAssetType(editTrade.assetType || 'stock');
+      setAssetType(editAssetType);
+      setMarket(editMarket);
+      setCurrency(editCurrency);
       setSymbol(editTrade.symbol);
       setName(editTrade.name || '');
       setLots(String(editTrade.lots));
@@ -91,16 +127,45 @@ export function AddStockTradeModal({
       setMarketQuote(null);
     } else {
       setTradeType(initialType);
-      setAssetType('stock');
+      setAssetType(market === 'crypto' ? 'crypto' : 'stock');
       setMarketQuote(null);
       if (initialSymbol) {
         setSymbol(initialSymbol);
         const match = knownStocks.find(k => k.symbol.toUpperCase() === initialSymbol.toUpperCase());
         if (match && match.name) setName(match.name);
-        fetchMarketPrice(initialSymbol, 'stock');
+        fetchMarketPrice(initialSymbol, 'stock', market);
       }
     }
   }, [isOpen, editTrade, initialType, initialSymbol]);
+
+  const handleSymbolChange = async (val: string) => {
+    const upperVal = val.toUpperCase();
+    setSymbol(upperVal);
+    setShowSuggestions(true);
+
+    if (upperVal.trim().length >= 1) {
+      try {
+        const res = await searchMultiMarketAssetsAction(upperVal.trim());
+        if (res.success && res.data) {
+          setMultiSuggestions(res.data.slice(0, 8));
+        }
+      } catch {
+        setMultiSuggestions([]);
+      }
+    } else {
+      setMultiSuggestions([]);
+    }
+  };
+
+  const handleSelectMultiSuggestion = (item: { symbol: string; name: string; assetType: 'stock' | 'fund' | 'crypto'; market: 'bist' | 'us' | 'crypto'; currency: 'TRY' | 'USD' }) => {
+    setSymbol(item.symbol);
+    setName(item.name);
+    setAssetType(item.assetType);
+    setMarket(item.market);
+    setCurrency(item.currency);
+    setShowSuggestions(false);
+    fetchMarketPrice(item.symbol, item.assetType, item.market);
+  };
 
   if (!isOpen) return null;
 
@@ -111,13 +176,6 @@ export function AddStockTradeModal({
     if (!cleanSymbol) return false;
     return k.symbol.toUpperCase().includes(cleanSymbol) || k.name.toLowerCase().includes(symbol.toLowerCase());
   }).slice(0, 8);
-
-  const handleSelectSuggestion = (k: KnownStockDTO) => {
-    setSymbol(k.symbol);
-    setName(k.name);
-    setShowSuggestions(false);
-    fetchMarketPrice(k.symbol, assetType);
-  };
 
   const numLots = parseFloat(lots) || 0;
   const numPrice = parseFloat(price) || 0;
@@ -150,23 +208,23 @@ export function AddStockTradeModal({
     e.preventDefault();
 
     if (!cleanSymbol) {
-      toast.error("Lütfen hisse sembolü girin (örn: THYAO).");
+      toast.error(isEn ? "Please enter an asset symbol (e.g. AAPL or THYAO)." : "Lütfen hisse sembolü girin (örn: THYAO).");
       return;
     }
 
     if (numLots <= 0) {
-      toast.error("Lütfen geçerli bir lot adedi girin.");
+      toast.error(isEn ? "Please enter a valid lot quantity." : "Lütfen geçerli bir lot adedi girin.");
       return;
     }
 
     if (numPrice <= 0) {
-      toast.error("Lütfen geçerli bir birim fiyat girin.");
+      toast.error(isEn ? "Please enter a valid unit price." : "Lütfen geçerli bir birim fiyat girin.");
       return;
     }
 
     if (tradeType === 'sell' && !editTrade && matchedPos) {
       if (numLots > matchedPos.total_lots + 0.0001) {
-        toast.error(`Yetersiz bakiye! Elinizde ${matchedPos.total_lots} lot var.`);
+        toast.error(isEn ? `Insufficient balance! You only hold ${matchedPos.total_lots} lots.` : `Yetersiz bakiye! Elinizde ${matchedPos.total_lots} lot var.`);
         return;
       }
     }
@@ -178,6 +236,8 @@ export function AddStockTradeModal({
           symbol: cleanSymbol,
           name: name || undefined,
           assetType,
+          market,
+          currency,
           type: tradeType,
           lots: numLots,
           price: numPrice,
@@ -186,17 +246,19 @@ export function AddStockTradeModal({
         });
 
         if (res.success) {
-          toast.success("İşlem başarıyla güncellendi!");
+          toast.success(isEn ? "Trade updated successfully!" : "İşlem başarıyla güncellendi!");
           onSuccess();
           onClose();
         } else {
-          toast.error(res.error || "Güncelleme başarısız.");
+          toast.error(res.error || (isEn ? "Update failed." : "Güncelleme başarısız."));
         }
       } else {
         const res = await addStockTradeAction({
           symbol: cleanSymbol,
           name: name || undefined,
           assetType,
+          market,
+          currency,
           type: tradeType,
           lots: numLots,
           price: numPrice,
@@ -205,16 +267,18 @@ export function AddStockTradeModal({
         });
 
         if (res.success) {
-          const actionText = tradeType === 'buy' ? 'Alış emri' : 'Satış emri';
-          toast.success(`${cleanSymbol} ${actionText} başarıyla kaydedildi!`);
+          const actionText = tradeType === 'buy' 
+            ? (isEn ? 'Buy order' : 'Alış emri') 
+            : (isEn ? 'Sell order' : 'Satış emri');
+          toast.success(isEn ? `${cleanSymbol} ${actionText} recorded successfully!` : `${cleanSymbol} ${actionText} başarıyla kaydedildi!`);
           onSuccess();
           onClose();
         } else {
-          toast.error(res.error || "İşlem kaydedilemedi.");
+          toast.error(res.error || (isEn ? "Failed to record order." : "İşlem kaydedilemedi."));
         }
       }
     } catch (err: any) {
-      toast.error(err.message || "Beklenmedik bir hata oluştu.");
+      toast.error(err.message || (isEn ? "An unexpected error occurred." : "Beklenmedik bir hata oluştu."));
     } finally {
       setIsSubmitting(false);
     }
@@ -236,16 +300,23 @@ export function AddStockTradeModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-white">
-                {editTrade ? "İşlemi Düzenle" : tradeType === 'buy' ? `${assetType === 'fund' ? 'Fon' : 'Hisse'} Alışı` : `${assetType === 'fund' ? 'Fon' : 'Hisse'} Satışı`}
+                {editTrade
+                  ? (isEn ? "Edit Order" : "İşlemi Düzenle")
+                  : tradeType === 'buy'
+                  ? `${assetType === 'fund' ? (isEn ? 'Fund' : 'Fon') : (isEn ? 'Stock' : 'Hisse')} ${isEn ? 'Buy' : 'Alışı'}`
+                  : `${assetType === 'fund' ? (isEn ? 'Fund' : 'Fon') : (isEn ? 'Stock' : 'Hisse')} ${isEn ? 'Sell' : 'Satışı'}`}
               </h2>
               <p className="text-xs text-[var(--on-surface-variant)]">
-                {tradeType === 'buy' ? "Portföye yeni lot ekleme veya ilk alış" : "Kâr/zarar hesaplamalı lot satışı"}
+                {tradeType === 'buy' 
+                  ? (isEn ? "Add more lots or first buy to portfolio" : "Portföye yeni lot ekleme veya ilk alış")
+                  : (isEn ? "Sell lots with automatic P&L calculation" : "Kâr/zarar hesaplamalı lot satışı")}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
+            aria-label={isEn ? "Close" : "Kapat"}
             className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
           >
             <X size={20} />
@@ -255,11 +326,74 @@ export function AddStockTradeModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-4">
           
-          {/* Buy / Sell Switcher */}
-          {!editTrade && (
+          {/* Active Market Switcher (if user trades in multiple markets) */}
+          {!editTrade && userActiveMarkets.length > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                {isEn ? "Select Market" : "Piyasa / Borsa Seçimi"}
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-black/40 rounded-2xl border border-white/5">
+                {userActiveMarkets.includes('bist') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMarket('bist');
+                      setCurrency('TRY');
+                      if (assetType === 'crypto') setAssetType('stock');
+                    }}
+                    className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      market === 'bist' ? 'bg-[var(--primary)] text-black shadow-md' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <span>🇹🇷</span>
+                    <span>BIST</span>
+                  </button>
+                )}
+                {userActiveMarkets.includes('us') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMarket('us');
+                      setCurrency('USD');
+                      if (assetType === 'crypto') setAssetType('stock');
+                    }}
+                    className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      market === 'us' ? 'bg-[var(--primary)] text-black shadow-md' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <span>🇺🇸</span>
+                    <span>US Stocks</span>
+                  </button>
+                )}
+                {userActiveMarkets.includes('crypto') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMarket('crypto');
+                      setCurrency('USD');
+                      setAssetType('crypto');
+                    }}
+                    className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                      market === 'crypto' ? 'bg-[var(--primary)] text-black shadow-md' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <span>🪙</span>
+                    <span>Crypto</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Stock / Fund Switcher for BIST or Buy / Sell */}
+          {!editTrade && market === 'bist' && (
             <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/40 rounded-2xl border border-white/5">
-              <button type="button" onClick={() => setAssetType('stock')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'stock' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Hisse</button>
-              <button type="button" onClick={() => setAssetType('fund')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'fund' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Fon</button>
+              <button type="button" onClick={() => setAssetType('stock')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'stock' ? 'bg-[var(--primary)] text-black font-bold' : 'text-white/60 hover:text-white'}`}>
+                {isEn ? "Stock" : "Hisse Senedi"}
+              </button>
+              <button type="button" onClick={() => setAssetType('fund')} className={`min-h-11 rounded-xl text-xs font-bold transition-colors ${assetType === 'fund' ? 'bg-[var(--primary)] text-black font-bold' : 'text-white/60 hover:text-white'}`}>
+                {isEn ? "Fund" : "TEFAS Fonu"}
+              </button>
             </div>
           )}
 
@@ -274,7 +408,7 @@ export function AddStockTradeModal({
                     : 'text-white/60 hover:text-white'
                 }`}
               >
-                <TrendingUp size={15} /> Alış (Buy)
+                <TrendingUp size={15} /> {isEn ? "Buy" : "Alış"}
               </button>
               <button
                 type="button"
@@ -285,16 +419,31 @@ export function AddStockTradeModal({
                     : 'text-white/60 hover:text-white'
                 }`}
               >
-                <TrendingDown size={15} /> Satış (Sell)
+                <TrendingDown size={15} /> {isEn ? "Sell" : "Satış"}
               </button>
             </div>
           )}
+
+          {/* Data Methodology & Transparency Notice */}
+          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 text-xs text-amber-200/90 leading-relaxed">
+            <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-amber-300">
+                {isEn ? "Market Data Method: " : "Piyasa Veri Yöntemi: "}
+              </span>
+              <span>
+                {isEn
+                  ? "Quotes are updated using opening & closing reference prices, not live real-time streaming."
+                  : "Fiyatlar seans açılış ve önceki gün kapanış referans verileriyle periyodik güncellenir; anlık canlı veri akışı değildir."}
+              </span>
+            </div>
+          </div>
 
           {/* Quick Select from Open Positions if Selling */}
           {tradeType === 'sell' && positions.length > 0 && !editTrade && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Portföydeki Varlıklar
+                {isEn ? "Portfolio Holdings" : "Portföydeki Varlıklar"}
               </label>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                 {positions.map((p) => (
@@ -304,6 +453,8 @@ export function AddStockTradeModal({
                     onClick={() => {
                       setSymbol(p.symbol);
                       if (p.name) setName(p.name);
+                      if (p.market) setMarket(p.market as any);
+                      if (p.currency) setCurrency(p.currency as any);
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
                       cleanSymbol === p.symbol.toUpperCase()
@@ -312,7 +463,7 @@ export function AddStockTradeModal({
                     }`}
                   >
                     <span>{p.symbol}</span>
-                    <span className="text-[10px] text-white/50">({p.total_lots} Lot)</span>
+                    <span className="text-[10px] text-white/50">({p.total_lots} {isEn ? "Lots" : "Lot"})</span>
                   </button>
                 ))}
               </div>
@@ -322,72 +473,116 @@ export function AddStockTradeModal({
           {/* Symbol & Name Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5 relative">
-              <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                {assetType === 'fund' ? 'Fon Kodu *' : 'Hisse Sembolü *'}
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                  {assetType === 'fund' 
+                    ? (isEn ? 'Fund Code *' : 'Fon Kodu *') 
+                    : assetType === 'crypto'
+                    ? (isEn ? 'Crypto Symbol *' : 'Kripto Sembolü *')
+                    : (isEn ? 'Stock Symbol *' : 'Hisse Sembolü *')}
+                </label>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/70 font-semibold uppercase">
+                  {market.toUpperCase()} · {currency}
+                </span>
+              </div>
               <input
                 type="text"
                 required
                 value={symbol}
                 onFocus={() => setShowSuggestions(true)}
-                onChange={(e) => {
-                  const val = e.target.value.toUpperCase();
-                  setSymbol(val);
-                  setShowSuggestions(true);
-                  const match = knownStocks.find(k => k.symbol.toUpperCase() === val);
-                  if (match && match.name && !name) {
-                    setName(match.name);
-                  }
-                }}
+                onChange={(e) => handleSymbolChange(e.target.value)}
                 onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 200);
-                  const match = knownStocks.find(k => k.symbol.toUpperCase() === cleanSymbol);
-                  if (match && match.name && !name) {
-                    setName(match.name);
-                  }
+                  setTimeout(() => setShowSuggestions(false), 250);
                   if (cleanSymbol && !price) {
-                    fetchMarketPrice(cleanSymbol, assetType);
+                    fetchMarketPrice(cleanSymbol, assetType, market);
                   }
                 }}
-                placeholder={assetType === 'fund' ? 'Örn: TTE, MAC' : 'Örn: THYAO, ASELS'}
+                placeholder={
+                  assetType === 'fund'
+                    ? (isEn ? 'e.g. SPY, QQQ' : 'Örn: TTE, MAC')
+                    : market === 'us'
+                    ? 'e.g. AAPL, NVDA, TSLA'
+                    : market === 'crypto'
+                    ? 'e.g. BTC, ETH, SOL'
+                    : (isEn ? 'e.g. THYAO, ASELS, GARAN' : 'Örn: THYAO, ASELS, GARAN')
+                }
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold tracking-wider placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all uppercase"
               />
 
               {/* Suggestions Dropdown */}
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div className="absolute top-[100%] left-0 right-0 z-50 mt-1 bg-[#181826] border border-white/15 rounded-2xl shadow-2xl overflow-hidden py-1 max-h-48 overflow-y-auto">
-                  {filteredSuggestions.map((item) => (
-                    <button
-                      key={item.symbol}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelectSuggestion(item);
-                      }}
-                      className="w-full px-3.5 py-2 text-left hover:bg-white/10 flex items-center justify-between transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-xs">{item.symbol}</span>
-                        <span className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[170px]">{item.name}</span>
-                      </div>
-                      {item.isCustom && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">Kayıtlı</span>
-                      )}
-                    </button>
-                  ))}
+              {showSuggestions && (multiSuggestions.length > 0 || filteredSuggestions.length > 0) && (
+                <div className="absolute top-[100%] left-0 right-0 z-50 mt-1 bg-[#181826] border border-white/15 rounded-2xl shadow-2xl overflow-hidden py-1 max-h-56 overflow-y-auto">
+                  {multiSuggestions.length > 0 ? (
+                    multiSuggestions.map((item) => (
+                      <button
+                        key={`${item.market}-${item.symbol}`}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectMultiSuggestion(item);
+                        }}
+                        className="w-full px-3.5 py-2 text-left hover:bg-white/10 flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-bold text-white text-xs">{item.symbol}</span>
+                          <span className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[150px]">{item.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-white/10 text-white/80 border border-white/10">
+                            {item.market.toUpperCase()}
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[var(--primary)]/15 text-[var(--primary)]">
+                            {item.currency}
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    filteredSuggestions.map((item) => (
+                      <button
+                        key={item.symbol}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleSelectMultiSuggestion({
+                            symbol: item.symbol,
+                            name: item.name,
+                            assetType: assetType,
+                            market: market,
+                            currency: currency,
+                          });
+                        }}
+                        className="w-full px-3.5 py-2 text-left hover:bg-white/10 flex items-center justify-between transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-xs">{item.symbol}</span>
+                          <span className="text-[11px] text-[var(--on-surface-variant)] truncate max-w-[170px]">{item.name}</span>
+                        </div>
+                        {item.isCustom && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold">
+                            {isEn ? "Saved" : "Kayıtlı"}
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                {assetType === 'fund' ? 'Fon Adı (Opsiyonel)' : 'Şirket / Tanım (Opsiyonel)'}
+                {assetType === 'fund' 
+                  ? (isEn ? 'Fund Name (Optional)' : 'Fon Adı (Opsiyonel)') 
+                  : (isEn ? 'Company / Description (Optional)' : 'Şirket / Tanım (Opsiyonel)')}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={assetType === 'fund' ? 'Örn: Para Piyasası Fonu' : 'Örn: Türk Hava Yolları'}
+                placeholder={assetType === 'fund' 
+                  ? (isEn ? 'e.g. Index Fund' : 'Örn: Para Piyasası Fonu') 
+                  : (isEn ? 'e.g. Apple Inc.' : 'Örn: Türk Hava Yolları')}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
@@ -397,13 +592,13 @@ export function AddStockTradeModal({
           {matchedPos && (
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
               <div className="flex flex-col">
-                <span className="text-[var(--on-surface-variant)]">Eldeki Mevcut Miktar:</span>
-                <span className="font-bold text-white text-sm">{matchedPos.total_lots} Lot</span>
+                <span className="text-[var(--on-surface-variant)]">{isEn ? "Current Holding:" : "Eldeki Mevcut Miktar:"}</span>
+                <span className="font-bold text-white text-sm">{matchedPos.total_lots} {isEn ? "Lots" : "Lot"}</span>
               </div>
               <div className="flex flex-col items-end">
-                <span className="text-[var(--on-surface-variant)]">Mevcut Ort. Maliyet:</span>
+                <span className="text-[var(--on-surface-variant)]">{isEn ? "Current Avg. Cost:" : "Mevcut Ort. Maliyet:"}</span>
                 <span className="font-bold text-white text-sm">
-                  {matchedPos.average_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                  {formatStockCurrency(matchedPos.average_cost, matchedPos.currency || currency)}
                 </span>
               </div>
             </div>
@@ -414,7 +609,7 @@ export function AddStockTradeModal({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                  Lot Sayısı (Adet) *
+                  {isEn ? "Quantity (Lots) *" : "Lot Sayısı (Adet) *"}
                 </label>
                 {tradeType === 'sell' && matchedPos && (
                   <button
@@ -422,7 +617,7 @@ export function AddStockTradeModal({
                     onClick={() => setLots(String(matchedPos.total_lots))}
                     className="text-[10px] text-rose-400 hover:text-rose-300 font-bold underline cursor-pointer"
                   >
-                    Tümünü Sat ({matchedPos.total_lots})
+                    {isEn ? `Sell All (${matchedPos.total_lots})` : `Tümünü Sat (${matchedPos.total_lots})`}
                   </button>
                 )}
               </div>
@@ -433,7 +628,7 @@ export function AddStockTradeModal({
                 required
                 value={lots}
                 onChange={(e) => setLots(e.target.value)}
-                placeholder="Örn: 100"
+                placeholder={isEn ? "e.g. 100" : "Örn: 100"}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
@@ -441,17 +636,17 @@ export function AddStockTradeModal({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                  Birim Fiyat (₺) *
+                  {isEn ? `Unit Price (${getStockCurrencySymbol(currency)}) *` : `Birim Fiyat (${getStockCurrencySymbol(currency)}) *`}
                 </label>
                 {cleanSymbol && (
                   <button
                     type="button"
                     disabled={isFetchingQuote}
-                    onClick={() => fetchMarketPrice(cleanSymbol, assetType)}
+                    onClick={() => fetchMarketPrice(cleanSymbol, assetType, market)}
                     className="text-[10px] font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                   >
                     <Sparkles size={11} className={isFetchingQuote ? "animate-spin" : ""} />
-                    {isFetchingQuote ? "Fiyat Alınıyor..." : "Piyasa Fiyatı Al"}
+                    {isFetchingQuote ? (isEn ? "Fetching..." : "Fiyat Alınıyor...") : (isEn ? "Get Market Price" : "Piyasa Fiyatı Al")}
                   </button>
                 )}
               </div>
@@ -462,7 +657,7 @@ export function AddStockTradeModal({
                 required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="Örn: 245.50"
+                placeholder={isEn ? "e.g. 245.50" : "Örn: 245.50"}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
@@ -474,7 +669,7 @@ export function AddStockTradeModal({
               <div className="flex items-center justify-between">
                 <span className="text-[var(--on-surface-variant)] flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Piyasa Fiyatı: <b className="text-white text-sm">{marketQuote.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b>
+                  {isEn ? "Market Price: " : "Piyasa Fiyatı: "}<b className="text-white text-sm">{formatStockCurrency(marketQuote.currentPrice, currency)}</b>
                 </span>
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                   marketQuote.dayChangePercent >= 0
@@ -486,8 +681,8 @@ export function AddStockTradeModal({
                 </span>
               </div>
               <div className="flex items-center justify-between text-[11px] text-white/60 pt-1 border-t border-white/5">
-                <span>Açılış: <b className="text-white/90">{marketQuote.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
-                <span>Önceki Kapanış: <b className="text-white/90">{marketQuote.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>{isEn ? "Open: " : "Açılış: "}<b className="text-white/90">{formatStockCurrency(marketQuote.openPrice, currency)}</b></span>
+                <span>{isEn ? "Prev. Close: " : "Önceki Kapanış: "}<b className="text-white/90">{formatStockCurrency(marketQuote.closePrice, currency)}</b></span>
               </div>
               {price !== String(marketQuote.currentPrice) && (
                 <button
@@ -495,7 +690,9 @@ export function AddStockTradeModal({
                   onClick={() => setPrice(String(marketQuote.currentPrice))}
                   className="mt-1 py-1 px-2.5 text-[10px] font-bold rounded-lg bg-[var(--primary)]/20 text-[var(--primary)] hover:bg-[var(--primary)]/30 transition-colors w-fit self-end cursor-pointer"
                 >
-                  Piyasa Fiyatını Uygula ({marketQuote.currentPrice} ₺)
+                  {isEn 
+                    ? `Apply Market Price (${formatStockCurrency(marketQuote.currentPrice, currency)})` 
+                    : `Piyasa Fiyatını Uygula (${formatStockCurrency(marketQuote.currentPrice, currency)})`}
                 </button>
               )}
             </div>
@@ -505,7 +702,7 @@ export function AddStockTradeModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
-                <Calendar size={12} /> İşlem Tarihi *
+                <Calendar size={12} /> {isEn ? "Order Date *" : "İşlem Tarihi *"}
               </label>
               <input
                 type="date"
@@ -518,13 +715,13 @@ export function AddStockTradeModal({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
-                <FileText size={12} /> Not (Opsiyonel)
+                <FileText size={12} /> {isEn ? "Notes (Optional)" : "Not (Opsiyonel)"}
               </label>
               <input
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Örn: Temettü hedefli, kademe alış"
+                placeholder={isEn ? "e.g. Long-term, DCA" : "Örn: Temettü hedefli, kademe alış"}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
@@ -534,9 +731,9 @@ export function AddStockTradeModal({
           {numLots > 0 && numPrice > 0 && (
             <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex flex-col gap-2.5 animate-fade-in">
               <div className="flex items-center justify-between text-xs pb-2 border-b border-white/5">
-                <span className="text-[var(--on-surface-variant)]">Toplam İşlem Tutarı:</span>
+                <span className="text-[var(--on-surface-variant)]">{isEn ? "Total Order Amount:" : "Toplam İşlem Tutarı:"}</span>
                 <span className="text-base font-extrabold text-white">
-                  {totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                  {formatStockCurrency(totalAmount, currency)}
                 </span>
               </div>
 
@@ -545,10 +742,12 @@ export function AddStockTradeModal({
                 <div className="flex items-center justify-between text-xs text-emerald-400">
                   <span className="flex items-center gap-1">
                     <Sparkles size={13} />
-                    {matchedPos ? "Yeni Ağırlıklı Ortalama Maliyet:" : "Birim Alış Maliyeti:"}
+                    {matchedPos 
+                      ? (isEn ? "New Weighted Avg. Cost:" : "Yeni Ağırlıklı Ortalama Maliyet:") 
+                      : (isEn ? "Unit Cost Basis:" : "Birim Alış Maliyeti:")}
                   </span>
                   <span className="font-bold text-sm">
-                    {newAvgCostPreview.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ₺
+                    {formatStockCurrency(newAvgCostPreview, currency)}
                   </span>
                 </div>
               )}
@@ -565,22 +764,22 @@ export function AddStockTradeModal({
                       {realizedPnlPreview >= 0 ? (
                         <>
                           <TrendingUp size={13} className="text-emerald-400" />
-                          <span>Gerçekleşen Net Kâr</span>
+                          <span>{isEn ? "Realized Net Profit" : "Gerçekleşen Net Kâr"}</span>
                         </>
                       ) : (
                         <>
                           <TrendingDown size={13} className="text-rose-400" />
-                          <span>Gerçekleşen Net Zarar</span>
+                          <span>{isEn ? "Realized Net Loss" : "Gerçekleşen Net Zarar"}</span>
                         </>
                       )}
                     </span>
                     <span className="text-base font-extrabold">
                       {realizedPnlPreview >= 0 ? '+' : ''}
-                      {realizedPnlPreview.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                      {formatStockCurrency(realizedPnlPreview, currency)}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] opacity-70">Getiri Oranı</span>
+                    <span className="text-[10px] opacity-70">{isEn ? "Return Rate" : "Getiri Oranı"}</span>
                     <p className="text-sm font-black">
                       {realizedPnlPercentPreview >= 0 ? '+' : ''}%{realizedPnlPercentPreview.toFixed(2)}
                     </p>
@@ -595,21 +794,27 @@ export function AddStockTradeModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-white/10 text-white/80 hover:text-white text-xs font-semibold hover:bg-white/5 transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-white/10 text-white/80 hover:text-white text-xs font-semibold hover:bg-white/5 transition-colors cursor-pointer"
             >
-              İptal
+              {isEn ? "Cancel" : "İptal"}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 ${
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 cursor-pointer ${
                 tradeType === 'buy'
                   ? 'bg-emerald-500 hover:bg-emerald-400 text-black'
                   : 'bg-rose-500 hover:bg-rose-400 text-white'
               }`}
             >
               <CheckCircle2 size={16} />
-              {isSubmitting ? "Kaydediliyor..." : editTrade ? "Değişiklikleri Kaydet" : tradeType === 'buy' ? "Alış Emrini Kaydet" : "Satış Emrini Kaydet"}
+              {isSubmitting 
+                ? (isEn ? "Saving..." : "Kaydediliyor...") 
+                : editTrade 
+                ? (isEn ? "Save Changes" : "Değişiklikleri Kaydet") 
+                : tradeType === 'buy' 
+                ? (isEn ? "Save Buy Order" : "Alış Emrini Kaydet") 
+                : (isEn ? "Save Sell Order" : "Satış Emrini Kaydet")}
             </button>
           </div>
         </form>

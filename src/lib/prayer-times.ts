@@ -1,5 +1,6 @@
 export type PrayerKind = 'imsak' | 'ogle' | 'ikindi' | 'aksam' | 'yatsi';
 export const PRAYER_LABELS: Record<PrayerKind, string> = { imsak: 'Sabah', ogle: 'Öğle', ikindi: 'İkindi', aksam: 'Akşam', yatsi: 'Yatsı' };
+export const PRAYER_AUTHORIZED_EMAIL = 'gkhkaya0000@gmail.com';
 
 export function getMonthKey(date = new Date(), timezone = 'Europe/Istanbul') {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit' }).formatToParts(date);

@@ -9,8 +9,10 @@ import { StockPosition } from "@/models/StockPosition";
 import { StockTradeType } from "@/models/Enums";
 import { calculateStockPortfolio, RawTrade, POPULAR_BIST_STOCKS } from "@/lib/stock-engine";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
-import { fetchMarketQuote, searchBistDirectory, POPULAR_TEFAS_FUNDS, MarketQuote } from "@/lib/market-service";
+import { fetchMarketQuote, searchBistDirectory, searchMultiMarketAssets, POPULAR_TEFAS_FUNDS, MarketQuote } from "@/lib/market-service";
 import { BIST_COMPANIES } from "@/lib/bist-directory";
+import { POPULAR_US_STOCKS, POPULAR_CRYPTO_ASSETS } from "@/lib/us-crypto-directory";
+import { User } from "@/models/User";
 import { revalidatePath } from "next/cache";
 
 async function getUserId() {
@@ -49,7 +51,9 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     id: t._id.toString(),
     symbol: t.symbol,
     name: t.name,
-    assetType: t.asset_type === 'fund' ? 'fund' : 'stock',
+    assetType: (t.asset_type || 'stock') as any,
+    market: t.market || (t.asset_type === 'crypto' ? 'crypto' : 'bist'),
+    currency: t.currency || (t.market === 'us' || t.market === 'crypto' ? 'USD' : 'TRY'),
     type: t.type as 'buy' | 'sell',
     lots: Number(t.lots),
     price: Number(t.price),
@@ -89,6 +93,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
         $set: {
           name: pos.name,
           asset_type: pos.assetType,
+          market: pos.market || (pos.assetType === 'crypto' ? 'crypto' : 'bist'),
+          currency: pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'),
           total_lots: pos.total_lots,
           average_cost: pos.average_cost,
           total_cost: pos.total_cost,
@@ -111,6 +117,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       symbol: p.symbol,
       name: p.name,
       assetType: p.assetType,
+      market: p.market || ex?.market || (p.assetType === 'crypto' ? 'crypto' : 'bist'),
+      currency: p.currency || ex?.currency || (p.market === 'us' || p.market === 'crypto' ? 'USD' : 'TRY'),
       total_lots: p.total_lots,
       average_cost: p.average_cost,
       total_cost: p.total_cost,
@@ -133,6 +141,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       symbol: p.symbol,
       name: p.name,
       assetType: p.assetType,
+      market: p.market || ex?.market || (p.assetType === 'crypto' ? 'crypto' : 'bist'),
+      currency: p.currency || ex?.currency || (p.market === 'us' || p.market === 'crypto' ? 'USD' : 'TRY'),
       total_lots: p.total_lots,
       average_cost: p.average_cost,
       total_cost: p.total_cost,
@@ -148,59 +158,64 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     };
   });
 
-  const sortByNewest = (a: { date: Date | string; created_at?: Date | string }, b: { date: Date | string; created_at?: Date | string }) => {
-    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-    if (timeDiff !== 0) return timeDiff;
-    const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return createB - createA;
-  };
-
-  const realizedTradesDTO: StockTradeDTO[] = calc.realizedTrades
-    .sort(sortByNewest)
-    .map((t) => ({
-      id: t._id || t.id,
-      symbol: t.symbol,
-      name: t.name,
-      assetType: t.assetType || 'stock',
-      type: t.type,
-      lots: t.lots,
-      price: t.price,
-      total_amount: t.total_amount || 0,
-      date: new Date(t.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      rawDate: new Date(t.date).toISOString(),
-      notes: t.notes,
-      cost_basis: t.cost_basis,
-      total_cost: t.total_cost,
-      realized_pnl: t.realized_pnl,
-      realized_pnl_percent: t.realized_pnl_percent,
-      holding_days: t.holding_days,
-      created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
-    }));
+  const realizedTradesDTO: StockTradeDTO[] = calc.realizedTrades.map((t) => ({
+    id: t._id?.toString() || t.id || '',
+    symbol: t.symbol,
+    name: t.name,
+    assetType: (t.assetType || 'stock') as 'stock' | 'fund' | 'crypto',
+    market: t.market,
+    currency: t.currency,
+    type: t.type,
+    lots: t.lots,
+    price: t.price,
+    total_amount: t.total_amount || 0,
+    cost_basis: t.cost_basis || 0,
+    total_cost: t.total_cost || 0,
+    realized_pnl: t.realized_pnl || 0,
+    realized_pnl_percent: t.realized_pnl_percent || 0,
+    holding_days: t.holding_days,
+    date: new Date(t.date).toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    rawDate: new Date(t.date).toISOString(),
+    notes: t.notes,
+    created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
+  }));
 
   const allTradesDTO: StockTradeDTO[] = calc.computedTrades
-    .sort(sortByNewest)
+    .slice()
+    .reverse()
     .map((t) => ({
-      id: t._id || t.id,
+      id: t._id?.toString() || t.id || '',
       symbol: t.symbol,
       name: t.name,
-      assetType: t.assetType || 'stock',
+      assetType: (t.assetType || 'stock') as 'stock' | 'fund' | 'crypto',
+      market: t.market,
+      currency: t.currency,
       type: t.type,
       lots: t.lots,
       price: t.price,
       total_amount: t.total_amount || 0,
-      date: new Date(t.date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      cost_basis: t.cost_basis || 0,
+      total_cost: t.total_cost || 0,
+      realized_pnl: t.realized_pnl || 0,
+      realized_pnl_percent: t.realized_pnl_percent || 0,
+      holding_days: t.holding_days,
+      date: new Date(t.date).toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' }),
       rawDate: new Date(t.date).toISOString(),
       notes: t.notes,
-      cost_basis: t.cost_basis,
-      total_cost: t.total_cost,
-      realized_pnl: t.realized_pnl,
-      realized_pnl_percent: t.realized_pnl_percent,
-      holding_days: t.holding_days,
       created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
     }));
 
-  // Build known stocks dictionary: User's historical symbols + Known Funds + Complete BIST Companies
+  // Fetch user's active markets preference
+  const user = await User.findById(userId).select('settings.active_markets').lean();
+  const activeMarkets: string[] = (user?.settings?.active_markets && user.settings.active_markets.length > 0)
+    ? user.settings.active_markets
+    : ['bist'];
+
+  const includeBist = activeMarkets.includes('bist');
+  const includeUs = activeMarkets.includes('us');
+  const includeCrypto = activeMarkets.includes('crypto');
+
+  // Build known stocks dictionary based on user's active markets
   const userKnownSymbols = new Map<string, string>();
   for (const t of rawTrades) {
     if (t.symbol) {
@@ -224,25 +239,60 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     });
   }
 
-  // 2. Add popular TEFAS funds
-  for (const [code, title] of Object.entries(POPULAR_TEFAS_FUNDS)) {
-    if (!userKnownSymbols.has(code)) {
-      knownStocksDTO.push({
-        symbol: code,
-        name: title,
-        isCustom: false,
-      });
+  // 2. Add US Stocks if active
+  if (includeUs) {
+    for (const item of POPULAR_US_STOCKS) {
+      if (!userKnownSymbols.has(item.symbol)) {
+        knownStocksDTO.push({
+          symbol: item.symbol,
+          name: item.name,
+          market: 'us',
+          currency: 'USD',
+          isCustom: false,
+        });
+      }
     }
   }
 
-  // 3. Add all BIST companies from directory
-  for (const item of BIST_COMPANIES) {
-    if (!userKnownSymbols.has(item.symbol)) {
-      knownStocksDTO.push({
-        symbol: item.symbol,
-        name: item.name,
-        isCustom: false,
-      });
+  // 3. Add Crypto Assets if active
+  if (includeCrypto) {
+    for (const item of POPULAR_CRYPTO_ASSETS) {
+      if (!userKnownSymbols.has(item.symbol)) {
+        knownStocksDTO.push({
+          symbol: item.symbol,
+          name: item.name,
+          market: 'crypto',
+          currency: 'USD',
+          isCustom: false,
+        });
+      }
+    }
+  }
+
+  // 4. Add popular TEFAS funds and BIST companies if active
+  if (includeBist) {
+    for (const [code, title] of Object.entries(POPULAR_TEFAS_FUNDS)) {
+      if (!userKnownSymbols.has(code)) {
+        knownStocksDTO.push({
+          symbol: code,
+          name: title,
+          market: 'bist',
+          currency: 'TRY',
+          isCustom: false,
+        });
+      }
+    }
+
+    for (const item of BIST_COMPANIES) {
+      if (!userKnownSymbols.has(item.symbol)) {
+        knownStocksDTO.push({
+          symbol: item.symbol,
+          name: item.name,
+          market: 'bist',
+          currency: 'TRY',
+          isCustom: false,
+        });
+      }
     }
   }
 
@@ -253,6 +303,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     allTrades: allTradesDTO,
     knownStocks: knownStocksDTO,
     totals: calc.totals,
+    activeMarkets,
   };
 }
 
@@ -316,16 +367,55 @@ export async function syncStockMarketPricesAction(): Promise<{ success: boolean;
 /**
  * Fetch a single market quote (for autocomplete / modal autofill)
  */
+/**
+ * Get the current user's active markets ('bist', 'us', 'crypto')
+ */
+export async function getUserMarketsAction(): Promise<{ success: boolean; active_markets: string[] }> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const user = await User.findById(userId).select('settings.active_markets').lean();
+    const active = (user?.settings?.active_markets && user.settings.active_markets.length > 0)
+      ? user.settings.active_markets
+      : ['bist'];
+    return { success: true, active_markets: active };
+  } catch (error: any) {
+    return { success: false, active_markets: ['bist'] };
+  }
+}
+
+/**
+ * Update the user's active markets selection
+ */
+export async function updateUserMarketsAction(markets: string[]): Promise<{ success: boolean; active_markets?: string[]; error?: string }> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const validMarkets = markets.filter(m => ['bist', 'us', 'crypto'].includes(m));
+    await User.findByIdAndUpdate(userId, {
+      $set: { 'settings.active_markets': validMarkets }
+    });
+    revalidatePath('/dashboard');
+    return { success: true, active_markets: validMarkets };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Fetch a single market quote (for autocomplete / modal autofill)
+ */
 export async function fetchMarketQuoteAction(
   symbol: string,
-  assetType?: 'stock' | 'fund'
+  assetType?: 'stock' | 'fund' | 'crypto',
+  marketHint?: 'bist' | 'us' | 'crypto'
 ): Promise<{ success: boolean; data?: MarketQuote; error?: string }> {
   try {
     const cleanSymbol = symbol?.trim().toUpperCase();
     if (!cleanSymbol) {
       return { success: false, error: "Sembol belirtilmedi." };
     }
-    const quote = await fetchMarketQuote(cleanSymbol, assetType);
+    const quote = await fetchMarketQuote(cleanSymbol, assetType, marketHint);
     if (!quote) {
       return { success: false, error: "Fiyat bilgisi bulunamadı." };
     }
@@ -337,7 +427,23 @@ export async function fetchMarketQuoteAction(
 }
 
 /**
- * Autocomplete search across 800+ BIST stocks and TEFAS funds
+ * Autocomplete search across all markets active for the user
+ */
+export async function searchMultiMarketAssetsAction(
+  query: string
+): Promise<{ success: boolean; data: Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' | 'crypto'; market: 'bist' | 'us' | 'crypto'; currency: 'TRY' | 'USD' }> }> {
+  try {
+    const userMarkets = await getUserMarketsAction();
+    const results = searchMultiMarketAssets(query, userMarkets.active_markets);
+    return { success: true, data: results };
+  } catch (error: any) {
+    console.error("searchMultiMarketAssetsAction error:", error);
+    return { success: false, data: [] };
+  }
+}
+
+/**
+ * Autocomplete search across 800+ BIST stocks and TEFAS funds (backward compatible)
  */
 export async function searchBistDirectoryAction(
   query: string
@@ -357,7 +463,7 @@ export async function searchBistDirectoryAction(
 export async function updateStockSymbolNameAction(
   symbol: string,
   newName: string,
-  assetType: 'stock' | 'fund' = 'stock'
+  assetType: 'stock' | 'fund' | 'crypto' = 'stock'
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await connectDB();
@@ -421,12 +527,14 @@ export async function getStockPortfolioAction(): Promise<{ success: boolean; dat
 }
 
 /**
- * Add a Buy or Sell stock order
+ * Add a Buy or Sell stock
  */
 export async function addStockTradeAction(data: {
   symbol: string;
   name?: string;
-  assetType?: 'stock' | 'fund';
+  assetType?: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -468,12 +576,34 @@ export async function addStockTradeAction(data: {
       }
     }
 
-    // Auto-resolve stock/fund name if not explicitly provided
+    // Auto-resolve market and currency
+    let market: 'bist' | 'us' | 'crypto' = data.market || 'bist';
+    let currency = data.currency || (market === 'bist' ? 'TRY' : 'USD');
+    if (!data.market) {
+      if (data.assetType === 'crypto' || POPULAR_CRYPTO_ASSETS.some(c => c.symbol === symbol)) {
+        market = 'crypto';
+        currency = 'USD';
+      } else if (POPULAR_US_STOCKS.some(s => s.symbol === symbol)) {
+        market = 'us';
+        currency = 'USD';
+      } else {
+        market = 'bist';
+        currency = 'TRY';
+      }
+    }
+
+    // Auto-resolve stock/fund/crypto name if not explicitly provided
     let resolvedName = data.name?.trim();
     if (!resolvedName) {
       const bistMatch = BIST_COMPANIES.find(b => b.symbol === symbol);
+      const usMatch = POPULAR_US_STOCKS.find(s => s.symbol === symbol);
+      const cryptoMatch = POPULAR_CRYPTO_ASSETS.find(c => c.symbol === symbol);
       if (bistMatch) {
         resolvedName = bistMatch.name;
+      } else if (usMatch) {
+        resolvedName = usMatch.name;
+      } else if (cryptoMatch) {
+        resolvedName = cryptoMatch.name;
       } else if (POPULAR_TEFAS_FUNDS[symbol]) {
         resolvedName = POPULAR_TEFAS_FUNDS[symbol];
       }
@@ -483,7 +613,9 @@ export async function addStockTradeAction(data: {
       user_id: userId,
       symbol,
       name: resolvedName || undefined,
-      asset_type: data.assetType === 'fund' ? 'fund' : 'stock',
+      asset_type: data.assetType || (market === 'crypto' ? 'crypto' : 'stock'),
+      market,
+      currency,
       type: data.type === 'sell' ? StockTradeType.SELL : StockTradeType.BUY,
       lots,
       price,
@@ -496,13 +628,15 @@ export async function addStockTradeAction(data: {
     const existingPos = await StockPosition.findOne({ user_id: userId, symbol }).lean();
     if (!existingPos || !existingPos.current_price || existingPos.current_price <= 0) {
       try {
-        const quote = await fetchMarketQuote(symbol, data.assetType);
+        const quote = await fetchMarketQuote(symbol, data.assetType, market);
         if (quote && quote.currentPrice > 0) {
           await StockPosition.findOneAndUpdate(
             { user_id: userId, symbol },
             {
               $set: {
                 name: resolvedName || quote.name,
+                market,
+                currency,
                 current_price: quote.currentPrice,
                 open_price: quote.openPrice || quote.currentPrice,
                 close_price: quote.closePrice || quote.currentPrice,
@@ -514,7 +648,7 @@ export async function addStockTradeAction(data: {
           );
         }
       } catch (err) {
-        console.error(`Could not pre-fetch quote for new trade ${symbol}:`, err);
+        console.error(`Could not autofetch initial quote for ${symbol}:`, err);
       }
     }
 
@@ -535,7 +669,9 @@ export async function updateStockTradeAction(
   data: {
     symbol: string;
     name?: string;
-    assetType?: 'stock' | 'fund';
+    assetType?: 'stock' | 'fund' | 'crypto';
+    market?: 'bist' | 'us' | 'crypto';
+    currency?: 'TRY' | 'USD';
     type: 'buy' | 'sell';
     lots: number;
     price: number;
@@ -562,7 +698,9 @@ export async function updateStockTradeAction(
 
     trade.symbol = symbol;
     trade.name = data.name?.trim() || undefined;
-    trade.asset_type = data.assetType === 'fund' ? 'fund' : 'stock';
+    trade.asset_type = data.assetType === 'fund' ? 'fund' : (data.assetType === 'crypto' ? 'crypto' : 'stock');
+    if (data.market) trade.market = data.market;
+    if (data.currency) trade.currency = data.currency;
     trade.type = data.type === 'sell' ? StockTradeType.SELL : StockTradeType.BUY;
     trade.lots = lots;
     trade.price = price;

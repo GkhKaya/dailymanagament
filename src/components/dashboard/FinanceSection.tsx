@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { FinanceDataDTO } from "@/models/DashboardTypes";
 import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatCurrency } from "@/lib/i18n";
+import { localizeCategoryName } from "@/lib/category-helpers";
 
 interface FinanceSectionProps {
   data: FinanceDataDTO;
@@ -13,15 +16,17 @@ interface FinanceSectionProps {
 
 const TxnIcon = ({ title }: { title: string }) => {
   const tLow = title.toLowerCase();
-  if (tLow.includes("kira") || tLow.includes("konut")) return <Home size={18} />;
-  if (tLow.includes("market") || tLow.includes("gıda")) return <ShoppingCart size={18} />;
-  if (tLow.includes("maaş") || tLow.includes("gelir")) return <DollarSign size={18} />;
-  if (tLow.includes("fatura") || tLow.includes("internet")) return <Wifi size={18} />;
+  if (tLow.includes("kira") || tLow.includes("konut") || tLow.includes("rent")) return <Home size={18} />;
+  if (tLow.includes("market") || tLow.includes("gıda") || tLow.includes("grocery") || tLow.includes("food")) return <ShoppingCart size={18} />;
+  if (tLow.includes("maaş") || tLow.includes("gelir") || tLow.includes("salary") || tLow.includes("income")) return <DollarSign size={18} />;
+  if (tLow.includes("fatura") || tLow.includes("internet") || tLow.includes("bill")) return <Wifi size={18} />;
   return <CreditCard size={18} />;
 };
 
 export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAnalysis, currentDate }: FinanceSectionProps) {
-  const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(val);
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+  const fmt = (val: number) => formatCurrency(val);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   // Filter transactions for Overview mode: only selected day and up to 2 previous days within the SAME month
@@ -79,13 +84,13 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
       
       {/* Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-hero text-white tracking-tight">Finansal Durum</h2>
+        <h2 className="text-hero text-white tracking-tight">{isEn ? "Financial Overview" : "Finansal Durum"}</h2>
         <div className="flex items-center gap-1">
-          <button type="button" data-tour="finance-pdf-btn" onClick={() => setIsPdfModalOpen(true)} aria-label="Finans raporunu PDF olarak indir" title="PDF raporu indir" className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#8ec13b]/15 border border-[#8ec13b]/20 text-white transition-colors hover:bg-[#8ec13b]/25">
+          <button type="button" data-tour="finance-pdf-btn" onClick={() => setIsPdfModalOpen(true)} aria-label={isEn ? "Download finance report as PDF" : "Finans raporunu PDF olarak indir"} title={isEn ? "Download PDF Report" : "PDF Raporu İndir"} className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[#8ec13b]/15 border border-[#8ec13b]/20 text-white transition-colors hover:bg-[#8ec13b]/25">
             <Download size={17} className="text-white" />
           </button>
           {!isOverview && (
-            <button type="button" data-tour="finance-analysis-btn" onClick={onShowAnalysis} aria-label="Detaylı finans analizi" className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
+            <button type="button" data-tour="finance-analysis-btn" onClick={onShowAnalysis} aria-label={isEn ? "Detailed finance analysis" : "Detaylı finans analizi"} className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)]">
               <Activity size={18} />
             </button>
           )}
@@ -98,7 +103,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           {/* TOPLAM BAKIYE */}
           <div className="glass-card p-[var(--space-4)] flex flex-col justify-center">
             <div className="flex items-center justify-between">
-              <span className="text-caption text-[var(--primary)]">TOPLAM BAKİYE</span>
+              <span className="text-caption text-[var(--primary)]">{isEn ? "TOTAL BALANCE" : "TOPLAM BAKİYE"}</span>
               <div className="flex items-baseline gap-1">
                 <span className="text-metric text-white">{fmt(data.totalBalance)}</span>
               </div>
@@ -108,11 +113,11 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           {/* GELIR / GIDER */}
           <div className="grid grid-cols-2 gap-[var(--space-2)]">
             <div className="glass-card p-[var(--space-3)] flex items-center justify-between">
-              <span className="text-caption text-[var(--on-surface-variant)]">GELİR</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">{isEn ? "INCOME" : "GELİR"}</span>
               <span className="text-headline text-[var(--color-income)]">+{fmt(data.monthlyIncome)}</span>
             </div>
             <div className="glass-card p-[var(--space-3)] flex items-center justify-between">
-              <span className="text-caption text-[var(--on-surface-variant)]">GİDER</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">{isEn ? "EXPENSE" : "GİDER"}</span>
               <span className="text-headline text-[var(--color-expense)]">-{fmt(data.monthlyExpense)}</span>
             </div>
           </div>
@@ -121,16 +126,16 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           {!isOverview && (
             <div className="grid w-full grid-cols-2 gap-2">
               <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                Hesaplar <Wallet size={16} className="text-[var(--on-surface-variant)]" />
+                {isEn ? "Accounts" : "Hesaplar"} <Wallet size={16} className="text-[var(--on-surface-variant)]" />
               </button>
               <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                Kategoriler <Tag size={16} className="text-[var(--on-surface-variant)]" />
+                {isEn ? "Categories" : "Kategoriler"} <Tag size={16} className="text-[var(--on-surface-variant)]" />
               </button>
               <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                Borçlar <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
+                {isEn ? "Debts" : "Borçlar"} <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
               </button>
               <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                Abonelikler <Repeat size={16} className="text-[var(--on-surface-variant)]" />
+                {isEn ? "Subscriptions" : "Abonelikler"} <Repeat size={16} className="text-[var(--on-surface-variant)]" />
               </button>
             </div>
           )}
@@ -139,12 +144,12 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           {!isOverview && data.accounts && data.accounts.length > 0 && (
             <div className="glass-card p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">HESAPLARIM ({data.accounts.length})</span>
+                <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{isEn ? "MY ACCOUNTS" : "HESAPLARIM"} ({data.accounts.length})</span>
                 <button 
                   onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} 
                   className="text-xs text-[var(--primary)] hover:underline font-semibold"
                 >
-                  Yönet
+                  {isEn ? "Manage" : "Yönet"}
                 </button>
               </div>
               <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
@@ -171,22 +176,23 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
         <div className={isOverview ? "w-full mt-[var(--space-2)]" : "lg:col-span-7 xl:col-span-8 flex flex-col"}>
         <div className="flex items-center justify-between mb-[var(--space-3)]">
           <div className="flex items-center gap-[var(--space-2)]">
-            <h3 className="text-caption text-[var(--on-surface-variant)]">İŞLEM GEÇMİŞİ</h3>
+            <h3 className="text-caption text-[var(--on-surface-variant)]">{isEn ? "TRANSACTION HISTORY" : "İŞLEM GEÇMİŞİ"}</h3>
             <button 
               data-tour="finance-add-transaction"
               onClick={() => onOpenSheet && onOpenSheet('transaction')}
+              aria-label={isEn ? "Add transaction" : "İşlem ekle"}
               className="w-5 h-5 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
             >
               <Plus size={12} />
             </button>
           </div>
-          <span className="text-caption text-[var(--on-surface-variant)] uppercase">{new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(currentDate || new Date()).toLocaleUpperCase('tr-TR')}</span>
+          <span className="text-caption text-[var(--on-surface-variant)] uppercase">{new Intl.DateTimeFormat(isEn ? 'en-US' : 'tr-TR', { month: 'long', year: 'numeric' }).format(currentDate || new Date()).toLocaleUpperCase(isEn ? 'en-US' : 'tr-TR')}</span>
         </div>
         
         <div className="flex flex-col gap-[var(--space-4)]">
           {Object.entries(grouped).length === 0 ? (
             <div className="glass-card p-6 text-center text-sm text-[var(--on-surface-variant)]">
-              {isOverview ? "Son günlere ait işlem kaydı bulunmuyor." : "Bu döneme ait işlem kaydı bulunmuyor."}
+              {isOverview ? (isEn ? "No recent transactions found." : "Son günlere ait işlem kaydı bulunmuyor.") : (isEn ? "No transactions found for this period." : "Bu döneme ait işlem kaydı bulunmuyor.")}
             </div>
           ) : (
             Object.entries(grouped).map(([date, groupData]) => (
@@ -194,7 +200,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                 <div className="flex items-center justify-between px-1">
                   <span className="text-caption text-[var(--on-surface-variant)]">{date}</span>
                   <span className={`text-caption ${groupData.net > 0 ? 'text-[var(--color-income)]' : 'text-[var(--on-surface-variant)]'}`}>
-                    GÜNLÜK: {groupData.net > 0 ? '+' : ''}{fmt(groupData.net)}
+                    {isEn ? "DAILY:" : "GÜNLÜK:"} {groupData.net > 0 ? '+' : ''}{fmt(groupData.net)}
                   </span>
                 </div>
                 <div className="flex flex-col gap-[var(--space-1)]">
@@ -215,13 +221,13 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                             <div className="flex items-center gap-2">
                               <span className="text-body font-bold text-white">{txn.title}</span>
                               {txn.source === 'voice' && (
-                                <div className="flex items-center text-[var(--primary)]" title="Sesli asistan ile eklendi">
+                                <div className="flex items-center text-[var(--primary)]" title={isEn ? "Added via voice assistant" : "Sesli asistan ile eklendi"}>
                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                                 </div>
                               )}
                             </div>
                             <span className="text-caption text-[var(--on-surface-variant)] tracking-normal mt-0.5 capitalize flex items-center gap-1">
-                              {isTransfer ? `Transfer${txn.relatedAccountName ? ` → ${txn.relatedAccountName}` : ''}` : (txn.category || "Diğer")} 
+                              {isTransfer ? `Transfer${txn.relatedAccountName ? ` → ${txn.relatedAccountName}` : ''}` : (localizeCategoryName(txn.category || '', isEn) || (isEn ? "Other" : "Diğer"))} 
                               {txn.accountName && (
                                   <>
                                     <span className="w-1 h-1 rounded-full bg-[var(--on-surface-variant)] opacity-50"></span>

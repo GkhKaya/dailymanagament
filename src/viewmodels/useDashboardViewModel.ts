@@ -1,9 +1,23 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardMode, HealthDataDTO, FinanceDataDTO } from '@/models/DashboardTypes';
 import { getHealthDataAction, getFinanceDataAction } from '@/actions/dashboard';
+import { isAbroad, getLocale } from '@/lib/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
+
+// Module-level caches & in-flight promise deduplication to make screen switches instantaneous (0ms)
+let cachedFinanceData: { data: FinanceDataDTO; timestamp: number } | null = null;
+let financeInFlightPromise: Promise<{ success: boolean; data?: FinanceDataDTO; error?: string }> | null = null;
+
+const healthCacheMap = new Map<string, { data: HealthDataDTO; timestamp: number }>();
+const healthInFlightMap = new Map<string, Promise<{ success: boolean; data?: HealthDataDTO; error?: string }>>();
+const CACHE_TTL_MS = 60 * 1000; // 60 seconds fresh cache
 
 export function useDashboardViewModel() {
+  const router = useRouter();
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en' || isAbroad() || getLocale() === 'en';
   const [mode, setModeState] = useState<DashboardMode>('overview');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
@@ -36,22 +50,57 @@ export function useDashboardViewModel() {
     }
   }, []);
   
-  const [healthData, setHealthData] = useState<HealthDataDTO | null>(null);
-  const [financeData, setFinanceData] = useState<FinanceDataDTO | null>(null);
+  const [healthData, setHealthData] = useState<HealthDataDTO | null>(() => {
+    const now = new Date();
+    const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const cached = healthCacheMap.get(key);
+    return (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) ? cached.data : null;
+  });
+
+  const [financeData, setFinanceData] = useState<FinanceDataDTO | null>(() => {
+    return (cachedFinanceData && Date.now() - cachedFinanceData.timestamp < CACHE_TTL_MS) ? cachedFinanceData.data : null;
+  });
   
-  const [isLoadingHealth, setIsLoadingHealth] = useState(false);
-  const [isLoadingFinance, setIsLoadingFinance] = useState(false);
+  const [isLoadingHealth, setIsLoadingHealth] = useState(!healthData);
+  const [isLoadingFinance, setIsLoadingFinance] = useState(!financeData);
   
 
-  const fetchHealthData = useCallback(async (date: Date) => {
+  const fetchHealthData = useCallback(async (date: Date, force = false) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateKey = `${year}-${month}-${day}`;
+    const dateString = `${dateKey}T00:00:00.000Z`;
+
+    // 1. Serve from cache if fresh and not forced
+    const cached = healthCacheMap.get(dateKey);
+    if (!force && cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      setHealthData(cached.data);
+      setIsLoadingHealth(false);
+      return;
+    }
+
+    // 2. Deduplicate in-flight requests for the same date
+    if (healthInFlightMap.has(dateKey)) {
+      try {
+        const result = await healthInFlightMap.get(dateKey);
+        if (result?.success && result.data) {
+          setHealthData(result.data);
+        }
+      } finally {
+        setIsLoadingHealth(false);
+      }
+      return;
+    }
+
     setIsLoadingHealth(true);
+    const fetchPromise = getHealthDataAction(dateString);
+    healthInFlightMap.set(dateKey, fetchPromise);
+
     try {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}T00:00:00.000Z`;
-      const result = await getHealthDataAction(dateString);
+      const result = await fetchPromise;
       if (result.success && result.data) {
+        healthCacheMap.set(dateKey, { data: result.data, timestamp: Date.now() });
         setHealthData(result.data);
       } else {
         console.error(result.error);
@@ -61,15 +110,39 @@ export function useDashboardViewModel() {
       console.error(err);
       toast.error("Beklenmedik bir hata oluştu.");
     } finally {
+      healthInFlightMap.delete(dateKey);
       setIsLoadingHealth(false);
     }
   }, []);
 
-  const fetchFinanceData = useCallback(async () => {
+  const fetchFinanceData = useCallback(async (force = false) => {
+    // 1. Serve from cache if fresh and not forced
+    if (!force && cachedFinanceData && (Date.now() - cachedFinanceData.timestamp < CACHE_TTL_MS)) {
+      setFinanceData(cachedFinanceData.data);
+      setIsLoadingFinance(false);
+      return;
+    }
+
+    // 2. Deduplicate in-flight requests
+    if (financeInFlightPromise) {
+      try {
+        const result = await financeInFlightPromise;
+        if (result?.success && result.data) {
+          setFinanceData(result.data);
+        }
+      } finally {
+        setIsLoadingFinance(false);
+      }
+      return;
+    }
+
     setIsLoadingFinance(true);
+    financeInFlightPromise = getFinanceDataAction();
+
     try {
-      const result = await getFinanceDataAction();
+      const result = await financeInFlightPromise;
       if (result.success && result.data) {
+        cachedFinanceData = { data: result.data, timestamp: Date.now() };
         setFinanceData(result.data);
       } else {
         console.error(result.error);
@@ -79,20 +152,28 @@ export function useDashboardViewModel() {
       console.error(err);
       toast.error("Beklenmedik bir hata oluştu.");
     } finally {
+      financeInFlightPromise = null;
       setIsLoadingFinance(false);
     }
   }, []);
 
+  // Fetch health data when currentDate changes
+  useEffect(() => {
+    fetchHealthData(currentDate);
+  }, [currentDate, fetchHealthData]);
+
+  // Fetch finance data once on mount
+  useEffect(() => {
+    fetchFinanceData();
+  }, [fetchFinanceData]);
+
+  // Explicit refresh (bypasses cache when a modal adds transactions/meals)
   const refreshData = useCallback(async () => {
     await Promise.all([
-      fetchHealthData(currentDate),
-      fetchFinanceData()
+      fetchHealthData(currentDate, true),
+      fetchFinanceData(true)
     ]);
   }, [currentDate, fetchHealthData, fetchFinanceData]);
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
 
   const handlePrevDay = () => {
     const prev = new Date(currentDate);
@@ -107,6 +188,16 @@ export function useDashboardViewModel() {
   };
 
   const handleAddBmr = async () => {
+    if (healthData && (!healthData.hasHealthProfile || !healthData.isBmrCalculable || (healthData.currentWeight || 0) <= 0)) {
+      toast.error(
+        isEn
+          ? "Please complete your weight, height, and age to calculate BMR."
+          : "BMR hesaplayabilmemiz için lütfen önce boy, kilo ve yaş bilgilerinizi girin."
+      );
+      router.push('/onboarding?step=health');
+      return;
+    }
+
     try {
       const { addBMRAction } = await import('@/actions/health');
       const year = currentDate.getFullYear();
@@ -116,13 +207,24 @@ export function useDashboardViewModel() {
       
       const res = await addBMRAction(dateString);
       if (res.success) {
-        toast.success(`BMR eklendi: ${res.bmr} kcal`);
-        await fetchHealthData(currentDate);
+        toast.success(isEn ? `BMR added: ${res.bmr} kcal` : `BMR eklendi: ${res.bmr} kcal`);
+        await fetchHealthData(currentDate, true);
       } else {
-        toast.error(res.error || "BMR eklenirken bir hata oluştu.");
+        let msg = res.error;
+        if (isEn) {
+          if (msg?.includes("BMR hesaplamak") || msg?.includes("doğum tarihi") || msg?.includes("eksiksiz olmalıdır")) {
+            msg = "Height, weight, and birth date are required to calculate BMR.";
+          } else if (msg?.includes("zaten eklenmiş")) {
+            msg = "BMR has already been added for today.";
+          }
+        }
+        toast.error(msg || (isEn ? "Failed to add BMR." : "BMR eklenirken bir hata oluştu."));
+        if (!healthData?.hasHealthProfile || !healthData?.isBmrCalculable) {
+          router.push('/onboarding?step=health');
+        }
       }
     } catch (e) {
-      toast.error("Beklenmedik bir hata oluştu.");
+      toast.error(isEn ? "An unexpected error occurred." : "Beklenmedik bir hata oluştu.");
     }
   };
 

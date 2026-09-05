@@ -2,12 +2,18 @@ import React from 'react';
 import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText } from 'lucide-react';
 import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useTranslation } from '@/hooks/useTranslation';
+import { getCurrencySymbol } from '@/lib/i18n';
 
 type AccountOption = { id: string; name: string; balance: number; type: string };
 type CreditCardDetails = { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number };
 type EditableAccount = AccountOption & { include_in_total_balance?: boolean; credit_card_details?: CreditCardDetails };
 
 export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onSuccess?: () => void, initialData?: EditableAccount, accounts?: AccountOption[] }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
+  const currencySymbol = getCurrencySymbol(locale, isAbroad);
+
   const {
     accountName, setAccountName,
     accountType, setAccountType,
@@ -30,7 +36,9 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
       <div className="flex flex-col gap-4">
         {/* Hesap Adı */}
         <div className="flex flex-col gap-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hesap Adı</label>
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+            {isEn ? 'Account Name' : 'Hesap Adı'}
+          </label>
           <input 
             type="text" 
             value={accountName}
@@ -41,28 +49,33 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
 
         {/* Hesap Tipi */}
         <div className="flex flex-col gap-2">
-          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Hesap Tipi</label>
+          <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+            {isEn ? 'Account Type' : 'Hesap Tipi'}
+          </label>
           <div className="grid grid-cols-3 gap-2">
             <button 
+              type="button"
               onClick={() => setAccountType('bank')}
               className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'bank' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <Building2 size={24} />
-              <span className="text-caption font-medium">Banka</span>
+              <span className="text-caption font-medium">{isEn ? 'Bank' : 'Banka'}</span>
             </button>
             <button 
+              type="button"
               onClick={() => setAccountType('credit')}
               className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'credit' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <CreditCard size={24} />
-              <span className="text-caption font-medium">Kredi Kartı</span>
+              <span className="text-caption font-medium">{isEn ? 'Credit Card' : 'Kredi Kartı'}</span>
             </button>
             <button 
+              type="button"
               onClick={() => setAccountType('cash')}
               className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${accountType === 'cash' ? 'bg-[var(--primary)] text-black shadow-sm border border-[rgba(255,255,255,0.1)]' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] border border-transparent hover:border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
             >
               <Wallet size={24} />
-              <span className="text-caption font-medium">Nakit</span>
+              <span className="text-caption font-medium">{isEn ? 'Cash' : 'Nakit'}</span>
             </button>
           </div>
         </div>
@@ -73,9 +86,11 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
             <div className="grid grid-cols-2 gap-4">
               {/* Kart Limiti */}
               <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Kart Limiti</label>
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                  {isEn ? 'Card Limit' : 'Kart Limiti'}
+                </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">{currencySymbol}</span>
                   <input 
                     type="number" 
                     value={creditLimit}
@@ -86,9 +101,11 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
               </div>
               {/* Güncel Borç */}
               <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider text-orange-400">Güncel Borç</label>
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider text-orange-400">
+                  {isEn ? 'Current Debt' : 'Güncel Borç'}
+                </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">{currencySymbol}</span>
                   <input 
                     type="number" 
                     value={creditDebt}
@@ -102,7 +119,9 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
             <div className="grid grid-cols-2 gap-4">
               {/* Hesap Kesim Tarihi */}
               <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider truncate">Hesap Kesim (Gün)</label>
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider truncate">
+                  {isEn ? 'Cut-off Day (Day)' : 'Hesap Kesim (Gün)'}
+                </label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
                   <input 
@@ -117,7 +136,9 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
               
               {/* Son Ödeme Tarihi */}
               <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider truncate">Son Ödeme (Gün)</label>
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider truncate">
+                  {isEn ? 'Due Day (Day)' : 'Son Ödeme (Gün)'}
+                </label>
                 <div className="relative">
                   <CardIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
                   <input 
@@ -134,9 +155,11 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
         ) : (
           /* Güncel Bakiye */
           <div className="flex flex-col gap-2 animate-fade-in">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Güncel Bakiye</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? 'Current Balance' : 'Güncel Bakiye'}
+            </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">₺</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">{currencySymbol}</span>
               <input 
                 type="number" 
                 value={balance}
@@ -151,11 +174,17 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
           <section className="flex flex-col gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-4 sm:p-5">
             <div className="flex items-center gap-2 text-emerald-300">
               <ReceiptText size={18} />
-              <h3 className="text-sm font-bold">Kart Borcu Öde</h3>
+              <h3 className="text-sm font-bold">{isEn ? 'Pay Card Debt' : 'Kart Borcu Öde'}</h3>
             </div>
-            <p className="text-xs leading-5 text-[var(--on-surface-variant)]">Nakit/banka hesabı seçilirse bakiyesi düşer. Dış ödeme yalnızca kart borcunu azaltır.</p>
+            <p className="text-xs leading-5 text-[var(--on-surface-variant)]">
+              {isEn 
+                ? 'Selecting cash/bank account deducts from its balance. External payment only reduces card debt.' 
+                : 'Nakit/banka hesabı seçilirse bakiyesi düşer. Dış ödeme yalnızca kart borcunu azaltır.'}
+            </p>
             <div className="flex flex-col gap-2">
-              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Ödeme Tutarı</label>
+              <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                {isEn ? 'Payment Amount' : 'Ödeme Tutarı'}
+              </label>
               <input
                 type="number"
                 min="0.01"
@@ -169,39 +198,39 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setIsExternalPayment(false)} className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors ${!isExternalPayment ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
-                Hesaptan Öde
+                {isEn ? 'Pay from Account' : 'Hesaptan Öde'}
               </button>
               <button type="button" onClick={() => setIsExternalPayment(true)} className={`min-h-11 rounded-xl border px-3 text-sm font-medium transition-colors ${isExternalPayment ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
-                Dış Ödeme
+                {isEn ? 'External Payment' : 'Dış Ödeme'}
               </button>
             </div>
             {!isExternalPayment && (
               <div className="flex flex-col gap-2">
-                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Ödeme Hesabı</label>
+                <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+                  {isEn ? 'Payment Account' : 'Ödeme Hesabı'}
+                </label>
                 <div className="relative">
                   <Landmark className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={17} />
                   <select value={paymentAccountId} onChange={(event) => setPaymentAccountId(event.target.value)} className="min-h-11 w-full appearance-none rounded-xl border border-[rgba(255,255,255,0.1)] bg-[var(--surface-container)] py-2 pl-10 pr-3 text-sm text-white focus:border-emerald-400 focus:outline-none">
-                    <option value="">Nakit veya banka hesabı seçin</option>
+                    <option value="">{isEn ? 'Select cash or bank account' : 'Nakit veya banka hesabı seçin'}</option>
                     {paymentAccounts.map(account => <option key={account.id} value={account.id}>{account.name}</option>)}
                   </select>
                 </div>
               </div>
             )}
             <button type="button" disabled={isLoading || !paymentAmount || (!isExternalPayment && !paymentAccountId)} onClick={handlePayment} className="min-h-11 w-full rounded-xl bg-emerald-500 px-4 text-sm font-bold text-black transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
-              Borcu Öde
+              {isEn ? 'Pay Debt' : 'Borcu Öde'}
             </button>
           </section>
         )}
       </div>
 
-      
-
       <div className="mt-2 flex flex-col gap-3">
         <button onClick={handleUpdate} disabled={isLoading} className="w-full py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">
-          {isLoading ? <LoadingSpinner size="sm" /> : "Değişiklikleri Kaydet"}
+          {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? 'Save Changes' : 'Değişiklikleri Kaydet')}
         </button>
         <button onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">
-          Hesabı Sil
+          {isEn ? 'Delete Account' : 'Hesabı Sil'}
         </button>
       </div>
     </div>

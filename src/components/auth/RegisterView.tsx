@@ -1,11 +1,21 @@
+"use client";
+
 import React from "react";
 import { HeroPanel } from "@/components/auth/HeroPanel";
 import { RegisterForm } from "@/components/auth/RegisterForm";
-import { t } from "@/lib/i18n";
+import { AuthLanguageToggle } from "@/components/auth/AuthLanguageToggle";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function RegisterView() {
+  const { t } = useTranslation();
+
   return (
-    <div className="ambient-bg min-h-screen flex">
+    <div className="ambient-bg min-h-screen flex relative">
+      {/* ── Dil Değiştirici (Top Right) ── */}
+      <div className="absolute top-6 right-6 z-30">
+        <AuthLanguageToggle />
+      </div>
+
       {/* ── Sol Panel: Logo + Hero ── */}
       <HeroPanel />
 

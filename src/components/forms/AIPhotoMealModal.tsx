@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { Camera, Sparkles, Upload, Check, Trash2, RefreshCw, X, Database, Bot, Home, Utensils, Leaf, Flame } from "lucide-react";
 import { addMealsAction } from "@/actions/health";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface AnalyzedItem {
   id: string;
@@ -46,6 +47,9 @@ export function AIPhotoMealModal({
   currentDate,
   initialMealType = 'lunch',
 }: AIPhotoMealModalProps) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -64,7 +68,7 @@ export function AIPhotoMealModal({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Lütfen geçerli bir resim dosyası seçin.');
+      toast.error(isEn ? 'Please select a valid image file.' : 'Lütfen geçerli bir resim dosyası seçin.');
       return;
     }
 
@@ -95,10 +99,10 @@ export function AIPhotoMealModal({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Fotoğraf analiz edilemedi.');
+        throw new Error(data.error || (isEn ? 'Failed to analyze photo.' : 'Fotoğraf analiz edilemedi.'));
       }
 
-      setMealName(data.meal_name || 'Görsel Yemek');
+      setMealName(data.meal_name || (isEn ? 'Meal Photo' : 'Görsel Yemek'));
       
       const processed: AnalyzedItem[] = (data.items || []).map((item: any) => ({
         ...item,
@@ -106,9 +110,11 @@ export function AIPhotoMealModal({
       }));
 
       setItems(processed);
-      toast.success(directiveToUse ? 'Notunuza göre AI analizi güncellendi!' : 'Yemek AI ile tespit edildi!');
+      toast.success(directiveToUse 
+        ? (isEn ? 'AI analysis updated with your note!' : 'Notunuza göre AI analizi güncellendi!') 
+        : (isEn ? 'Food detected with AI!' : 'Yemek AI ile tespit edildi!'));
     } catch (err: any) {
-      toast.error(err.message || 'Analiz sırasında hata oluştu.');
+      toast.error(err.message || (isEn ? 'An error occurred during analysis.' : 'Analiz sırasında hata oluştu.'));
     } finally {
       setIsAnalyzing(false);
     }
@@ -160,7 +166,7 @@ export function AIPhotoMealModal({
   const handleSaveMeal = async () => {
     const selectedItems = items.filter(i => i.selected);
     if (selectedItems.length === 0) {
-      toast.error('Lütfen eklemek istediğiniz en az bir besini seçin.');
+      toast.error(isEn ? 'Please select at least one food item to add.' : 'Lütfen eklemek istediğiniz en az bir besini seçin.');
       return;
     }
 
@@ -170,7 +176,7 @@ export function AIPhotoMealModal({
     const payload = selectedItems.map(item => ({
       date: dateStr,
       type: mealType,
-      food_name: item.food_name,
+      food_name: (isEn && item.food_name_en) ? item.food_name_en : item.food_name,
       serving_description: `${item.amount} ${item.unit_type}`,
       quantity: item.amount,
       unit_type: item.unit_type,
@@ -185,14 +191,16 @@ export function AIPhotoMealModal({
     try {
       const res = await addMealsAction(payload);
       if (res.success) {
-        toast.success(`AI ile ${selectedItems.length} besin öğüne eklendi!`);
+        toast.success(isEn 
+          ? `Added ${selectedItems.length} food items to your meal with AI!` 
+          : `AI ile ${selectedItems.length} besin öğüne eklendi!`);
         onSuccess();
         onClose();
       } else {
-        toast.error(res.error || 'Öğün eklenemedi.');
+        toast.error(res.error || (isEn ? 'Failed to add meal.' : 'Öğün eklenemedi.'));
       }
     } catch (err: any) {
-      toast.error(err.message || 'Öğün kaydı başarısız.');
+      toast.error(err.message || (isEn ? 'Meal recording failed.' : 'Öğün kaydı başarısız.'));
     } finally {
       setIsSaving(false);
     }
@@ -216,9 +224,11 @@ export function AIPhotoMealModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                Fotoğraf ile AI Besin Analizi
+                {isEn ? 'AI Food Photo Analysis' : 'Fotoğraf ile AI Besin Analizi'}
               </h2>
-              <p className="text-xs text-[var(--on-surface-variant)]">Fotoğraf çekin veya yükleyin, AI parçalara ayırıp eklesin</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">
+                {isEn ? 'Take or upload a photo, AI segments items and estimates nutrition' : 'Fotoğraf çekin veya yükleyin, AI parçalara ayırıp eklesin'}
+              </p>
             </div>
           </div>
           <button
@@ -248,7 +258,7 @@ export function AIPhotoMealModal({
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles size={13} />
-                <span>AI İÇİN ÖZEL NOT / DİREKTİF (OPSİYONEL)</span>
+                <span>{isEn ? 'SPECIAL NOTE / DIRECTIVE FOR AI (OPTIONAL)' : 'AI İÇİN ÖZEL NOT / DİREKTİF (OPSİYONEL)'}</span>
               </label>
               {userDirective && (
                 <button
@@ -256,7 +266,7 @@ export function AIPhotoMealModal({
                   onClick={() => setUserDirective("")}
                   className="text-[10px] text-white/40 hover:text-white"
                 >
-                  Temizle
+                  {isEn ? 'Clear' : 'Temizle'}
                 </button>
               )}
             </div>
@@ -265,17 +275,19 @@ export function AIPhotoMealModal({
               type="text"
               value={userDirective}
               onChange={(e) => setUserDirective(e.target.value)}
-              placeholder="Örn: Anne yemeği (yağı bir tık fazla hesaplasın), ev usulü, diyet/az yağlı, restoran yemeği..."
+              placeholder={isEn 
+                ? "e.g. Home cooked (slightly higher fat), diet/low fat, restaurant style..." 
+                : "Örn: Anne yemeği (yağı bir tık fazla hesaplasın), ev usulü, diyet/az yağlı, restoran yemeği..."}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all"
             />
 
             {/* Quick Presets */}
             <div className="flex flex-wrap gap-1.5 pt-1">
               {[
-                { label: 'Anne Yemeği / Ev Yapımı', text: 'anne yemeği ev yapımı', icon: Home },
-                { label: 'Restoran Yemeği', text: 'restoran yemeği dışarıda', icon: Utensils },
-                { label: 'Az Yağlı / Diyet', text: 'az yağlı diyet yemeği', icon: Leaf },
-                { label: 'Bol Tereyağlı', text: 'bol tereyağlı yağlı', icon: Flame },
+                { label: isEn ? 'Home Cooking / Homemade' : 'Anne Yemeği / Ev Yapımı', text: isEn ? 'homemade home cooking' : 'anne yemeği ev yapımı', icon: Home },
+                { label: isEn ? 'Restaurant Meal' : 'Restoran Yemeği', text: isEn ? 'restaurant meal dining out' : 'restoran yemeği dışarıda', icon: Utensils },
+                { label: isEn ? 'Low Fat / Diet' : 'Az Yağlı / Diyet', text: isEn ? 'low fat diet meal' : 'az yağlı diyet yemeği', icon: Leaf },
+                { label: isEn ? 'Rich in Butter / High Fat' : 'Bol Tereyağlı', text: isEn ? 'high butter rich in fat' : 'bol tereyağlı yağlı', icon: Flame },
               ].map(preset => {
                 const Icon = preset.icon;
                 const isActive = userDirective.toLowerCase().includes(preset.text.split(' ')[0]);
@@ -314,14 +326,18 @@ export function AIPhotoMealModal({
                 <Camera size={32} />
               </div>
               <div className="flex flex-col items-center text-center gap-1">
-                <span className="text-base font-semibold text-white">Yemek Fotoğrafı Yükleyin veya Çekin</span>
+                <span className="text-base font-semibold text-white">
+                  {isEn ? 'Upload or Take a Meal Photo' : 'Yemek Fotoğrafı Yükleyin veya Çekin'}
+                </span>
                 <span className="text-xs text-[var(--on-surface-variant)] max-w-sm">
-                  Kameranızla tabağınızın fotoğrafını çekin. Yapay zeka yiyecekleri tespit edip gramaj tahmini yapacaktır.
+                  {isEn 
+                    ? 'Take a photo of your plate. AI will detect foods and estimate portions.' 
+                    : 'Kameranızla tabağınızın fotoğrafını çekin. Yapay zeka yiyecekleri tespit edip gramaj tahmini yapacaktır.'}
                 </span>
               </div>
               <div className="flex items-center gap-3 mt-2">
                 <button type="button" className="px-4 py-2 rounded-xl bg-emerald-500 text-black text-xs font-bold flex items-center gap-2 hover:bg-emerald-400 transition-colors shadow-md">
-                  <Camera size={16} /> Fotoğraf Çek / Seç
+                  <Camera size={16} /> {isEn ? 'Take / Select Photo' : 'Fotoğraf Çek / Seç'}
                 </button>
               </div>
             </div>
@@ -342,16 +358,16 @@ export function AIPhotoMealModal({
                       onClick={() => analyzePhoto(imagePreview, userDirective)}
                       disabled={isAnalyzing}
                       className="px-3 py-1.5 rounded-xl bg-emerald-500/30 hover:bg-emerald-500/50 backdrop-blur-md text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors border border-emerald-500/40"
-                      title="Yeni direktifinizle yeniden analiz edin"
+                      title={isEn ? "Re-analyze with your new directive" : "Yeni direktifinizle yeniden analiz edin"}
                     >
-                      <Sparkles size={13} className="animate-pulse" /> Yeniden Analiz
+                      <Sparkles size={13} className="animate-pulse" /> {isEn ? 'Re-analyze' : 'Yeniden Analiz'}
                     </button>
                     <button
                       type="button"
                       onClick={resetAll}
                       className="px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white/90 text-xs font-semibold flex items-center gap-1.5 transition-colors border border-white/10"
                     >
-                      <RefreshCw size={13} /> Değiştir
+                      <RefreshCw size={13} /> {isEn ? 'Change' : 'Değiştir'}
                     </button>
                   </div>
                 </div>
@@ -365,9 +381,13 @@ export function AIPhotoMealModal({
                     <Sparkles size={18} className="absolute text-emerald-400" />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-bold text-white">Yemek Fotoğrafı Analiz Ediliyor...</span>
+                    <span className="text-sm font-bold text-white">
+                      {isEn ? 'Analyzing Meal Photo...' : 'Yemek Fotoğrafı Analiz Ediliyor...'}
+                    </span>
                     <span className="text-xs text-[var(--on-surface-variant)]">
-                      Yiyecekler parçalara ayrılıyor, gramajlar tahmin ediliyor & veritabanı eşleştiriliyor.
+                      {isEn 
+                        ? 'Segmenting food items, estimating portions & matching database.' 
+                        : 'Yiyecekler parçalara ayrılıyor, gramajlar tahmin ediliyor & veritabanı eşleştiriliyor.'}
                     </span>
                   </div>
                 </div>
@@ -379,13 +399,15 @@ export function AIPhotoMealModal({
                   
                   {/* Meal Category Selector */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-[var(--on-surface-variant)] uppercase tracking-wider">Öğün Kategorisi</label>
+                    <label className="text-xs font-semibold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                      {isEn ? 'Meal Category' : 'Öğün Kategorisi'}
+                    </label>
                     <div className="grid grid-cols-4 gap-1.5 p-1 bg-black/30 rounded-2xl border border-white/5">
                       {[
-                        { key: 'breakfast', label: 'Kahvaltı' },
-                        { key: 'lunch', label: 'Öğle' },
-                        { key: 'dinner', label: 'Akşam' },
-                        { key: 'snack', label: 'Atıştırmalık' },
+                        { key: 'breakfast', label: isEn ? 'Breakfast' : 'Kahvaltı' },
+                        { key: 'lunch', label: isEn ? 'Lunch' : 'Öğle' },
+                        { key: 'dinner', label: isEn ? 'Dinner' : 'Akşam' },
+                        { key: 'snack', label: isEn ? 'Snack' : 'Atıştırmalık' },
                       ].map(cat => (
                         <button
                           key={cat.key}
@@ -407,7 +429,7 @@ export function AIPhotoMealModal({
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                        Tespit Edilen Besinler ({items.filter(i => i.selected).length}/{items.length})
+                        {isEn ? 'Detected Foods' : 'Tespit Edilen Besinler'} ({items.filter(i => i.selected).length}/{items.length})
                       </span>
                     </div>
 
@@ -429,14 +451,16 @@ export function AIPhotoMealModal({
                                 onChange={() => toggleSelect(item.id)}
                                 className="w-4 h-4 accent-emerald-500 rounded cursor-pointer"
                               />
-                              <span className="text-sm font-bold text-white truncate">{item.food_name}</span>
+                              <span className="text-sm font-bold text-white truncate">
+                                {(isEn && item.food_name_en) ? item.food_name_en : item.food_name}
+                              </span>
                               {item.matched_in_db ? (
                                 <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/20 shrink-0">
-                                  <Database size={10} /> DB Eşleşti
+                                  <Database size={10} /> {isEn ? 'DB Matched' : 'DB Eşleşti'}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/20 shrink-0">
-                                  <Bot size={10} /> AI Tahmini
+                                  <Bot size={10} /> {isEn ? 'AI Estimate' : 'AI Tahmini'}
                                 </span>
                               )}
                             </div>
@@ -453,7 +477,7 @@ export function AIPhotoMealModal({
                           {/* Controls & Macros */}
                           <div className="flex flex-wrap items-center justify-between gap-2 pl-6 pt-1 border-t border-white/5">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-[var(--on-surface-variant)]">Miktar:</span>
+                              <span className="text-xs text-[var(--on-surface-variant)]">{isEn ? 'Amount:' : 'Miktar:'}</span>
                               <input
                                 type="number"
                                 min="1"
@@ -468,8 +492,8 @@ export function AIPhotoMealModal({
                             <div className="flex items-center gap-2 text-xs">
                               <span className="font-bold text-emerald-400">{item.calculated.calories} kcal</span>
                               <span className="text-blue-400">P:{item.calculated.protein_g}g</span>
-                              <span className="text-[#8ec13b]">K:{item.calculated.carbs_g}g</span>
-                              <span className="text-amber-400">Y:{item.calculated.fat_g}g</span>
+                              <span className="text-[#8ec13b]">{isEn ? 'C' : 'K'}:{item.calculated.carbs_g}g</span>
+                              <span className="text-amber-400">{isEn ? 'F' : 'Y'}:{item.calculated.fat_g}g</span>
                             </div>
                           </div>
                         </div>
@@ -480,14 +504,16 @@ export function AIPhotoMealModal({
                   {/* Total Summary Bar */}
                   <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/20 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-[var(--on-surface-variant)] uppercase tracking-wider">Seçilen Toplam Besin Değeri</span>
+                      <span className="text-xs font-semibold text-[var(--on-surface-variant)] uppercase tracking-wider">
+                        {isEn ? 'Total Selected Nutrition' : 'Seçilen Toplam Besin Değeri'}
+                      </span>
                       <span className="text-base font-extrabold text-emerald-400">{totals.calories} kcal</span>
                     </div>
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5 text-white/80 font-medium">
-                      <span>Karbonhidrat: <strong className="text-[#8ec13b]">{totals.carbs_g}g</strong></span>
-                      <span>Protein: <strong className="text-blue-400">{totals.protein_g}g</strong></span>
-                      <span>Yağ: <strong className="text-amber-400">{totals.fat_g}g</strong></span>
-                      <span>Şeker: <strong className="text-pink-300">{totals.sugar_g}g</strong></span>
+                      <span>{isEn ? 'Carbs:' : 'Karbonhidrat:'} <strong className="text-[#8ec13b]">{totals.carbs_g}g</strong></span>
+                      <span>{isEn ? 'Protein:' : 'Protein:'} <strong className="text-blue-400">{totals.protein_g}g</strong></span>
+                      <span>{isEn ? 'Fat:' : 'Yağ:'} <strong className="text-amber-400">{totals.fat_g}g</strong></span>
+                      <span>{isEn ? 'Sugar:' : 'Şeker:'} <strong className="text-pink-300">{totals.sugar_g}g</strong></span>
                     </div>
                   </div>
                 </div>
@@ -503,7 +529,7 @@ export function AIPhotoMealModal({
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-white/10 text-white/80 hover:text-white text-xs font-semibold hover:bg-white/5 transition-colors"
           >
-            İptal
+            {isEn ? 'Cancel' : 'İptal'}
           </button>
           {imagePreview && items.length > 0 && !isAnalyzing && (
             <button
@@ -512,7 +538,7 @@ export function AIPhotoMealModal({
               onClick={handleSaveMeal}
               className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Check size={16} /> {isSaving ? 'Kaydediliyor...' : 'Öğünü Günlüğe Ekle'}
+              <Check size={16} /> {isSaving ? (isEn ? 'Saving...' : 'Kaydediliyor...') : (isEn ? 'Add Meal to Diary' : 'Öğünü Günlüğe Ekle')}
             </button>
           )}
         </div>

@@ -4,10 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useRegisterViewModel } from "@/viewmodels/useRegisterViewModel";
 
 export function RegisterForm() {
+  const { t } = useTranslation();
   const {
     email,
     setEmail,
@@ -49,7 +50,7 @@ export function RegisterForm() {
       />
 
       <Button type="submit" withArrow className="mt-8" disabled={loading}>
-        {loading ? "Kayıt olunuyor..." : t("auth.registerTitle")}
+        {loading ? t("auth.signingUp") : t("auth.registerTitle")}
       </Button>
 
       {/* Zaten hesabınız var mı? */}

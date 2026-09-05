@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid } from 'recharts';
 import { useFinanceAnalysisViewModel } from '@/viewmodels/useFinanceAnalysisViewModel';
 import { ExportPdfModal } from '@/components/ui/ExportPdfModal';
+import { useTranslation } from '@/hooks/useTranslation';
+import { isAbroad, formatCurrency } from '@/lib/i18n';
+import { localizeCategoryName } from '@/lib/category-helpers';
 
 export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
+  const { locale, isAbroad: abroadFromHook } = useTranslation();
+  const [userAbroad, setUserAbroad] = useState(false);
+
+  useEffect(() => {
+    setUserAbroad(isAbroad());
+  }, []);
+
+  const isEn = abroadFromHook || locale === 'en' || userAbroad || isAbroad();
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const {
     timeFilter,
@@ -16,18 +27,26 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
     totalIncome,
     totalExpense,
     barData,
-    pieData,
+    pieData: rawPieData,
     lineData
   } = useFinanceAnalysisViewModel();
 
-  const months = [
+  const pieData = (rawPieData || []).map((entry: any) => ({
+    ...entry,
+    name: localizeCategoryName(entry.name, isEn)
+  }));
+
+  const months = isEn ? [
+    'January', 'February', 'March', 'April', 
+    'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+  ] : [
     'Ocak', 'Şubat', 'Mart', 'Nisan', 
     'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
   ];
   
   const formatTimeOffset = () => {
-    if (timeOffset === 0) return timeFilter === 'week' ? 'Bu Hafta' : timeFilter === 'month' ? 'Bu Ay' : 'Bu Yıl';
-    if (timeOffset === -1) return timeFilter === 'week' ? 'Geçen Hafta' : timeFilter === 'month' ? 'Geçen Ay' : 'Geçen Yıl';
+    if (timeOffset === 0) return timeFilter === 'week' ? (isEn ? 'This Week' : 'Bu Hafta') : timeFilter === 'month' ? (isEn ? 'This Month' : 'Bu Ay') : (isEn ? 'This Year' : 'Bu Yıl');
+    if (timeOffset === -1) return timeFilter === 'week' ? (isEn ? 'Last Week' : 'Geçen Hafta') : timeFilter === 'month' ? (isEn ? 'Last Month' : 'Geçen Ay') : (isEn ? 'Last Year' : 'Geçen Yıl');
     
     const now = new Date();
     if (timeFilter === 'month') {
@@ -38,14 +57,14 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
       return `${now.getFullYear() + timeOffset}`;
     }
     
-    return `${Math.abs(timeOffset)} Hafta Önce`;
+    return isEn ? `${Math.abs(timeOffset)} Weeks Ago` : `${Math.abs(timeOffset)} Hafta Önce`;
   };
 
   const currentYear = new Date().getFullYear();
 
   const diff = totalIncome - totalExpense;
 
-  const fmt = (val: number) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val);
+  const fmt = (val: number) => formatCurrency(val);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-6 pb-24 animate-slide-up">
@@ -53,27 +72,29 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
       <div className="flex flex-col gap-4 mb-2">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
           <div className="flex items-center gap-4">
-            <button onClick={onBack} className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors">
+            <button onClick={onBack} aria-label={isEn ? "Go back" : "Geri dön"} className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer">
               <ArrowLeft size={20} className="text-white" />
             </button>
-            <h2 className="text-2xl font-bold text-white">Detaylı Finans Analizi</h2>
+            <h2 className="text-2xl font-bold text-white">
+              {isEn ? "Detailed Financial Analysis" : "Detaylı Finans Analizi"}
+            </h2>
           </div>
           
           <div className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-end">
-            <button type="button" onClick={() => setIsPdfModalOpen(true)} className="min-h-11 shrink-0 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 px-3.5 text-xs font-bold text-white transition-colors hover:bg-[#8ec13b]/25 flex items-center justify-center gap-1.5" title="PDF raporu al">
+            <button type="button" onClick={() => setIsPdfModalOpen(true)} className="min-h-11 shrink-0 rounded-xl bg-[#8ec13b]/15 border border-[#8ec13b]/20 px-3.5 text-xs font-bold text-white transition-colors hover:bg-[#8ec13b]/25 flex items-center justify-center gap-1.5 cursor-pointer" title={isEn ? "Export PDF Report" : "PDF raporu al"}>
               <Download size={15} className="text-white" />
               <span>PDF</span>
             </button>
           <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl">
             {[
-              { id: 'week', label: 'Haftalık' },
-              { id: 'month', label: 'Aylık' },
-              { id: 'year', label: 'Yıllık' }
+              { id: 'week', label: isEn ? 'Weekly' : 'Haftalık' },
+              { id: 'month', label: isEn ? 'Monthly' : 'Aylık' },
+              { id: 'year', label: isEn ? 'Yearly' : 'Yıllık' }
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setTimeFilter(f.id as any)}
-                className={`px-4 py-2 rounded-lg text-caption font-medium transition-colors ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg text-caption font-medium transition-colors cursor-pointer ${timeFilter === f.id ? 'bg-[var(--surface-container)] text-white shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
               >
                 {f.label}
               </button>
@@ -84,13 +105,13 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
 
         {/* Month Navigator */}
         <div className="flex items-center justify-center gap-4 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl py-3 w-fit mx-auto px-6">
-          <button onClick={handlePrevMonth} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handlePrevMonth} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50 cursor-pointer">
             <ChevronLeft size={20} />
           </button>
           <span className="text-body font-bold text-white min-w-[120px] text-center">
             {formatTimeOffset()}
           </span>
-          <button onClick={handleNextMonth} disabled={timeOffset >= 0} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50">
+          <button onClick={handleNextMonth} disabled={timeOffset >= 0} className="text-[var(--on-surface-variant)] hover:text-white disabled:opacity-50 cursor-pointer">
             <ChevronRight size={20} />
           </button>
         </div>
@@ -105,15 +126,21 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-[#8ec13b]">
-          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Toplam Gelir</span>
+          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">
+            {isEn ? "Total Income" : "Toplam Gelir"}
+          </span>
           <span className="text-xl font-bold text-[#8ec13b]">{fmt(totalIncome)}</span>
         </div>
         <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-white">
-          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Toplam Gider</span>
+          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">
+            {isEn ? "Total Expense" : "Toplam Gider"}
+          </span>
           <span className="text-xl font-bold text-white">{fmt(totalExpense)}</span>
         </div>
         <div className="glass-item p-4 flex flex-col items-center justify-center border-b-4 border-b-[#c0c1ff]">
-          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">Net Durum</span>
+          <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider mb-1">
+            {isEn ? "Net Balance" : "Net Durum"}
+          </span>
           <span className={`text-xl font-bold ${diff >= 0 ? 'text-[#c0c1ff]' : 'text-orange-400'}`}>
             {diff >= 0 ? '+' : ''}{fmt(diff)}
           </span>
@@ -124,7 +151,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
         
         {/* Daily Spending Trend (Full Width) */}
         <div className="glass-item p-6 h-[350px] flex flex-col lg:col-span-2">
-          <h3 className="text-body font-bold text-white mb-6">Günlük Harcama Trendi</h3>
+          <h3 className="text-body font-bold text-white mb-6">
+            {isEn ? "Daily Spending Trend" : "Günlük Harcama Trendi"}
+          </h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -134,9 +163,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(20,20,25,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#fff' }}
-                  formatter={(value: any) => fmt(value)}
+                  formatter={(value: any) => fmt(value as number)}
                 />
-                <Line type="monotone" dataKey="spent" name="Harcama" stroke="#fb923c" strokeWidth={3} dot={{ r: 4, fill: '#fb923c', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="spent" name={isEn ? "Expense" : "Harcama"} stroke="#fb923c" strokeWidth={3} dot={{ r: 4, fill: '#fb923c', strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -144,7 +173,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
 
         {/* Income vs Expense Bar Chart */}
         <div className="glass-item p-6 h-[400px] flex flex-col">
-          <h3 className="text-body font-bold text-white mb-6">Gelir / Gider Karşılaştırması</h3>
+          <h3 className="text-body font-bold text-white mb-6">
+            {isEn ? "Income / Expense Comparison" : "Gelir / Gider Karşılaştırması"}
+          </h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -157,8 +188,8 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="income" name="Gelir" fill="#8ec13b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Gider" fill="#c0c1ff" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="income" name={isEn ? "Income" : "Gelir"} fill="#8ec13b" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name={isEn ? "Expense" : "Gider"} fill="#c0c1ff" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -166,7 +197,9 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
 
         {/* Expense Categories Pie Chart */}
         <div className="glass-item p-6 h-[400px] flex flex-col">
-          <h3 className="text-body font-bold text-white mb-2">Harcama Dağılımı</h3>
+          <h3 className="text-body font-bold text-white mb-2">
+            {isEn ? "Expense Breakdown" : "Harcama Dağılımı"}
+          </h3>
           <div className="flex-1 w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

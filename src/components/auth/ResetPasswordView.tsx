@@ -1,9 +1,12 @@
+"use client";
+
 import React from "react";
 import { HeroPanel } from "@/components/auth/HeroPanel";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function ResetPasswordView() {
+  const { t } = useTranslation();
   return (
     <div className="ambient-bg min-h-screen flex">
       {/* ── Sol Panel: Logo + Hero ── */}

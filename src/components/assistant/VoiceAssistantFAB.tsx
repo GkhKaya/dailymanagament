@@ -32,6 +32,7 @@ import {
 } from '@/actions/assistant';
 import { getSmartPortionOptions, type FoodPortionOption } from '@/lib/food-portions';
 import { toUserFacingError } from '@/lib/error-management';
+import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 
 const MACRO_COLORS = {
@@ -110,6 +111,9 @@ function getPortionOptions(food: AssistantFoodItem): FoodPortionOption[] {
 }
 
 export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () => void; currentDate?: string }) {
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -168,7 +172,8 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
     setIsSearchingReplace(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/food/search?query=${encodeURIComponent(replaceQuery.trim())}`);
+        const langParam = isEn ? '&lang=en&is_abroad=1' : '';
+        const res = await fetch(`/api/food/search?query=${encodeURIComponent(replaceQuery.trim())}${langParam}`);
         const data = await res.json();
         setReplaceResults(data.foods || []);
       } catch {
@@ -178,7 +183,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
       }
     }, 200);
     return () => clearTimeout(timer);
-  }, [replaceQuery]);
+  }, [replaceQuery, isEn]);
 
   // Alttan yeni besin arama
   useEffect(() => {
@@ -191,7 +196,8 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
     setShowNewFoodDropdown(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/food/search?query=${encodeURIComponent(newFoodQuery.trim())}`);
+        const langParam = isEn ? '&lang=en&is_abroad=1' : '';
+        const res = await fetch(`/api/food/search?query=${encodeURIComponent(newFoodQuery.trim())}${langParam}`);
         const data = await res.json();
         setNewFoodResults(data.foods || []);
       } catch {
@@ -201,7 +207,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
       }
     }, 350);
     return () => clearTimeout(timer);
-  }, [newFoodQuery]);
+  }, [newFoodQuery, isEn]);
 
   // Anlık toplam makro hesaplama
   const healthTotals = useMemo(() => {
@@ -252,7 +258,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.lang = 'tr-TR';
+    recognition.lang = isEn ? 'en-US' : 'tr-TR';
     recognition.interimResults = false;
 
     recognition.onresult = (event: any) => {
@@ -891,7 +897,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
                                     handleOpenCardDBSearch(food.id, food.food_name);
                                   }
                                 }}
-                                placeholder="Veritabanında arayın (Örn: Bulgur, Tavuk, Yumurta...)"
+                                placeholder={isEn ? "Search in database (e.g. Rice, Chicken, Eggs...)" : "Veritabanında arayın (Örn: Bulgur, Tavuk, Yumurta...)"}
                                 className="w-full bg-[#14141E] border-2 border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.16)] focus:border-[var(--primary)] rounded-xl py-2.5 pl-10 pr-4 text-[13px] font-semibold text-white focus:outline-none transition-all placeholder:text-[var(--on-surface-variant)] placeholder:font-normal"
                               />
                             </div>
@@ -1133,7 +1139,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
                       onFocus={() => {
                         if (newFoodResults.length > 0) setShowNewFoodDropdown(true);
                       }}
-                      placeholder="Veritabanından yemek arayın (Örn: Bulgur, Tavuk, Yumurta...)"
+                      placeholder={isEn ? "Search foods in database (e.g. Rice, Chicken, Eggs...)" : "Veritabanından yemek arayın (Örn: Bulgur, Tavuk, Yumurta...)"}
                       className="w-full bg-[#16161F] border-2 border-[rgba(255,255,255,0.06)] rounded-2xl py-3 pl-11 pr-4 text-[13px] font-medium text-white focus:outline-none focus:border-[var(--primary)] focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] transition-all placeholder:text-[var(--on-surface-variant)]"
                     />
                   </div>

@@ -2,29 +2,31 @@ import React from 'react';
 import { CalendarDays } from 'lucide-react';
 import { useUpdateAgeViewModel } from '@/viewmodels/useUpdateAgeViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { t } from '@/lib/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function UpdateAgeForm({ onClose, onSuccess, initialBirthDate }: { onClose: () => void, onSuccess: () => void, initialBirthDate?: string | null }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
   const { birthDate, setBirthDate, isLoading, handleSubmit } = useUpdateAgeViewModel(onSuccess, initialBirthDate);
   const [inputType, setInputType] = React.useState('text');
 
-  let ageHint = "Doğum tarihinizi seçin (Kayıtlı yaşınız yok)";
+  let ageHint = isEn ? "Select your birth date (No age recorded)" : "Doğum tarihinizi seçin (Kayıtlı yaşınız yok)";
   if (initialBirthDate) {
     const age = new Date().getFullYear() - new Date(initialBirthDate).getFullYear();
-    ageHint = `Mevcut yaşınız: ${age}`;
+    ageHint = isEn ? `Current age: ${age}` : `Mevcut yaşınız: ${age}`;
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="text-body text-[var(--on-surface-variant)] mb-2">
-        {t("profile.updateAge.description")}
+        {isEn 
+          ? "Enter your birth date to help us calculate your targets accurately."
+          : "Doğum tarihinizi girerek hedeflerinizin doğru hesaplanmasını sağlayın."}
       </div>
-      
-      
       
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-          {t("profile.updateAge.dateLabel")}
+          {isEn ? "Birth Date" : "Doğum Tarihi"}
         </label>
         <div className="relative">
           <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -43,10 +45,10 @@ export function UpdateAgeForm({ onClose, onSuccess, initialBirthDate }: { onClos
 
       <div className="mt-2 flex gap-3">
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-          İptal
+          {isEn ? "Cancel" : "İptal"}
         </button>
         <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
-          {isLoading ? <LoadingSpinner size="sm" /> : t("profile.updateAge.submit")}
+          {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? "Save" : "Kaydet")}
         </button>
       </div>
     </form>

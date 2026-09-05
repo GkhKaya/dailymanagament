@@ -49,6 +49,8 @@ export interface HealthDataDTO {
   exercises?: ExerciseInfo[];
   currentWeight?: number;
   weightHistory?: { id?: string; date: string; weight: number; note?: string }[];
+  hasHealthProfile?: boolean;
+  isBmrCalculable?: boolean;
 }
 
 // ── Finance Data Models ──
@@ -122,7 +124,7 @@ export interface StockTradeDTO {
   id: string;
   symbol: string;
   name?: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
   type: 'buy' | 'sell';
   lots: number;
   price: number;
@@ -130,6 +132,8 @@ export interface StockTradeDTO {
   date: string;       // Formatted or ISO date
   rawDate: string;    // ISO string
   notes?: string;
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   cost_basis?: number;
   total_cost?: number;
   realized_pnl?: number;
@@ -142,7 +146,9 @@ export interface StockPositionDTO {
   id: string;
   symbol: string;
   name?: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -160,6 +166,8 @@ export interface StockPositionDTO {
 export interface KnownStockDTO {
   symbol: string;
   name: string;
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   isCustom?: boolean;
 }
 
@@ -169,6 +177,7 @@ export interface StockPortfolioDTO {
   realizedTrades: StockTradeDTO[];
   allTrades: StockTradeDTO[];
   knownStocks: KnownStockDTO[];
+  activeMarkets?: string[];
   totals: {
     totalInvestedCost: number;        // Açık pozisyonlardaki toplam maliyet
     totalCurrentValue: number;         // Açık pozisyonlardaki güncel değer (varsa)

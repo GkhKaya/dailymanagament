@@ -249,3 +249,35 @@ export function getSmartPortionOptions(food: PortionFoodInput): FoodPortionOptio
 
   return options;
 }
+
+/**
+ * Translates Turkish portion names and measure units to standard English terms
+ * for global/abroad users.
+ */
+export function translatePortionNameToEn(name: string): string {
+  if (!name) return name;
+  let res = name;
+  const map: [RegExp, string][] = [
+    [/su bardağı/gi, 'cup'],
+    [/çay bardağı/gi, 'tea glass'],
+    [/yemek kaşığı/gi, 'tbsp'],
+    [/tatlı kaşığı/gi, 'dessert spoon'],
+    [/çay kaşığı/gi, 'tsp'],
+    [/porsiyon/gi, 'serving'],
+    [/dilim/gi, 'slice'],
+    [/adet/gi, 'piece'],
+    [/tane/gi, 'piece'],
+    [/kase/gi, 'bowl'],
+    [/tabak/gi, 'plate'],
+    [/bardak/gi, 'glass'],
+    [/avuç/gi, 'handful'],
+    [/yarım/gi, 'half'],
+    [/kutu/gi, 'can'],
+    [/şişe/gi, 'bottle'],
+    [/paket/gi, 'pack']
+  ];
+  for (const [re, repl] of map) {
+    res = res.replace(re, repl);
+  }
+  return res;
+}

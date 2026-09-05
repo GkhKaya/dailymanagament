@@ -4,7 +4,9 @@ export interface IStockPosition extends Document {
   user_id: string;
   symbol: string;
   name?: string;
-  asset_type: 'stock' | 'fund';
+  asset_type: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -24,7 +26,9 @@ const StockPositionSchema: Schema = new Schema({
   user_id: { type: String, ref: 'User', required: true },
   symbol: { type: String, required: true, uppercase: true, trim: true },
   name: { type: String, trim: true },
-  asset_type: { type: String, enum: ['stock', 'fund'], default: 'stock', required: true },
+  asset_type: { type: String, enum: ['stock', 'fund', 'crypto'], default: 'stock', required: true },
+  market: { type: String, enum: ['bist', 'us', 'crypto'], default: 'bist' },
+  currency: { type: String, default: 'TRY' },
   total_lots: { type: Number, required: true, default: 0 },
   average_cost: { type: Number, required: true, default: 0 },
   total_cost: { type: Number, required: true, default: 0 },

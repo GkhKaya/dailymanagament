@@ -1,9 +1,9 @@
 export type PortfolioTrend = "gain" | "loss" | "neutral";
 
-type RealizedTradeFilter = 'all' | 'stock' | 'fund';
+type RealizedTradeFilter = 'all' | 'stock' | 'fund' | 'crypto';
 type RealizedPeriodFilter = 'all' | 'week' | 'month';
 
-export function filterRealizedTrades<T extends { assetType: 'stock' | 'fund'; rawDate: string; created_at?: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()) {
+export function filterRealizedTrades<T extends { assetType?: string; rawDate: string; created_at?: string }>(trades: T[], assetFilter: RealizedTradeFilter, period: RealizedPeriodFilter, now = new Date()): T[] {
   const start = new Date(now);
   if (period === 'week') {
     const dayOfWeek = start.getDay() || 7;
@@ -41,9 +41,21 @@ export function getPortfolioPerformance(currentValue: number, investedCost: numb
   };
 }
 
-export function formatStockCurrency(value: number) {
-  return `${value.toLocaleString("tr-TR", {
+export function getStockCurrencySymbol(currency: string = 'TRY'): string {
+  return currency === 'USD' ? '$' : '₺';
+}
+
+export function formatStockCurrency(value: number, currency: string = 'TRY') {
+  const safeVal = isNaN(value) ? 0 : value;
+  if (currency === 'USD') {
+    return `$${safeVal.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  return `${safeVal.toLocaleString("tr-TR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })} ₺`;
 }
+

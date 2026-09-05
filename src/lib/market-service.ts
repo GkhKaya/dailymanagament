@@ -1,18 +1,23 @@
 /**
- * Market Service for Borsa İstanbul (BIST) Stocks and TEFAS Mutual Funds
+ * Market Service for Multi-Exchange Assets:
+ * 1. Borsa İstanbul (BIST) Stocks & TEFAS Mutual Funds (TRY)
+ * 2. US Stock Market: NASDAQ / NYSE (USD)
+ * 3. Cryptocurrency: Major Crypto Assets (USD)
  * 
  * Sources:
- * 1. BIST & Global Stocks: Yahoo Finance Chart API (Free, real-time delayed, no API key required)
- * 2. TEFAS Funds: Official TEFAS JSON API (tefas.gov.tr/api/funds/fonFiyatBilgiGetir)
- * 3. BIST Company Directory: Official KAP BIST member list (800+ companies)
+ * - Stocks & Crypto: Yahoo Finance Chart API (Opening & closing reference data)
+ * - TEFAS Funds: Official TEFAS JSON API (Daily valuation)
  */
 
 import { BIST_COMPANIES, BistCompany } from './bist-directory';
+import { POPULAR_US_STOCKS, POPULAR_CRYPTO_ASSETS, MarketAsset } from './us-crypto-directory';
 
 export interface MarketQuote {
   symbol: string;
   name?: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
+  market?: 'bist' | 'us' | 'crypto';
+  currency?: string;
   currentPrice: number;
   openPrice: number;
   closePrice: number;
@@ -54,154 +59,251 @@ export function getBistDirectory(): BistCompany[] {
 }
 
 /**
- * Search the comprehensive BIST directory and known funds by query
+ * Search across active markets (BIST, US Stocks, Crypto, TEFAS)
  */
-export function searchBistDirectory(query: string, limit = 40): Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' }> {
-  if (!query || !query.trim()) {
-    // Return top popular stocks
-    return bistList.slice(0, limit).map(item => ({
-      symbol: item.symbol,
-      name: item.name,
-      assetType: 'stock' as const,
-    }));
-  }
+export function searchMultiMarketAssets(
+  query: string,
+  activeMarkets: string[] = ['bist', 'us', 'crypto'],
+  limit = 40
+): Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' | 'crypto'; market: 'bist' | 'us' | 'crypto'; currency: 'TRY' | 'USD' }> {
+  const cleanQuery = query ? query.trim().toUpperCase() : '';
+  const cleanQueryLower = query ? query.trim().toLowerCase() : '';
+  const results: Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' | 'crypto'; market: 'bist' | 'us' | 'crypto'; currency: 'TRY' | 'USD'; score: number }> = [];
 
-  const cleanQuery = query.trim().toUpperCase();
-  const cleanQueryLower = query.trim().toLowerCase();
+  const includeBist = activeMarkets.length === 0 || activeMarkets.includes('bist');
+  const includeUs = activeMarkets.length === 0 || activeMarkets.includes('us');
+  const includeCrypto = activeMarkets.length === 0 || activeMarkets.includes('crypto');
 
-  const results: Array<{ symbol: string; name: string; assetType: 'stock' | 'fund'; score: number }> = [];
-
-  // 1. Search in known TEFAS funds
-  for (const [code, title] of Object.entries(POPULAR_TEFAS_FUNDS)) {
-    if (code.includes(cleanQuery) || title.toLowerCase().includes(cleanQueryLower)) {
-      const isExact = code === cleanQuery;
-      const isPrefix = code.startsWith(cleanQuery);
-      results.push({
-        symbol: code,
-        name: title,
-        assetType: 'fund',
-        score: isExact ? 100 : isPrefix ? 80 : 50,
-      });
+  // 1. Crypto
+  if (includeCrypto) {
+    for (const c of POPULAR_CRYPTO_ASSETS) {
+      if (!cleanQuery) {
+        results.push({ ...c, assetType: 'crypto', score: 10 });
+      } else if (c.symbol.includes(cleanQuery) || c.name.toLowerCase().includes(cleanQueryLower)) {
+        const isExact = c.symbol === cleanQuery;
+        const isPrefix = c.symbol.startsWith(cleanQuery);
+        results.push({ ...c, assetType: 'crypto', score: isExact ? 110 : isPrefix ? 90 : 50 });
+      }
     }
   }
 
-  // 2. Search in 800+ BIST companies
-  for (const item of bistList) {
-    const sym = item.symbol.toUpperCase();
-    const nameLower = item.name.toLowerCase();
-
-    if (sym.includes(cleanQuery) || nameLower.includes(cleanQueryLower)) {
-      const isExact = sym === cleanQuery;
-      const isPrefix = sym.startsWith(cleanQuery);
-      results.push({
-        symbol: sym,
-        name: item.name,
-        assetType: 'stock',
-        score: isExact ? 100 : isPrefix ? 80 : 40,
-      });
+  // 2. US Stocks
+  if (includeUs) {
+    for (const s of POPULAR_US_STOCKS) {
+      if (!cleanQuery) {
+        results.push({ ...s, assetType: 'stock', score: 10 });
+      } else if (s.symbol.includes(cleanQuery) || s.name.toLowerCase().includes(cleanQueryLower)) {
+        const isExact = s.symbol === cleanQuery;
+        const isPrefix = s.symbol.startsWith(cleanQuery);
+        results.push({ ...s, assetType: 'stock', score: isExact ? 105 : isPrefix ? 85 : 45 });
+      }
     }
   }
 
-  // Sort by match score then by symbol
+  // 3. TEFAS Funds & BIST Stocks
+  if (includeBist) {
+    for (const [code, title] of Object.entries(POPULAR_TEFAS_FUNDS)) {
+      if (!cleanQuery) {
+        results.push({ symbol: code, name: title, assetType: 'fund', market: 'bist', currency: 'TRY', score: 5 });
+      } else if (code.includes(cleanQuery) || title.toLowerCase().includes(cleanQueryLower)) {
+        const isExact = code === cleanQuery;
+        const isPrefix = code.startsWith(cleanQuery);
+        results.push({ symbol: code, name: title, assetType: 'fund', market: 'bist', currency: 'TRY', score: isExact ? 100 : isPrefix ? 80 : 40 });
+      }
+    }
+
+    for (const item of bistList) {
+      const sym = item.symbol.toUpperCase();
+      const nameLower = item.name.toLowerCase();
+      if (!cleanQuery) {
+        if (results.length < limit) {
+          results.push({ symbol: sym, name: item.name, assetType: 'stock', market: 'bist', currency: 'TRY', score: 5 });
+        }
+      } else if (sym.includes(cleanQuery) || nameLower.includes(cleanQueryLower)) {
+        const isExact = sym === cleanQuery;
+        const isPrefix = sym.startsWith(cleanQuery);
+        results.push({ symbol: sym, name: item.name, assetType: 'stock', market: 'bist', currency: 'TRY', score: isExact ? 100 : isPrefix ? 80 : 40 });
+      }
+    }
+  }
+
   results.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     return a.symbol.localeCompare(b.symbol);
   });
 
-  return results.slice(0, limit).map(({ symbol, name, assetType }) => ({ symbol, name, assetType }));
+  return results.slice(0, limit).map(({ symbol, name, assetType, market, currency }) => ({ symbol, name, assetType, market, currency }));
 }
 
 /**
- * Fetch quote for a BIST or Global stock via Yahoo Finance
+ * Backward-compatible search BIST directory
  */
-export async function fetchStockQuote(symbol: string): Promise<MarketQuote | null> {
+export function searchBistDirectory(query: string, limit = 40): Array<{ symbol: string; name: string; assetType: 'stock' | 'fund' }> {
+  return searchMultiMarketAssets(query, ['bist'], limit).map(item => ({
+    symbol: item.symbol,
+    name: item.name,
+    assetType: item.assetType === 'fund' ? 'fund' : 'stock'
+  }));
+}
+
+/**
+ * Fetch quote for a BIST, US, or Crypto asset via Yahoo Finance
+ */
+export async function fetchStockQuote(symbol: string, marketHint?: 'bist' | 'us' | 'crypto'): Promise<MarketQuote | null> {
   const cleanSymbol = symbol.trim().toUpperCase();
   if (!cleanSymbol) return null;
 
-  const cacheKey = `stock:${cleanSymbol}`;
+  const cacheKey = `quote:${cleanSymbol}`;
   const cached = quoteCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.quote;
   }
 
-  // Determine Yahoo symbol: if Turkish stock without dot, append .IS
-  const isGlobalStock = ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'AMZN', 'GOOGL', 'META'].includes(cleanSymbol);
-  const yahooSymbol = isGlobalStock || cleanSymbol.includes('.') ? cleanSymbol : `${cleanSymbol}.IS`;
+  let isCrypto = marketHint === 'crypto' || POPULAR_CRYPTO_ASSETS.some(c => c.symbol === cleanSymbol) || cleanSymbol.endsWith('-USD');
+  let isUsStock = marketHint === 'us' || POPULAR_US_STOCKS.some(s => s.symbol === cleanSymbol);
+  let isBist = marketHint === 'bist' || BIST_COMPANIES.some(b => b.symbol === cleanSymbol);
 
-  try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=1d&range=5d`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-        },
-        next: { revalidate: 300 }, // 5 mins cache in Next.js
-      }
-    );
-
-    if (!res.ok) {
-      return null;
-    }
-
-    const json = await res.json();
-    const result = json.chart?.result?.[0];
-    if (!result) return null;
-
-    const meta = result.meta;
-    const quotes = result.indicators?.quote?.[0];
-
-    const validCloses: number[] = quotes?.close
-      ? quotes.close.filter((v: any): v is number => typeof v === 'number' && v > 0)
-      : [];
-    const validOpens: number[] = quotes?.open
-      ? quotes.open.filter((v: any): v is number => typeof v === 'number' && v > 0)
-      : [];
-
-    const currentPrice = Number(meta.regularMarketPrice) || (validCloses.length > 0 ? validCloses[validCloses.length - 1] : 0);
-    if (currentPrice <= 0) return null;
-
-    // Get today's open price from latest candle open or meta
-    let openPrice = validOpens.length > 0 ? validOpens[validOpens.length - 1] : (Number(meta.regularMarketOpen) || currentPrice);
-    if (openPrice <= 0) openPrice = currentPrice;
-
-    // Get previous day's close (dünkü kapanış referansı):
-    // If validCloses has at least 2 entries, the second-to-last is yesterday's close
-    let closePrice = 0;
-    if (validCloses.length >= 2) {
-      closePrice = validCloses[validCloses.length - 2];
-    } else if (typeof meta.fulldayChange === 'number' && meta.fulldayChange !== 0) {
-      closePrice = currentPrice - meta.fulldayChange;
-    } else if (Number(meta.previousClose) > 0) {
-      closePrice = Number(meta.previousClose);
-    }
-    if (closePrice <= 0) closePrice = openPrice;
-
-    // Calculate percent change against previous close
-    let dayChangePercent = Number(meta.regularMarketChangePercent) || 0;
-    if ((dayChangePercent === 0 || !Number.isFinite(dayChangePercent)) && closePrice > 0) {
-      dayChangePercent = Math.round(((currentPrice - closePrice) / closePrice) * 10000) / 100;
-    }
-
-    const quote: MarketQuote = {
-      symbol: cleanSymbol,
-      name: meta.longName || meta.shortName || undefined,
-      assetType: 'stock',
-      currentPrice: Math.round(currentPrice * 100) / 100,
-      openPrice: Math.round(openPrice * 100) / 100,
-      closePrice: Math.round(closePrice * 100) / 100,
-      dayChangePercent: Math.round(dayChangePercent * 100) / 100,
-      dayHigh: meta.regularMarketDayHigh ? Math.round(Number(meta.regularMarketDayHigh) * 100) / 100 : undefined,
-      dayLow: meta.regularMarketDayLow ? Math.round(Number(meta.regularMarketDayLow) * 100) / 100 : undefined,
-      updatedAt: new Date(),
-    };
-
-    quoteCache.set(cacheKey, { quote, expiresAt: Date.now() + CACHE_TTL_MS });
-    return quote;
-  } catch (error) {
-    console.error(`fetchStockQuote error for ${cleanSymbol}:`, error);
-    return null;
+  let yahooSymbol = cleanSymbol;
+  if (isCrypto) {
+    yahooSymbol = cleanSymbol.includes('-') ? cleanSymbol : `${cleanSymbol}-USD`;
+  } else if (isBist) {
+    yahooSymbol = cleanSymbol.includes('.') ? cleanSymbol : `${cleanSymbol}.IS`;
+  } else if (!isUsStock) {
+    yahooSymbol = cleanSymbol.includes('.') ? cleanSymbol : (cleanSymbol.length >= 4 && !cleanSymbol.includes('-') ? `${cleanSymbol}.IS` : cleanSymbol);
   }
+
+  const fetchYahoo = async (ticker: string) => {
+    const urls = [
+      `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`,
+    ];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+          },
+          next: { revalidate: 300 },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.chart?.result?.[0]) {
+            return json.chart.result[0];
+          }
+        }
+      } catch {
+        // try next
+      }
+    }
+    return null;
+  };
+
+  let result = await fetchYahoo(yahooSymbol);
+  if (!result && yahooSymbol.endsWith('.IS')) {
+    yahooSymbol = cleanSymbol;
+    result = await fetchYahoo(yahooSymbol);
+    if (result) {
+      isUsStock = true;
+      isBist = false;
+    }
+  }
+  if (!result && !yahooSymbol.includes('-')) {
+    const cryptoSym = `${cleanSymbol}-USD`;
+    result = await fetchYahoo(cryptoSym);
+    if (result) {
+      yahooSymbol = cryptoSym;
+      isCrypto = true;
+      isUsStock = false;
+    }
+  }
+
+  // Binance Fallback for crypto assets
+  if (!result && isCrypto) {
+    try {
+      const binanceRes = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${cleanSymbol}USDT`);
+      if (binanceRes.ok) {
+        const bData = await binanceRes.json();
+        const curPrice = parseFloat(bData.lastPrice);
+        const prevClose = parseFloat(bData.prevClosePrice) || parseFloat(bData.openPrice) || curPrice;
+        const openPr = parseFloat(bData.openPrice) || prevClose;
+        const changePct = parseFloat(bData.priceChangePercent) || 0;
+        if (curPrice > 0) {
+          const cryptoQuote: MarketQuote = {
+            symbol: cleanSymbol,
+            name: POPULAR_CRYPTO_ASSETS.find(c => c.symbol === cleanSymbol)?.name || cleanSymbol,
+            assetType: 'crypto',
+            market: 'crypto',
+            currency: 'USD',
+            currentPrice: Math.round(curPrice * 100) / 100,
+            openPrice: Math.round(openPr * 100) / 100,
+            closePrice: Math.round(prevClose * 100) / 100,
+            dayChangePercent: Math.round(changePct * 100) / 100,
+            updatedAt: new Date(),
+          };
+          quoteCache.set(cacheKey, { quote: cryptoQuote, expiresAt: Date.now() + CACHE_TTL_MS });
+          return cryptoQuote;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!result) return null;
+
+  const meta = result.meta;
+  const quotes = result.indicators?.quote?.[0];
+
+  const validCloses: number[] = quotes?.close
+    ? quotes.close.filter((v: any): v is number => typeof v === 'number' && v > 0)
+    : [];
+  const validOpens: number[] = quotes?.open
+    ? quotes.open.filter((v: any): v is number => typeof v === 'number' && v > 0)
+    : [];
+
+  const currentPrice = Number(meta.regularMarketPrice) || (validCloses.length > 0 ? validCloses[validCloses.length - 1] : 0);
+  if (currentPrice <= 0) return null;
+
+  let openPrice = validOpens.length > 0 ? validOpens[validOpens.length - 1] : (Number(meta.regularMarketOpen) || currentPrice);
+  if (openPrice <= 0) openPrice = currentPrice;
+
+  let closePrice = 0;
+  if (validCloses.length >= 2) {
+    closePrice = validCloses[validCloses.length - 2];
+  } else if (typeof meta.chartPreviousClose === 'number' && meta.chartPreviousClose > 0) {
+    closePrice = meta.chartPreviousClose;
+  } else if (Number(meta.previousClose) > 0) {
+    closePrice = Number(meta.previousClose);
+  }
+  if (closePrice <= 0) closePrice = openPrice;
+
+  let dayChangePercent = Number(meta.regularMarketChangePercent) || 0;
+  if ((dayChangePercent === 0 || !Number.isFinite(dayChangePercent)) && closePrice > 0) {
+    dayChangePercent = Math.round(((currentPrice - closePrice) / closePrice) * 10000) / 100;
+  }
+
+  const detectedMarket: 'bist' | 'us' | 'crypto' = isCrypto ? 'crypto' : isUsStock ? 'us' : (meta.currency === 'TRY' ? 'bist' : 'us');
+  const detectedAssetType: 'stock' | 'fund' | 'crypto' = isCrypto ? 'crypto' : 'stock';
+  const currency = meta.currency || (detectedMarket === 'bist' ? 'TRY' : 'USD');
+
+  const quote: MarketQuote = {
+    symbol: cleanSymbol,
+    name: meta.longName || meta.shortName || undefined,
+    assetType: detectedAssetType,
+    market: detectedMarket,
+    currency,
+    currentPrice: Math.round(currentPrice * 100) / 100,
+    openPrice: Math.round(openPrice * 100) / 100,
+    closePrice: Math.round(closePrice * 100) / 100,
+    dayChangePercent: Math.round(dayChangePercent * 100) / 100,
+    dayHigh: meta.regularMarketDayHigh ? Math.round(Number(meta.regularMarketDayHigh) * 100) / 100 : undefined,
+    dayLow: meta.regularMarketDayLow ? Math.round(Number(meta.regularMarketDayLow) * 100) / 100 : undefined,
+    updatedAt: new Date(),
+  };
+
+  quoteCache.set(cacheKey, { quote, expiresAt: Date.now() + CACHE_TTL_MS });
+  return quote;
 }
 
 /**
@@ -232,7 +334,7 @@ export async function fetchTefasFundQuote(fundCode: string): Promise<MarketQuote
         dil: 'TR',
         periyod: 1,
       }),
-      next: { revalidate: 600 }, // 10 mins cache
+      next: { revalidate: 600 },
     });
 
     if (!res.ok) {
@@ -264,7 +366,9 @@ export async function fetchTefasFundQuote(fundCode: string): Promise<MarketQuote
       symbol: cleanCode,
       name: latest.fonUnvan || POPULAR_TEFAS_FUNDS[cleanCode] || undefined,
       assetType: 'fund',
-      currentPrice: currentPrice,
+      market: 'bist',
+      currency: 'TRY',
+      currentPrice,
       openPrice: previousPrice,
       closePrice: currentPrice,
       dayChangePercent,
@@ -284,7 +388,8 @@ export async function fetchTefasFundQuote(fundCode: string): Promise<MarketQuote
  */
 export async function fetchMarketQuote(
   symbol: string,
-  assetType?: 'stock' | 'fund'
+  assetType?: 'stock' | 'fund' | 'crypto',
+  marketHint?: 'bist' | 'us' | 'crypto'
 ): Promise<MarketQuote | null> {
   const cleanSymbol = symbol.trim().toUpperCase();
   if (!cleanSymbol) return null;
@@ -295,8 +400,8 @@ export async function fetchMarketQuote(
     if (fundQuote) return fundQuote;
   }
 
-  // 2. Otherwise try stock quote via Yahoo Finance
-  const stockQuote = await fetchStockQuote(cleanSymbol);
+  // 2. Otherwise fetch via Yahoo Finance (supports BIST, US, and Crypto)
+  const stockQuote = await fetchStockQuote(cleanSymbol, marketHint);
   if (stockQuote) return stockQuote;
 
   // 3. Fallback: If 3-character ticker and stock failed, test TEFAS

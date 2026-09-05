@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus, Utensils, Activity, DollarSign, X, Camera } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DashboardMode } from "@/models/DashboardTypes";
 
 interface FABMenuProps {
@@ -11,6 +11,7 @@ interface FABMenuProps {
 }
 
 export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -52,7 +53,7 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
           onClick={() => handleAction('aiPhotoMeal')}
           className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-md text-emerald-400 px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
         >
-          <span className="font-semibold text-sm">AI Fotoğrafla Yemek Ekle</span>
+          <span className="font-semibold text-sm">{t("dashboard.fab.aiPhotoMeal")}</span>
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
             <Camera size={16} />
           </div>

@@ -1,10 +1,16 @@
+"use client";
+
 import { t } from '@/lib/i18n';
 import React from 'react';
 import { Search } from 'lucide-react';
 import { useEditMealViewModel } from '@/viewmodels/useEditMealViewModel';
+import { useTranslation } from '@/hooks/useTranslation';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () => void, onSuccess?: () => void, initialData?: any }) {
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+
   const {
     mealType, setMealType,
     foodName, setFoodName,
@@ -24,17 +30,18 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
       {/* Öğün Seçimi */}
       <div className="grid grid-cols-2 gap-2">
         {[
-          { id: 'breakfast', label: 'Kahvaltı' },
-          { id: 'lunch', label: 'Öğle' },
-          { id: 'dinner', label: 'Akşam' },
-          { id: 'snack', label: 'Atıştırmalık' }
+          { id: 'breakfast', label: 'Kahvaltı', labelEn: 'Breakfast' },
+          { id: 'lunch', label: 'Öğle', labelEn: 'Lunch' },
+          { id: 'dinner', label: 'Akşam', labelEn: 'Dinner' },
+          { id: 'snack', label: 'Atıştırmalık', labelEn: 'Snack' }
         ].map(m => (
           <button 
             key={m.id}
+            type="button"
             onClick={() => setMealType(m.id as any)}
-            className={`py-3 text-center rounded-2xl text-body font-medium transition-all ${mealType === m.id ? 'bg-[var(--primary)] text-black shadow-sm' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
+            className={`py-3 text-center rounded-2xl text-body font-medium transition-all cursor-pointer ${mealType === m.id ? 'bg-[var(--primary)] text-black shadow-sm' : 'bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white'}`}
           >
-            {m.label}
+            {isEn ? m.labelEn : m.label}
           </button>
         ))}
       </div>
@@ -47,7 +54,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={20} />
             <input 
               type="text" 
-              placeholder="Besin, marka veya yemek..." 
+              placeholder={isEn ? "Food, brand or meal..." : "Besin, marka veya yemek..."} 
               value={foodName}
               onChange={(e) => setFoodName(e.target.value)}
               className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-12 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
@@ -71,14 +78,14 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
             <select 
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none"
+              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none cursor-pointer"
             >
-              <option value="portion">Porsiyon</option>
-              <option value="gram">Gram</option>
-              <option value="piece">Adet</option>
-              <option value="ml">Mililitre</option>
-              <option value="bardak">Bardak</option>
-              <option value="tabak">Tabak</option>
+              <option value="portion">{isEn ? "Portion" : "Porsiyon"}</option>
+              <option value="gram">{isEn ? "Gram" : "Gram"}</option>
+              <option value="piece">{isEn ? "Piece" : "Adet"}</option>
+              <option value="ml">{isEn ? "Milliliter" : "Mililitre"}</option>
+              <option value="bardak">{isEn ? "Glass" : "Bardak"}</option>
+              <option value="tabak">{isEn ? "Plate" : "Tabak"}</option>
             </select>
           </div>
         </div>
@@ -100,7 +107,9 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
 
           {/* Canlı Makro Kartları (Protein, Karbonhidrat, Yağ) */}
           <div className="flex flex-col gap-2">
-            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">Makro Besin Değerleri</label>
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? "Macronutrients" : "Makro Besin Değerleri"}
+            </label>
             <div className="grid grid-cols-3 gap-2">
               {/* Protein */}
               <div className="flex flex-col p-3 bg-[#161622] border border-[#4ade80]/25 rounded-xl">
@@ -119,7 +128,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
 
               {/* Karbonhidrat */}
               <div className="flex flex-col p-3 bg-[#161622] border border-[#60a5fa]/25 rounded-xl">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#60a5fa]">Karb</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#60a5fa]">{isEn ? "Carbs" : "Karb"}</span>
                 <div className="flex items-center justify-between mt-1">
                   <input
                     type="number"
@@ -134,7 +143,7 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
 
               {/* Yağ */}
               <div className="flex flex-col p-3 bg-[#161622] border border-[#facc15]/25 rounded-xl">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#facc15]">Yağ</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#facc15]">{isEn ? "Fat" : "Yağ"}</span>
                 <div className="flex items-center justify-between mt-1">
                   <input
                     type="number"
@@ -151,14 +160,12 @@ export function EditMealForm({ onClose, onSuccess, initialData }: { onClose: () 
         </div>
       </div>
 
-      
-
       <div className="mt-4 flex flex-col gap-3">
-        <button onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors">
-          {isLoading ? <LoadingSpinner size="sm" /> : "Değişiklikleri Kaydet"}
+        <button type="button" onClick={handleUpdate} disabled={isLoading} className="w-full flex items-center justify-center py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors cursor-pointer disabled:opacity-50">
+          {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? "Save Changes" : "Değişiklikleri Kaydet")}
         </button>
-        <button onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors">
-          Yemeği Sil
+        <button type="button" onClick={handleDelete} disabled={isLoading} className="w-full py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-medium transition-colors cursor-pointer disabled:opacity-50">
+          {isEn ? "Delete Meal" : "Yemeği Sil"}
         </button>
       </div>
     </div>

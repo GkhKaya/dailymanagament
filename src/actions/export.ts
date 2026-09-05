@@ -106,7 +106,7 @@ export interface FinanceExportData {
 export interface StocksExportPosition {
   symbol: string;
   name: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
   total_lots: number;
   average_cost: number;
   total_cost: number;
@@ -120,7 +120,7 @@ export interface StocksExportTrade {
   date: string;
   symbol: string;
   name: string;
-  assetType: 'stock' | 'fund';
+  assetType: 'stock' | 'fund' | 'crypto';
   type: 'buy' | 'sell';
   lots: number;
   price: number;

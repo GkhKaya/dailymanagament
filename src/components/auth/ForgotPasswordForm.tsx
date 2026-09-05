@@ -4,10 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useForgotPasswordViewModel } from "@/viewmodels/useForgotPasswordViewModel";
 
 export function ForgotPasswordForm() {
+  const { t } = useTranslation();
   const {
     email,
     setEmail,
@@ -41,7 +42,7 @@ export function ForgotPasswordForm() {
       )}
 
       <Button type="submit" withArrow disabled={loading || success}>
-        {loading ? "Gönderiliyor..." : t("auth.resetPasswordButton")}
+        {loading ? t("auth.sending") : t("auth.resetPasswordButton")}
       </Button>
 
       {/* Giriş Ekranına Dön */}

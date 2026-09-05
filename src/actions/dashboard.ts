@@ -24,16 +24,12 @@ async function getSession() {
 
 export async function getHealthDataAction(dateString: string): Promise<{ success: boolean; data?: HealthDataDTO; error?: string }> {
   try {
-    const start = Date.now();
-    console.log(`[getHealthDataAction] Starting for date: ${dateString}`);
     const session = await getSession();
     if (!session || !session.user) {
       return { success: false, error: "Unauthorized" };
     }
 
-    console.log(`[getHealthDataAction] Session retrieved. Connecting to DB... (${Date.now() - start}ms)`);
     await connectDB();
-    console.log(`[getHealthDataAction] DB Connected. Starting queries... (${Date.now() - start}ms)`);
     const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
     
     // Parse target date and set boundaries
@@ -55,7 +51,15 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         date: { $gte: thirtyDaysAgo, $lte: targetDateEnd }
       }).sort({ date: 1 }).lean()
     ]);
-    console.log(`[getHealthDataAction] DB queries finished. (${Date.now() - start}ms)`);
+
+    const hasHealthProfile = Boolean(
+      user?.current_weight_kg && 
+      user.current_weight_kg > 0 && 
+      user?.profile?.height_cm && 
+      user.profile.height_cm > 0 &&
+      user?.profile?.birth_date
+    );
+    const isBmrCalculable = hasHealthProfile;
 
     // Calculate Dynamic Target Calories
     let targetCalories = user?.settings?.daily_calorie_goal || 2400;
@@ -140,7 +144,9 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
           meals: [],
           exercises: [],
           currentWeight: user?.current_weight_kg || 0,
-          weightHistory
+          weightHistory,
+          hasHealthProfile,
+          isBmrCalculable
         }
       };
     }
@@ -230,7 +236,9 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
         meals,
         exercises: mappedExercises,
         currentWeight: user?.current_weight_kg || 0,
-        weightHistory
+        weightHistory,
+        hasHealthProfile,
+        isBmrCalculable
       }
     };
   } catch (e: unknown) {
@@ -242,16 +250,12 @@ export async function getHealthDataAction(dateString: string): Promise<{ success
 
 export async function getFinanceDataAction(): Promise<{ success: boolean; data?: FinanceDataDTO; error?: string }> {
   try {
-    const start = Date.now();
-    console.log(`[getFinanceDataAction] Starting...`);
     const session = await getSession();
     if (!session || !session.user) {
       return { success: false, error: "Unauthorized" };
     }
 
-    console.log(`[getFinanceDataAction] Session retrieved. Connecting to DB... (${Date.now() - start}ms)`);
     await connectDB();
-    console.log(`[getFinanceDataAction] DB Connected. Starting queries... (${Date.now() - start}ms)`);
     const userId = session.user.id; // User._id is String in schema — do NOT cast to ObjectId
 
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -276,7 +280,6 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         { $group: { _id: "$type", total: { $sum: "$amount" } } }
       ])
     ]);
-    console.log(`[getFinanceDataAction] DB queries finished. (${Date.now() - start}ms)`);
 
     let totalBalance = 0;
     const accounts = (accountsRaw || []).map((acc: any) => {

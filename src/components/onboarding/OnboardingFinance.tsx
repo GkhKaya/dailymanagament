@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import { ArrowRight, SkipForward, Wallet } from 'lucide-react';
 import { AddAccountForm } from '../forms/AddAccountForm';
 import { ManageSubscriptionsForm } from '../forms/ManageSubscriptionsForm';
@@ -6,14 +8,17 @@ import { ManageDebtsForm } from '../forms/ManageDebtsForm';
 import { ManageCategoriesForm } from '../forms/ManageCategoriesForm';
 import { getCategoriesAction } from '@/actions/finance';
 import { getFinanceDataAction } from '@/actions/dashboard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewModel: ReturnType<typeof import("@/viewmodels/useOnboardingViewModel").useOnboardingViewModel>, initialCategories?: { id: string, name: string, type: string, icon: string }[] }) {
-  const { skipFinance, finishOnboarding } = viewModel;
+  const { finishOnboarding } = viewModel;
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
   
   // Local step for finance
   const [financeStep, setFinanceStep] = useState<'account' | 'debt' | 'category'>('account');
   const [categories, setCategories] = useState<any[]>(initialCategories);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [isLoadingCategories] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [debts, setDebts] = useState<any[]>([]);
@@ -29,11 +34,9 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
   const handleNext = () => {
     if (financeStep === 'account') setFinanceStep('debt');
     else if (financeStep === 'debt') setFinanceStep('category');
-    else finishOnboarding();
+    else viewModel.setCurrentStep('markets');
   };
 
-  // Re-fetch when transitioning to the category step just in case user added custom categories 
-  // Wait, user adds custom categories inside ManageCategoriesForm, and that form refreshes via onSuccess.
   const handleCategorySuccess = async () => {
     const res = await getCategoriesAction();
     if (res.success && res.categories) setCategories(res.categories);
@@ -46,12 +49,16 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
           <Wallet size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-white">
-            {financeStep === 'account' ? 'Hesaplarınızı Ekleyin' : 
-             financeStep === 'debt' ? 'Abonelik ve Borçlar' : 
-             'Kategoriler'}
+          <h2 suppressHydrationWarning className="text-2xl font-bold text-white">
+            {financeStep === 'account' 
+              ? (isEn ? 'Add Your Accounts' : 'Hesaplarınızı Ekleyin')
+              : financeStep === 'debt' 
+                ? (isEn ? 'Subscriptions & Debts' : 'Abonelik ve Borçlar')
+                : (isEn ? 'Categories' : 'Kategoriler')}
           </h2>
-          <p className="text-sm text-[var(--on-surface-variant)]">Finansal durumunuzu şekillendirelim.</p>
+          <p suppressHydrationWarning className="text-sm text-[var(--on-surface-variant)]">
+            {isEn ? "Let's configure your financial profile." : 'Finansal durumunuzu şekillendirelim.'}
+          </p>
         </div>
       </div>
 
@@ -59,23 +66,31 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
         {financeStep === 'account' && (
           <div className="flex flex-col gap-6">
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-              <p className="text-sm text-[var(--on-surface-variant)] mb-6">Maaş hesabınızı, nakit cüzdanınızı veya kredi kartınızı ekleyerek başlayın.</p>
+              <p className="text-sm text-[var(--on-surface-variant)] mb-6">
+                {isEn 
+                  ? 'Start by adding your salary account, cash wallet, or credit card.'
+                  : 'Maaş hesabınızı, nakit cüzdanınızı veya kredi kartınızı ekleyerek başlayın.'}
+              </p>
               <AddAccountForm 
                 onClose={() => {}} 
                 onSuccess={(id, name) => {
-                  setCreatedAccounts(prev => [...prev, { id: id || Date.now().toString(), name: name || "Yeni Hesap", type: "bank" }]);
+                  setCreatedAccounts(prev => [...prev, { id: id || Date.now().toString(), name: name || (isEn ? "New Account" : "Yeni Hesap"), type: "bank" }]);
                 }} 
               />
             </div>
             
             {createdAccounts.length > 0 && (
               <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                <h3 className="text-lg font-bold text-white mb-4">Eklenen Hesaplar</h3>
+                <h3 className="text-lg font-bold text-white mb-4">
+                  {isEn ? 'Added Accounts' : 'Eklenen Hesaplar'}
+                </h3>
                 <div className="flex flex-col gap-3">
                   {createdAccounts.map((acc, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
                       <Wallet size={18} className="text-[var(--primary)]" />
-                      <span className="text-body text-white font-medium">{acc.name} eklendi</span>
+                      <span className="text-body text-white font-medium">
+                        {acc.name} {isEn ? 'added' : 'eklendi'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -87,12 +102,16 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
         {financeStep === 'debt' && (
           <div className="flex flex-col gap-8">
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-              <h3 className="text-lg font-bold text-white mb-4">Abonelik Ekle</h3>
+              <h3 className="text-lg font-bold text-white mb-4">
+                {isEn ? 'Add Subscription' : 'Abonelik Ekle'}
+              </h3>
               <ManageSubscriptionsForm onClose={() => {}} onSuccess={handleFinanceSuccess} subscriptions={subscriptions} categories={categories} accounts={createdAccounts} />
             </div>
             
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-              <h3 className="text-lg font-bold text-white mb-4">Borç Ekle</h3>
+              <h3 className="text-lg font-bold text-white mb-4">
+                {isEn ? 'Add Debt / Receivable' : 'Borç Ekle'}
+              </h3>
               <ManageDebtsForm onClose={() => {}} onSuccess={handleFinanceSuccess} debts={debts} />
             </div>
           </div>
@@ -100,7 +119,11 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
 
         {financeStep === 'category' && (
           <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
-            <p className="text-sm text-[var(--on-surface-variant)] mb-6">Varsayılan kategorilerimize ek olarak kendi özel kategorilerinizi oluşturabilirsiniz.</p>
+            <p className="text-sm text-[var(--on-surface-variant)] mb-6">
+              {isEn 
+                ? 'In addition to default categories, you can create your custom categories.'
+                : 'Varsayılan kategorilerimize ek olarak kendi özel kategorilerinizi oluşturabilirsiniz.'}
+            </p>
             <ManageCategoriesForm onClose={() => {}} onSuccess={handleCategorySuccess} categories={categories} isLoadingCategories={isLoadingCategories} />
           </div>
         )}
@@ -108,17 +131,23 @@ export function OnboardingFinance({ viewModel, initialCategories = [] }: { viewM
 
       <div className="flex gap-4 mt-auto pt-4 border-t border-white/10">
         <button 
+          type="button"
           onClick={handleNext}
-          className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors flex items-center justify-center gap-2"
+          className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
           <SkipForward size={18} />
-          <span>Atla</span>
+          <span>{isEn ? 'Skip' : 'Atla'}</span>
         </button>
         <button 
+          type="button"
           onClick={handleNext}
-          className="flex-1 py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>{financeStep === 'category' ? 'Kurulumu Tamamla' : 'Sonraki Adım'}</span>
+          <span>
+            {financeStep === 'category' 
+              ? (isEn ? 'Next: Markets' : 'Sonraki: Piyasalar') 
+              : (isEn ? 'Next Step' : 'Sonraki Adım')}
+          </span>
           <ArrowRight size={20} />
         </button>
       </div>

@@ -3,6 +3,8 @@
 import React from "react";
 import dynamic from 'next/dynamic';
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { useTranslation } from "@/hooks/useTranslation";
+import { isAbroad } from "@/lib/i18n";
 
 // Performans optimizasyonu: Ağır formları sadece ihtiyaç anında (tıklandığında) yüklenecek şekilde (Lazy Load) ayırıyoruz.
 const AddTransactionForm = dynamic(() => import("@/components/forms/AddTransactionForm").then(m => m.AddTransactionForm), { ssr: false });
@@ -47,6 +49,14 @@ export function DashboardSheetManager({
   currentDate
 }: DashboardSheetManagerProps) {
   
+  const { locale, isAbroad: abroadFromHook } = useTranslation();
+  const [userAbroad, setUserAbroad] = React.useState(false);
+
+  React.useEffect(() => {
+    setUserAbroad(isAbroad());
+  }, []);
+
+  const isEn = abroadFromHook || locale === 'en' || userAbroad || isAbroad();
   const localDateStr = new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   if (activeSheet === 'aiPhotoMeal') {
@@ -110,21 +120,21 @@ export function DashboardSheetManager({
 
   const getSheetTitle = () => {
     switch (activeSheet) {
-      case 'transaction': return 'Gelir / Gider Ekle';
-      case 'edit-transaction': return 'İşlemi Düzenle';
-      case 'meal': return 'Öğün Ekle';
-      case 'editMeal': return 'Öğün Düzenle';
-      case 'exercise': return 'Egzersiz Ekle';
-      case 'addSleep': return 'Uyku Verisi Ekle';
-      case 'addWeight': return 'Kilo Güncelle';
-      case 'manageWorkoutRoutine': return sheetPayload?.id ? 'Antrenman Gününü Düzenle' : 'Antrenman Programı Ekle';
-      case 'manageAccounts': return 'Hesapları Yönet';
-      case 'addAccount': return 'Hesap Oluştur';
-      case 'transferAccounts': return 'Hesaplar Arası Transfer';
-      case 'editAccount': return 'Hesabı Düzenle';
-      case 'categories': return 'Kategori Yönetimi';
-      case 'debts': return 'Borç Yönetimi';
-      case 'subscriptions': return 'Abonelikler';
+      case 'transaction': return isEn ? 'Add Income / Expense' : 'Gelir / Gider Ekle';
+      case 'edit-transaction': return isEn ? 'Edit Transaction' : 'İşlemi Düzenle';
+      case 'meal': return isEn ? 'Add Meal' : 'Öğün Ekle';
+      case 'editMeal': return isEn ? 'Edit Meal' : 'Öğün Düzenle';
+      case 'exercise': return isEn ? 'Add Exercise' : 'Egzersiz Ekle';
+      case 'addSleep': return isEn ? 'Add Sleep Log' : 'Uyku Verisi Ekle';
+      case 'addWeight': return isEn ? 'Update Weight' : 'Kilo Güncelle';
+      case 'manageWorkoutRoutine': return sheetPayload?.id ? (isEn ? 'Edit Workout Day' : 'Antrenman Gününü Düzenle') : (isEn ? 'Add Workout Routine' : 'Antrenman Programı Ekle');
+      case 'manageAccounts': return isEn ? 'Manage Accounts' : 'Hesapları Yönet';
+      case 'addAccount': return isEn ? 'Create Account' : 'Hesap Oluştur';
+      case 'transferAccounts': return isEn ? 'Transfer Between Accounts' : 'Hesaplar Arası Transfer';
+      case 'editAccount': return isEn ? 'Edit Account' : 'Hesabı Düzenle';
+      case 'categories': return isEn ? 'Category Management' : 'Kategori Yönetimi';
+      case 'debts': return isEn ? 'Debt Management' : 'Borç Yönetimi';
+      case 'subscriptions': return isEn ? 'Subscriptions' : 'Abonelikler';
       default: return '';
     }
   };

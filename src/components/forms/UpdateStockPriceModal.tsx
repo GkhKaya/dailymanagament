@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, CheckCircle2, TrendingUp, Sparkles, RefreshCw } from "lucide-react";
+import { X, CheckCircle2, TrendingUp, RefreshCw } from "lucide-react";
 import { updateStockCurrentPriceAction, fetchMarketQuoteAction } from "@/actions/stocks";
 import { StockPositionDTO } from "@/models/DashboardTypes";
+import { useTranslation } from "@/hooks/useTranslation";
+import { getStockCurrencySymbol, formatStockCurrency } from "@/lib/stocks-ui";
 import toast from "react-hot-toast";
 
 interface UpdateStockPriceModalProps {
@@ -19,6 +21,10 @@ export function UpdateStockPriceModal({
   onSuccess,
   position,
 }: UpdateStockPriceModalProps) {
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+  const stockSym = getStockCurrencySymbol();
+
   const [price, setPrice] = useState<string>(
     position?.current_price && position.current_price > 0 ? String(position.current_price) : ""
   );
@@ -48,12 +54,16 @@ export function UpdateStockPriceModal({
           closePrice: res.data.closePrice,
           dayChangePercent: res.data.dayChangePercent,
         });
-        toast.success(`${position.symbol} piyasa fiyatı getirildi: ${res.data.currentPrice} ₺`);
+        toast.success(
+          isEn
+            ? `${position.symbol} market price updated: ${stockSym}${res.data.currentPrice}`
+            : `${position.symbol} piyasa fiyatı getirildi: ${res.data.currentPrice} ${stockSym}`
+        );
       } else {
-        toast.error(res.error || "Piyasa fiyatı çekilemedi.");
+        toast.error(res.error || (isEn ? "Failed to fetch market price." : "Piyasa fiyatı çekilemedi."));
       }
     } catch {
-      toast.error("Piyasa fiyatı alınamadı.");
+      toast.error(isEn ? "Could not retrieve market price." : "Piyasa fiyatı alınamadı.");
     } finally {
       setIsFetchingQuote(false);
     }
@@ -71,7 +81,7 @@ export function UpdateStockPriceModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (numPrice <= 0) {
-      toast.error("Lütfen geçerli bir güncel fiyat girin.");
+      toast.error(isEn ? "Please enter a valid current price." : "Lütfen geçerli bir güncel fiyat girin.");
       return;
     }
 
@@ -79,18 +89,26 @@ export function UpdateStockPriceModal({
     try {
       const res = await updateStockCurrentPriceAction(position.symbol, numPrice);
       if (res.success) {
-        toast.success(`${position.symbol} güncel fiyatı güncellendi!`);
+        toast.success(
+          isEn
+            ? `${position.symbol} current price updated!`
+            : `${position.symbol} güncel fiyatı güncellendi!`
+        );
         onSuccess();
         onClose();
       } else {
-        toast.error(res.error || "Güncelleme başarısız.");
+        toast.error(res.error || (isEn ? "Update failed." : "Güncelleme başarısız."));
       }
     } catch (err: any) {
-      toast.error(err.message || "Hata oluştu.");
+      toast.error(err.message || (isEn ? "An error occurred." : "Hata oluştu."));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const assetTypeName = position.assetType === 'fund'
+    ? (isEn ? 'Fund' : 'Fon')
+    : (isEn ? 'Stock' : 'Hisse');
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/70 animate-fade-in">
@@ -103,8 +121,12 @@ export function UpdateStockPriceModal({
               <TrendingUp size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{position.symbol} Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı</h3>
-              <p className="text-[11px] text-[var(--on-surface-variant)]">{position.total_lots} Lot | Ort. Maliyet: {position.average_cost.toFixed(2)} ₺</p>
+              <h3 className="text-sm font-bold text-white">
+                {position.symbol} {isEn ? `Current ${assetTypeName} Price` : `Güncel ${assetTypeName} Fiyatı`}
+              </h3>
+              <p className="text-[11px] text-[var(--on-surface-variant)]">
+                {position.total_lots} {isEn ? 'Shares' : 'Lot'} | {isEn ? 'Avg Cost' : 'Ort. Maliyet'}: {formatStockCurrency(position.average_cost)}
+              </p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-white/70">
@@ -117,7 +139,7 @@ export function UpdateStockPriceModal({
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-                Güncel {position.assetType === 'fund' ? 'Fon' : 'Hisse'} Fiyatı (₺)
+                {isEn ? `Current Price (${stockSym})` : `Güncel ${assetTypeName} Fiyatı (${stockSym})`}
               </label>
               <button
                 type="button"
@@ -126,7 +148,7 @@ export function UpdateStockPriceModal({
                 className="text-[11px] font-bold text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <RefreshCw size={11} className={isFetchingQuote ? "animate-spin" : ""} />
-                {isFetchingQuote ? "Piyasa Alınıyor..." : "Piyasadan Getir"}
+                {isFetchingQuote ? (isEn ? "Fetching..." : "Piyasa Alınıyor...") : (isEn ? "Fetch Market" : "Piyasadan Getir")}
               </button>
             </div>
             <input
@@ -137,7 +159,7 @@ export function UpdateStockPriceModal({
               autoFocus
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              placeholder="Örn: 285.40"
+              placeholder={isEn ? "e.g. 285.40" : "Örn: 285.40"}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-base text-white font-extrabold focus:outline-none focus:border-[var(--primary)]"
             />
           </div>
@@ -146,15 +168,15 @@ export function UpdateStockPriceModal({
           {marketInfo && (marketInfo.openPrice > 0 || marketInfo.closePrice > 0) && (
             <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1 text-[11px]">
               <div className="flex items-center justify-between text-[var(--on-surface-variant)]">
-                <span>Piyasa Bilgisi:</span>
+                <span>{isEn ? "Market Info:" : "Piyasa Bilgisi:"}</span>
                 <span className={`font-bold ${marketInfo.dayChangePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {marketInfo.dayChangePercent >= 0 ? '▲ +' : '▼ '}
                   {marketInfo.dayChangePercent.toFixed(2)}%
                 </span>
               </div>
               <div className="flex items-center justify-between text-white/70">
-                <span>Açılış: <b className="text-white">{marketInfo.openPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
-                <span>Önceki Kapanış: <b className="text-white">{marketInfo.closePrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</b></span>
+                <span>{isEn ? "Open:" : "Açılış:"} <b className="text-white">{formatStockCurrency(marketInfo.openPrice)}</b></span>
+                <span>{isEn ? "Prev Close:" : "Önceki Kapanış:"} <b className="text-white">{formatStockCurrency(marketInfo.closePrice)}</b></span>
               </div>
             </div>
           )}
@@ -166,13 +188,13 @@ export function UpdateStockPriceModal({
                 : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
             }`}>
               <div>
-                <p className="text-[10px] opacity-70">Potansiyel Kâr/Zarar</p>
+                <p className="text-[10px] opacity-70">{isEn ? "Unrealized P&L" : "Potansiyel Kâr/Zarar"}</p>
                 <p className="font-extrabold text-sm">
-                  {potentialPnl >= 0 ? '+' : ''}{potentialPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                  {potentialPnl >= 0 ? '+' : ''}{formatStockCurrency(potentialPnl)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] opacity-70">Getiri</p>
+                <p className="text-[10px] opacity-70">{isEn ? "Return" : "Getiri"}</p>
                 <p className="font-black text-sm">{potentialPnlPercent >= 0 ? '+' : ''}%{potentialPnlPercent.toFixed(2)}</p>
               </div>
             </div>
@@ -182,16 +204,16 @@ export function UpdateStockPriceModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-white/10 text-white/80 hover:text-white text-xs font-semibold"
+              className="px-4 py-2 rounded-xl border border-white/10 text-white/80 hover:text-white text-xs font-semibold cursor-pointer"
             >
-              İptal
+              {isEn ? "Cancel" : "İptal"}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl bg-[var(--primary)] hover:opacity-90 text-black text-xs font-bold shadow-md flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-[var(--primary)] hover:opacity-90 text-black text-xs font-bold shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              <CheckCircle2 size={15} /> {isSubmitting ? "Kaydediliyor..." : "Kaydet"}
+              <CheckCircle2 size={15} /> {isSubmitting ? (isEn ? "Saving..." : "Kaydediliyor...") : (isEn ? "Save" : "Kaydet")}
             </button>
           </div>
         </form>

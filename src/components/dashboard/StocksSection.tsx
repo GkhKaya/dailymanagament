@@ -17,7 +17,8 @@ import {
   Download,
   X,
   Activity,
-  RefreshCw
+  RefreshCw,
+  Info
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction, syncStockMarketPricesAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -28,9 +29,13 @@ import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrders
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades } from "@/lib/stocks-ui";
+import { useTranslation } from "@/hooks/useTranslation";
 import toast from "react-hot-toast";
 
 export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void } = {}) {
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+
   const [portfolio, setPortfolio] = useState<StockPortfolioDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncingPrices, setIsSyncingPrices] = useState(false);
@@ -54,7 +59,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [ordersModalPosition, setOrdersModalPosition] = useState<StockPositionDTO | null>(null);
 
   const [isEditSymbolModalOpen, setIsEditSymbolModalOpen] = useState(false);
-  const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string; assetType: 'stock' | 'fund' } | null>(null);
+  const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string; assetType: 'stock' | 'fund' | 'crypto' } | null>(null);
 
   const fetchPortfolio = useCallback(async () => {
     setIsLoading(true);
@@ -81,13 +86,13 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     try {
       const res = await syncStockMarketPricesAction();
       if (res.success) {
-        toast.success(`Piyasa fiyatları güncellendi! (${res.updatedCount || 0} varlık)`);
+        toast.success(isEn ? `Market prices updated! (${res.updatedCount || 0} assets)` : `Piyasa fiyatları güncellendi! (${res.updatedCount || 0} varlık)`);
         await fetchPortfolio();
       } else {
-        toast.error(res.error || "Piyasa fiyatları güncellenemedi.");
+        toast.error(res.error || (isEn ? "Could not update market prices." : "Piyasa fiyatları güncellenemedi."));
       }
     } catch {
-      toast.error("Piyasa fiyatları güncellenirken hata oluştu.");
+      toast.error(isEn ? "An error occurred while updating market prices." : "Piyasa fiyatları güncellenirken hata oluştu.");
     } finally {
       setIsSyncingPrices(false);
     }
@@ -117,20 +122,20 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   };
 
   const handleDeleteTrade = async (tradeId: string, symbol: string) => {
-    if (!confirm(`${symbol} işlemini silmek istediğinizden emin misiniz? Bu işlem maliyetleri ve kâr/zararı yeniden hesaplayacaktır.`)) {
+    if (!confirm(isEn ? `Are you sure you want to delete this ${symbol} transaction? This will recalculate costs and P&L.` : `${symbol} işlemini silmek istediğinizden emin misiniz? Bu işlem maliyetleri ve kâr/zararı yeniden hesaplayacaktır.`)) {
       return;
     }
 
     try {
       const res = await deleteStockTradeAction(tradeId);
       if (res.success) {
-        toast.success("İşlem silindi ve hesaplamalar güncellendi!");
+        toast.success(isEn ? "Trade deleted and calculations updated!" : "İşlem silindi ve hesaplamalar güncellendi!");
         fetchPortfolio();
       } else {
-        toast.error(res.error || "Silme işlemi başarısız.");
+        toast.error(res.error || (isEn ? "Deletion failed." : "Silme işlemi başarısız."));
       }
     } catch (err: any) {
-      toast.error(err.message || "Hata oluştu.");
+      toast.error(err.message || (isEn ? "An error occurred." : "Hata oluştu."));
     }
   };
 
@@ -144,26 +149,26 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     setIsOrdersModalOpen(true);
   };
 
-  const handleOpenEditSymbol = (symbol: string, name?: string, assetType: 'stock' | 'fund' = 'stock') => {
+  const handleOpenEditSymbol = (symbol: string, name?: string, assetType: 'stock' | 'fund' | 'crypto' = 'stock') => {
     setEditSymbolModalData({ symbol, name, assetType });
     setIsEditSymbolModalOpen(true);
   };
 
   const handleDeletePosition = async (symbol: string) => {
-    if (!confirm(`${symbol} hissesine ait tüm alış/satış geçmişi ve portföy kaydı tamamen silinecektir. Emin misiniz?`)) {
+    if (!confirm(isEn ? `All buy/sell history and portfolio records for ${symbol} will be completely deleted. Are you sure?` : `${symbol} hissesine ait tüm alış/satış geçmişi ve portföy kaydı tamamen silinecektir. Emin misiniz?`)) {
       return;
     }
 
     try {
       const res = await deleteStockPositionAction(symbol);
       if (res.success) {
-        toast.success(`${symbol} hissesi ve tüm kayıtları başarıyla silindi.`);
+        toast.success(isEn ? `${symbol} and all records successfully deleted.` : `${symbol} hissesi ve tüm kayıtları başarıyla silindi.`);
         fetchPortfolio();
       } else {
-        toast.error(res.error || "Silme işlemi başarısız.");
+        toast.error(res.error || (isEn ? "Deletion failed." : "Silme işlemi başarısız."));
       }
     } catch (err: any) {
-      toast.error(err.message || "Hata oluştu.");
+      toast.error(err.message || (isEn ? "An error occurred." : "Hata oluştu."));
     }
   };
 
@@ -171,7 +176,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <LoadingSpinner />
-        <p className="text-sm text-[var(--on-surface-variant)] mt-3">Borsa portföyü ve kâr/zarar hesaplanıyor...</p>
+        <p className="text-sm text-[var(--on-surface-variant)] mt-3">{isEn ? "Calculating portfolio and profit/loss..." : "Borsa portföyü ve kâr/zarar hesaplanıyor..."}</p>
       </div>
     );
   }
@@ -190,7 +195,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     totalSellVolume: 0,
   };
   const performance = getPortfolioPerformance(totals.totalCurrentValue, totals.totalInvestedCost);
-  const performanceLabel = performance.trend === "gain" ? "Artış" : performance.trend === "loss" ? "Düşüş" : "Değişim yok";
+  const performanceLabel = performance.trend === "gain" ? (isEn ? "Gain" : "Artış") : performance.trend === "loss" ? (isEn ? "Loss" : "Düşüş") : (isEn ? "No change" : "Değişim yok");
   const performanceColor = performance.trend === "gain" ? "text-emerald-400" : performance.trend === "loss" ? "text-rose-400" : "text-[var(--on-surface-variant)]";
   const performanceSurface = performance.trend === "gain" ? "border-emerald-500/25 bg-emerald-500/5" : performance.trend === "loss" ? "border-rose-500/25 bg-rose-500/5" : "border-[var(--outline)]";
 
@@ -225,10 +230,10 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               <span className="w-11 h-11 rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] shrink-0 flex items-center justify-center">
                 <TrendingUp size={20} />
               </span>
-              Borsa
+              {isEn ? "Stocks & Portfolio" : "Borsa"}
             </h2>
             <p className="text-body text-[var(--on-surface-variant)] mt-2">
-              Portföyün bugün nasıl?
+              {isEn ? "How is your portfolio doing today?" : "Portföyün bugün nasıl?"}
             </p>
           </div>
           <div className="flex items-center gap-1 sm:hidden">
@@ -236,8 +241,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               type="button" 
               disabled={isSyncingPrices}
               onClick={handleSyncPrices} 
-              aria-label="Piyasa fiyatlarını yenile" 
-              title="Piyasa Fiyatlarını Yenile" 
+              aria-label={isEn ? "Refresh market prices" : "Piyasa fiyatlarını yenile"} 
+              title={isEn ? "Refresh Market Prices" : "Piyasa Fiyatlarını Yenile"} 
               className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 transition-colors hover:bg-emerald-500/25 cursor-pointer disabled:opacity-50"
             >
               <RefreshCw size={16} className={isSyncingPrices ? "animate-spin" : ""} />
@@ -246,8 +251,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               type="button" 
               data-tour="stocks-pdf-btn"
               onClick={() => setIsPdfModalOpen(true)} 
-              aria-label="Borsa raporunu PDF olarak indir" 
-              title="PDF Raporu İndir" 
+              aria-label={isEn ? "Download stock report as PDF" : "Borsa raporunu PDF olarak indir"} 
+              title={isEn ? "Download PDF Report" : "PDF Raporu İndir"} 
               className="min-h-11 min-w-11 flex items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer"
             >
               <Download size={18} className="text-white" />
@@ -257,8 +262,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                 type="button"
                 data-tour="stocks-analysis-btn"
                 onClick={onShowAnalysis}
-                aria-label="Detaylı borsa analizi"
-                title="Detaylı Analiz"
+                aria-label={isEn ? "Detailed stock analysis" : "Detaylı borsa analizi"}
+                title={isEn ? "Detailed Analysis" : "Detaylı Analiz"}
                 className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)] cursor-pointer"
               >
                 <Activity size={18} />
@@ -273,19 +278,19 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
             type="button"
             disabled={isSyncingPrices}
             onClick={handleSyncPrices}
-            aria-label="Piyasa fiyatlarını yenile"
-            title="Piyasa Fiyatlarını Güncelle"
+            aria-label={isEn ? "Refresh market prices" : "Piyasa fiyatlarını yenile"}
+            title={isEn ? "Refresh Market Prices" : "Piyasa Fiyatlarını Güncelle"}
             className="hidden sm:flex min-h-11 px-3.5 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold transition-colors hover:bg-emerald-500/25 cursor-pointer disabled:opacity-50 mr-1 gap-1.5"
           >
             <RefreshCw size={14} className={isSyncingPrices ? "animate-spin" : ""} />
-            <span>{isSyncingPrices ? "Güncelleniyor..." : "Fiyatları Yenile"}</span>
+            <span>{isEn ? (isSyncingPrices ? "Updating..." : "Refresh Prices") : (isSyncingPrices ? "Güncelleniyor..." : "Fiyatları Yenile")}</span>
           </button>
           <button
             type="button"
             data-tour="stocks-pdf-btn"
             onClick={() => setIsPdfModalOpen(true)}
-            aria-label="Borsa raporunu PDF olarak indir"
-            title="PDF Raporu İndir"
+            aria-label={isEn ? "Download stock report as PDF" : "Borsa raporunu PDF olarak indir"}
+            title={isEn ? "Download PDF Report" : "PDF Raporu İndir"}
             className="hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-full bg-[var(--primary)]/15 border border-[var(--primary)]/20 text-white transition-colors hover:bg-[var(--primary)]/25 cursor-pointer mr-1"
           >
             <Download size={16} className="text-white" />
@@ -295,8 +300,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               type="button"
               data-tour="stocks-analysis-btn"
               onClick={onShowAnalysis}
-              aria-label="Detaylı borsa analizi"
-              title="Detaylı Analiz"
+              aria-label={isEn ? "Detailed stock analysis" : "Detaylı borsa analizi"}
+              title={isEn ? "Detailed Analysis" : "Detaylı Analiz"}
               className="hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-[var(--primary)] cursor-pointer mr-1"
             >
               <Activity size={18} />
@@ -308,7 +313,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
             onClick={() => handleOpenBuy()}
             className="min-h-11 px-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Plus size={16} /> Alış Emri Gir
+            <Plus size={16} /> {isEn ? "Buy Order" : "Alış Emri Gir"}
           </button>
           <button
             type="button"
@@ -316,16 +321,26 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
             onClick={() => handleOpenSell()}
             className="min-h-11 px-4 rounded-full bg-transparent hover:bg-white/5 border border-[var(--outline)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Minus size={16} /> Satış Yap
+            <Minus size={16} /> {isEn ? "Sell Asset" : "Satış Yap"}
           </button>
         </div>
       </div>
 
-      <section data-tour="stocks-summary" aria-label="Portföy özeti" className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      {/* Market Data Methodology Notice */}
+      <div className="flex items-start sm:items-center gap-3 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+        <Info size={18} className="shrink-0 mt-0.5 sm:mt-0 text-amber-400" />
+        <span className="leading-relaxed">
+          {isEn 
+            ? "Market Data Method: Asset prices are updated periodically using session opening and previous close reference quotes (not real-time streaming). You can configure your active markets (BIST, US Stocks, Crypto) anytime in Profile > Settings."
+            : "Piyasa Veri Yöntemi: Varlık fiyatları seans açılış ve önceki gün kapanış referans verileriyle periyodik çekilir (anlık canlı veri akışı değildir). Aktif piyasalarınızı (BIST, ABD, Kripto) dilediğiniz zaman Profil > Ayarlar bölümünden yönetebilirsiniz."}
+        </span>
+      </div>
+
+      <section data-tour="stocks-summary" aria-label={isEn ? "Portfolio summary" : "Portföy özeti"} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <div className={`glass-card col-span-2 p-4 border ${performanceSurface}`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-caption text-[var(--on-surface-variant)]">PORTFÖY DEĞERİ</p>
+              <p className="text-caption text-[var(--on-surface-variant)]">{isEn ? "PORTFOLIO VALUE" : "PORTFÖY DEĞERİ"}</p>
               <p className="text-title text-white mt-1">{formatStockCurrency(totals.totalCurrentValue)}</p>
             </div>
             <div className={`text-right ${performanceColor}`}>
@@ -335,14 +350,14 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
           </div>
         </div>
         <div className="glass-card p-3">
-          <p className="text-caption text-[var(--on-surface-variant)]">YATIRILAN</p>
+          <p className="text-caption text-[var(--on-surface-variant)]">{isEn ? "INVESTED" : "YATIRILAN"}</p>
           <p className="text-body font-bold text-white mt-1 truncate">{formatStockCurrency(totals.totalInvestedCost)}</p>
-          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">{portfolio?.positions.length || 0} varlık</p>
+          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">{portfolio?.positions.length || 0} {isEn ? "assets" : "varlık"}</p>
         </div>
         <div className="glass-card p-3">
-          <p className="text-caption text-[var(--on-surface-variant)]">GERÇEKLEŞEN</p>
+          <p className="text-caption text-[var(--on-surface-variant)]">{isEn ? "REALIZED" : "GERÇEKLEŞEN"}</p>
           <p className={`text-body font-bold mt-1 truncate ${totals.totalRealizedPnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{totals.totalRealizedPnl >= 0 ? "+" : ""}{formatStockCurrency(totals.totalRealizedPnl)}</p>
-          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">Satış sonucu</p>
+          <p className="text-[11px] text-[var(--on-surface-variant)] mt-1">{isEn ? "From sales" : "Satış sonucu"}</p>
         </div>
       </section>
 
@@ -360,7 +375,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <PieChart size={14} aria-hidden="true" /> <span className="sm:hidden">Portföy</span><span className="hidden sm:inline">Açık Portföy</span> ({portfolio?.positions.length || 0})
+            <PieChart size={14} aria-hidden="true" /> <span className="sm:hidden">{isEn ? "Portfolio" : "Portföy"}</span><span className="hidden sm:inline">{isEn ? "Open Portfolio" : "Açık Portföy"}</span> ({portfolio?.positions.length || 0})
           </button>
           <button
             type="button"
@@ -371,7 +386,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <TrendingUp size={14} aria-hidden="true" /> <span className="sm:hidden">Kâr/Zarar</span><span className="hidden sm:inline">Gerçekleşen Kâr/Zarar</span> ({portfolio?.realizedTrades.length || 0})
+            <TrendingUp size={14} aria-hidden="true" /> <span className="sm:hidden">{isEn ? "P&L" : "Kâr/Zarar"}</span><span className="hidden sm:inline">{isEn ? "Realized P&L" : "Gerçekleşen Kâr/Zarar"}</span> ({portfolio?.realizedTrades.length || 0})
           </button>
           <button
             type="button"
@@ -382,14 +397,14 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            <ListOrdered size={14} aria-hidden="true" /> <span className="sm:hidden">İşlemler</span><span className="hidden sm:inline">Emir Defteri</span> ({portfolio?.allTrades.length || 0})
+            <ListOrdered size={14} aria-hidden="true" /> <span className="sm:hidden">{isEn ? "Orders" : "İşlemler"}</span><span className="hidden sm:inline">{isEn ? "Order Book" : "Emir Defteri"}</span> ({portfolio?.allTrades.length || 0})
           </button>
         </div>
 
         {/* Search Input */}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <div className="grid grid-cols-3 gap-1 p-1 bg-[var(--surface-container-low)] rounded-[var(--radius-input)] border border-[var(--outline)]">
-            {([['all', 'Tümü'], ['stock', 'Hisse'], ['fund', 'Fon']] as const).map(([value, label]) => (
+            {([['all', isEn ? 'All' : 'Tümü'], ['stock', isEn ? 'Stock' : 'Hisse'], ['fund', isEn ? 'Fund' : 'Fon']] as const).map(([value, label]) => (
               <button key={value} type="button" onClick={() => setAssetFilter(value)} aria-pressed={assetFilter === value} className={`min-h-9 px-3 rounded-md text-xs font-bold transition-colors ${assetFilter === value ? value === 'fund' ? 'bg-purple-500/20 text-purple-300' : 'bg-[var(--primary)] text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}>
                 {label}
               </button>
@@ -401,15 +416,15 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Hisse sembolü veya fon ara..."
-              aria-label="Hisse sembolü ara"
+              placeholder={isEn ? "Search symbol or fund..." : "Hisse sembolü veya fon ara..."}
+              aria-label={isEn ? "Search stock symbol" : "Hisse sembolü ara"}
               className="min-h-11 w-full bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-[var(--radius-input)] py-2 pl-9 pr-8 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--primary)]"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                aria-label="Aramayı temizle"
+                aria-label={isEn ? "Clear search" : "Aramayı temizle"}
                 className="absolute right-2 p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors cursor-pointer"
               >
                 <X size={14} />
@@ -427,16 +442,18 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               <div className="w-14 h-14 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 flex items-center justify-center text-[var(--primary)]">
                 <PieChart size={28} />
               </div>
-              <h3 className="text-base font-bold text-white">Açık Pozisyon Bulunmuyor</h3>
+              <h3 className="text-base font-bold text-white">{isEn ? "No Open Positions" : "Açık Pozisyon Bulunmuyor"}</h3>
               <p className="text-xs text-[var(--on-surface-variant)] max-w-md">
-                Portföyünüzde henüz hisse veya fon bulunmuyor. İlk alış emrinizi girerek maliyet ve kâr/zarar takibine başlayın.
+                {isEn
+                  ? "There are no stocks or funds in your portfolio yet. Add your first buy order to start tracking costs and P&L."
+                  : "Portföyünüzde henüz hisse veya fon bulunmuyor. İlk alış emrinizi girerek maliyet ve kâr/zarar takibine başlayın."}
               </p>
               <button
                 type="button"
                 onClick={() => handleOpenBuy()}
                 className="mt-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-black font-bold text-xs flex items-center gap-2 hover:opacity-90 shadow-md cursor-pointer"
               >
-                <Plus size={15} /> İlk Alış Emrini Ekle
+                <Plus size={15} /> {isEn ? "Add First Buy Order" : "İlk Alış Emrini Ekle"}
               </button>
             </div>
           ) : (
@@ -449,18 +466,40 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                   {/* Card Header */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-black text-sm tracking-wider shrink-0 ${pos.assetType === 'fund' ? 'bg-purple-500/15 border-purple-500/30' : 'bg-[var(--primary)]/15 border-[var(--primary)]/30'}`}>
+                      <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-black text-sm tracking-wider shrink-0 ${
+                        pos.market === 'crypto' || pos.assetType === 'crypto'
+                          ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                          : pos.market === 'us'
+                          ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                          : pos.assetType === 'fund'
+                          ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
+                          : 'bg-[var(--primary)]/15 border-[var(--primary)]/30'
+                      }`}>
                         {pos.symbol.slice(0, 4)}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h4 className="text-base font-bold text-white tracking-wide">{pos.symbol}</h4>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${pos.assetType === 'fund' ? 'bg-purple-500/15 text-purple-300' : 'bg-[var(--primary)]/15 text-[var(--primary)]'}`}>
-                            {pos.assetType === 'fund' ? 'FON' : 'HİSSE'}
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            pos.market === 'crypto' || pos.assetType === 'crypto'
+                              ? 'bg-amber-500/15 text-amber-300'
+                              : pos.market === 'us'
+                              ? 'bg-blue-500/15 text-blue-300'
+                              : pos.assetType === 'fund'
+                              ? 'bg-purple-500/15 text-purple-300'
+                              : 'bg-[var(--primary)]/15 text-[var(--primary)]'
+                          }`}>
+                            {pos.market === 'crypto' || pos.assetType === 'crypto'
+                              ? 'CRYPTO'
+                              : pos.market === 'us'
+                              ? 'US STOCK'
+                              : pos.assetType === 'fund'
+                              ? (isEn ? 'FUND' : 'FON')
+                              : (isEn ? 'BIST' : 'BİST')}
                           </span>
                         </div>
                         <p className="text-[11px] text-[var(--on-surface-variant)] truncate">
-                          {pos.name || (pos.assetType === 'fund' ? 'Yatırım Fonu' : 'Borsa İstanbul')}
+                          {pos.name || (pos.assetType === 'crypto' ? 'Crypto' : pos.assetType === 'fund' ? (isEn ? 'Mutual Fund' : 'Yatırım Fonu') : (isEn ? 'Stock' : 'Hisse Senedi'))}
                         </p>
                       </div>
                     </div>
@@ -468,13 +507,13 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <div className="text-right mr-1">
                         <span className="text-base font-black text-white">{pos.total_lots}</span>
-                        <span className="text-[10px] text-[var(--on-surface-variant)] block">Lot</span>
+                        <span className="text-[10px] text-[var(--on-surface-variant)] block">{isEn ? 'Lots' : 'Lot'}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleOpenEditSymbol(pos.symbol, pos.name, pos.assetType)}
-                        aria-label={`${pos.symbol} adını düzenle`}
-                        title="İsim Düzenle"
+                        aria-label={isEn ? `Edit name of ${pos.symbol}` : `${pos.symbol} adını düzenle`}
+                        title={isEn ? "Edit Name" : "İsim Düzenle"}
                         className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Edit3 size={13} />
@@ -482,8 +521,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                       <button
                         type="button"
                         onClick={() => handleDeletePosition(pos.symbol)}
-                        aria-label={`${pos.symbol} hissesini sil`}
-                        title="Hisseyi Tamamen Sil"
+                        aria-label={isEn ? `Delete stock ${pos.symbol}` : `${pos.symbol} hissesini sil`}
+                        title={isEn ? "Completely Delete Stock" : "Hisseyi Tamamen Sil"}
                         className="w-8 h-8 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 hover:text-rose-300 flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Trash2 size={13} />
@@ -494,15 +533,15 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                   {/* Metrics Grid */}
                   <div className="grid grid-cols-2 gap-2 p-3 bg-[var(--surface-container)] rounded-[var(--radius-input)] border border-[var(--outline)] text-xs">
                     <div>
-                      <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">Ort. Maliyet</span>
+                      <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">{isEn ? "Avg. Cost" : "Ort. Maliyet"}</span>
                       <span className="font-bold text-white">
-                        {formatStockCurrency(pos.average_cost)}
+                        {formatStockCurrency(pos.average_cost, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'))}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">Toplam Maliyet</span>
+                      <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">{isEn ? "Total Cost" : "Toplam Maliyet"}</span>
                       <span className="font-bold text-white">
-                        {formatStockCurrency(pos.total_cost)}
+                        {formatStockCurrency(pos.total_cost, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'))}
                       </span>
                     </div>
 
@@ -510,16 +549,16 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <div className="col-span-2 pt-2 border-t border-white/5 flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">Son / Kapanış:</span>
+                          <span className="text-[10px] text-[var(--on-surface-variant)] uppercase">{isEn ? "Last / Close:" : "Son / Kapanış:"}</span>
                           {pos.current_price && pos.current_price > 0 ? (
-                            <span className="font-bold text-white text-sm">{formatStockCurrency(pos.current_price)}</span>
+                            <span className="font-bold text-white text-sm">{formatStockCurrency(pos.current_price, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'))}</span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => handleOpenPriceModal(pos)}
                               className="min-h-9 px-2 text-xs text-[var(--primary)] hover:underline font-semibold cursor-pointer"
                             >
-                              + Fiyat Gir
+                              + {isEn ? "Set Price" : "Fiyat Gir"}
                             </button>
                           )}
                         </div>
@@ -539,19 +578,19 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                       {/* Open & Close Prices */}
                       {((pos.open_price ?? 0) > 0 || (pos.close_price ?? 0) > 0) && (
                         <div className="flex items-center justify-between text-[10px] text-[var(--on-surface-variant)] pt-1 border-t border-white/5">
-                          <span>Açılış: <b className="text-white/80">{pos.open_price ? formatStockCurrency(pos.open_price) : '-'}</b></span>
-                          <span>Önceki Kapanış: <b className="text-white/80">{pos.close_price ? formatStockCurrency(pos.close_price) : '-'}</b></span>
+                          <span>{isEn ? "Open:" : "Açılış:"} <b className="text-white/80">{pos.open_price ? formatStockCurrency(pos.open_price, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY')) : '-'}</b></span>
+                          <span>{isEn ? "Prev. Close:" : "Önceki Kapanış:"} <b className="text-white/80">{pos.close_price ? formatStockCurrency(pos.close_price, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY')) : '-'}</b></span>
                         </div>
                       )}
 
                       {pos.current_price && pos.current_price > 0 && (
                         <div className="flex items-center justify-between pt-1 border-t border-white/5 text-xs">
-                          <span className="text-[10px] text-[var(--on-surface-variant)]">Toplam K/Z:</span>
+                          <span className="text-[10px] text-[var(--on-surface-variant)]">{isEn ? "Total P&L:" : "Toplam K/Z:"}</span>
                           <span className={`text-xs font-extrabold ${
                             (pos.unrealized_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
                           }`}>
                             {(pos.unrealized_pnl || 0) >= 0 ? '+' : ''}
-                            {formatStockCurrency(pos.unrealized_pnl || 0)}
+                            {formatStockCurrency(pos.unrealized_pnl || 0, pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'))}
                             {' '}({(pos.unrealized_pnl_percent || 0) >= 0 ? '+' : ''}%{(pos.unrealized_pnl_percent || 0).toFixed(1)})
                           </span>
                         </div>
@@ -566,32 +605,32 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                       onClick={() => handleOpenBuy(pos.symbol)}
                       className="min-h-11 px-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                     >
-                      <Plus size={15} /> Ekle (Alış)
+                      <Plus size={15} /> {isEn ? "Buy More" : "Ekle (Alış)"}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenSell(pos.symbol)}
                       className="min-h-11 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
-                      <Minus size={15} /> Satış Yap
+                      <Minus size={15} /> {isEn ? "Sell" : "Satış Yap"}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenPriceModal(pos)}
-                      aria-label={`${pos.symbol} güncel fiyatını düzenle`}
+                      aria-label={isEn ? `Edit current price for ${pos.symbol}` : `${pos.symbol} güncel fiyatını düzenle`}
                       className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
                       <Edit3 size={13} className="text-[var(--primary)]" />
-                      <span>Fiyat Gir</span>
+                      <span>{isEn ? "Set Price" : "Fiyat Gir"}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenOrdersModal(pos)}
-                      aria-label={`${pos.symbol} emir ve maliyetlerini düzenle`}
+                      aria-label={isEn ? `Edit orders and costs for ${pos.symbol}` : `${pos.symbol} emir ve maliyetlerini düzenle`}
                       className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
                       <ListOrdered size={13} className="text-blue-400" />
-                      <span>Maliyet/Emirler</span>
+                      <span>{isEn ? "Cost/Orders" : "Maliyet/Emirler"}</span>
                     </button>
                   </div>
                 </div>
@@ -607,21 +646,21 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
           <div className="glass-card p-4 rounded-3xl border border-white/10 flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)]">Filtrelenmiş net durum</p>
+                <p className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)]">{isEn ? "Filtered net status" : "Filtrelenmiş net durum"}</p>
                 <p className={`text-2xl font-black ${realizedSummary.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {realizedSummary.netPnl >= 0 ? '+' : ''}{formatStockCurrency(realizedSummary.netPnl)}
                 </p>
               </div>
               <div className="flex gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
-                {([['all', 'Tümü'], ['week', 'Haftalık'], ['month', 'Aylık']] as const).map(([value, label]) => (
+                {([['all', isEn ? 'All' : 'Tümü'], ['week', isEn ? 'Weekly' : 'Haftalık'], ['month', isEn ? 'Monthly' : 'Aylık']] as const).map(([value, label]) => (
                   <button key={value} type="button" onClick={() => setRealizedPeriod(value)} className={`min-h-9 px-3 rounded-md text-xs font-bold ${realizedPeriod === value ? 'bg-[var(--primary)] text-black' : 'text-white/60 hover:text-white'}`}>{label}</button>
                 ))}
               </div>
             </div>
             <div className="flex gap-4 text-xs text-[var(--on-surface-variant)]">
-              <span>Kârlı: <strong className="text-emerald-400">{realizedSummary.winningCount}</strong></span>
-              <span>Zararlı: <strong className="text-rose-400">{realizedSummary.losingCount}</strong></span>
-              <span>İşlem: <strong className="text-white">{realizedTrades.length}</strong></span>
+              <span>{isEn ? "Profitable:" : "Kârlı:"} <strong className="text-emerald-400">{realizedSummary.winningCount}</strong></span>
+              <span>{isEn ? "Loss:" : "Zararlı:"} <strong className="text-rose-400">{realizedSummary.losingCount}</strong></span>
+              <span>{isEn ? "Trades:" : "İşlem:"} <strong className="text-white">{realizedTrades.length}</strong></span>
             </div>
           </div>
           {realizedTrades.length === 0 ? (
@@ -629,9 +668,11 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
                 <TrendingUp size={28} />
               </div>
-              <h3 className="text-base font-bold text-white">Henüz Satış Yapılmadı</h3>
+              <h3 className="text-base font-bold text-white">{isEn ? "No Sells Yet" : "Henüz Satış Yapılmadı"}</h3>
               <p className="text-xs text-[var(--on-surface-variant)] max-w-md">
-                Elinizdeki hisselerden satış yaptığınızda, maliyetleriniz ve net gerçekleşen kâr/zararınız burada otomatik hesaplanarak listelenecektir.
+                {isEn
+                  ? "When you sell stocks from your holdings, your cost basis and net realized profit/loss will be automatically calculated and listed here."
+                  : "Elinizdeki hisselerden satış yaptığınızda, maliyetleriniz ve net gerçekleşen kâr/zararınız burada otomatik hesaplanarak listelenecektir."}
               </p>
             </div>
           ) : (
@@ -656,15 +697,23 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         <div className="flex items-center gap-2">
                           <h4 className="text-base font-bold text-white">{trade.symbol}</h4>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                            SATIŞ
+                            {isEn ? "SELL" : "SATIŞ"}
                           </span>
-                          <span className="text-xs text-[var(--on-surface-variant)]">{trade.date} · {trade.holding_days ?? 0} gün</span>
+                          <span className="text-xs text-[var(--on-surface-variant)]">{trade.date} · {trade.holding_days ?? 0} {isEn ? "days" : "gün"}</span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)] mt-0.5">
-                          <strong>{trade.lots} Lot</strong> satıldı &bull; Satış: <strong>{trade.price.toFixed(2)} ₺</strong> (Alış Maliyeti: {trade.cost_basis?.toFixed(2)} ₺)
+                          {isEn ? (
+                            <>
+                              <strong>{trade.lots} Lots</strong> sold &bull; Sold at: <strong>{formatStockCurrency(trade.price, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))}</strong> (Cost Basis: {formatStockCurrency(trade.cost_basis || 0, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))})
+                            </>
+                          ) : (
+                            <>
+                              <strong>{trade.lots} Lot</strong> satıldı &bull; Satış: <strong>{formatStockCurrency(trade.price, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))}</strong> (Alış Maliyeti: {formatStockCurrency(trade.cost_basis || 0, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))})
+                            </>
+                          )}
                         </p>
                         {trade.notes && (
-                          <p className="text-[11px] text-white/50 italic mt-0.5">Not: {trade.notes}</p>
+                          <p className="text-[11px] text-white/50 italic mt-0.5">{isEn ? "Note:" : "Not:"} {trade.notes}</p>
                         )}
                       </div>
                     </div>
@@ -673,13 +722,13 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <div className="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                       <div className="text-left sm:text-right">
                         <span className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider block">
-                          {isProfit ? 'Net Kâr' : 'Net Zarar'}
+                          {isProfit ? (isEn ? 'Net Profit' : 'Net Kâr') : (isEn ? 'Net Loss' : 'Net Zarar')}
                         </span>
                         <div className={`text-lg sm:text-xl font-black ${
                           isProfit ? 'text-emerald-400' : 'text-rose-400'
                         }`}>
                           {isProfit ? '+' : ''}
-                          {(trade.realized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                          {formatStockCurrency(trade.realized_pnl || 0, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))}
                         </div>
                         <span className={`text-[11px] font-bold ${
                           isProfit ? 'text-emerald-300' : 'text-rose-300'
@@ -693,7 +742,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         <button
                           type="button"
                           onClick={() => handleEditTrade(trade)}
-                          title="Düzenle"
+                          title={isEn ? "Edit" : "Düzenle"}
+                          aria-label={isEn ? "Edit trade" : "İşlemi düzenle"}
                           className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all cursor-pointer"
                         >
                           <Edit3 size={15} />
@@ -701,7 +751,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         <button
                           type="button"
                           onClick={() => handleDeleteTrade(trade.id, trade.symbol)}
-                          title="Sil"
+                          title={isEn ? "Delete" : "Sil"}
+                          aria-label={isEn ? "Delete trade" : "İşlemi sil"}
                           className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all cursor-pointer"
                         >
                           <Trash2 size={15} />
@@ -731,17 +782,17 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     tradeFilter === f ? 'bg-white/15 text-white' : 'text-white/50 hover:text-white'
                   }`}
                 >
-                  {f === 'all' ? 'Tümü' : f === 'buy' ? 'Sadece Alışlar' : 'Sadece Satışlar'}
+                  {f === 'all' ? (isEn ? 'All' : 'Tümü') : f === 'buy' ? (isEn ? 'Buys Only' : 'Sadece Alışlar') : (isEn ? 'Sells Only' : 'Sadece Satışlar')}
                 </button>
               ))}
             </div>
-            <span className="text-xs text-[var(--on-surface-variant)]">{allTrades.length} İşlem</span>
+            <span className="text-xs text-[var(--on-surface-variant)]">{allTrades.length} {isEn ? "Orders" : "İşlem"}</span>
           </div>
 
           {allTrades.length === 0 ? (
             <div className="glass-card p-10 rounded-3xl border border-white/10 flex flex-col items-center justify-center text-center gap-2">
               <ListOrdered size={28} className="text-white/40" />
-              <p className="text-xs text-[var(--on-surface-variant)]">Kayıtlı işlem bulunamadı.</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">{isEn ? "No orders found." : "Kayıtlı işlem bulunamadı."}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -764,12 +815,12 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                           <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
                             isBuy ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
                           }`}>
-                            {isBuy ? 'ALIŞ' : 'SATIŞ'}
+                            {isBuy ? (isEn ? 'BUY' : 'ALIŞ') : (isEn ? 'SELL' : 'SATIŞ')}
                           </span>
                           <span className="text-[11px] text-[var(--on-surface-variant)]">{trade.date}</span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)]">
-                          {trade.lots} Lot &times; {trade.price.toFixed(2)} ₺ {trade.notes ? `(${trade.notes})` : ''}
+                          {trade.lots} {isEn ? "Lots" : "Lot"} &times; {formatStockCurrency(trade.price, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))} {trade.notes ? `(${trade.notes})` : ''}
                         </p>
                       </div>
                     </div>
@@ -777,13 +828,13 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <span className="font-extrabold text-sm text-white block">
-                          {trade.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                          {formatStockCurrency(trade.total_amount, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))}
                         </span>
                         {!isBuy && trade.realized_pnl !== undefined && (
                           <span className={`text-[10px] font-bold ${
                             trade.realized_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'
                           }`}>
-                            {trade.realized_pnl >= 0 ? '+' : ''}{trade.realized_pnl.toFixed(2)} ₺
+                            {trade.realized_pnl >= 0 ? '+' : ''}{formatStockCurrency(trade.realized_pnl, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))}
                           </span>
                         )}
                       </div>
@@ -792,6 +843,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         <button
                           type="button"
                           onClick={() => handleEditTrade(trade)}
+                          title={isEn ? "Edit" : "Düzenle"}
+                          aria-label={isEn ? "Edit trade" : "İşlemi düzenle"}
                           className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
                         >
                           <Edit3 size={14} />
@@ -799,6 +852,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         <button
                           type="button"
                           onClick={() => handleDeleteTrade(trade.id, trade.symbol)}
+                          title={isEn ? "Delete" : "Sil"}
+                          aria-label={isEn ? "Delete trade" : "İşlemi sil"}
                           className="p-1.5 rounded-lg text-white/50 hover:text-red-400 hover:bg-red-500/10"
                         >
                           <Trash2 size={14} />

@@ -36,6 +36,8 @@ import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from '@/models/Das
 import { formatStockCurrency, getPortfolioPerformance } from '@/lib/stocks-ui';
 import { ExportPdfModal } from '@/components/ui/ExportPdfModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useTranslation } from '@/hooks/useTranslation';
+import { isAbroad } from '@/lib/i18n';
 import toast from 'react-hot-toast';
 
 const PIE_COLORS = [
@@ -49,6 +51,14 @@ interface StocksAnalysisProps {
 }
 
 export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
+  const { locale, isAbroad: abroadFromHook } = useTranslation();
+  const [userAbroad, setUserAbroad] = useState(false);
+
+  useEffect(() => {
+    setUserAbroad(isAbroad());
+  }, []);
+
+  const isEn = abroadFromHook || locale === 'en' || userAbroad || isAbroad();
   const [portfolio, setPortfolio] = useState<StockPortfolioDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
@@ -61,14 +71,14 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
       if (res.success && res.data) {
         setPortfolio(res.data);
       } else {
-        toast.error(res.error || "Borsa verileri alınamadı.");
+        toast.error(res.error || (isEn ? "Failed to retrieve stock portfolio data." : "Borsa verileri alınamadı."));
       }
     } catch (err: any) {
-      toast.error(err.message || "Beklenmedik bir hata oluştu.");
+      toast.error(err.message || (isEn ? "An unexpected error occurred." : "Beklenmedik bir hata oluştu."));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isEn]);
 
   useEffect(() => {
     fetchPortfolio();
@@ -214,7 +224,9 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <LoadingSpinner />
-        <p className="text-sm text-[var(--on-surface-variant)] mt-3">Borsa portföy analizi hesaplanıyor...</p>
+        <p className="text-sm text-[var(--on-surface-variant)] mt-3">
+          {isEn ? "Calculating portfolio analytics..." : "Borsa portföy analizi hesaplanıyor..."}
+        </p>
       </div>
     );
   }
@@ -231,7 +243,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
             <button 
               type="button"
               onClick={onBack} 
-              aria-label="Borsa sayfasına geri dön"
+              aria-label={isEn ? "Back to stocks" : "Borsa sayfasına geri dön"}
               className="p-2.5 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-white cursor-pointer"
             >
               <ArrowLeft size={20} />
@@ -239,10 +251,12 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
                 <TrendingUp size={22} className="text-[var(--primary)]" />
-                Detaylı Borsa & Portföy Analizi
+                {isEn ? "Detailed Stocks & Portfolio Analysis" : "Detaylı Borsa & Portföy Analizi"}
               </h2>
               <p className="text-xs text-[var(--on-surface-variant)] mt-0.5">
-                Varlık ağırlıkları, potansiyel ve gerçekleşen getiri analizleri
+                {isEn 
+                  ? "Asset allocation, unrealized and realized returns analysis" 
+                  : "Varlık ağırlıkları, potansiyel ve gerçekleşen getiri analizleri"}
               </p>
             </div>
           </div>
@@ -253,18 +267,18 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
               type="button"
               onClick={() => setIsPdfModalOpen(true)}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#8ec13b]/15 hover:bg-[#8ec13b]/25 border border-[#8ec13b]/20 text-white text-xs font-bold transition-all shrink-0 cursor-pointer"
-              title="Borsa PDF Raporu Al"
+              title={isEn ? "Export PDF Report" : "Borsa PDF Raporu Al"}
             >
               <Download size={15} className="text-white" />
-              <span>PDF Raporu</span>
+              <span>{isEn ? "PDF Report" : "PDF Raporu"}</span>
             </button>
 
             {/* Asset Type Filter */}
             <div className="flex bg-[rgba(255,255,255,0.05)] p-1 rounded-xl shrink-0">
               {[
-                { id: 'all', label: 'Tümü' },
-                { id: 'stock', label: 'Hisse' },
-                { id: 'fund', label: 'Fon' }
+                { id: 'all', label: isEn ? 'All' : 'Tümü' },
+                { id: 'stock', label: isEn ? 'Stock' : 'Hisse' },
+                { id: 'fund', label: isEn ? 'Fund' : 'Fon' }
               ].map(f => (
                 <button
                   key={f.id}
@@ -284,17 +298,17 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
       </div>
 
       {/* ── KEY PERFORMANCE METRIC CARDS ── */}
-      <section aria-label="Portföy temel göstergeleri" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section aria-label={isEn ? "Key portfolio indicators" : "Portföy temel göstergeleri"} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Toplam Portföy Değeri */}
         <div className="glass-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-caption text-[var(--on-surface-variant)] uppercase">Portföy Değeri</span>
+            <span className="text-caption text-[var(--on-surface-variant)] uppercase">{isEn ? "Portfolio Value" : "Portföy Değeri"}</span>
             <Coins size={16} className="text-[var(--primary)] opacity-80" />
           </div>
           <div className="mt-2">
             <p className="text-xl sm:text-2xl font-black text-white">{formatStockCurrency(totals.totalCurrentValue)}</p>
             <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-              Yatırılan: <span className="font-semibold text-white/90">{formatStockCurrency(totals.totalInvestedCost)}</span>
+              {isEn ? "Invested: " : "Yatırılan: "}<span className="font-semibold text-white/90">{formatStockCurrency(totals.totalInvestedCost)}</span>
             </p>
           </div>
         </div>
@@ -302,7 +316,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
         {/* Potansiyel (Unrealized) Kâr/Zarar */}
         <div className="glass-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-caption text-[var(--on-surface-variant)] uppercase">Potansiyel K/Z</span>
+            <span className="text-caption text-[var(--on-surface-variant)] uppercase">{isEn ? "Unrealized P&L" : "Potansiyel K/Z"}</span>
             {totals.totalUnrealizedPnl >= 0 ? (
               <ArrowUpRight size={16} className="text-emerald-400" />
             ) : (
@@ -314,7 +328,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
               {totals.totalUnrealizedPnl >= 0 ? '+' : ''}{formatStockCurrency(totals.totalUnrealizedPnl)}
             </p>
             <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-              Getiri: <span className={`font-bold ${totals.totalUnrealizedPnlPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {isEn ? "Return: " : "Getiri: "}<span className={`font-bold ${totals.totalUnrealizedPnlPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 %{totals.totalUnrealizedPnlPercent.toFixed(2)}
               </span>
             </p>
@@ -324,7 +338,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
         {/* Gerçekleşen (Realized) Kâr/Zarar */}
         <div className="glass-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-caption text-[var(--on-surface-variant)] uppercase">Gerçekleşen K/Z</span>
+            <span className="text-caption text-[var(--on-surface-variant)] uppercase">{isEn ? "Realized P&L" : "Gerçekleşen K/Z"}</span>
             <Percent size={16} className="text-blue-400 opacity-80" />
           </div>
           <div className="mt-2">
@@ -332,7 +346,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
               {totals.totalRealizedPnl >= 0 ? '+' : ''}{formatStockCurrency(totals.totalRealizedPnl)}
             </p>
             <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-              Net Satış Getirisi: <span className="font-semibold text-white/90">{formatStockCurrency(totals.totalSellVolume)}</span>
+              {isEn ? "Sell Revenue: " : "Net Satış Getirisi: "}<span className="font-semibold text-white/90">{formatStockCurrency(totals.totalSellVolume)}</span>
             </p>
           </div>
         </div>
@@ -340,13 +354,13 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
         {/* Al-Sat Kazanma Oranı (Win Rate) */}
         <div className="glass-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-caption text-[var(--on-surface-variant)] uppercase">Al-Sat Başarı Oranı</span>
+            <span className="text-caption text-[var(--on-surface-variant)] uppercase">{isEn ? "Win Rate" : "Al-Sat Başarı Oranı"}</span>
             <CheckCircle2 size={16} className="text-emerald-400 opacity-80" />
           </div>
           <div className="mt-2">
             <p className="text-xl sm:text-2xl font-black text-white">%{totals.winRate}</p>
             <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-              <span className="text-emerald-400 font-bold">{totals.winningTradesCount} Kârlı</span> / <span className="text-rose-400 font-bold">{totals.losingTradesCount} Zararlı</span>
+              <span className="text-emerald-400 font-bold">{totals.winningTradesCount} {isEn ? "Won" : "Kârlı"}</span> / <span className="text-rose-400 font-bold">{totals.losingTradesCount} {isEn ? "Lost" : "Zararlı"}</span>
             </p>
           </div>
         </div>
@@ -361,18 +375,20 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <PieIcon size={18} className="text-[var(--primary)]" />
-                Portföy Varlık Ağırlıkları
+                {isEn ? "Asset Allocation Weights" : "Portföy Varlık Ağırlıkları"}
               </h3>
-              <p className="text-xs text-[var(--on-surface-variant)]">Açık pozisyonların portföy içerisindeki yüzdelik payı</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">
+                {isEn ? "Percentage share of open positions in your portfolio" : "Açık pozisyonların portföy içerisindeki yüzdelik payı"}
+              </p>
             </div>
             <span className="text-xs font-bold text-white/60 bg-white/5 px-2 py-1 rounded-lg">
-              {pieData.length} Varlık
+              {pieData.length} {isEn ? "Assets" : "Varlık"}
             </span>
           </div>
 
           {pieData.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[260px] text-center text-sm text-[var(--on-surface-variant)]">
-              <p>Açık pozisyon bulunamadı.</p>
+              <p>{isEn ? "No open positions found." : "Açık pozisyon bulunamadı."}</p>
             </div>
           ) : (
             <div className="h-[280px] w-full flex items-center justify-center">
@@ -400,16 +416,16 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
                             <span className="font-bold text-white text-sm">{data.name}</span>
                             <span className="text-[var(--on-surface-variant)]">{data.fullName}</span>
                             <div className="flex items-center justify-between gap-4 mt-1 pt-1 border-t border-white/10">
-                              <span className="text-[var(--on-surface-variant)]">Değer:</span>
+                              <span className="text-[var(--on-surface-variant)]">{isEn ? "Value:" : "Değer:"}</span>
                               <span className="font-bold text-white">{formatStockCurrency(data.value)}</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
-                              <span className="text-[var(--on-surface-variant)]">Portföy Payı:</span>
+                              <span className="text-[var(--on-surface-variant)]">{isEn ? "Portfolio Share:" : "Portföy Payı:"}</span>
                               <span className="font-bold text-[var(--primary)]">%{data.percent}</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
-                              <span className="text-[var(--on-surface-variant)]">Adet/Lot:</span>
-                              <span className="font-semibold text-white">{data.lots} Lot</span>
+                              <span className="text-[var(--on-surface-variant)]">{isEn ? "Lots:" : "Adet/Lot:"}</span>
+                              <span className="font-semibold text-white">{data.lots} {isEn ? "Lots" : "Lot"}</span>
                             </div>
                           </div>
                         );
@@ -435,15 +451,17 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <BarChart3 size={18} className="text-emerald-400" />
-                Varlık Bazında Kâr / Zarar
+                {isEn ? "P&L by Asset" : "Varlık Bazında Kâr / Zarar"}
               </h3>
-              <p className="text-xs text-[var(--on-surface-variant)]">Pozisyonların güncel kâr ve zarar performansı (₺)</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">
+                {isEn ? "Current profit and loss performance of positions" : "Pozisyonların güncel kâr ve zarar performansı"}
+              </p>
             </div>
           </div>
 
           {pnlBarData.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[260px] text-center text-sm text-[var(--on-surface-variant)]">
-              <p>Karşılaştırılacak açık pozisyon bulunamadı.</p>
+              <p>{isEn ? "No open positions to compare." : "Karşılaştırılacak açık pozisyon bulunamadı."}</p>
             </div>
           ) : (
             <div className="h-[280px] w-full">
@@ -459,7 +477,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
                   <YAxis 
                     stroke="rgba(255,255,255,0.5)" 
                     fontSize={11}
-                    tickFormatter={(val) => `${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val} ₺`}
+                    tickFormatter={(val) => `${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`}
                     tickLine={false}
                   />
                   <Tooltip 
@@ -471,13 +489,13 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
                             <span className="font-bold text-white text-sm">{data.symbol}</span>
                             <span className="text-[var(--on-surface-variant)]">{data.name}</span>
                             <div className="flex items-center justify-between gap-4 mt-1 pt-1 border-t border-white/10">
-                              <span className="text-[var(--on-surface-variant)]">Kâr/Zarar:</span>
+                              <span className="text-[var(--on-surface-variant)]">{isEn ? "P&L:" : "Kâr/Zarar:"}</span>
                               <span className={`font-bold ${data.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 {data.pnl >= 0 ? '+' : ''}{formatStockCurrency(data.pnl)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
-                              <span className="text-[var(--on-surface-variant)]">Getiri Oranı:</span>
+                              <span className="text-[var(--on-surface-variant)]">{isEn ? "Return Rate:" : "Getiri Oranı:"}</span>
                               <span className={`font-bold ${data.percent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 %{data.percent}
                               </span>
@@ -511,12 +529,14 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Calendar size={18} className="text-blue-400" />
-                Gerçekleşen Kâr/Zarar Çizelgesi
+                {isEn ? "Realized P&L Timeline" : "Gerçekleşen Kâr/Zarar Çizelgesi"}
               </h3>
-              <p className="text-xs text-[var(--on-surface-variant)]">Tamamlanan satış işlemlerinden elde edilen net getiriler</p>
+              <p className="text-xs text-[var(--on-surface-variant)]">
+                {isEn ? "Net gains obtained from completed sell orders" : "Tamamlanan satış işlemlerinden elde edilen net getiriler"}
+              </p>
             </div>
             <span className="text-xs font-bold text-white/60 bg-white/5 px-2 py-1 rounded-lg">
-              Son {realizedTimelineData.length} Satış
+              {isEn ? `Last ${realizedTimelineData.length} Sells` : `Son ${realizedTimelineData.length} Satış`}
             </span>
           </div>
 
@@ -533,7 +553,7 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
                 <YAxis 
                   stroke="rgba(255,255,255,0.5)" 
                   fontSize={11}
-                  tickFormatter={(val) => `${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val} ₺`}
+                  tickFormatter={(val) => `${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`}
                   tickLine={false}
                 />
                 <Tooltip 
@@ -572,11 +592,13 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
         <div className="glass-card p-4 flex flex-col gap-3">
           <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
             <TrendingUp size={16} />
-            <h4>En İyi Performans Gösterenler</h4>
+            <h4>{isEn ? "Top Performers" : "En İyi Performans Gösterenler"}</h4>
           </div>
 
           {topGainers.length === 0 ? (
-            <p className="text-xs text-[var(--on-surface-variant)] py-4 text-center">Henüz kârda olan pozisyon bulunmuyor.</p>
+            <p className="text-xs text-[var(--on-surface-variant)] py-4 text-center">
+              {isEn ? "No profitable positions yet." : "Henüz kârda olan pozisyon bulunmuyor."}
+            </p>
           ) : (
             <div className="flex flex-col gap-2">
               {topGainers.map((pos) => (
@@ -603,11 +625,13 @@ export function StocksAnalysis({ onBack }: StocksAnalysisProps) {
         <div className="glass-card p-4 flex flex-col gap-3">
           <div className="flex items-center gap-2 text-rose-400 text-sm font-bold">
             <TrendingDown size={16} />
-            <h4>Gelişime Açık / Zararda Olanlar</h4>
+            <h4>{isEn ? "Room for Growth / In Loss" : "Gelişime Açık / Zararda Olanlar"}</h4>
           </div>
 
           {topLosers.length === 0 ? (
-            <p className="text-xs text-[var(--on-surface-variant)] py-4 text-center">Zararda olan herhangi bir pozisyon bulunmuyor!</p>
+            <p className="text-xs text-[var(--on-surface-variant)] py-4 text-center">
+              {isEn ? "No positions currently in loss!" : "Zararda olan herhangi bir pozisyon bulunmuyor!"}
+            </p>
           ) : (
             <div className="flex flex-col gap-2">
               {topLosers.map((pos) => (

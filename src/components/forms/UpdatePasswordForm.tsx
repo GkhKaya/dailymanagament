@@ -2,9 +2,11 @@ import React from 'react';
 import { Key } from 'lucide-react';
 import { useUpdatePasswordViewModel } from '@/viewmodels/useUpdatePasswordViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { t } from '@/lib/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
   const { 
     currentPassword, setCurrentPassword,
     newPassword, setNewPassword,
@@ -15,15 +17,15 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="text-body text-[var(--on-surface-variant)] mb-2">
-        {t("profile.updatePassword.description")}
+        {isEn 
+          ? "Choose a strong password with at least 8 characters." 
+          : "En az 8 karakterden oluşan güçlü bir şifre seçin."}
       </div>
-      
-      
       
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-            {t("profile.updatePassword.currentPasswordLabel")}
+            {isEn ? "Current Password" : "Mevcut Şifre"}
           </label>
           <div className="relative">
             <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -39,7 +41,7 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
 
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-            {t("profile.updatePassword.newPasswordLabel")}
+            {isEn ? "New Password" : "Yeni Şifre"}
           </label>
           <div className="relative">
             <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -55,7 +57,7 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
 
         <div className="flex flex-col gap-2">
           <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-            {t("profile.updatePassword.confirmPasswordLabel")}
+            {isEn ? "Confirm New Password" : "Yeni Şifre (Tekrar)"}
           </label>
           <div className="relative">
             <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -72,10 +74,10 @@ export function UpdatePasswordForm({ onClose, onSuccess }: { onClose: () => void
 
       <div className="mt-2 flex gap-3">
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-          İptal
+          {isEn ? "Cancel" : "İptal"}
         </button>
         <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
-          {isLoading ? <LoadingSpinner size="sm" /> : t("profile.updatePassword.submit")}
+          {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? "Save" : "Kaydet")}
         </button>
       </div>
     </form>

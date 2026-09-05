@@ -31,10 +31,12 @@ export function useRegisterViewModel() {
     setLoading(true);
 
     try {
+      const isEn = typeof window !== 'undefined' && (localStorage.getItem('dailym-lang') === 'en' || document.cookie.includes('NEXT_LOCALE=en'));
+
       // 1. Check uniqueness
       const uniqueRes = await checkUsernameUniqueAction(username);
       if (!uniqueRes.isUnique) {
-        Alert.error("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane seçin.");
+        Alert.error(isEn ? "This username is already taken, please choose another." : "Bu kullanıcı adı zaten alınmış, lütfen başka bir tane seçin.");
         setLoading(false);
         return;
       }
@@ -47,17 +49,39 @@ export function useRegisterViewModel() {
       });
       
       if (data && !signUpError) {
+        try {
+          await saveRegistrationDataAction({ username });
+        } catch (saveErr) {
+          console.error("Save registration data err:", saveErr);
+        }
+
         if (typeof window !== 'undefined') {
           localStorage.removeItem('dailym-product-tour-completed');
+          localStorage.removeItem('dailym-residence-completed');
+          
+          if (isEn) {
+            localStorage.setItem('dailym-is-abroad', '1');
+            localStorage.setItem('dailym-country', 'US');
+            localStorage.setItem('dailym-lang', 'en');
+            document.cookie = 'IS_ABROAD=1; path=/; max-age=31536000';
+            document.cookie = 'USER_COUNTRY=US; path=/; max-age=31536000';
+            document.cookie = 'NEXT_LOCALE=en; path=/; max-age=31536000';
+          } else {
+            localStorage.removeItem('dailym-is-abroad');
+            localStorage.removeItem('dailym-country');
+            document.cookie = 'IS_ABROAD=0; path=/; max-age=0';
+            document.cookie = 'USER_COUNTRY=; path=/; max-age=0';
+          }
         }
-        Alert.success('Hesap kurma ekranına yönlendiriliyorsunuz...');
+        Alert.success(isEn ? 'Redirecting to setup...' : 'Hesap kurma ekranına yönlendiriliyorsunuz...');
         router.push('/onboarding');
       } else {
-        Alert.error(signUpError?.message || 'Kayıt başarısız oldu.');
+        Alert.error(signUpError?.message || (isEn ? 'Registration failed.' : 'Kayıt başarısız oldu.'));
       }
     } catch (e: unknown) {
+      const isEn = typeof window !== 'undefined' && localStorage.getItem('dailym-lang') === 'en';
       const err = e as Error;
-      Alert.error(err.message || 'Kayıt olurken beklenmedik bir hata oluştu.');
+      Alert.error(err.message || (isEn ? 'An unexpected error occurred during registration.' : 'Kayıt olurken beklenmedik bir hata oluştu.'));
     } finally {
       setLoading(false);
     }

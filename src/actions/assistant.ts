@@ -108,27 +108,30 @@ async function parseVoiceCommand(text: string) {
   const generateWithModel = async (model: string) => {
     const response = await ai.models.generateContent({
       model,
-      contents: `Türkçe kişisel finans ve beslenme komutunu JSON'a dönüştür.
+      contents: `You are an AI assistant processing personal finance and nutrition commands in Turkish or English. Convert the user command into JSON.
 
-FİNANS KURALLARI:
-- Yalnız söylenen bilgileri çıkar. Bilinmeyen hesabı veya kategoriyi uydurma.
+FINANCE RULES:
+- Extract only provided information. Do not invent missing accounts or categories.
+- transaction_type: 'expense' for expenses / spending / purchases (harcama, aldım, ödedim); 'income' for earnings / salary / deposit (gelir, maaş, kazandım).
 
-BESLENME KURALLARI:
-1. Eğer öğün türü (kahvaltı, öğle, akşam, ara öğün) komutta varsa meal_type olarak belirt ('breakfast'|'lunch'|'dinner'|'snack'). Belirtilmemişse yiyecek türüne göre en uygun öğünü seç veya null bırak.
-2. Türkçe ölçü birimlerini eksiksiz ve doğru yorumla:
-   - "kilogram", "kilo", "kg" dendiğinde grama çevir (örn: 1 kilo = 1000 gram, yarım kilo = 500 gram), unit="gram".
-   - "gram", "gr", "g" dendiğinde quantity=söylenen gram, unit="gram".
-   - "adet", "tane", "yumurta", "elma" dendiğinde quantity=adet, unit="adet".
-   - "dilim" dendiğinde quantity=dilim, unit="dilim".
-   - "porsiyon", "tabak" dendiğinde quantity=porsiyon, unit="porsiyon".
-   - "bardak", "su bardağı" dendiğinde quantity=bardak, unit="bardak".
-   - "çay bardağı" dendiğinde quantity=çay bardağı, unit="çay bardağı".
-   - "kase" dendiğinde quantity=kase, unit="kase".
-   - "kaşık", "yemek kaşığı", "tatlı kaşığı", "çay kaşığı" dendiğinde unit olarak bunu yaz.
-3. Komutta birden fazla yiyecek varsa hepsini ayrı ayrı foods dizisine ekle.
-4. total_calories, total_protein_g, total_carbs_g, total_fat_g alanlarına belirtilen MİKTARIN TAMAMI için toplam besin değerlerini yaz. (Örn: 2 yumurta için ~140 kcal, 100g peynir için ~260 kcal, 2 dilim ekmek için ~130 kcal). Pozitif ve gerçekçi değerler ver.
+NUTRITION RULES:
+1. meal_type: Detect from command ('breakfast'|'lunch'|'dinner'|'snack' / 'kahvaltı'|'öğle'|'akşam'|'ara öğün'). If omitted, pick the most appropriate meal based on the food type or leave null.
+2. Units and quantities:
+   - "kilogram", "kilo", "kg" -> convert to grams (e.g. 1 kg = 1000g, half a kilo = 500g), unit="gram".
+   - "gram", "grams", "gr", "g" -> quantity=stated grams, unit="gram".
+   - "adet", "tane", "piece", "pieces", whole fruits or eggs -> unit="adet".
+   - "dilim", "slice", "slices" -> unit="dilim".
+   - "porsiyon", "tabak", "serving", "servings", "plate" -> unit="porsiyon".
+   - "bardak", "su bardağı", "cup", "glass" -> unit="bardak".
+   - "çay bardağı", "tea glass" -> unit="çay bardağı".
+   - "kase", "bowl" -> unit="kase".
+   - "yemek kaşığı", "tablespoon", "tbsp" -> unit="yemek kaşığı".
+   - "çay kaşığı", "tatlı kaşığı", "teaspoon", "tsp" -> unit="çay kaşığı".
+   - "ml", "liter", "litre" -> convert to ml, unit="ml".
+3. If multiple food items are mentioned, extract each one separately into the foods array.
+4. Calculate total_calories, total_protein_g, total_carbs_g, total_fat_g for the ENTIRE stated quantity (e.g. 2 eggs = ~140 kcal, 100g chicken breast = ~120 kcal, 2 slices of bread = ~140 kcal). Provide realistic positive nutritional estimates.
 
-Kullanıcı komutu: "${text}"`,
+User command: "${text}"`,
       config: {
         responseMimeType: 'application/json',
         responseSchema: voiceSchema(),

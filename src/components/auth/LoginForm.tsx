@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useLoginViewModel } from "@/viewmodels/useLoginViewModel";
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const {
     email,
     setEmail,
@@ -67,7 +68,7 @@ export function LoginForm() {
       
 
       <Button type="submit" withArrow disabled={loading}>
-        {loading ? "Giriş yapılıyor..." : t("auth.login")}
+        {loading ? t("auth.loggingIn") : t("auth.login")}
       </Button>
 
       {/* Hesabınız yok mu? */}

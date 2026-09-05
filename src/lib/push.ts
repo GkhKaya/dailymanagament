@@ -1,5 +1,6 @@
 import { PushSubscription } from '@/models/PushSubscription';
 import { PrayerNotification } from '@/models/PrayerNotification';
+import { PRAYER_AUTHORIZED_EMAIL } from '@/lib/prayer-times';
 
 export function getVapidPublicKey() { return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''; }
 
@@ -8,7 +9,10 @@ export async function sendDuePrayerNotifications(now = new Date()) {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY; const privateKey = process.env.VAPID_PRIVATE_KEY; const subject = process.env.VAPID_SUBJECT;
   if (!publicKey || !privateKey || !subject) throw new Error('VAPID ayarları eksik.');
   webpush.setVapidDetails(subject, publicKey, privateKey);
-  const due = await PrayerNotification.find({ status: 'pending', scheduled_at: { $lte: now } }).limit(100);
+  const { User } = await import('@/models/User');
+  const authorizedUser = await User.findOne({ email: PRAYER_AUTHORIZED_EMAIL }).select('_id').lean();
+  if (!authorizedUser) return 0;
+  const due = await PrayerNotification.find({ user_id: String(authorizedUser._id), status: 'pending', scheduled_at: { $lte: now } }).limit(100);
   let sent = 0;
   for (const notice of due) {
     const subscriptions = await PushSubscription.find({ user_id: notice.user_id, active: true });

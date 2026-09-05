@@ -1,29 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { t } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Activity, Wallet, LineChart } from "lucide-react";
 
-const slides = [
-  {
-    icon: <Activity size={32} className="text-[var(--primary)]" />,
-    title: "Sağlığınızı Yönetin",
-    description: "Günlük kalori, uyku düzeni ve egzersizlerinizi zahmetsizce kaydedip takip edin.",
-  },
-  {
-    icon: <Wallet size={32} className="text-[var(--primary)]" />,
-    title: "Finansal Özgürlük",
-    description: "Gelir, gider ve aboneliklerinizi tek bir merkezden yöneterek geleceğinizi planlayın.",
-  },
-  {
-    icon: <LineChart size={32} className="text-[var(--primary)]" />,
-    title: "Gelişmiş Analizler",
-    description: "Verilerinizi detaylı ve modern grafiklerle inceleyip, hedeflerinize daha hızlı ulaşın.",
-  }
-];
-
 export function HeroPanel() {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    {
+      icon: <Activity size={32} className="text-[var(--primary)]" />,
+      title: t("home.slides.healthTitle"),
+      description: t("home.slides.healthDesc"),
+    },
+    {
+      icon: <Wallet size={32} className="text-[var(--primary)]" />,
+      title: t("home.slides.financeTitle"),
+      description: t("home.slides.financeDesc"),
+    },
+    {
+      icon: <LineChart size={32} className="text-[var(--primary)]" />,
+      title: t("home.slides.analyticsTitle"),
+      description: t("home.slides.analyticsDesc"),
+    }
+  ];
 
   // Timer: reset whenever currentSlide changes (fixes the jump issue)
   useEffect(() => {
@@ -31,7 +32,7 @@ export function HeroPanel() {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [currentSlide]);
+  }, [currentSlide, slides.length]);
 
   return (
     <div className="hidden md:flex flex-col justify-between flex-1 px-[var(--space-8)] py-[var(--space-8)] relative overflow-hidden">

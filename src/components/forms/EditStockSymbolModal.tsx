@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Building2, CheckCircle2 } from "lucide-react";
 import { updateStockSymbolNameAction } from "@/actions/stocks";
+import { useTranslation } from "@/hooks/useTranslation";
 import toast from "react-hot-toast";
 
 interface EditStockSymbolModalProps {
@@ -11,7 +12,7 @@ interface EditStockSymbolModalProps {
   onSuccess: () => void;
   symbol: string;
   currentName?: string;
-  currentAssetType?: 'stock' | 'fund';
+  currentAssetType?: 'stock' | 'fund' | 'crypto';
 }
 
 export function EditStockSymbolModal({
@@ -22,8 +23,11 @@ export function EditStockSymbolModal({
   currentName = "",
   currentAssetType = 'stock',
 }: EditStockSymbolModalProps) {
+  const { locale, isAbroad: userAbroad } = useTranslation();
+  const isEn = userAbroad || locale === 'en';
+
   const [name, setName] = useState(currentName);
-  const [assetType, setAssetType] = useState<'stock' | 'fund'>(currentAssetType);
+  const [assetType, setAssetType] = useState<'stock' | 'fund' | 'crypto'>(currentAssetType);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -34,14 +38,14 @@ export function EditStockSymbolModal({
     try {
       const res = await updateStockSymbolNameAction(symbol, name, assetType);
       if (res.success) {
-        toast.success(`${symbol} bilgileri güncellendi.`);
+        toast.success(isEn ? `${symbol} details updated.` : `${symbol} bilgileri güncellendi.`);
         onSuccess();
         onClose();
       } else {
-        toast.error(res.error || "Güncelleme başarısız.");
+        toast.error(res.error || (isEn ? "Update failed." : "Güncelleme başarısız."));
       }
     } catch (err: any) {
-      toast.error(err.message || "Hata oluştu.");
+      toast.error(err.message || (isEn ? "An error occurred." : "Hata oluştu."));
     } finally {
       setIsSubmitting(false);
     }
@@ -57,11 +61,11 @@ export function EditStockSymbolModal({
               <Building2 size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">{symbol} Varlık Bilgisi</h3>
-              <p className="text-[11px] text-[var(--on-surface-variant)]">Adını ve türünü düzenleyin</p>
+              <h3 className="text-sm font-bold text-white">{symbol} {isEn ? "Asset Info" : "Varlık Bilgisi"}</h3>
+              <p className="text-[11px] text-[var(--on-surface-variant)]">{isEn ? "Edit name and asset type" : "Adını ve türünü düzenleyin"}</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-white/70">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-white/70 cursor-pointer">
             <X size={18} />
           </button>
         </div>
@@ -70,7 +74,7 @@ export function EditStockSymbolModal({
         <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
-              Tanım
+              {isEn ? "Description / Name" : "Tanım"}
             </label>
             <input
               type="text"
@@ -78,16 +82,30 @@ export function EditStockSymbolModal({
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Örn: Aselsan Elektronik Sanayi"
+              placeholder={isEn ? "e.g. Apple Inc, S&P 500 ETF" : "Örn: Aselsan Elektronik Sanayi"}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-[var(--primary)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">Varlık Türü</label>
+            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider">
+              {isEn ? "Asset Type" : "Varlık Türü"}
+            </label>
             <div className="grid grid-cols-2 gap-2 p-1 bg-black/40 rounded-xl border border-white/10">
-              <button type="button" onClick={() => setAssetType('stock')} className={`min-h-11 rounded-lg text-xs font-bold transition-colors ${assetType === 'stock' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}>Hisse</button>
-              <button type="button" onClick={() => setAssetType('fund')} className={`min-h-11 rounded-lg text-xs font-bold transition-colors ${assetType === 'fund' ? 'bg-purple-500/25 text-purple-200' : 'text-white/60 hover:text-white'}`}>Fon</button>
+              <button 
+                type="button" 
+                onClick={() => setAssetType('stock')} 
+                className={`min-h-11 rounded-lg text-xs font-bold transition-colors cursor-pointer ${assetType === 'stock' ? 'bg-[var(--primary)] text-white' : 'text-white/60 hover:text-white'}`}
+              >
+                {isEn ? "Stock" : "Hisse"}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setAssetType('fund')} 
+                className={`min-h-11 rounded-lg text-xs font-bold transition-colors cursor-pointer ${assetType === 'fund' ? 'bg-purple-500/25 text-purple-200' : 'text-white/60 hover:text-white'}`}
+              >
+                {isEn ? "Fund / ETF" : "Fon"}
+              </button>
             </div>
           </div>
 
@@ -95,18 +113,18 @@ export function EditStockSymbolModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:bg-white/5"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:bg-white/5 cursor-pointer"
             >
-              Vazgeç
+              {isEn ? "Cancel" : "Vazgeç"}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-xl bg-[var(--primary)] hover:bg-[#3d3fb3] text-black font-bold text-xs flex items-center gap-1.5 shadow-lg"
+              className="px-5 py-2 rounded-xl bg-[var(--primary)] hover:bg-[#3d3fb3] text-black font-bold text-xs flex items-center gap-1.5 shadow-lg cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? "Kaydediliyor..." : (
+              {isSubmitting ? (isEn ? "Saving..." : "Kaydediliyor...") : (
                 <>
-                  <CheckCircle2 size={14} /> Kaydet
+                  <CheckCircle2 size={14} /> {isEn ? "Save" : "Kaydet"}
                 </>
               )}
             </button>

@@ -1,13 +1,32 @@
 "use client";
 
 import React from 'react';
-import { useOnboardingViewModel } from '@/viewmodels/useOnboardingViewModel';
+import { useOnboardingViewModel, OnboardingStep } from '@/viewmodels/useOnboardingViewModel';
 import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcome';
+import { OnboardingResidence } from '@/components/onboarding/OnboardingResidence';
 import { OnboardingHealth } from '@/components/onboarding/OnboardingHealth';
 import { OnboardingFinance } from '@/components/onboarding/OnboardingFinance';
+import { OnboardingMarkets } from '@/components/onboarding/OnboardingMarkets';
 
-export function OnboardingClient({ initialCategories, initialAge = 25 }: { initialCategories: any[], initialAge?: number }) {
-  const viewModel = useOnboardingViewModel();
+export function OnboardingClient({ 
+  initialCategories, 
+  initialAge = 25,
+  initialResidenceCompleted = false,
+  initialHealthData,
+  initialStep
+}: { 
+  initialCategories: any[]; 
+  initialAge?: number;
+  initialResidenceCompleted?: boolean;
+  initialHealthData?: {
+    weight?: string;
+    height?: string;
+    gender?: 'Male' | 'Female';
+    birthDate?: string;
+  };
+  initialStep?: OnboardingStep;
+}) {
+  const viewModel = useOnboardingViewModel(initialResidenceCompleted, initialHealthData, initialStep);
   
   return (
     <div className="min-h-screen bg-[var(--background)] relative overflow-x-hidden flex flex-col">
@@ -17,8 +36,10 @@ export function OnboardingClient({ initialCategories, initialAge = 25 }: { initi
           className="h-full bg-[var(--primary)] transition-all duration-500 ease-out"
           style={{ 
             width: viewModel.currentStep === 'welcome' ? '0%' : 
-                   viewModel.currentStep === 'health' ? '33%' : 
-                   viewModel.currentStep === 'finance' ? '66%' : '100%' 
+                   viewModel.currentStep === 'residence' ? '20%' : 
+                   viewModel.currentStep === 'health' ? '40%' : 
+                   viewModel.currentStep === 'finance' || viewModel.currentStep === 'categories' ? '65%' : 
+                   viewModel.currentStep === 'markets' ? '85%' : '100%' 
           }}
         />
       </div>
@@ -31,6 +52,13 @@ export function OnboardingClient({ initialCategories, initialAge = 25 }: { initi
             onSkip={viewModel.skipToDashboard} 
           />
         )}
+
+        {viewModel.currentStep === 'residence' && (
+          <OnboardingResidence 
+            onNext={() => viewModel.setCurrentStep('health')} 
+            onSkip={viewModel.skipToDashboard} 
+          />
+        )}
         
         {viewModel.currentStep === 'health' && (
           <OnboardingHealth viewModel={viewModel} />
@@ -38,6 +66,13 @@ export function OnboardingClient({ initialCategories, initialAge = 25 }: { initi
 
         {(viewModel.currentStep === 'finance' || viewModel.currentStep === 'categories') && (
           <OnboardingFinance viewModel={viewModel} initialCategories={initialCategories} />
+        )}
+
+        {viewModel.currentStep === 'markets' && (
+          <OnboardingMarkets 
+            onComplete={viewModel.finishOnboarding} 
+            onSkip={viewModel.finishOnboarding} 
+          />
         )}
       </div>
     </div>

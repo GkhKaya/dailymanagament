@@ -2,7 +2,7 @@ import React from 'react';
 import { Scale } from 'lucide-react';
 import { useUpdateWeightViewModel } from '@/viewmodels/useUpdateWeightViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { t } from '@/lib/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function UpdateWeightForm({ 
   onClose, 
@@ -17,6 +17,8 @@ export function UpdateWeightForm({
   initialTargetWeight?: number,
   initialTargetDate?: string
 }) {
+  const { locale, isAbroad } = useTranslation();
+  const isEn = isAbroad || locale === 'en';
   const { 
     weight, setWeight, 
     targetWeight, setTargetWeight,
@@ -27,14 +29,14 @@ export function UpdateWeightForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="text-body text-[var(--on-surface-variant)] mb-2">
-        {t("profile.updateWeight.description")}
+        {isEn 
+          ? "Enter your current weight to help us calculate calorie goals accurately."
+          : "Kilonuzu güncelleyerek kalori hedeflerinizin doğru hesaplanmasını sağlayın."}
       </div>
-      
-      
       
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-          {t("profile.updateWeight.weightLabel") || "Mevcut Kilo"}
+          {isEn ? "Current Weight (kg)" : "Mevcut Kilo (kg)"}
         </label>
         <div className="relative">
           <Scale className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -46,7 +48,9 @@ export function UpdateWeightForm({
             required
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
-            placeholder={initialWeight ? `Mevcut kilonuz: ${initialWeight} kg` : "Örn: 70.5 (Kayıtlı kilonuz yok)"}
+            placeholder={initialWeight 
+              ? (isEn ? `Current weight: ${initialWeight} kg` : `Mevcut kilonuz: ${initialWeight} kg`) 
+              : (isEn ? "e.g. 70.5 (No weight recorded)" : "Örn: 70.5 (Kayıtlı kilonuz yok)")}
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
           />
         </div>
@@ -54,7 +58,7 @@ export function UpdateWeightForm({
 
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-          Hedef Kilo
+          {isEn ? "Target Weight (kg)" : "Hedef Kilo (kg)"}
         </label>
         <div className="relative">
           <Scale className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
@@ -65,7 +69,7 @@ export function UpdateWeightForm({
             max="300"
             value={targetWeight}
             onChange={(e) => setTargetWeight(e.target.value)}
-            placeholder={"Örn: 65.0"}
+            placeholder={isEn ? "e.g. 65.0" : "Örn: 65.0"}
             className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
           />
         </div>
@@ -73,7 +77,7 @@ export function UpdateWeightForm({
 
       <div className="flex flex-col gap-2">
         <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
-          Hedef Tarih
+          {isEn ? "Target Date" : "Hedef Tarih"}
         </label>
         <input 
           type="date" 
@@ -82,16 +86,18 @@ export function UpdateWeightForm({
           className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
         />
         <span className="text-[10px] text-[var(--on-surface-variant)]">
-          Hedef tarihinizi belirlediğinizde, günlük kalori ihtiyacınız bu tarihe kadar hedefinize ulaşacak şekilde dinamik olarak hesaplanır.
+          {isEn 
+            ? "When you set a target date, your daily calorie target is dynamically adjusted to reach your goal by then."
+            : "Hedef tarihinizi belirlediğinizde, günlük kalori ihtiyacınız bu tarihe kadar hedefinize ulaşacak şekilde dinamik olarak hesaplanır."}
         </span>
       </div>
 
       <div className="mt-2 flex gap-3">
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors">
-          İptal
+          {isEn ? "Cancel" : "İptal"}
         </button>
         <button type="submit" disabled={isLoading} className="flex-[2] py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold transition-colors flex items-center justify-center">
-          {isLoading ? <LoadingSpinner size="sm" /> : t("profile.updateWeight.submit")}
+          {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? "Save" : "Kaydet")}
         </button>
       </div>
     </form>

@@ -3,7 +3,7 @@
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { DailyLog } from "@/models/DailyLog";
 import { User } from "@/models/User";
 import { SavedFood } from "@/models/SavedFood";
@@ -290,8 +290,16 @@ export async function addExerciseAction(data: { date: string; name: string; dura
       ? calculateStepsCalories(user?.current_weight_kg || 0, data.step_count!)
       : data.calories_burned;
 
+    const cookieStore = await cookies();
+    const isEn = cookieStore.get('NEXT_LOCALE')?.value === 'en' || cookieStore.get('IS_ABROAD')?.value === '1';
+
     if (isStepEntry && (!user?.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date)) {
-      return { success: false, error: "Adım kalorisi için boy, kilo ve doğum tarihi bilgileri eksiksiz olmalıdır." };
+      return { 
+        success: false, 
+        error: isEn 
+          ? "Height, weight, and birth date are required to calculate step calories." 
+          : "Adım kalorisi için boy, kilo ve doğum tarihi bilgileri eksiksiz olmalıdır." 
+      };
     }
 
     let log = await DailyLog.findOne({ user_id: userId, date: targetDate });
@@ -340,11 +348,20 @@ export async function addBMRAction(dateString: string) {
     const targetDate = new Date(dateString);
     targetDate.setUTCHours(0, 0, 0, 0);
 
+    const cookieStore = await cookies();
+    const cookieIsEn = cookieStore.get('NEXT_LOCALE')?.value === 'en' || cookieStore.get('IS_ABROAD')?.value === '1';
+
     const user = await User.findById(userId);
-    if (!user) return { success: false, error: "User not found" };
+    const isEn = cookieIsEn || user?.settings?.language === 'en' || user?.settings?.is_abroad;
+    if (!user) return { success: false, error: isEn ? "User not found" : "Kullanıcı bulunamadı" };
 
     if (!user.current_weight_kg || !user.profile?.height_cm || !user.profile?.birth_date) {
-      return { success: false, error: "BMR hesaplamak için boy, kilo, doğum tarihi bilgileri eksiksiz olmalıdır." };
+      return { 
+        success: false, 
+        error: isEn 
+          ? "Height, weight, and birth date are required to calculate BMR." 
+          : "BMR hesaplamak için boy, kilo, doğum tarihi bilgileri eksiksiz olmalıdır." 
+      };
     }
 
     const currentWeight = user.current_weight_kg;
@@ -364,7 +381,10 @@ export async function addBMRAction(dateString: string) {
     }
 
     if (log.bmr_added) {
-      return { success: false, error: "BMR zaten eklenmiş." };
+      return { 
+        success: false, 
+        error: isEn ? "BMR has already been added for today." : "BMR zaten eklenmiş." 
+      };
     }
 
     log.bmr_added = true;
