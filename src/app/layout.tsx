@@ -40,6 +40,8 @@ import { GoogleTranslateProvider } from '@/components/providers/GoogleTranslateP
 import { I18nProvider } from '@/components/providers/I18nProvider';
 import { setServerLocale, type Locale } from '@/lib/i18n';
 
+import { PwaInstallBanner } from '@/components/pwa/PwaInstallBanner';
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' });
 
@@ -82,6 +84,7 @@ export default async function RootLayout({
           {children}
           <Toaster position="top-center" />
           <GoogleTranslateProvider />
+          <PwaInstallBanner />
         </I18nProvider>
       </body>
     </html>

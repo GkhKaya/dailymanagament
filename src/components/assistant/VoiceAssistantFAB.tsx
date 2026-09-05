@@ -643,6 +643,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
       <div className="fixed bottom-6 left-6 z-[90] flex items-center">
         <button
           type="button"
+          data-tour="voice-assistant"
           onClick={() => {
             if (!isOpen) {
               setIsOpen(true);

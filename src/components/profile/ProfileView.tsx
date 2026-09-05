@@ -26,6 +26,8 @@ import { FinanceDataDTO } from '@/models/DashboardTypes';
 import toast from 'react-hot-toast';
 import { PrayerView } from '@/components/profile/PrayerView';
 import { useTranslation } from '@/hooks/useTranslation';
+import { isPwaStandalone, getDeviceInfo } from '@/lib/pwa-helpers';
+import { PwaInstallGuideModal } from '@/components/pwa/PwaInstallGuideModal';
 
 export function ProfileView({ initialUser, financeData }: { initialUser: { name: string, email: string, image?: string, current_weight_kg?: number, target_weight_kg?: number, target_weight_date?: string, height_cm?: number, age?: number }, financeData?: FinanceDataDTO | null }) {
   const router = useRouter();
@@ -33,10 +35,16 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   const isEn = isAbroad || locale === 'en';
 
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  const [isPwa, setIsPwa] = useState(false);
+  const [isPwaGuideOpen, setIsPwaGuideOpen] = useState(false);
   const [workoutDays, setWorkoutDays] = useState<any[]>([]);
   const [expandedWorkoutDays, setExpandedWorkoutDays] = useState<string[]>([]);
   const [selectedWorkoutDay, setSelectedWorkoutDay] = useState<any>(null);
   const [jsonText, setJsonText] = useState('');
+
+  useEffect(() => {
+    setIsPwa(isPwaStandalone());
+  }, []);
 
   const fetchWorkoutRoutine = () => {
     getWorkoutRoutineAction().then(res => {
@@ -319,6 +327,34 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                     </span>
                     <span className="text-xs text-[var(--on-surface-variant)]">
                       {isEn ? "BIST, US Stocks & Crypto selection" : "BIST, ABD ve Kripto seçimi"}
+                    </span>
+                  </div>
+                  <ArrowRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPwaGuideOpen(true)}
+                  className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container)] hover:bg-[#27272a] transition-colors group cursor-pointer"
+                >
+                  <div className="flex flex-col text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-sm group-hover:text-[var(--primary)] transition-colors">
+                        {isEn ? "App Installation (PWA)" : "Uygulama Kurulumu (PWA)"}
+                      </span>
+                      {isPwa ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                          {isEn ? "Installed" : "Yüklü"}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                          {isEn ? "Browser" : "Tarayıcı"}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-[var(--on-surface-variant)]">
+                      {isPwa
+                        ? (isEn ? "Running as standalone app" : "Ana ekrandan bağımsız uygulama olarak açık")
+                        : (isEn ? "Add to phone home screen" : "Telefona / ana ekrana ekleme rehberi")}
                     </span>
                   </div>
                   <ArrowRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
@@ -672,6 +708,13 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
           </button>
         </div>
       </BottomSheet>
+
+      {/* PWA Install Guide Modal */}
+      <PwaInstallGuideModal
+        isOpen={isPwaGuideOpen}
+        onClose={() => setIsPwaGuideOpen(false)}
+        initialPlatform={getDeviceInfo().platform}
+      />
     </div>
   );
 }

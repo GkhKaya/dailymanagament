@@ -8,16 +8,49 @@ import { isAbroad } from "@/lib/i18n";
 
 type Highlight = { top: number; left: number; width: number; height: number } | null;
 
+function isElementTrulyVisible(el: HTMLElement): boolean {
+  if (!el) return false;
+
+  if (typeof el.checkVisibility === 'function') {
+    if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) {
+      return false;
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+      return false;
+    }
+    // Check all parent elements up to body
+    let curr: HTMLElement | null = el.parentElement;
+    while (curr && curr !== document.body) {
+      const parentStyle = window.getComputedStyle(curr);
+      if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden') {
+        return false;
+      }
+      curr = curr.parentElement;
+    }
+  }
+
+  const rect = el.getBoundingClientRect();
+  return rect.width > 4 && rect.height > 4;
+}
+
 function findVisibleTarget(target: string): HTMLElement | null {
-  return [...document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`)]
-    .find((element) => {
-      const rect = element.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    }) ?? null;
+  if (typeof document === 'undefined') return null;
+  const elements = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${target}"]`));
+  if (elements.length === 0) return null;
+
+  // On small screens, prioritize mobile-specific elements (which appear later in the DOM)
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 640 : false;
+  const candidates = isMobile ? [...elements].reverse() : elements;
+
+  return candidates.find((el) => isElementTrulyVisible(el)) ?? null;
 }
 
 export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; onChangeMode: (mode: ProductTourMode) => void }) {
-  const { locale } = useTranslation();
+  const { locale, isAbroad: abroadFromHook } = useTranslation();
   const [userAbroad, setUserAbroad] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
 
@@ -25,19 +58,13 @@ export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; 
     setUserAbroad(isAbroad());
   }, []);
 
-  const isEn = userAbroad || locale === 'en';
+  const isEn = abroadFromHook || userAbroad || locale === 'en' || isAbroad();
   const [stepIndex, setStepIndex] = useState(0);
   const [highlight, setHighlight] = useState<Highlight>(null);
   const current = productTourSteps[stepIndex];
   const isLast = stepIndex === productTourSteps.length - 1;
 
-  const updateHighlight = useCallback(() => {
-    const element = findVisibleTarget(current.target);
-    if (!element) {
-      setHighlight(null);
-      return;
-    }
-    element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  const measureAndApplyHighlight = useCallback((element: HTMLElement) => {
     const rect = element.getBoundingClientRect();
     const padding = 6;
     setHighlight({
@@ -46,25 +73,50 @@ export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; 
       width: Math.min(window.innerWidth - 8, rect.width + padding * 2),
       height: Math.min(window.innerHeight - 8, rect.height + padding * 2)
     });
-  }, [current.target]);
+  }, []);
+
+  const goToTarget = useCallback(() => {
+    const element = findVisibleTarget(current.target);
+    if (!element) {
+      setHighlight(null);
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const isInView = rect.top >= 50 && rect.bottom <= window.innerHeight - 50 && rect.left >= 0 && rect.right <= window.innerWidth;
+
+    if (!isInView) {
+      // Instant snapping instead of sluggish smooth scrolling to prevent drifting
+      element.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+    }
+
+    measureAndApplyHighlight(element);
+  }, [current.target, measureAndApplyHighlight]);
+
+  const syncOnScrollOrResize = useCallback(() => {
+    const element = findVisibleTarget(current.target);
+    if (!element) return;
+    measureAndApplyHighlight(element);
+  }, [current.target, measureAndApplyHighlight]);
 
   useEffect(() => {
     onChangeMode(current.mode);
 
-    // Staggered attempts to ensure dynamic components and animations are fully mounted
-    const timer1 = window.setTimeout(updateHighlight, 120);
-    const timer2 = window.setTimeout(updateHighlight, 320);
+    // Instant position + short checks for dynamic tab mount transitions
+    goToTarget();
+    const timer1 = window.setTimeout(goToTarget, 50);
+    const timer2 = window.setTimeout(goToTarget, 160);
 
-    window.addEventListener("resize", updateHighlight);
-    window.addEventListener("scroll", updateHighlight, true);
+    window.addEventListener("resize", syncOnScrollOrResize);
+    window.addEventListener("scroll", syncOnScrollOrResize, true);
 
     return () => {
       window.clearTimeout(timer1);
       window.clearTimeout(timer2);
-      window.removeEventListener("resize", updateHighlight);
-      window.removeEventListener("scroll", updateHighlight, true);
+      window.removeEventListener("resize", syncOnScrollOrResize);
+      window.removeEventListener("scroll", syncOnScrollOrResize, true);
     };
-  }, [current.mode, current.target, onChangeMode, updateHighlight]);
+  }, [current.mode, current.target, onChangeMode, goToTarget, syncOnScrollOrResize]);
 
   const finish = useCallback(() => {
     localStorage.setItem("dailym-product-tour-completed", "1");
@@ -168,13 +220,13 @@ export function ProductTour({ onFinish, onChangeMode }: { onFinish: () => void; 
       {!highlight && <div className="absolute inset-0 bg-black/75 backdrop-blur-[2px]" />}
       {highlight && (
         <div 
-          className="pointer-events-none fixed z-[161] rounded-2xl border-2 border-[var(--primary)] ring-2 ring-[var(--primary)]/30 shadow-[0_0_0_9999px_rgba(0,0,0,0.78)] transition-all duration-200" 
+          className="pointer-events-none fixed z-[161] rounded-2xl border-2 border-[var(--primary)] ring-2 ring-[var(--primary)]/30 shadow-[0_0_0_9999px_rgba(0,0,0,0.78)] transition-[top,left,width,height] duration-150 ease-out" 
           style={highlight} 
         />
       )}
       <section 
         ref={cardRef}
-        className="fixed z-[162] rounded-3xl border border-[var(--primary)]/30 bg-[#13171d] p-5 shadow-2xl transition-all duration-200 max-h-[calc(100vh-32px)] overflow-y-auto" 
+        className="fixed z-[162] rounded-3xl border border-[var(--primary)]/30 bg-[#13171d] p-5 shadow-2xl transition-[top,left] duration-150 ease-out max-h-[calc(100vh-32px)] overflow-y-auto" 
         style={{ width: tooltipWidth, top: tooltipTop, left: tooltipLeft }}
       >
         <button 

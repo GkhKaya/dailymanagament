@@ -51,6 +51,14 @@ export const productTourSteps: ProductTourStep[] = [
     target: "quick-add",
     mode: "overview"
   },
+  {
+    title: "Yapay Zeka Sesli Asistan",
+    titleEn: "AI Voice Assistant",
+    text: "Ekranın sol altındaki bu mikrofona dokunarak konuşabilirsin! 'Kahvaltıda 2 yumurta ve 1 dilim ekmek yedim' veya 'Cüzdandan 150 TL market harcaması yaptım' dediğinde yapay zeka komutunu saniyeler içinde anlayıp otomatik kaydeder.",
+    textEn: "Tap this microphone at the bottom left to speak! Say 'I had 2 eggs and 1 toast for breakfast' or 'Spent $50 on groceries from wallet', and AI instantly interprets and logs your entries.",
+    target: "voice-assistant",
+    mode: "overview"
+  },
 
   // ── 2. BESLENME & SAĞLIK SAYFASI ──
   {
