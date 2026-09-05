@@ -289,5 +289,20 @@
     "categoryPrompt": "In addition to default categories, you can create your custom categories.",
     "nextStep": "Next Step",
     "completeSetup": "Complete Setup"
+  },
+  "seo": {
+    "siteTitle": "DailyM - Smart Personal Management, Calorie, Finance & Stock Assistant",
+    "siteDescription": "Track daily calories, macros, nutrition, manage multi-market stock portfolios (BIST, US, Crypto), control your budget, and achieve your goals with AI voice assistance.",
+    "homeTitle": "DailyM - Personal Management Assistant | Finance, Health & Stocks",
+    "homeDescription": "Track daily calories, nutrition and macros, manage BIST & global stock portfolios, control income-expense budgets, and log with AI voice assistant in one unified app.",
+    "registerTitle": "Create Free Account | DailyM - Finance, Health & Stocks",
+    "registerDescription": "Sign up for a free DailyM account; start managing calories, macros, multi-market stock portfolios, and your budget from a single dashboard.",
+    "forgotPasswordTitle": "Forgot Password | DailyM",
+    "forgotPasswordDescription": "Securely reset your DailyM account password and regain immediate access to your data.",
+    "resetPasswordTitle": "Reset Password | DailyM",
+    "resetPasswordDescription": "Set a new and secure password for your DailyM account.",
+    "dashboardTitle": "Dashboard | DailyM",
+    "profileTitle": "Profile & Settings | DailyM",
+    "onboardingTitle": "Account Setup | DailyM"
   }
 }

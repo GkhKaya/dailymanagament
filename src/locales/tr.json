@@ -289,5 +289,20 @@
     "categoryPrompt": "Varsayılan kategorilerimize ek olarak kendi özel kategorilerinizi oluşturabilirsiniz.",
     "nextStep": "Sonraki Adım",
     "completeSetup": "Kurulumu Tamamla"
+  },
+  "seo": {
+    "siteTitle": "DailyM - Akıllı Kişisel Yönetim, Kalori, Finans & Borsa Asistanı",
+    "siteDescription": "DailyM ile günlük kalori ve beslenme takibi yapın, borsa portföyünüzü (BIST, ABD, Kripto) canlı yönetin, bütçenizi kontrol edin ve yapay zeka sesli asistanı ile hedeflerinize ulaşın.",
+    "homeTitle": "DailyM - Kişisel Yönetim Asistanınız | Finans, Sağlık & Borsa",
+    "homeDescription": "Günlük kalori, beslenme ve makro takibi, BIST ve küresel borsa portföy yönetimi, gelir-gider bütçe kontrolü ve yapay zeka sesli asistanı tek uygulamada.",
+    "registerTitle": "Ücretsiz Hesap Oluştur | DailyM - Finans, Sağlık & Borsa",
+    "registerDescription": "Hemen ücretsiz DailyM hesabı açın; kalori takibi, makro hesaplama, borsa portföyü ve kişisel bütçenizi tek ekrandan yönetmeye başlayın.",
+    "forgotPasswordTitle": "Şifremi Unuttum | DailyM",
+    "forgotPasswordDescription": "DailyM hesabınızın şifresini güvenle sıfırlayın ve kişisel hedeflerinize kaldığınız yerden devam edin.",
+    "resetPasswordTitle": "Yeni Şifre Belirleme | DailyM",
+    "resetPasswordDescription": "Hesabınız için yeni ve güvenli bir şifre belirleyin.",
+    "dashboardTitle": "Gösterge Paneli | DailyM",
+    "profileTitle": "Profil ve Ayarlar | DailyM",
+    "onboardingTitle": "Hesap Kurulumu | DailyM"
   }
 }

@@ -2,7 +2,11 @@ import { Metadata } from 'next';
 import { getCategoriesAction } from '@/actions/finance';
 
 export const metadata: Metadata = {
-  title: "Kurulum",
+  title: "Hesap Kurulumu | DailyM",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 import { OnboardingClient } from './OnboardingClient';
 import { auth } from '@/lib/auth';

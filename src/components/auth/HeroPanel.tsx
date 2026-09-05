@@ -35,14 +35,14 @@ export function HeroPanel() {
   }, [currentSlide, slides.length]);
 
   return (
-    <div className="hidden md:flex flex-col justify-between flex-1 px-[var(--space-8)] py-[var(--space-8)] relative overflow-hidden">
+    <section aria-label="DailyM Hero" className="hidden md:flex flex-col justify-between flex-1 px-[var(--space-8)] py-[var(--space-8)] relative overflow-hidden">
       
       {/* Logo — top */}
       <div className="flex items-center gap-3 animate-slide-up z-10">
-        <img src="/assets/logo.svg" alt="DailyM" className="h-10 w-auto object-contain" width={40} height={40} style={{ maxHeight: "40px" }} />
-        <h1 className="text-logo text-[var(--primary)]">
+        <img src="/assets/logo.svg" alt="DailyM - Kişisel Yönetim Asistanı" className="h-10 w-auto object-contain" width={40} height={40} style={{ maxHeight: "40px" }} />
+        <span className="text-logo text-[var(--primary)] font-semibold">
           {t("home.logo")}
-        </h1>
+        </span>
       </div>
 
       {/* Carousel Area — Middle */}
@@ -58,7 +58,7 @@ export function HeroPanel() {
               <div className="w-14 h-14 rounded-2xl bg-[var(--surface-container)] border border-[var(--outline)] flex items-center justify-center mb-[var(--space-4)] shadow-lg shadow-black/50">
                 {slide.icon}
               </div>
-              <h2 className="text-hero text-white mb-[var(--space-2)] text-[32px] leading-tight">
+              <h2 className="text-hero text-white mb-[var(--space-2)] text-[32px] leading-tight font-bold">
                 {slide.title}
               </h2>
               <p className="text-body text-[var(--on-surface-variant)] text-lg leading-relaxed">
@@ -73,6 +73,7 @@ export function HeroPanel() {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
+                aria-label={`Slide ${idx + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-500 ${
                   idx === currentSlide ? 'w-8 bg-[var(--primary)]' : 'w-2 bg-[var(--outline)] hover:bg-[var(--on-surface-variant)]'
                 }`}
@@ -82,18 +83,18 @@ export function HeroPanel() {
         </div>
       </div>
 
-      {/* Hero text — Bottom (Original Text) */}
+      {/* Hero text — Bottom (Original Text as H1) */}
       <div style={{ maxWidth: 420 }} className="z-10">
-        <h2
+        <h1
           className="text-headline animate-slide-up anim-delay-100"
           style={{ color: "var(--on-surface)", marginBottom: 14 }}
         >
           {t("home.heroTitle")}
-        </h2>
+        </h1>
         <p className="text-body animate-slide-up anim-delay-200" style={{ color: "var(--on-surface-variant)" }}>
           {t("home.heroSubtitle")}
         </p>
       </div>
-    </div>
+    </section>
   );
 }

@@ -8,19 +8,19 @@ import { useTranslation } from "@/hooks/useTranslation";
 export function ForgotPasswordView() {
   const { t } = useTranslation();
   return (
-    <div className="ambient-bg min-h-screen flex">
+    <main className="ambient-bg min-h-screen flex" role="main">
       {/* ── Sol Panel: Logo + Hero ── */}
       <HeroPanel />
 
       {/* ── Sağ Panel: Form ── */}
       <div className="flex flex-1 items-center justify-center md:justify-end px-8 py-12 md:pl-16 md:pr-24">
         {/* Mobil logo */}
-        <div className="md:hidden absolute top-8 w-full flex items-center justify-center gap-2 animate-slide-up">
-          <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" />
-          <h1 className="text-logo" style={{ color: "var(--on-surface)" }}>
+        <header className="md:hidden absolute top-8 w-full flex items-center justify-center gap-2 animate-slide-up">
+          <img src="/assets/logo.svg" alt="DailyM - Kişisel Yönetim Asistanı" className="h-8 w-auto object-contain" />
+          <span className="text-logo font-bold" style={{ color: "var(--on-surface)" }}>
             {t("home.logo")}
-          </h1>
-        </div>
+          </span>
+        </header>
 
         <div style={{ width: "100%", maxWidth: 380 }} className="animate-slide-up anim-delay-100">
           <h2
@@ -35,6 +35,6 @@ export function ForgotPasswordView() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

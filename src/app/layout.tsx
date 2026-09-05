@@ -3,16 +3,96 @@ import "./globals.css";
 
 import type { Viewport } from "next";
 
+import { getBaseUrl } from "@/lib/seo-helpers";
+
+const siteUrl = getBaseUrl();
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     template: "%s | DailyM",
-    default: "DailyM - Kişisel Yönetim Asistanınız",
+    default: "DailyM - Akıllı Kişisel Yönetim, Kalori, Finans & Borsa Asistanı",
   },
-  description: "Kişisel hedeflerinizi, finansınızı ve sağlığınızı tek bir yerden yönetin.",
+  description: "DailyM ile günlük kalori ve beslenme takibi yapın, borsa portföyünüzü (BIST, ABD, Kripto) canlı yönetin, bütçenizi kontrol edin ve yapay zeka sesli asistanı ile hedeflerinize ulaşın.",
+  keywords: [
+    "DailyM",
+    "kişisel yönetim",
+    "kalori takip",
+    "kalori sayacı",
+    "makro besin hesaplama",
+    "sağlık takibi",
+    "borsa takip",
+    "bist hisse takip",
+    "portföy yönetimi",
+    "gelir gider takip",
+    "bütçe planlama",
+    "yapay zeka besin kaydı",
+    "sesli asistan",
+    "pwa sağlık",
+    "calorie tracker",
+    "macro tracker",
+    "nutrition diary",
+    "personal finance tracker",
+    "stock portfolio manager",
+    "budget planner",
+    "ai voice assistant"
+  ],
+  authors: [{ name: "DailyM Team" }],
+  creator: "DailyM",
+  publisher: "DailyM",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "tr-TR": "/?lang=tr",
+      "en-US": "/?lang=en",
+      "x-default": "/",
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    alternateLocale: ["en_US"],
+    url: siteUrl,
+    title: "DailyM - Akıllı Kişisel Yönetim, Kalori, Finans & Borsa Asistanı",
+    description: "Günlük kalori ve beslenme takibi, BIST ve küresel borsa portföy yönetimi, gelir-gider bütçe kontrolü ve yapay zeka sesli asistanı tek uygulamada.",
+    siteName: "DailyM",
+    images: [
+      {
+        url: "/assets/logo.png",
+        width: 512,
+        height: 512,
+        alt: "DailyM - Kişisel Yönetim Asistanı",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DailyM - Kişisel Yönetim Asistanı (Kalori, Finans, Borsa)",
+    description: "Günlük beslenme, borsa portföyü ve bütçenizi yapay zeka sesli asistanı desteğiyle tek bir yerden yönetin.",
+    images: ["/assets/logo.png"],
+    creator: "@dailym",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/assets/logo.svg", type: "image/svg+xml" },
       { url: "/assets/logo.png", sizes: "192x192", type: "image/png" },
+      { url: "/assets/logo.png", sizes: "512x512", type: "image/png" },
     ],
     shortcut: "/assets/logo.png",
     apple: [
@@ -24,6 +104,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "DailyM",
   },
+  category: "lifestyle",
 };
 
 export const viewport: Viewport = {

@@ -10,7 +10,7 @@ export function RegisterView() {
   const { t } = useTranslation();
 
   return (
-    <div className="ambient-bg min-h-screen flex relative">
+    <main className="ambient-bg min-h-screen flex relative" role="main">
       {/* ── Dil Değiştirici (Top Right) ── */}
       <div className="absolute top-6 right-6 z-30">
         <AuthLanguageToggle />
@@ -22,12 +22,12 @@ export function RegisterView() {
       {/* ── Sağ Panel: Form ── */}
       <div className="flex flex-1 items-center justify-center md:justify-end px-8 py-12 md:pl-16 md:pr-24">
         {/* Mobil logo */}
-        <div className="md:hidden absolute top-8 w-full flex items-center justify-center gap-2 animate-slide-up">
-          <img src="/assets/logo.svg" alt="DailyM" className="h-8 w-auto object-contain" />
-          <h1 className="text-logo" style={{ color: "var(--on-surface)" }}>
+        <header className="md:hidden absolute top-8 w-full flex items-center justify-center gap-2 animate-slide-up">
+          <img src="/assets/logo.svg" alt="DailyM - Kişisel Yönetim Asistanı" className="h-8 w-auto object-contain" />
+          <span className="text-logo font-bold" style={{ color: "var(--on-surface)" }}>
             {t("home.logo")}
-          </h1>
-        </div>
+          </span>
+        </header>
 
         <div style={{ width: "100%", maxWidth: 380 }} className="animate-slide-up anim-delay-100">
           <h2
@@ -42,6 +42,6 @@ export function RegisterView() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
