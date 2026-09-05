@@ -106,8 +106,99 @@ function formatEnglishDate(dateStr: string): string {
   }
 }
 
+// Capitalize food name for English display (e.g. "boiled egg" -> "Boiled Egg")
+export function formatEnglishFoodName(name: string): string {
+  if (!name) return '';
+  return name
+    .trim()
+    .split(' ')
+    .map(word => {
+      if (!word) return '';
+      if (word.length > 1 && word === word.toUpperCase()) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+// Translate and normalize Turkish food portion strings to English
+export function formatEnglishAmount(rawAmount: string | undefined, translatedMap?: Map<string, string>): string {
+  if (!rawAmount) return '';
+  const clean = rawAmount.trim();
+  if (!clean) return '';
+
+  const mapped = translatedMap?.get(clean.toLowerCase());
+  if (mapped && mapped.toLowerCase() !== clean.toLowerCase()) {
+    return mapped;
+  }
+
+  return clean
+    .replace(/(\d+(?:[.,]\d+)?)\s*(?:adet|tane)\b/gi, '$1 pcs')
+    .replace(/(\d+(?:[.,]\d+)?)\s*dilim\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} slices` : `${n} slice`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*porsiyon\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} servings` : `${n} serving`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*kase\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} bowls` : `${n} bowl`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*tabak\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} plates` : `${n} plate`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*su\s*barda[gğ][ıi]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} glasses` : `${n} glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*[cç]ay\s*barda[gğ][ıi]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} tea glasses` : `${n} tea glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*bardak\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} glasses` : `${n} glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*fincan\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} cups` : `${n} cup`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*avu[cç]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} handfuls` : `${n} handful`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*yemek\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 tbsp')
+    .replace(/(\d+(?:[.,]\d+)?)\s*tatl[ıi]\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 dessert spoon')
+    .replace(/(\d+(?:[.,]\d+)?)\s*[cç]ay\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 tsp')
+    .replace(/(\d+(?:[.,]\d+)?)\s*(?:gram|gr)\b/gi, '$1g')
+    .replace(/\byar[ıi]m\s*porsiyon\b/gi, '0.5 serving')
+    .replace(/\byar[ıi]m\s*dilim\b/gi, '0.5 slice')
+    .replace(/\byar[ıi]m\b/gi, 'half');
+}
+
 export async function downloadHealthStory(data: HealthDataDTO, lang: 'tr' | 'en' = 'tr') {
   const isEn = lang === 'en';
+
+  // ── TRANSLATE FOODS & PORTIONS TO ENGLISH VIA API ──
+  const translatedFoodsMap = new Map<string, string>();
+  if (isEn && data.meals && data.meals.length > 0) {
+    const phrasesToTranslate = new Set<string>();
+
+    for (const meal of data.meals) {
+      if (meal.foods && meal.foods.length > 0) {
+        for (const f of meal.foods) {
+          const cName = cleanFoodText(f.name);
+          if (cName) phrasesToTranslate.add(cName);
+          if (f.amount) phrasesToTranslate.add(f.amount.trim());
+        }
+      } else if (meal.foodName) {
+        const cName = cleanFoodText(meal.foodName);
+        if (cName) phrasesToTranslate.add(cName);
+      }
+    }
+
+    if (phrasesToTranslate.size > 0) {
+      try {
+        const { translateStoryTextsAction } = await import('@/actions/health');
+        const res = await translateStoryTextsAction(Array.from(phrasesToTranslate));
+        if (res && res.success && res.translations) {
+          for (const [k, v] of Object.entries(res.translations)) {
+            translatedFoodsMap.set(k.toLowerCase().trim(), v);
+          }
+        }
+      } catch (err) {
+        console.warn('translateStoryTextsAction server action fallback:', err);
+      }
+
+      // Check for any phrases not yet mapped and fallback to client translateBatch
+      const remaining = Array.from(phrasesToTranslate).filter(p => !translatedFoodsMap.has(p.toLowerCase().trim()));
+      if (remaining.length > 0) {
+        try {
+          const clientMap = await translateBatch(remaining);
+          for (const [k, v] of clientMap) {
+            translatedFoodsMap.set(k.toLowerCase().trim(), v);
+          }
+        } catch (clientErr) {
+          console.warn('Client translation fallback error:', clientErr);
+        }
+      }
+    }
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH;
@@ -443,15 +534,25 @@ export async function downloadHealthStory(data: HealthDataDTO, lang: 'tr' | 'en'
       if (meal.foods && meal.foods.length > 0) {
         foodText = meal.foods
           .map((f) => {
-            const rawName = isEn ? ((f as any).name_en || (f as any).nameEn || f.name) : f.name;
-            const cleanName = cleanFoodText(rawName);
-            return `${cleanName}${f.amount ? ` (${f.amount})` : ''}`;
+            const rawClean = cleanFoodText(f.name);
+            let displayName = rawClean;
+            if (isEn) {
+              const trans = translatedFoodsMap.get(rawClean.toLowerCase()) || (f as any).name_en || (f as any).nameEn || rawClean;
+              displayName = formatEnglishFoodName(trans);
+            }
+            const displayAmount = isEn ? formatEnglishAmount(f.amount, translatedFoodsMap) : f.amount;
+            return `${displayName}${displayAmount ? ` (${displayAmount})` : ''}`;
           })
           .filter(t => t.trim().length > 0)
           .join(' · ');
       } else {
-        const rawName = isEn ? ((meal as any).foodNameEn || (meal as any).food_name_en || meal.foodName) : meal.foodName;
-        foodText = cleanFoodText(rawName || (isEn ? 'Logged meal' : 'Kayıtlı yiyecek'));
+        const rawClean = cleanFoodText(meal.foodName);
+        let displayName = rawClean || (isEn ? 'Logged meal' : 'Kayıtlı yiyecek');
+        if (isEn && rawClean) {
+          const trans = translatedFoodsMap.get(rawClean.toLowerCase()) || (meal as any).foodNameEn || (meal as any).food_name_en || rawClean;
+          displayName = formatEnglishFoodName(trans);
+        }
+        foodText = displayName;
       }
 
       wrapCleanText(ctx, foodText, pad + 32, curY + 76, contentWidth - 170, 22, 2);

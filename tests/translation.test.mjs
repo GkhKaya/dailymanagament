@@ -56,3 +56,32 @@ test('translateDayDataToEnglish translates meals and exercises correctly', async
   // 'Yumurta' will be translated to 'Egg' or preserved if offline
   assert.ok(translated.meals.breakfast[0].name.length > 0);
 });
+
+test('formatEnglishFoodName formats food names in title case for English story', async () => {
+  const { formatEnglishFoodName } = await import('../src/lib/translation-service.ts');
+  assert.equal(formatEnglishFoodName('boiled egg'), 'Boiled Egg');
+  assert.equal(formatEnglishFoodName('chicken breast'), 'Chicken Breast');
+  assert.equal(formatEnglishFoodName('oatmeal with berries'), 'Oatmeal With Berries');
+  assert.equal(formatEnglishFoodName(''), '');
+});
+
+test('formatEnglishAmount converts Turkish portion amounts to standard English', async () => {
+  const { formatEnglishAmount } = await import('../src/lib/translation-service.ts');
+  assert.equal(formatEnglishAmount('2 adet'), '2 pcs');
+  assert.equal(formatEnglishAmount('1 dilim'), '1 slice');
+  assert.equal(formatEnglishAmount('2 dilim'), '2 slices');
+  assert.equal(formatEnglishAmount('1 kase'), '1 bowl');
+  assert.equal(formatEnglishAmount('100 gram'), '100g');
+  assert.equal(formatEnglishAmount('1 porsiyon'), '1 serving');
+  assert.equal(formatEnglishAmount('2 porsiyon'), '2 servings');
+});
+
+test('translateBatch translates Turkish foods to English via translation API', async () => {
+  const foods = ['Yumurta', 'Yulaf Ezmesi', 'Tavuk Göğsü', 'Pirinç Pilavı'];
+  const res = await translateBatch(foods);
+  assert.ok(res.has('Yumurta'));
+  assert.equal(res.get('Yumurta')?.toLowerCase(), 'egg');
+  assert.ok(res.has('Yulaf Ezmesi'));
+  assert.equal(res.get('Yulaf Ezmesi')?.toLowerCase(), 'oatmeal');
+});
+

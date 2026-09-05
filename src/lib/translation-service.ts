@@ -142,28 +142,30 @@ export async function translateBatch(texts: string[]): Promise<Map<string, strin
     return resultMap;
   }
 
-  // Check database FoodCache for any known foods with food_name_en
-  try {
-    const dbMod = await import('@/lib/db').catch(() => import('./db.ts' as any)).catch(() => null);
-    const modelMod = await import('@/models/FoodCache').catch(() => import('../models/FoodCache.ts' as any)).catch(() => null);
-    if (dbMod && modelMod) {
-      const { connectDB } = dbMod;
-      const { FoodCache } = modelMod;
-      await connectDB();
-      const dbMatches = await FoodCache.find({
-        food_name: { $in: toFetch.map((t: string) => new RegExp(`^${t}$`, 'i')) },
-        food_name_en: { $exists: true, $ne: '' }
-      }).select('food_name food_name_en').lean();
+  // Check database FoodCache for any known foods with food_name_en (server-only)
+  if (typeof window === 'undefined') {
+    try {
+      const dbMod = await import('@/lib/db').catch(() => import('./db.ts' as any)).catch(() => null);
+      const modelMod = await import('@/models/FoodCache').catch(() => import('../models/FoodCache.ts' as any)).catch(() => null);
+      if (dbMod && modelMod) {
+        const { connectDB } = dbMod;
+        const { FoodCache } = modelMod;
+        await connectDB();
+        const dbMatches = await FoodCache.find({
+          food_name: { $in: toFetch.map((t: string) => new RegExp(`^${t}$`, 'i')) },
+          food_name_en: { $exists: true, $ne: '' }
+        }).select('food_name food_name_en').lean();
 
-      for (const match of dbMatches) {
-        if (match.food_name_en) {
-          translationCache.set(match.food_name.toLowerCase(), match.food_name_en);
-          resultMap.set(match.food_name, match.food_name_en);
+        for (const match of dbMatches) {
+          if (match.food_name_en) {
+            translationCache.set(match.food_name.toLowerCase(), match.food_name_en);
+            resultMap.set(match.food_name, match.food_name_en);
+          }
         }
       }
+    } catch {
+      // Graceful fallback to Google Translate if DB is unavailable
     }
-  } catch {
-    // Graceful fallback to Google Translate if DB is unavailable
   }
 
   // Filter items still needing Google Translate
@@ -310,3 +312,53 @@ export async function translateWeekSummariesToEnglish(weeks: ExportWeekSummary[]
     })),
   }));
 }
+
+/**
+ * Capitalizes food name for English display (e.g. "boiled egg" -> "Boiled Egg")
+ */
+export function formatEnglishFoodName(name: string): string {
+  if (!name) return '';
+  return name
+    .trim()
+    .split(' ')
+    .map(word => {
+      if (!word) return '';
+      if (word.length > 1 && word === word.toUpperCase()) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+/**
+ * Translates and normalizes Turkish food portion strings to English
+ */
+export function formatEnglishAmount(rawAmount: string | undefined, translatedMap?: Map<string, string>): string {
+  if (!rawAmount) return '';
+  const clean = rawAmount.trim();
+  if (!clean) return '';
+
+  const mapped = translatedMap?.get(clean.toLowerCase());
+  if (mapped && mapped.toLowerCase() !== clean.toLowerCase()) {
+    return mapped;
+  }
+
+  return clean
+    .replace(/(\d+(?:[.,]\d+)?)\s*(?:adet|tane)\b/gi, '$1 pcs')
+    .replace(/(\d+(?:[.,]\d+)?)\s*dilim\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} slices` : `${n} slice`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*porsiyon\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} servings` : `${n} serving`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*kase\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} bowls` : `${n} bowl`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*tabak\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} plates` : `${n} plate`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*su\s*barda[gğ][ıi]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} glasses` : `${n} glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*[cç]ay\s*barda[gğ][ıi]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} tea glasses` : `${n} tea glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*bardak\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} glasses` : `${n} glass`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*fincan\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} cups` : `${n} cup`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*avu[cç]\b/gi, (_, n) => (parseFloat(n.replace(',', '.')) > 1 ? `${n} handfuls` : `${n} handful`))
+    .replace(/(\d+(?:[.,]\d+)?)\s*yemek\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 tbsp')
+    .replace(/(\d+(?:[.,]\d+)?)\s*tatl[ıi]\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 dessert spoon')
+    .replace(/(\d+(?:[.,]\d+)?)\s*[cç]ay\s*ka[sş][ıi][gğ][ıi]\b/gi, '$1 tsp')
+    .replace(/(\d+(?:[.,]\d+)?)\s*(?:gram|gr)\b/gi, '$1g')
+    .replace(/\byar[ıi]m\s*porsiyon\b/gi, '0.5 serving')
+    .replace(/\byar[ıi]m\s*dilim\b/gi, '0.5 slice')
+    .replace(/\byar[ıi]m\b/gi, 'half');
+}
+

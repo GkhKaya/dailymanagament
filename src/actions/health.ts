@@ -696,3 +696,16 @@ export async function deleteExerciseAction(data: { date: string; entry_id: strin
     return { success: false, error: err.message };
   }
 }
+
+// ── STORY & EXPORT TEXT TRANSLATION ──
+export async function translateStoryTextsAction(texts: string[]): Promise<{ success: boolean; translations: Record<string, string> }> {
+  try {
+    const { translateBatch } = await import("@/lib/translation-service");
+    const map = await translateBatch(texts);
+    return { success: true, translations: Object.fromEntries(map) };
+  } catch (error: any) {
+    console.error("translateStoryTextsAction error:", error);
+    return { success: false, translations: {} };
+  }
+}
+
