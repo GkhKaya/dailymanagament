@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { GoogleGenAI } from '@google/genai';
 import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
@@ -70,6 +72,11 @@ function calculateNutrition(perUnit: { calories: number; protein_g: number; carb
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 });
+    }
+
     const body = await request.json() as { imageBase64?: string; mimeType?: string; userDirective?: string };
     if (!body.imageBase64) {
       return NextResponse.json({ error: 'Fotoğraf verisi (imageBase64) gerekli.' }, { status: 400 });

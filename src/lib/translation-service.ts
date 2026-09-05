@@ -152,7 +152,9 @@ export async function translateBatch(texts: string[]): Promise<Map<string, strin
         const { FoodCache } = modelMod;
         await connectDB();
         const dbMatches = await FoodCache.find({
-          food_name: { $in: toFetch.map((t: string) => new RegExp(`^${t}$`, 'i')) },
+          food_name: {
+            $in: toFetch.map((t: string) => new RegExp(`^${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'))
+          },
           food_name_en: { $exists: true, $ne: '' }
         }).select('food_name food_name_en').lean();
 

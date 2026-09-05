@@ -122,6 +122,7 @@ import { I18nProvider } from '@/components/providers/I18nProvider';
 import { setServerLocale, type Locale } from '@/lib/i18n';
 
 import { PwaInstallBanner } from '@/components/pwa/PwaInstallBanner';
+import { DevToolsShield } from '@/components/security/DevToolsShield';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage' });
@@ -161,6 +162,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans">
+        <DevToolsShield />
         <I18nProvider initialLocale={initialLocale} initialIsAbroad={initialIsAbroad} initialCountry={initialCountry}>
           {children}
           <Toaster position="top-center" />

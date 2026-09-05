@@ -1,5 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 
@@ -187,6 +189,11 @@ async function queryOpenRouter(foodName: string, amount: number, unit: UnitType)
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 });
+    }
+
     const body = await request.json() as { food_name?: string; amount?: number; unit?: UnitType };
     const foodName = body.food_name?.trim();
     const amount = Number(body.amount);

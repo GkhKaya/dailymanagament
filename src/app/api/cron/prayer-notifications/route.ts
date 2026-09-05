@@ -6,7 +6,10 @@ import { PRAYER_AUTHORIZED_EMAIL } from '@/lib/prayer-times';
 import { User } from '@/models/User';
 export const runtime = 'nodejs';
 export async function GET(request: Request) {
-  if (request.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   await connectDB();
   const now = new Date();
   let synced = 0;

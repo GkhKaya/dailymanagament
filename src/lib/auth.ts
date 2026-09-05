@@ -59,7 +59,7 @@ export const auth = betterAuth({
     baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL,
     rateLimit: {
         window: 60,
-        max: 10000
+        max: 30, // Rate limit: maximum 30 requests per minute to prevent brute-force attacks
     },
     session: {
         expiresIn: 60 * 60 * 24 * 7, // 7 gün
@@ -69,6 +69,7 @@ export const auth = betterAuth({
         defaultCookieAttributes: {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
+            httpOnly: true,
         },
     },
     trustedOrigins: [
@@ -77,8 +78,11 @@ export const auth = betterAuth({
     ].filter(Boolean),
     emailAndPassword: {
         enabled: true,
+        minPasswordLength: 8,
         sendResetPassword: async ({ user, url }) => {
-          console.log(`\n=== SIFRE SIFIRLAMA TALEBI ===\nEmail: ${user.email}\nSifirlama Linki: ${url}\n==============================\n`);
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`\n=== SIFRE SIFIRLAMA TALEBI ===\nEmail: ${user.email}\nSifirlama Linki: ${url}\n==============================\n`);
+          }
         }
     },
 });

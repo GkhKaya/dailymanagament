@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { buildAlternateLanguages } from "@/lib/seo-helpers";
 
@@ -12,6 +15,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !session.user) {
+    redirect('/');
+  }
+
   return <DashboardView />;
 }
+

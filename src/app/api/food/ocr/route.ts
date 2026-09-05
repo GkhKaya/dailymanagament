@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_VISION_MODEL, nutritionVisionPrompt, nutritionVisionSchema } from '@/lib/gemini-vision';
 import { extractMistralErrorMessage, nutritionAnnotationFormat, parseNutritionAnnotation } from '@/lib/mistral-ocr';
@@ -69,6 +71,11 @@ async function readWithMistral(bytes: Buffer, mimeType: string) {
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('image');
     const provider = formData.get('provider');

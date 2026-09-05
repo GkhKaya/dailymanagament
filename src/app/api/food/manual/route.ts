@@ -8,7 +8,10 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
-    const userId = session?.user?.id || null;
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Oturum açmanız gerekiyor.' }, { status: 401 });
+    }
+    const userId = session.user.id;
 
     const body = await req.json();
 
