@@ -99,6 +99,11 @@ textarea {
   touch-action: manipulation;
 }
 
+input[type="date"] {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 :where(button, a, input, select, textarea):focus-visible {
   outline: 2px solid var(--primary) !important;
   outline-offset: 3px;

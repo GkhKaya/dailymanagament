@@ -56,7 +56,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
         onTransitionEnd={onAnimationEnd}
       >
         {/* Header */}
-        <div className="px-6 py-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.05)] shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.05)] shrink-0">
           <h2 id="bottom-sheet-title" className="text-title font-semibold">{title}</h2>
           <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Pencereyi kapat" className="min-h-11 min-w-11 p-2 rounded-full hover:bg-[rgba(255,255,255,0.05)] transition-colors">
             <X size={20} className="text-[var(--on-surface-variant)]" />
@@ -64,7 +64,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </div>

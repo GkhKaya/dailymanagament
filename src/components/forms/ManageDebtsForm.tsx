@@ -126,13 +126,13 @@ export function ManageDebtsForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="flex flex-col gap-2 min-w-0">
               <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
                 {isEn ? "Amount" : "Tutar"}
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)]">
+              <div className="relative min-w-0">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--font-headline)] font-medium text-[var(--on-surface-variant)] pointer-events-none">
                   {currencySym}
                 </span>
                 <input 
@@ -142,22 +142,22 @@ export function ManageDebtsForm({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00" 
-                  className={`w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body font-semibold text-white focus:outline-none transition-all ${debtDirection === DebtDirection.GIVEN ? 'focus:border-[#4ade80]' : 'focus:border-orange-400'}`}
+                  className={`w-full min-w-0 max-w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body font-semibold text-white focus:outline-none transition-all ${debtDirection === DebtDirection.GIVEN ? 'focus:border-[#4ade80]' : 'focus:border-orange-400'}`}
                 />
               </div>
             </div>
             
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 min-w-0">
               <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
                 {isEn ? "Due Date" : "Son Ödeme Tarihi"}
               </label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={18} />
+              <div className="relative min-w-0">
+                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)] pointer-events-none" size={18} />
                 <input 
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)} 
-                  className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-10 pr-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] transition-all"
+                  className="w-full min-w-0 max-w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 pl-11 pr-3 text-body text-white [color-scheme:dark] focus:outline-none focus:border-[var(--inverse-primary)] transition-all cursor-pointer"
                 />
               </div>
             </div>

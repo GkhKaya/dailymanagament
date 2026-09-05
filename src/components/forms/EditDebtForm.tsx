@@ -32,8 +32,8 @@ export function EditDebtForm({ onClose, onSuccess, initialData }: { onClose: () 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="flex flex-col gap-2 min-w-0">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
               {isEn ? `Amount (${currencySymbol})` : `Tutar (${currencySymbol})`}
             </label>
@@ -41,11 +41,11 @@ export function EditDebtForm({ onClose, onSuccess, initialData }: { onClose: () 
               type="number" 
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+              className="w-full min-w-0 max-w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
             />
           </div>
           
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 min-w-0">
             <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">
               {isEn ? 'Due Date (Optional)' : 'Son Ödeme (Opsiyonel)'}
             </label>
@@ -53,7 +53,7 @@ export function EditDebtForm({ onClose, onSuccess, initialData }: { onClose: () 
               type="date" 
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+              className="w-full min-w-0 max-w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white [color-scheme:dark] focus:outline-none focus:border-[var(--inverse-primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer"
             />
           </div>
         </div>

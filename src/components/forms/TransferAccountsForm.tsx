@@ -85,7 +85,7 @@ export function TransferAccountsForm({ accounts, currentDate, onSuccess, onClose
           options={targetOptions.map((account) => ({ value: account.id, label: account.name }))} 
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input 
           type="number" 
           min="0.01" 
@@ -94,16 +94,16 @@ export function TransferAccountsForm({ accounts, currentDate, onSuccess, onClose
           value={amount} 
           onChange={(event) => setAmount(event.target.value)} 
           placeholder={isEn ? `Amount ${currencySymbol}` : `Tutar ${currencySymbol}`} 
-          className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white outline-none" 
+          className="w-full min-w-0 max-w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white outline-none" 
         />
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" size={17} />
+        <div className="relative min-w-0">
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)] pointer-events-none" size={17} />
           <input 
             type="date" 
             required 
             value={date} 
             onChange={(event) => setDate(event.target.value)} 
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-2 text-white outline-none" 
+            className="w-full min-w-0 max-w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-2 text-white [color-scheme:dark] outline-none" 
           />
         </div>
       </div>
