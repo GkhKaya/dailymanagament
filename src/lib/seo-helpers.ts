@@ -3,7 +3,7 @@ import tr from '../locales/tr.json' with { type: 'json' };
 import en from '../locales/en.json' with { type: 'json' };
 
 export function getBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://dailym.app';
+  const url = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://dailym.devosuit.com';
   return url.replace(/\/$/, '');
 }
 

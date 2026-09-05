@@ -3,7 +3,7 @@ import { getBaseUrl } from '@/lib/seo-helpers';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getBaseUrl();
-  const lastModified = new Date();
+  const lastModified = new Date().toISOString().split('T')[0];
 
   return [
     {
@@ -16,6 +16,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
           'tr-TR': `${baseUrl}/?lang=tr`,
           'en-US': `${baseUrl}/?lang=en`,
           'x-default': `${baseUrl}/`,
+        },
+      },
+    },
+    {
+      url: `${baseUrl}/dashboard`,
+      lastModified,
+      changeFrequency: 'daily',
+      priority: 1.0,
+      alternates: {
+        languages: {
+          'tr-TR': `${baseUrl}/dashboard?lang=tr`,
+          'en-US': `${baseUrl}/dashboard?lang=en`,
+          'x-default': `${baseUrl}/dashboard`,
         },
       },
     },

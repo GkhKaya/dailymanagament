@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: [
           '/',
+          '/dashboard',
           '/register',
           '/forgot-password',
           '/assets/',
@@ -20,8 +21,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
         disallow: [
           '/api/',
-          '/dashboard',
-          '/dashboard/',
           '/profile',
           '/profile/',
           '/onboarding',

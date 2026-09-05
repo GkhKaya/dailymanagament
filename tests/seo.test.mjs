@@ -69,14 +69,16 @@ test('3. Schema.org BreadcrumbList generation', () => {
 test('4. Robots.ts and Sitemap.ts file integrity', () => {
   const robotsContent = fs.readFileSync(path.resolve('src/app/robots.ts'), 'utf8');
   assert.ok(robotsContent.includes("userAgent: '*'"));
-  assert.ok(robotsContent.includes("disallow: ["));
+  assert.ok(robotsContent.includes("allow: ["));
   assert.ok(robotsContent.includes("'/dashboard'"));
+  assert.ok(robotsContent.includes("disallow: ["));
   assert.ok(robotsContent.includes("'/profile'"));
   assert.ok(robotsContent.includes("'/api/'"));
   assert.ok(robotsContent.includes("sitemap:"));
 
   const sitemapContent = fs.readFileSync(path.resolve('src/app/sitemap.ts'), 'utf8');
   assert.ok(sitemapContent.includes("url: `${baseUrl}/`"));
+  assert.ok(sitemapContent.includes("url: `${baseUrl}/dashboard`"));
   assert.ok(sitemapContent.includes("url: `${baseUrl}/register`"));
   assert.ok(sitemapContent.includes("url: `${baseUrl}/forgot-password`"));
   assert.ok(sitemapContent.includes("'tr-TR':"));
