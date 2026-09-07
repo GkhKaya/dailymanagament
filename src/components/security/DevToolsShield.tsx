@@ -56,6 +56,20 @@ export function DevToolsShield() {
         return false;
       }
 
+      // Ctrl+Shift+K veya Cmd+Option+K -> Firefox Console
+      if (cmdOrCtrl && (e.shiftKey || (isMac && e.altKey)) && (e.key === 'K' || e.key === 'k' || e.keyCode === 75)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
+      // Ctrl+Shift+E veya Cmd+Option+E -> Network Tools
+      if (cmdOrCtrl && (e.shiftKey || (isMac && e.altKey)) && (e.key === 'E' || e.key === 'e' || e.keyCode === 69)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+
       // Ctrl+U veya Cmd+Option+U -> View Page Source
       if (cmdOrCtrl && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
         e.preventDefault();
@@ -72,6 +86,7 @@ export function DevToolsShield() {
     };
 
     // 3. Konsolu koruma ve uyarı basma
+    let intervalId: any = null;
     if (process.env.NODE_ENV === 'production') {
       try {
         const warnStyle = 'color: #ef4444; font-size: 24px; font-weight: bold; -webkit-text-stroke: 1px black;';
@@ -82,6 +97,16 @@ export function DevToolsShield() {
           '%cBu alan geliştiricilere özeldir. Buraya herhangi bir kod yapıştırmak veya çalıştırmak hesabınızın güvenliğini tehlikeye atabilir.',
           textStyle
         );
+
+        // DevTools açıkken kod incelemeyi engellemek için hafif anti-debugger
+        intervalId = setInterval(() => {
+          const t0 = performance.now();
+          // eslint-disable-next-line no-debugger
+          debugger;
+          if (performance.now() - t0 > 100) {
+            console.clear();
+          }
+        }, 1500);
       } catch {}
     }
 
@@ -89,6 +114,7 @@ export function DevToolsShield() {
     window.addEventListener('keydown', handleKeyDown, { capture: true });
 
     return () => {
+      if (intervalId) clearInterval(intervalId);
       document.removeEventListener('contextmenu', handleContextMenu, { capture: true });
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };

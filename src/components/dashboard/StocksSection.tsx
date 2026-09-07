@@ -699,7 +699,9 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
                             {isEn ? "SELL" : "SATIŞ"}
                           </span>
-                          <span className="text-xs text-[var(--on-surface-variant)]">{trade.date} · {trade.holding_days ?? 0} {isEn ? "days" : "gün"}</span>
+                          <span className="text-xs text-[var(--on-surface-variant)]">
+                            {trade.date}{trade.time ? ` (${trade.time})` : ''} · {isEn ? (trade.holding_duration_en || `${trade.holding_days ?? 0} days`) : (trade.holding_duration_text || `${trade.holding_days ?? 0} gün`)}
+                          </span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)] mt-0.5">
                           {isEn ? (
@@ -817,7 +819,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                           }`}>
                             {isBuy ? (isEn ? 'BUY' : 'ALIŞ') : (isEn ? 'SELL' : 'SATIŞ')}
                           </span>
-                          <span className="text-[11px] text-[var(--on-surface-variant)]">{trade.date}</span>
+                          <span className="text-[11px] text-[var(--on-surface-variant)]">{trade.date}{trade.time ? ` · ${trade.time}` : ''}</span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)]">
                           {trade.lots} {isEn ? "Lots" : "Lot"} &times; {formatStockCurrency(trade.price, trade.currency || (trade.market === 'us' || trade.market === 'crypto' ? 'USD' : 'TRY'))} {trade.notes ? `(${trade.notes})` : ''}

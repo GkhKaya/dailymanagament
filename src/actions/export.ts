@@ -128,6 +128,9 @@ export interface StocksExportTrade {
   realized_pnl?: number;
   realized_pnl_percent?: number;
   holding_days?: number;
+  time?: string;
+  has_time?: boolean;
+  holding_duration?: string;
   total_amount: number;
   notes?: string;
 }
@@ -309,6 +312,9 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       realized_pnl: t.realized_pnl,
       realized_pnl_percent: t.realized_pnl_percent,
       holding_days: t.holding_days,
+      time: t.time,
+      has_time: t.has_time,
+      holding_duration: t.holding_duration_text || (t.holding_days !== undefined ? `${t.holding_days} gün` : undefined),
       total_amount: t.total_amount || (t.lots * t.price),
       notes: t.notes || '',
     });

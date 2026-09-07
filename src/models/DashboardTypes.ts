@@ -129,8 +129,10 @@ export interface StockTradeDTO {
   lots: number;
   price: number;
   total_amount: number;
-  date: string;       // Formatted or ISO date
+  date: string;       // Formatted date (DD.MM.YYYY)
   rawDate: string;    // ISO string
+  time?: string;      // e.g. "14:30"
+  has_time?: boolean;
   notes?: string;
   market?: 'bist' | 'us' | 'crypto';
   currency?: string;
@@ -139,6 +141,9 @@ export interface StockTradeDTO {
   realized_pnl?: number;
   realized_pnl_percent?: number;
   holding_days?: number;
+  holding_hours?: number;
+  holding_duration_text?: string;
+  holding_duration_en?: string;
   created_at?: string;
 }
 

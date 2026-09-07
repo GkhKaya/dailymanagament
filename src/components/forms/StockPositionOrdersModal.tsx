@@ -194,7 +194,7 @@ export function StockPositionOrdersModal({
                     <div className="flex items-center gap-2 text-[11px] text-[var(--on-surface-variant)]">
                       <span>{isEn ? "Total:" : "Tutar:"} <strong>{formatStockCurrency(t.total_amount)}</strong></span>
                       <span>•</span>
-                      <span>{t.date}</span>
+                      <span>{t.date}{t.time ? ` · ${t.time}` : ''}</span>
                     </div>
                     {t.notes && <p className="text-[10px] text-white/50 italic">{t.notes}</p>}
                   </div>
@@ -245,7 +245,9 @@ export function StockPositionOrdersModal({
                           ({t.realized_pnl && t.realized_pnl >= 0 ? '+' : ''}{formatStockCurrency(t.realized_pnl || 0)} {isEn ? "P&L" : "K/Z"})
                         </span>
                       </div>
-                      <span className="text-[10px] text-[var(--on-surface-variant)]">{t.date}</span>
+                      <span className="text-[10px] text-[var(--on-surface-variant)]">
+                        {t.date}{t.time ? ` · ${t.time}` : ''} · {isEn ? (t.holding_duration_en || `${t.holding_days ?? 0} days`) : (t.holding_duration_text || `${t.holding_days ?? 0} gün`)}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-1">

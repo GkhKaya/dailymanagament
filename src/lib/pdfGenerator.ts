@@ -582,7 +582,7 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
       startY: currentY,
       head: [[tr('Tarih'), tr('Sembol'), tr('Tur'), tr('Satilan Lot'), tr('Alis Maliyeti'), tr('Satis Fiyati'), tr('Toplam Tutar'), tr('Net Kar/Zarar')]],
       body: sortedRealizedTrades.map(t => [
-        tr(`${t.date} (${t.holding_days ?? 0}g)`),
+        tr(`${t.date}${t.time ? ` ${t.time}` : ''} (${(t as any).holding_duration || `${t.holding_days ?? 0}g`})`),
         tr(t.symbol),
         t.assetType === 'fund' ? 'FON' : 'HISSE',
         t.lots.toLocaleString('tr-TR'),

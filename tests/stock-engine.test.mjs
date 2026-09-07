@@ -113,3 +113,46 @@ test('keeps a fund type while calculating its manual-price profit and loss', () 
   assert.equal(result.openPositions[0].assetType, 'fund');
   assert.equal(result.openPositions[0].unrealized_pnl, 180);
 });
+
+test('calculates holding period with hours when time is specified (intraday and multi-day)', () => {
+  // Test 1: Same day trade with time (09:30 to 14:00 -> 4 saat 30 dk)
+  const intradayTrades = [
+    { id: '1', symbol: 'THYAO', type: 'buy', lots: 10, price: 300, date: '2026-09-07T09:30:00Z', time: '09:30', has_time: true },
+    { id: '2', symbol: 'THYAO', type: 'sell', lots: 10, price: 310, date: '2026-09-07T14:00:00Z', time: '14:00', has_time: true }
+  ];
+
+  const result1 = calculateStockPortfolio(intradayTrades);
+  const realized1 = result1.realizedTrades[0];
+  assert.equal(realized1.holding_days, 0);
+  assert.equal(realized1.holding_hours, 4);
+  assert.equal(realized1.holding_minutes, 30);
+  assert.equal(realized1.holding_duration_text, '4 saat 30 dk');
+  assert.equal(realized1.holding_duration_en, '4 hrs 30 min');
+
+  // Test 2: Multi-day trade with time (2 days and 5 hours)
+  const multiDayTrades = [
+    { id: '3', symbol: 'GARAN', type: 'buy', lots: 50, price: 100, date: '2026-09-01T10:00:00Z', time: '10:00', has_time: true },
+    { id: '4', symbol: 'GARAN', type: 'sell', lots: 50, price: 110, date: '2026-09-03T15:00:00Z', time: '15:00', has_time: true }
+  ];
+
+  const result2 = calculateStockPortfolio(multiDayTrades);
+  const realized2 = result2.realizedTrades[0];
+  assert.equal(realized2.holding_days, 2);
+  assert.equal(realized2.holding_hours, 5);
+  assert.equal(realized2.holding_duration_text, '2 gün 5 saat');
+  assert.equal(realized2.holding_duration_en, '2 days 5 hrs');
+
+  // Test 3: Trade without time keeps days only
+  const noTimeTrades = [
+    { id: '5', symbol: 'AKBNK', type: 'buy', lots: 20, price: 50, date: '2026-09-01T00:00:00Z' },
+    { id: '6', symbol: 'AKBNK', type: 'sell', lots: 20, price: 55, date: '2026-09-05T00:00:00Z' }
+  ];
+
+  const result3 = calculateStockPortfolio(noTimeTrades);
+  const realized3 = result3.realizedTrades[0];
+  assert.equal(realized3.holding_days, 4);
+  assert.equal(realized3.holding_hours, undefined);
+  assert.equal(realized3.holding_duration_text, '4 gün');
+  assert.equal(realized3.holding_duration_en, '4 days');
+});
+

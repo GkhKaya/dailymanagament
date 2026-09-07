@@ -72,6 +72,8 @@ export interface RawTrade {
   price: number;
   total_amount?: number;
   date: Date | string;
+  time?: string;
+  has_time?: boolean;
   notes?: string;
   cost_basis?: number;
   total_cost?: number;
@@ -86,6 +88,29 @@ export interface ComputedTrade extends RawTrade {
   realized_pnl: number;
   realized_pnl_percent: number;
   holding_days?: number;
+  holding_hours?: number;
+  holding_minutes?: number;
+  holding_duration_text?: string;
+  holding_duration_en?: string;
+}
+
+export function formatTradeDuration(
+  trade: {
+    holding_days?: number;
+    holding_hours?: number;
+    holding_duration_text?: string;
+    holding_duration_en?: string;
+    has_time?: boolean;
+    time?: string;
+  },
+  isEn: boolean = false
+): string {
+  if (isEn) {
+    if (trade.holding_duration_en) return trade.holding_duration_en;
+    return `${trade.holding_days ?? 0} days`;
+  }
+  if (trade.holding_duration_text) return trade.holding_duration_text;
+  return `${trade.holding_days ?? 0} gün`;
 }
 
 export interface ComputedPosition {
@@ -171,6 +196,7 @@ export function calculateStockPortfolio(
     let symbolCurrency: string = 'TRY';
     let lastTradeDate: string | undefined;
     let totalPurchaseTime = 0; // for weighted holding period
+    let positionHasTimeTrades = false;
 
     for (const trade of symTrades) {
       if (trade.name) symbolLastName = trade.name;
@@ -187,12 +213,21 @@ export function calculateStockPortfolio(
       let realizedPnl = 0;
       let realizedPnlPercent = 0;
       let holdingDays: number | undefined;
+      let holdingHours: number | undefined;
+      let holdingMinutes: number | undefined;
+      let holdingDurationText: string | undefined;
+      let holdingDurationEn: string | undefined;
+
+      const tradeHasTime = Boolean(trade.has_time || (trade.time && trade.time.trim() !== ''));
 
       if (trade.type === 'buy') {
         totalBuyVolume += tradeAmount;
         totalPurchaseTime += lots * new Date(trade.date).getTime();
         currentLots += lots;
         totalInvestedCost += tradeAmount;
+        if (tradeHasTime) {
+          positionHasTimeTrades = true;
+        }
 
         costBasis = price;
         totalCost = tradeAmount;
@@ -209,10 +244,59 @@ export function calculateStockPortfolio(
           : 0;
 
         const averagePurchaseTime = currentLots > 0 ? totalPurchaseTime / currentLots : new Date(trade.date).getTime();
-        holdingDays = Math.max(0, Math.floor((new Date(trade.date).getTime() - averagePurchaseTime) / 86_400_000));
+        const diffMs = Math.max(0, new Date(trade.date).getTime() - averagePurchaseTime);
         totalPurchaseTime -= averagePurchaseTime * Math.min(lots, currentLots);
 
+        // Check if trade duration should include hours/minutes
+        const isTimeCalculationActive = tradeHasTime || positionHasTimeTrades;
+
+        if (isTimeCalculationActive) {
+          const totalMinutes = Math.max(0, Math.round(diffMs / 60_000));
+          const totalHours = Math.floor(totalMinutes / 60);
+          const days = Math.floor(totalHours / 24);
+          const hours = totalHours % 24;
+          const remMinutes = totalMinutes % 60;
+
+          holdingDays = days;
+          holdingHours = hours;
+          holdingMinutes = remMinutes;
+
+          if (days > 0) {
+            if (hours > 0) {
+              holdingDurationText = `${days} gün ${hours} saat`;
+              holdingDurationEn = `${days} days ${hours} hrs`;
+            } else {
+              holdingDurationText = `${days} gün`;
+              holdingDurationEn = `${days} days`;
+            }
+          } else {
+            // Under 1 day
+            if (hours > 0) {
+              if (remMinutes > 0) {
+                holdingDurationText = `${hours} saat ${remMinutes} dk`;
+                holdingDurationEn = `${hours} hrs ${remMinutes} min`;
+              } else {
+                holdingDurationText = `${hours} saat`;
+                holdingDurationEn = `${hours} hrs`;
+              }
+            } else {
+              // Under 1 hour
+              const m = Math.max(1, remMinutes);
+              holdingDurationText = `${m} dk`;
+              holdingDurationEn = `${m} min`;
+            }
+          }
+        } else {
+          holdingDays = Math.max(0, Math.floor(diffMs / 86_400_000));
+          holdingDurationText = `${holdingDays} gün`;
+          holdingDurationEn = `${holdingDays} days`;
+        }
+
         currentLots = Math.max(0, currentLots - lots);
+        if (currentLots <= 0.0001) {
+          positionHasTimeTrades = false;
+          totalPurchaseTime = 0;
+        }
         // After sell, the remaining cost basis reduces proportionally
         totalInvestedCost = currentLots * avgCost;
 
@@ -231,6 +315,10 @@ export function calculateStockPortfolio(
         realized_pnl: realizedPnl,
         realized_pnl_percent: realizedPnlPercent,
         holding_days: holdingDays,
+        holding_hours: holdingHours,
+        holding_minutes: holdingMinutes,
+        holding_duration_text: holdingDurationText,
+        holding_duration_en: holdingDurationEn,
       };
 
       computedTradesMap.set(trade._id || trade.id || `${symbol}-${trade.date}-${trade.type}-${lots}`, computed);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, TrendingUp, TrendingDown, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import { X, TrendingUp, TrendingDown, DollarSign, Calendar, Clock, FileText, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { addStockTradeAction, updateStockTradeAction, fetchMarketQuoteAction, getUserMarketsAction, searchMultiMarketAssetsAction } from "@/actions/stocks";
 import { StockPositionDTO, StockTradeDTO, KnownStockDTO } from "@/models/DashboardTypes";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -47,6 +47,7 @@ export function AddStockTradeModal({
   const [date, setDate] = useState<string>(
     editTrade?.rawDate ? editTrade.rawDate.slice(0, 10) : new Date().toISOString().slice(0, 10)
   );
+  const [time, setTime] = useState<string>(editTrade?.time || '');
   const [notes, setNotes] = useState(editTrade?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
@@ -123,11 +124,13 @@ export function AddStockTradeModal({
       setLots(String(editTrade.lots));
       setPrice(String(editTrade.price));
       setDate(editTrade.rawDate ? editTrade.rawDate.slice(0, 10) : new Date().toISOString().slice(0, 10));
+      setTime(editTrade.time || '');
       setNotes(editTrade.notes || '');
       setMarketQuote(null);
     } else {
       setTradeType(initialType);
       setAssetType(market === 'crypto' ? 'crypto' : 'stock');
+      setTime('');
       setMarketQuote(null);
       if (initialSymbol) {
         setSymbol(initialSymbol);
@@ -242,6 +245,7 @@ export function AddStockTradeModal({
           lots: numLots,
           price: numPrice,
           date,
+          time: time ? time.trim() : undefined,
           notes: notes || undefined,
         });
 
@@ -263,6 +267,7 @@ export function AddStockTradeModal({
           lots: numLots,
           price: numPrice,
           date,
+          time: time ? time.trim() : undefined,
           notes: notes || undefined,
         });
 
@@ -698,7 +703,7 @@ export function AddStockTradeModal({
             </div>
           )}
 
-          {/* Date & Note Grid */}
+          {/* Date & Time Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
@@ -714,17 +719,56 @@ export function AddStockTradeModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
-                <FileText size={12} /> {isEn ? "Notes (Optional)" : "Not (Opsiyonel)"}
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
+                  <Clock size={12} /> {isEn ? "Trade Time (Optional)" : "İşlem Saati (Opsiyonel)"}
+                </label>
+                <div className="flex items-center gap-2">
+                  {!time ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const now = new Date();
+                        const hh = String(now.getHours()).padStart(2, '0');
+                        const mm = String(now.getMinutes()).padStart(2, '0');
+                        setTime(`${hh}:${mm}`);
+                      }}
+                      className="text-[10px] text-[var(--primary)] hover:underline font-medium cursor-pointer"
+                    >
+                      {isEn ? "Now" : "Şu an"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setTime("")}
+                      className="text-[10px] text-white/40 hover:text-rose-400 transition-colors cursor-pointer"
+                    >
+                      {isEn ? "Clear" : "Kaldır"}
+                    </button>
+                  )}
+                </div>
+              </div>
               <input
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={isEn ? "e.g. Long-term, DCA" : "Örn: Temettü hedefli, kademe alış"}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[var(--primary)] transition-all"
               />
             </div>
+          </div>
+
+          {/* Notes (Optional) */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center gap-1">
+              <FileText size={12} /> {isEn ? "Notes (Optional)" : "Not (Opsiyonel)"}
+            </label>
+            <input
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={isEn ? "e.g. Long-term, DCA" : "Örn: Temettü hedefli, kademe alış"}
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-[var(--primary)] transition-all"
+            />
           </div>
 
           {/* LIVE MATH CALCULATION PREVIEW BOX */}

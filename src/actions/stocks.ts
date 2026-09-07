@@ -59,6 +59,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     price: Number(t.price),
     total_amount: Number(t.total_amount),
     date: t.date,
+    time: t.time,
+    has_time: t.has_time,
     notes: t.notes,
     created_at: t.created_at,
   }));
@@ -174,6 +176,11 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     realized_pnl: t.realized_pnl || 0,
     realized_pnl_percent: t.realized_pnl_percent || 0,
     holding_days: t.holding_days,
+    holding_hours: t.holding_hours,
+    holding_duration_text: t.holding_duration_text,
+    holding_duration_en: t.holding_duration_en,
+    time: t.time,
+    has_time: t.has_time,
     date: new Date(t.date).toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' }),
     rawDate: new Date(t.date).toISOString(),
     notes: t.notes,
@@ -199,6 +206,11 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       realized_pnl: t.realized_pnl || 0,
       realized_pnl_percent: t.realized_pnl_percent || 0,
       holding_days: t.holding_days,
+      holding_hours: t.holding_hours,
+      holding_duration_text: t.holding_duration_text,
+      holding_duration_en: t.holding_duration_en,
+      time: t.time,
+      has_time: t.has_time,
       date: new Date(t.date).toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' }),
       rawDate: new Date(t.date).toISOString(),
       notes: t.notes,
@@ -539,6 +551,7 @@ export async function addStockTradeAction(data: {
   lots: number;
   price: number;
   date?: string;
+  time?: string;
   notes?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
@@ -561,7 +574,24 @@ export async function addStockTradeAction(data: {
       return { success: false, error: "Geçerli bir fiyat girin." };
     }
 
-    const tradeDate = data.date ? new Date(data.date) : new Date();
+    const hasTime = Boolean(data.time && data.time.trim());
+    const cleanTime = hasTime ? data.time!.trim() : undefined;
+    let tradeDate: Date;
+
+    if (data.date) {
+      const datePart = data.date.slice(0, 10);
+      if (hasTime) {
+        tradeDate = new Date(`${datePart}T${cleanTime}:00`);
+      } else {
+        tradeDate = new Date(`${datePart}T00:00:00`);
+      }
+      if (isNaN(tradeDate.getTime())) {
+        tradeDate = new Date();
+      }
+    } else {
+      tradeDate = new Date();
+    }
+
     const totalAmount = Math.round(lots * price * 100) / 100;
 
     // Check if sell order is valid against current open lots
@@ -621,6 +651,8 @@ export async function addStockTradeAction(data: {
       price,
       total_amount: totalAmount,
       date: tradeDate,
+      time: cleanTime,
+      has_time: hasTime,
       notes: data.notes?.trim() || undefined,
     });
 
@@ -676,6 +708,7 @@ export async function updateStockTradeAction(
     lots: number;
     price: number;
     date: string;
+    time?: string;
     notes?: string;
   }
 ): Promise<{ success: boolean; error?: string }> {
@@ -696,6 +729,20 @@ export async function updateStockTradeAction(
       return { success: false, error: "İşlem bulunamadı." };
     }
 
+    const hasTime = Boolean(data.time && data.time.trim());
+    const cleanTime = hasTime ? data.time!.trim() : undefined;
+    let tradeDate: Date;
+
+    const datePart = data.date.slice(0, 10);
+    if (hasTime) {
+      tradeDate = new Date(`${datePart}T${cleanTime}:00`);
+    } else {
+      tradeDate = new Date(`${datePart}T00:00:00`);
+    }
+    if (isNaN(tradeDate.getTime())) {
+      tradeDate = new Date();
+    }
+
     trade.symbol = symbol;
     trade.name = data.name?.trim() || undefined;
     trade.asset_type = data.assetType === 'fund' ? 'fund' : (data.assetType === 'crypto' ? 'crypto' : 'stock');
@@ -705,7 +752,9 @@ export async function updateStockTradeAction(
     trade.lots = lots;
     trade.price = price;
     trade.total_amount = Math.round(lots * price * 100) / 100;
-    trade.date = new Date(data.date);
+    trade.date = tradeDate;
+    trade.time = cleanTime;
+    trade.has_time = hasTime;
     trade.notes = data.notes?.trim() || undefined;
     await trade.save();
 

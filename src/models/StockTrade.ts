@@ -13,6 +13,8 @@ export interface IStockTrade extends Document {
   price: number;
   total_amount: number;
   date: Date;
+  time?: string;
+  has_time?: boolean;
   notes?: string;
   cost_basis?: number;
   total_cost?: number;
@@ -34,6 +36,8 @@ const StockTradeSchema: Schema = new Schema({
   price: { type: Number, required: true, min: 0 },
   total_amount: { type: Number, required: true, min: 0 },
   date: { type: Date, required: true, default: Date.now },
+  time: { type: String, trim: true },
+  has_time: { type: Boolean, default: false },
   notes: { type: String, trim: true },
   cost_basis: { type: Number, default: 0 },
   total_cost: { type: Number, default: 0 },
