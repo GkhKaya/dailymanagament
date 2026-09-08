@@ -48,10 +48,15 @@ function getStocksPeriodRange(type: 'daily' | 'weekly' | 'monthly', date: Date) 
 }
 
 export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'health' }: ExportPdfModalProps) {
+  const isFinance = reportType === 'finance';
+  const isStocks = reportType === 'stocks';
+
   const defaultEndDate = inputDate(currentDate || new Date());
   const [startDate, setStartDate] = useState(defaultEndDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
-  const [selectedType, setSelectedType] = useState<'daily' | 'weekly' | 'monthly' | 'range'>('daily');
+  const [selectedType, setSelectedType] = useState<'daily' | 'weekly' | 'monthly' | 'range'>(
+    isStocks ? 'monthly' : 'daily'
+  );
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,17 +64,15 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
 
   useEffect(() => {
     setMounted(true);
-    if (reportType === 'stocks') {
-      // Default to 1 year back for stock history
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      setStartDate(inputDate(oneYearAgo));
+    if (isStocks) {
+      const range = getStocksPeriodRange('monthly', currentDate || new Date());
+      setStartDate(range.startDate);
+      setEndDate(range.endDate);
+      setSelectedType('monthly');
     }
-  }, [reportType]);
+  }, [reportType, currentDate, isStocks]);
 
-  const isFinance = reportType === 'finance';
-  const isStocks = reportType === 'stocks';
-  const isRange = isFinance || selectedType === 'range';
+  const isRange = isFinance || isStocks || selectedType === 'range';
 
   if (!isOpen) return null;
 
@@ -81,10 +84,7 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
     setIsLoading(true);
     try {
       if (isStocks) {
-        const range = selectedType === 'range'
-          ? { startDate, endDate }
-          : getStocksPeriodRange(selectedType, currentDate || new Date());
-        const res = await getStocksExportDataAction(range.startDate, range.endDate, assetFilter);
+        const res = await getStocksExportDataAction(startDate, endDate, assetFilter);
         if (!res.success || !res.data) throw new Error(res.error || 'Borsa rapor verileri alınamadı.');
         generateStocksPDF(res.userName || 'Kullanıcı', res.data);
       } else if (isFinance) {
@@ -189,7 +189,19 @@ export function ExportPdfModal({ isOpen, onClose, currentDate, reportType = 'hea
               const Icon = option.icon;
               const active = selectedType === option.id;
               return (
-                <button key={option.id} type="button" onClick={() => setSelectedType(option.id as typeof selectedType)} className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-colors ${active ? 'border-[var(--primary)] bg-[var(--primary)]/15 text-white' : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'}`}>
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedType(option.id as typeof selectedType);
+                    if (isStocks && option.id !== 'range') {
+                      const range = getStocksPeriodRange(option.id as 'daily' | 'weekly' | 'monthly', currentDate || new Date());
+                      setStartDate(range.startDate);
+                      setEndDate(range.endDate);
+                    }
+                  }}
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-left text-sm font-semibold transition-colors ${active ? 'border-[var(--primary)] bg-[var(--primary)]/15 text-white' : 'border-[rgba(255,255,255,0.08)] bg-white/[0.02] text-[var(--on-surface-variant)] hover:bg-white/[0.05] hover:text-white'}`}
+                >
                   <Icon size={17} className={active ? 'text-[var(--primary)]' : ''} />
                   {option.label}
                 </button>

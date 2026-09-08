@@ -118,6 +118,7 @@ export interface StocksExportPosition {
 
 export interface StocksExportTrade {
   date: string;
+  rawDate?: string;
   symbol: string;
   name: string;
   assetType: 'stock' | 'fund' | 'crypto';
@@ -265,25 +266,47 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       endFilterDate = range.endDate;
     }
 
-    const filterByDate = (tradeDateStr: string | undefined) => {
-      if (!startFilterDate || !endFilterDate || !tradeDateStr) return true;
-      const tDate = new Date(tradeDateStr);
+    const parseTradeDate = (t: any): Date | null => {
+      if (t.rawDate) {
+        const d = new Date(t.rawDate);
+        if (!isNaN(d.getTime())) return d;
+      }
+      if (t.date && typeof t.date === 'string') {
+        if (t.date.includes('-')) {
+          const d = new Date(t.date);
+          if (!isNaN(d.getTime())) return d;
+        }
+        const parts = t.date.split('.');
+        if (parts.length === 3) {
+          const timeStr = t.time ? `T${t.time}:00` : 'T00:00:00';
+          const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}${timeStr}`);
+          if (!isNaN(d.getTime())) return d;
+        }
+      }
+      return null;
+    };
+
+    const filterByDate = (t: any) => {
+      if (!startFilterDate || !endFilterDate) return true;
+      const tDate = parseTradeDate(t);
+      if (!tDate) return true;
       return tDate >= startFilterDate && tDate <= endFilterDate;
     };
 
     const filterByAsset = (assetType: string | undefined) => assetFilter === 'all' || (assetType || 'stock') === assetFilter;
-    const newestFirst = (a: { rawDate?: string; date: string; created_at?: string }, b: { rawDate?: string; date: string; created_at?: string }) => {
-      const timeDiff = new Date(b.rawDate || b.date).getTime() - new Date(a.rawDate || a.date).getTime();
-      if (timeDiff !== 0) return timeDiff;
+    const newestFirst = (a: any, b: any) => {
+      const dateA = parseTradeDate(a)?.getTime() || 0;
+      const dateB = parseTradeDate(b)?.getTime() || 0;
+      if (dateB !== dateA) return dateB - dateA;
       const createA = a.created_at ? new Date(a.created_at).getTime() : 0;
       const createB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return createB - createA;
     };
     const filteredRealized = portfolio.realizedTrades
-      .filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType))
+      .filter(t => filterByDate(t) && filterByAsset(t.assetType))
       .sort(newestFirst);
     const filteredAllTrades = portfolio.allTrades
-      .filter(t => filterByDate(t.rawDate || t.date) && filterByAsset(t.assetType))
+      .filter(t => filterByDate(t) && filterByAsset(t.assetType))
       .sort(newestFirst);
     const filteredPositions = portfolio.positions.filter(p => filterByAsset(p.assetType));
 
@@ -300,24 +323,28 @@ export async function getStocksExportDataAction(startDateStr?: string, endDateSt
       unrealized_pnl_percent: p.unrealized_pnl_percent,
     }));
 
-    const mapTrade = (t: any): StocksExportTrade => ({
-      date: t.date,
-      symbol: t.symbol,
-      name: t.name || '',
-      assetType: t.assetType || 'stock',
-      type: t.type,
-      lots: t.lots,
-      price: t.price,
-      cost_basis: t.cost_basis,
-      realized_pnl: t.realized_pnl,
-      realized_pnl_percent: t.realized_pnl_percent,
-      holding_days: t.holding_days,
-      time: t.time,
-      has_time: t.has_time,
-      holding_duration: t.holding_duration_text || (t.holding_days !== undefined ? `${t.holding_days} gün` : undefined),
-      total_amount: t.total_amount || (t.lots * t.price),
-      notes: t.notes || '',
-    });
+    const mapTrade = (t: any): StocksExportTrade => {
+      const parsed = parseTradeDate(t);
+      return {
+        date: t.date,
+        rawDate: t.rawDate || (parsed ? parsed.toISOString() : undefined),
+        symbol: t.symbol,
+        name: t.name || '',
+        assetType: t.assetType || 'stock',
+        type: t.type,
+        lots: t.lots,
+        price: t.price,
+        cost_basis: t.cost_basis,
+        realized_pnl: t.realized_pnl,
+        realized_pnl_percent: t.realized_pnl_percent,
+        holding_days: t.holding_days,
+        time: t.time,
+        has_time: t.has_time,
+        holding_duration: t.holding_duration_text || (t.holding_days !== undefined ? `${t.holding_days} gün` : undefined),
+        total_amount: t.total_amount || (t.lots * t.price),
+        notes: t.notes || '',
+      };
+    };
 
     const mappedRealizedTrades = filteredRealized.map(mapTrade);
     const mappedAllTrades = filteredAllTrades.map(mapTrade);

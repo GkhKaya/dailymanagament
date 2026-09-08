@@ -258,15 +258,81 @@ const TABLE_STYLES = {
   alternateRowStyles: {
     fillColor: [13, 13, 15] as [number, number, number],
   },
+  footStyles: {
+    fillColor: [24, 24, 28] as [number, number, number],
+    textColor: COLORS.textWhite,
+    fontStyle: 'bold' as const,
+    fontSize: 7.5,
+    lineColor: COLORS.primary,
+    lineWidth: { top: 0.5 },
+  },
+  margin: { top: 16, bottom: 18, left: 14, right: 14 },
 };
+
+/**
+ * Dark Multi-page Manager
+ * Ensures that all pages (including automatic autoTable page breaks) have the dark DailyM background,
+ * and renders an executive running header on pages 2+.
+ */
+function setupDarkPageManager(doc: jsPDF, reportTitle: string, dateRangeStr?: string) {
+  const marginX = 14;
+  const contentW = 182;
+  const paintedPages = new Set<number>();
+
+  const paintPage = (pageNumber?: number) => {
+    const pageNum = pageNumber ?? (doc as any).internal.getCurrentPageInfo().pageNumber;
+    if (!paintedPages.has(pageNum)) {
+      paintedPages.add(pageNum);
+      // Paint dark background across the entire canvas
+      doc.setFillColor(...COLORS.darkBg);
+      doc.rect(0, 0, 210, 297, 'F');
+
+      // On pages 2+, draw a sleek running header
+      if (pageNum > 1) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...COLORS.textWhite);
+        doc.text('Daily', marginX, 9.5);
+        const dailyW = doc.getTextWidth('Daily');
+        doc.setTextColor(...COLORS.primary);
+        doc.text('M', marginX + dailyW, 9.5);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...COLORS.textMuted);
+        const sub = dateRangeStr ? ` · ${tr(reportTitle)} (${dateRangeStr})` : ` · ${tr(reportTitle)}`;
+        doc.text(sub, marginX + dailyW + 4, 9.5);
+
+        doc.setDrawColor(...COLORS.borderSubtle);
+        doc.setLineWidth(0.2);
+        doc.line(marginX, 12, marginX + contentW, 12);
+      }
+    }
+  };
+
+  return { paintPage, paintedPages };
+}
 
 /**
  * Page footers with branding & pagination
  */
-function addDailyMPDFDecorations(doc: jsPDF, reportTitle: string, language: 'tr' | 'en' = 'tr') {
+function addDailyMPDFDecorations(
+  doc: jsPDF, 
+  reportTitle: string, 
+  language: 'tr' | 'en' = 'tr',
+  paintedPages?: Set<number>
+) {
   const pageCount = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
+
+    // If page i was somehow not painted yet, guarantee dark background
+    if (paintedPages && !paintedPages.has(i)) {
+      paintedPages.add(i);
+      doc.setFillColor(...COLORS.darkBg);
+      doc.rect(0, 0, 210, 297, 'F');
+    }
+
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.2);
     doc.line(14, 286, 196, 286);
@@ -366,7 +432,12 @@ export function generateMonthlyPDF(
 // ─────────────────────────────────────────────────────────────────
 export function generateFinancePDF(userName: string, data: FinanceExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  paintDailyMBackground(doc);
+  const { paintPage, paintedPages } = setupDarkPageManager(
+    doc,
+    'Finansal Durum ve Islem Raporu',
+    `${data.startDate} - ${data.endDate}`
+  );
+  paintPage(1);
   const marginX = 14;
   const contentW = 182;
 
@@ -425,6 +496,8 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
   autoTable(doc, {
     ...TABLE_STYLES,
     startY: currentY,
+    willDrawPage: () => paintPage(),
+    margin: { top: 16, bottom: 18, left: marginX, right: marginX },
     head: [[tr('Tarih'), tr('Aciklama'), tr('Hesap'), tr('Kategori'), tr('Tur'), tr('Tutar')]],
     body: sortedTransactions.map(item => [
       tr(item.date),
@@ -434,7 +507,14 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
       item.type === 'income' ? 'Gelir' : item.type === 'expense' ? 'Gider' : 'Transfer',
       `${item.type === 'income' ? '+' : item.type === 'expense' ? '-' : ''}${item.amount.toLocaleString('tr-TR')} TL`
     ]),
-    margin: { left: marginX, right: marginX, bottom: 18 },
+    foot: [[
+      tr('TOPLAM'),
+      `${sortedTransactions.length} Islem`,
+      '',
+      '',
+      '',
+      `${net >= 0 ? '+' : ''}${net.toLocaleString('tr-TR')} TL`
+    ]],
     columnStyles: {
       0: { cellWidth: 26 },
       1: { cellWidth: 50 },
@@ -452,10 +532,13 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
           dataCell.cell.styles.textColor = COLORS.textWhite;
         }
       }
+      if (dataCell.section === 'foot' && dataCell.column.index === 5) {
+        dataCell.cell.styles.textColor = net >= 0 ? COLORS.gain : COLORS.loss;
+      }
     }
   });
 
-  addDailyMPDFDecorations(doc, 'DailyM Finans Raporu');
+  addDailyMPDFDecorations(doc, 'DailyM Finans Raporu', 'tr', paintedPages);
   doc.save(`Finans_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 
@@ -464,7 +547,13 @@ export function generateFinancePDF(userName: string, data: FinanceExportData) {
 // ─────────────────────────────────────────────────────────────────
 export function generateStocksPDF(userName: string, data: StocksExportData) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  paintDailyMBackground(doc);
+  const { paintPage, paintedPages } = setupDarkPageManager(
+    doc,
+    'Borsa ve Portfoy Raporu',
+    `${data.startDate} - ${data.endDate}`
+  );
+  paintPage(1);
+
   const marginX = 14;
   const contentW = 182;
 
@@ -476,26 +565,15 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
     `${data.startDate} - ${data.endDate}`
   );
 
-  // Single Elegant Summary Strip
+  // Period total volume
+  const periodVolume = data.allTrades.reduce((sum, t) => sum + (t.total_amount || 0), 0);
+
+  // Executive Summary Strip focused on the specified period
   currentY = drawSummaryStrip(doc, marginX, currentY, contentW, 22, [
     {
-      label: 'Portfoy Degeri',
-      value: `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-      subtext: `Maliyet: ${data.totals.totalInvestedCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-      labelColor: COLORS.primary,
-      valueColor: COLORS.textWhite,
-    },
-    {
-      label: 'Potansiyel K/Z',
-      value: `${data.totals.totalUnrealizedPnl >= 0 ? '+' : ''}${data.totals.totalUnrealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-      subtext: `Getiri: %${data.totals.totalUnrealizedPnlPercent.toFixed(1)}`,
-      labelColor: data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
-      valueColor: data.totals.totalUnrealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
-    },
-    {
-      label: 'Gerceklesen K/Z',
+      label: 'Donem Gerceklesen K/Z',
       value: `${data.totals.totalRealizedPnl >= 0 ? '+' : ''}${data.totals.totalRealizedPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
-      subtext: `Oran: %${data.totals.totalRealizedPnlPercent.toFixed(1)}`,
+      subtext: `Getiri: %${data.totals.totalRealizedPnlPercent.toFixed(1)}`,
       labelColor: data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
       valueColor: data.totals.totalRealizedPnl >= 0 ? COLORS.gain : COLORS.loss,
     },
@@ -503,107 +581,105 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
       label: 'Kazanma Orani',
       value: `%${data.totals.winRate.toFixed(1)}`,
       subtext: `${data.totals.winningTradesCount} Kar / ${data.totals.losingTradesCount} Zarar`,
+      labelColor: data.totals.winRate >= 50 ? COLORS.gain : COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Donem Islem Hacmi',
+      value: `${periodVolume.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      subtext: `${data.allTrades.length} Emir (${data.realizedTrades.length} Satis)`,
       labelColor: COLORS.textMuted,
+      valueColor: COLORS.textWhite,
+    },
+    {
+      label: 'Mevcut Portfoy',
+      value: `${data.totals.totalCurrentValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      subtext: `Maliyet: ${data.totals.totalInvestedCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+      labelColor: COLORS.primary,
       valueColor: COLORS.textWhite,
     },
   ]);
 
-  // ── Table 1: Open Positions ──
-  currentY = drawSectionHeading(doc, marginX, currentY, 'Acik Portfoy Pozisyonlari', `${data.positions.length} Varlik`);
+  // Robust date sorting (newest first)
+  const parseSortTime = (item: any): number => {
+    if (item.rawDate) {
+      const t = new Date(item.rawDate).getTime();
+      if (!isNaN(t)) return t;
+    }
+    const dStr = String(item.date || '');
+    const parts = dStr.split('.');
+    if (parts.length === 3) {
+      const timePart = item.time ? `T${item.time}` : 'T00:00:00';
+      const t = new Date(`${parts[2]}-${parts[1]}-${parts[0]}${timePart}`).getTime();
+      if (!isNaN(t)) return t;
+    }
+    return new Date(item.date).getTime() || 0;
+  };
 
-  if (data.positions.length === 0) {
-    doc.setTextColor(...COLORS.textMuted);
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
-    doc.text(tr('Portfoyde acik hisse veya fon pozisyonu bulunmuyor.'), marginX + 4, currentY + 4);
-    currentY += 10;
-  } else {
-    autoTable(doc, {
-      ...TABLE_STYLES,
-      startY: currentY,
-      head: [[tr('Sembol'), tr('Sirket / Tanim'), tr('Tur'), tr('Lot'), tr('Ort. Maliyet'), tr('Top. Maliyet'), tr('Guncel Fiyat'), tr('Potansiyel K/Z')]],
-      body: data.positions.map(p => [
-        tr(p.symbol),
-        tr(p.name || '-'),
-        p.assetType === 'fund' ? 'FON' : 'HISSE',
-        p.total_lots.toLocaleString('tr-TR'),
-        `${p.average_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        `${p.total_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        p.current_price ? `${p.current_price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL` : '-',
-        p.unrealized_pnl !== undefined ? `${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(p.unrealized_pnl_percent || 0).toFixed(1)})` : '-'
-      ]),
-      margin: { left: marginX, right: marginX, bottom: 18 },
-      columnStyles: {
-        0: { cellWidth: 18, fontStyle: 'bold' },
-        1: { cellWidth: 38 },
-        2: { cellWidth: 14 },
-        3: { cellWidth: 16, halign: 'right' },
-        4: { cellWidth: 24, halign: 'right' },
-        5: { cellWidth: 24, halign: 'right' },
-        6: { cellWidth: 22, halign: 'right' },
-        7: { cellWidth: 26, halign: 'right', fontStyle: 'bold' },
-      },
-      didParseCell: (dataCell) => {
-        if (dataCell.section === 'body' && dataCell.column.index === 7) {
-          const text = String(dataCell.cell.raw || '');
-          dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
-        }
-      }
-    });
-    currentY = (doc as any).lastAutoTable.finalY + 8;
-  }
+  const sortedRealizedTrades = [...data.realizedTrades].sort((a, b) => parseSortTime(b) - parseSortTime(a));
+  const sortedAllTrades = [...data.allTrades].sort((a, b) => parseSortTime(b) - parseSortTime(a));
 
-  // Check if new page is needed before Table 2
-  if (currentY > 215) {
-    doc.addPage();
-    paintDailyMBackground(doc);
-    currentY = 14;
-  }
-
-  // ── Table 2: Realized Trades (Closed Profits/Losses) ──
-  // STRICT DESCENDING ORDER (newest sale first, down to oldest sale)
-  const sortedRealizedTrades = [...data.realizedTrades].sort((a, b) => {
-    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-    if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
-    return 0;
-  });
-
-  currentY = drawSectionHeading(doc, marginX, currentY, 'Gerceklesen Kar / Zarar Islemleri', `${sortedRealizedTrades.length} Satis Kaydi`);
+  // ── Section 1: Realized Trades in Selected Period ──
+  currentY = drawSectionHeading(
+    doc,
+    marginX,
+    currentY,
+    'Donem Ici Gerceklesen Kar / Zarar Satislari',
+    `${sortedRealizedTrades.length} Satis Kaydi`
+  );
 
   if (sortedRealizedTrades.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
-    doc.text(tr('Secilen tarih araliginda gerceklesen satis kaydi bulunmuyor.'), marginX + 4, currentY + 4);
+    doc.text(tr(`Secilen donemde (${data.startDate} - ${data.endDate}) gerceklesen satis kaydi bulunmuyor.`), marginX + 4, currentY + 4);
     currentY += 10;
   } else {
+    const totalRealizedLots = sortedRealizedTrades.reduce((s, t) => s + (t.lots || 0), 0);
+    const totalRealizedSales = sortedRealizedTrades.reduce((s, t) => s + (t.total_amount || 0), 0);
+    const totalRealizedPnl = sortedRealizedTrades.reduce((s, t) => s + (t.realized_pnl || 0), 0);
+
     autoTable(doc, {
       ...TABLE_STYLES,
       startY: currentY,
+      willDrawPage: () => paintPage(),
+      margin: { top: 16, bottom: 18, left: marginX, right: marginX },
       head: [[tr('Tarih'), tr('Sembol'), tr('Tur'), tr('Satilan Lot'), tr('Alis Maliyeti'), tr('Satis Fiyati'), tr('Toplam Tutar'), tr('Net Kar/Zarar')]],
-      body: sortedRealizedTrades.map(t => [
-        tr(`${t.date}${t.time ? ` ${t.time}` : ''} (${(t as any).holding_duration || `${t.holding_days ?? 0}g`})`),
-        tr(t.symbol),
-        t.assetType === 'fund' ? 'FON' : 'HISSE',
-        t.lots.toLocaleString('tr-TR'),
-        `${(t.cost_basis || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        `${(t.realized_pnl || 0) >= 0 ? '+' : ''}${(t.realized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(t.realized_pnl_percent || 0).toFixed(1)})`
-      ]),
-      margin: { left: marginX, right: marginX, bottom: 18 },
+      body: sortedRealizedTrades.map(t => {
+        const dateStr = t.time ? `${t.date} ${t.time}` : t.date;
+        return [
+          tr(dateStr),
+          tr(t.symbol),
+          t.assetType === 'fund' ? 'FON' : 'HISSE',
+          t.lots.toLocaleString('tr-TR'),
+          `${(t.cost_basis || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          `${(t.realized_pnl || 0) >= 0 ? '+' : ''}${(t.realized_pnl || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(t.realized_pnl_percent || 0).toFixed(1)})`
+        ];
+      }),
+      foot: [[
+        tr('TOPLAM'),
+        `${sortedRealizedTrades.length} Satis`,
+        '',
+        totalRealizedLots.toLocaleString('tr-TR'),
+        '',
+        '',
+        `${totalRealizedSales.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        `${totalRealizedPnl >= 0 ? '+' : ''}${totalRealizedPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`
+      ]],
       columnStyles: {
-        0: { cellWidth: 22 },
+        0: { cellWidth: 24 },
         1: { cellWidth: 18, fontStyle: 'bold' },
         2: { cellWidth: 14 },
-        3: { cellWidth: 18, halign: 'right' },
-        4: { cellWidth: 24, halign: 'right' },
-        5: { cellWidth: 24, halign: 'right' },
+        3: { cellWidth: 16, halign: 'right' },
+        4: { cellWidth: 22, halign: 'right' },
+        5: { cellWidth: 22, halign: 'right' },
         6: { cellWidth: 28, halign: 'right' },
-        7: { cellWidth: 34, halign: 'right', fontStyle: 'bold' },
+        7: { cellWidth: 38, halign: 'right', fontStyle: 'bold' },
       },
       didParseCell: (dataCell) => {
-        if (dataCell.section === 'body' && dataCell.column.index === 7) {
+        if ((dataCell.section === 'body' || dataCell.section === 'foot') && dataCell.column.index === 7) {
           const text = String(dataCell.cell.raw || '');
           dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
         }
@@ -612,65 +688,157 @@ export function generateStocksPDF(userName: string, data: StocksExportData) {
     currentY = (doc as any).lastAutoTable.finalY + 8;
   }
 
-  // Check if new page is needed before Table 3
+  // Check if new page is needed before Section 2 to avoid orphan headings
   if (currentY > 215) {
     doc.addPage();
-    paintDailyMBackground(doc);
-    currentY = 14;
+    paintPage();
+    currentY = 20;
   }
 
-  // ── Table 3: Order Book (All Trades) ──
-  // STRICT DESCENDING ORDER (newest trade first)
-  const sortedAllTrades = [...data.allTrades].sort((a, b) => {
-    const timeDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-    if (!isNaN(timeDiff) && timeDiff !== 0) return timeDiff;
-    return 0;
-  });
-
-  currentY = drawSectionHeading(doc, marginX, currentY, 'Emir Defteri ve Islem Gecmisi', `${sortedAllTrades.length} Islem`);
+  // ── Section 2: Order Book in Selected Period ──
+  currentY = drawSectionHeading(
+    doc,
+    marginX,
+    currentY,
+    'Donem Ici Emir Defteri (Alis & Satis)',
+    `${sortedAllTrades.length} Islem`
+  );
 
   if (sortedAllTrades.length === 0) {
     doc.setTextColor(...COLORS.textMuted);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
-    doc.text(tr('Secilen tarih araliginda emir kaydi bulunmuyor.'), marginX + 4, currentY + 4);
+    doc.text(tr(`Secilen donemde (${data.startDate} - ${data.endDate}) alis veya satis emri bulunmuyor.`), marginX + 4, currentY + 4);
     currentY += 10;
   } else {
+    const totalOrderLots = sortedAllTrades.reduce((s, t) => s + (t.lots || 0), 0);
+    const totalOrderVolume = sortedAllTrades.reduce((s, t) => s + (t.total_amount || 0), 0);
+
     autoTable(doc, {
       ...TABLE_STYLES,
       startY: currentY,
-      head: [[tr('Tarih'), tr('Sembol'), tr('Islem'), tr('Tur'), tr('Lot'), tr('Birim Fiyat'), tr('Toplam Tutar'), tr('Not')]],
-      body: sortedAllTrades.map(t => [
-        tr(t.date),
-        tr(t.symbol),
-        t.type === 'buy' ? 'ALIS' : 'SATIS',
-        t.assetType === 'fund' ? 'FON' : 'HISSE',
-        t.lots.toLocaleString('tr-TR'),
-        `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
-        tr(t.notes || '-')
-      ]),
-      margin: { left: marginX, right: marginX, bottom: 18 },
+      willDrawPage: () => paintPage(),
+      margin: { top: 16, bottom: 18, left: marginX, right: marginX },
+      head: [[tr('Tarih'), tr('Sembol'), tr('Islem'), tr('Tur'), tr('Lot'), tr('Birim Fiyat'), tr('Toplam Tutar'), tr('Not / Aciklama')]],
+      body: sortedAllTrades.map(t => {
+        const dateStr = t.time ? `${t.date} ${t.time}` : t.date;
+        return [
+          tr(dateStr),
+          tr(t.symbol),
+          t.type === 'buy' ? 'ALIS' : 'SATIS',
+          t.assetType === 'fund' ? 'FON' : 'HISSE',
+          t.lots.toLocaleString('tr-TR'),
+          `${t.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          `${t.total_amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          tr(t.notes || '-')
+        ];
+      }),
+      foot: [[
+        tr('TOPLAM'),
+        `${sortedAllTrades.length} Emir`,
+        '',
+        '',
+        totalOrderLots.toLocaleString('tr-TR'),
+        '',
+        `${totalOrderVolume.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+        ''
+      ]],
       columnStyles: {
-        0: { cellWidth: 20 },
+        0: { cellWidth: 24 },
         1: { cellWidth: 18, fontStyle: 'bold' },
         2: { cellWidth: 16, fontStyle: 'bold' },
         3: { cellWidth: 14 },
         4: { cellWidth: 16, halign: 'right' },
         5: { cellWidth: 24, halign: 'right' },
-        6: { cellWidth: 26, halign: 'right' },
-        7: { cellWidth: 48 },
+        6: { cellWidth: 28, halign: 'right' },
+        7: { cellWidth: 42 },
       },
       didParseCell: (dataCell) => {
         if (dataCell.section === 'body' && dataCell.column.index === 2) {
           const text = String(dataCell.cell.raw || '');
-          dataCell.cell.styles.textColor = text === 'ALIS' ? COLORS.primary : COLORS.loss;
+          dataCell.cell.styles.textColor = text === 'ALIS' ? COLORS.primary : [249, 115, 22];
+        }
+      }
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Check if new page is needed before Section 3
+  if (currentY > 215) {
+    doc.addPage();
+    paintPage();
+    currentY = 20;
+  }
+
+  // ── Section 3: Open Portfolio Positions (Current Snapshot) ──
+  currentY = drawSectionHeading(
+    doc,
+    marginX,
+    currentY,
+    'Mevcut Acik Portfoy Pozisyonlari (Guncel Durum)',
+    `${data.positions.length} Varlik`
+  );
+
+  if (data.positions.length === 0) {
+    doc.setTextColor(...COLORS.textMuted);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text(tr('Portfoyde su anda acik hisse veya fon pozisyonu bulunmuyor.'), marginX + 4, currentY + 4);
+    currentY += 10;
+  } else {
+    const totalPosCost = data.positions.reduce((s, p) => s + (p.total_cost || 0), 0);
+    const totalPosValue = data.positions.reduce((s, p) => s + (p.current_value || (p.current_price ? p.current_price * p.total_lots : p.total_cost)), 0);
+    const totalPosPnl = data.positions.reduce((s, p) => s + (p.unrealized_pnl || 0), 0);
+
+    autoTable(doc, {
+      ...TABLE_STYLES,
+      startY: currentY,
+      willDrawPage: () => paintPage(),
+      margin: { top: 16, bottom: 18, left: marginX, right: marginX },
+      head: [[tr('Sembol'), tr('Sirket / Varlik'), tr('Tur'), tr('Lot'), tr('Ort. Maliyet'), tr('Guncel Fiyat'), tr('Toplam Deger'), tr('Potansiyel K/Z')]],
+      body: data.positions.map(p => {
+        const totalVal = p.current_value || (p.current_price ? p.current_price * p.total_lots : p.total_cost);
+        return [
+          tr(p.symbol),
+          tr(p.name || '-'),
+          p.assetType === 'fund' ? 'FON' : 'HISSE',
+          p.total_lots.toLocaleString('tr-TR'),
+          `${p.average_cost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          p.current_price ? `${p.current_price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL` : '-',
+          `${totalVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`,
+          p.unrealized_pnl !== undefined ? `${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL (%${(p.unrealized_pnl_percent || 0).toFixed(1)})` : '-'
+        ];
+      }),
+      foot: [[
+        tr('TOPLAM'),
+        `${data.positions.length} Varlik`,
+        '',
+        '',
+        `${totalPosCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+        '',
+        `${totalPosValue.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`,
+        `${totalPosPnl >= 0 ? '+' : ''}${totalPosPnl.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} TL`
+      ]],
+      columnStyles: {
+        0: { cellWidth: 18, fontStyle: 'bold' },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 16, halign: 'right' },
+        4: { cellWidth: 24, halign: 'right' },
+        5: { cellWidth: 22, halign: 'right' },
+        6: { cellWidth: 24, halign: 'right' },
+        7: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
+      },
+      didParseCell: (dataCell) => {
+        if ((dataCell.section === 'body' || dataCell.section === 'foot') && dataCell.column.index === 7) {
+          const text = String(dataCell.cell.raw || '');
+          dataCell.cell.styles.textColor = text.startsWith('+') ? COLORS.gain : text.startsWith('-') ? COLORS.loss : COLORS.textWhite;
         }
       }
     });
   }
 
-  addDailyMPDFDecorations(doc, 'DailyM Borsa & Portfoy Raporu');
+  addDailyMPDFDecorations(doc, 'DailyM Borsa & Portfoy Raporu', 'tr', paintedPages);
   doc.save(`Borsa_Portfoy_Raporu_${data.startDate.replaceAll('.', '-')}_${data.endDate.replaceAll('.', '-')}.pdf`);
 }
 

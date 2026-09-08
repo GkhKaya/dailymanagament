@@ -33,3 +33,19 @@ test("weekly filter starts on Monday instead of rolling seven days", () => {
   const result = filterRealizedTrades(trades, 'all', 'week', new Date('2026-08-24T12:00:00.000Z'));
   assert.deepEqual(result.map((trade) => trade.id), ['current-week']);
 });
+
+test("monthly filter takes only the calendar month instead of rolling 30 days", () => {
+  const trades = [
+    { id: 'aug-late', assetType: 'stock', rawDate: '2026-08-31T10:00:00.000Z', realized_pnl: 150 },
+    { id: 'sep-early', assetType: 'stock', rawDate: '2026-09-02T10:00:00.000Z', realized_pnl: 80 },
+    { id: 'sep-mid', assetType: 'stock', rawDate: '2026-09-07T10:00:00.000Z', realized_pnl: 200 },
+  ];
+  // Filter for September (now = Sep 7, 2026, offset = 0)
+  const sepResult = filterRealizedTrades(trades, 'all', 'month', new Date('2026-09-07T12:00:00.000Z'), 0);
+  assert.deepEqual(sepResult.map((t) => t.id), ['sep-mid', 'sep-early']);
+
+  // Filter for August (now = Sep 7, 2026, offset = -1)
+  const augResult = filterRealizedTrades(trades, 'all', 'month', new Date('2026-09-07T12:00:00.000Z'), -1);
+  assert.deepEqual(augResult.map((t) => t.id), ['aug-late']);
+});
+

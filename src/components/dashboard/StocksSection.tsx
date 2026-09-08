@@ -18,7 +18,10 @@ import {
   X,
   Activity,
   RefreshCw,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight,
+  Calendar
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction, syncStockMarketPricesAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -28,7 +31,7 @@ import { EditStockSymbolModal } from "@/components/forms/EditStockSymbolModal";
 import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrdersModal";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades } from "@/lib/stocks-ui";
+import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades, formatRealizedPeriodLabel } from "@/lib/stocks-ui";
 import { useTranslation } from "@/hooks/useTranslation";
 import toast from "react-hot-toast";
 
@@ -44,6 +47,16 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
   const [realizedPeriod, setRealizedPeriod] = useState<'all' | 'week' | 'month'>('all');
+  const [realizedPeriodOffset, setRealizedPeriodOffset] = useState<number>(0);
+
+  const handleSelectPeriod = (period: 'all' | 'week' | 'month') => {
+    setRealizedPeriod(period);
+    setRealizedPeriodOffset(0);
+  };
+
+  const handlePrevPeriod = () => setRealizedPeriodOffset(prev => prev - 1);
+  const handleNextPeriod = () => setRealizedPeriodOffset(prev => prev + 1);
+  const handleResetCurrentPeriod = () => setRealizedPeriodOffset(0);
 
   // Modals state
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
@@ -210,6 +223,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     ),
     assetFilter,
     realizedPeriod,
+    new Date(),
+    realizedPeriodOffset
   );
   const realizedSummary = summarizeRealizedTrades(realizedTrades);
 
@@ -218,6 +233,20 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     const matchesFilter = tradeFilter === 'all' || t.type === tradeFilter;
     return matchesSearch && matchesFilter;
   });
+
+  const pdfReferenceDate = React.useMemo(() => {
+    const d = new Date();
+    if (realizedPeriod === 'month') {
+      return new Date(d.getFullYear(), d.getMonth() + realizedPeriodOffset, 1);
+    }
+    if (realizedPeriod === 'week') {
+      const dayOfWeek = d.getDay() || 7;
+      const ref = new Date(d);
+      ref.setDate(d.getDate() - dayOfWeek + 1 + (realizedPeriodOffset * 7));
+      return ref;
+    }
+    return d;
+  }, [realizedPeriod, realizedPeriodOffset]);
 
   return (
     <div className="flex flex-col gap-[var(--space-4)] w-full max-w-[1600px] mx-auto animate-fade-in">
@@ -653,10 +682,54 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               </div>
               <div className="flex gap-1 p-1 rounded-lg bg-white/5 border border-white/10">
                 {([['all', isEn ? 'All' : 'Tümü'], ['week', isEn ? 'Weekly' : 'Haftalık'], ['month', isEn ? 'Monthly' : 'Aylık']] as const).map(([value, label]) => (
-                  <button key={value} type="button" onClick={() => setRealizedPeriod(value)} className={`min-h-9 px-3 rounded-md text-xs font-bold ${realizedPeriod === value ? 'bg-[var(--primary)] text-black' : 'text-white/60 hover:text-white'}`}>{label}</button>
+                  <button key={value} type="button" onClick={() => handleSelectPeriod(value)} className={`min-h-9 px-3 rounded-md text-xs font-bold ${realizedPeriod === value ? 'bg-[var(--primary)] text-black' : 'text-white/60 hover:text-white'}`}>{label}</button>
                 ))}
               </div>
             </div>
+
+            {/* Period Navigator for Weekly and Monthly calendar views */}
+            {realizedPeriod !== 'all' && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/10 text-xs">
+                <button
+                  type="button"
+                  onClick={handlePrevPeriod}
+                  aria-label={isEn ? "Previous period" : "Önceki dönem"}
+                  className="min-h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center gap-1 transition-colors cursor-pointer text-xs font-semibold active:scale-95"
+                >
+                  <ChevronLeft size={16} />
+                  <span className="hidden sm:inline">{isEn ? "Previous" : "Önceki"}</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <Calendar size={15} className="text-[var(--primary)] shrink-0" />
+                  <span className="font-bold text-white text-xs sm:text-sm">
+                    {formatRealizedPeriodLabel(realizedPeriod, realizedPeriodOffset, isEn)}
+                  </span>
+                  {realizedPeriodOffset !== 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetCurrentPeriod}
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors cursor-pointer ml-1"
+                      title={isEn ? "Back to Current" : "Güncele Dön"}
+                    >
+                      {isEn ? "Current" : "Güncel"}
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleNextPeriod}
+                  disabled={realizedPeriodOffset >= 0}
+                  aria-label={isEn ? "Next period" : "Sonraki dönem"}
+                  className="min-h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold active:scale-95"
+                >
+                  <span className="hidden sm:inline">{isEn ? "Next" : "Sonraki"}</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+
             <div className="flex gap-4 text-xs text-[var(--on-surface-variant)]">
               <span>{isEn ? "Profitable:" : "Kârlı:"} <strong className="text-emerald-400">{realizedSummary.winningCount}</strong></span>
               <span>{isEn ? "Loss:" : "Zararlı:"} <strong className="text-rose-400">{realizedSummary.losingCount}</strong></span>
@@ -668,12 +741,29 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
                 <TrendingUp size={28} />
               </div>
-              <h3 className="text-base font-bold text-white">{isEn ? "No Sells Yet" : "Henüz Satış Yapılmadı"}</h3>
+              <h3 className="text-base font-bold text-white">
+                {(portfolio?.realizedTrades?.length || 0) > 0
+                  ? (isEn ? "No Trades in This Period" : "Bu Dönemde Gerçekleşen İşlem Yok")
+                  : (isEn ? "No Sells Yet" : "Henüz Satış Yapılmadı")}
+              </h3>
               <p className="text-xs text-[var(--on-surface-variant)] max-w-md">
-                {isEn
-                  ? "When you sell stocks from your holdings, your cost basis and net realized profit/loss will be automatically calculated and listed here."
-                  : "Elinizdeki hisselerden satış yaptığınızda, maliyetleriniz ve net gerçekleşen kâr/zararınız burada otomatik hesaplanarak listelenecektir."}
+                {(portfolio?.realizedTrades?.length || 0) > 0
+                  ? (isEn
+                      ? "There are no realized sell trades in the selected period. You can navigate to other periods or view all trades."
+                      : "Seçili dönemde gerçekleşen kâr/zarar satışı bulunmuyor. Önceki dönemlere gidebilir veya tüm işlemleri görüntüleyebilirsiniz.")
+                  : (isEn
+                      ? "When you sell stocks from your holdings, your cost basis and net realized profit/loss will be automatically calculated and listed here."
+                      : "Elinizdeki hisselerden satış yaptığınızda, maliyetleriniz ve net gerçekleşen kâr/zararınız burada otomatik hesaplanarak listelenecektir.")}
               </p>
+              {(portfolio?.realizedTrades?.length || 0) > 0 && realizedPeriod !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => handleSelectPeriod('all')}
+                  className="mt-2 min-h-9 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {isEn ? "Show All Trades" : "Tüm İşlemleri Göster"}
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -931,6 +1021,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
       <ExportPdfModal
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
+        currentDate={pdfReferenceDate}
         reportType="stocks"
       />
     </div>
