@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -48,6 +48,20 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [assetFilter, setAssetFilter] = useState<'all' | 'stock' | 'fund'>('all');
   const [realizedPeriod, setRealizedPeriod] = useState<'all' | 'week' | 'month'>('all');
   const [realizedPeriodOffset, setRealizedPeriodOffset] = useState<number>(0);
+
+  const pdfReferenceDate = useMemo(() => {
+    const d = new Date();
+    if (realizedPeriod === 'month') {
+      return new Date(d.getFullYear(), d.getMonth() + realizedPeriodOffset, 1);
+    }
+    if (realizedPeriod === 'week') {
+      const dayOfWeek = d.getDay() || 7;
+      const ref = new Date(d);
+      ref.setDate(d.getDate() - dayOfWeek + 1 + (realizedPeriodOffset * 7));
+      return ref;
+    }
+    return d;
+  }, [realizedPeriod, realizedPeriodOffset]);
 
   const handleSelectPeriod = (period: 'all' | 'week' | 'month') => {
     setRealizedPeriod(period);
@@ -234,19 +248,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     return matchesSearch && matchesFilter;
   });
 
-  const pdfReferenceDate = React.useMemo(() => {
-    const d = new Date();
-    if (realizedPeriod === 'month') {
-      return new Date(d.getFullYear(), d.getMonth() + realizedPeriodOffset, 1);
-    }
-    if (realizedPeriod === 'week') {
-      const dayOfWeek = d.getDay() || 7;
-      const ref = new Date(d);
-      ref.setDate(d.getDate() - dayOfWeek + 1 + (realizedPeriodOffset * 7));
-      return ref;
-    }
-    return d;
-  }, [realizedPeriod, realizedPeriodOffset]);
+
 
   return (
     <div className="flex flex-col gap-[var(--space-4)] w-full max-w-[1600px] mx-auto animate-fade-in">
