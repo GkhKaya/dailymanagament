@@ -242,7 +242,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
               {isEn ? "Profile & Settings" : "Profil & Ayarlar"}
             </h1>
           </div>
-          <p className="text-[var(--on-surface-variant)] text-sm sm:text-base ml-[56px]">
+          <p className="text-[var(--on-surface-variant)] text-sm sm:text-base ml-0 sm:ml-14 mt-1">
             {isEn 
               ? "Manage your credentials, physical stats, and financial preferences." 
               : "Kimlik bilgilerinizi, fiziksel verilerinizi ve finansal ayarlarınızı yönetin."}

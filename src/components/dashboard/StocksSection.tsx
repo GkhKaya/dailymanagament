@@ -634,34 +634,36 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                     <button
                       type="button"
                       onClick={() => handleOpenBuy(pos.symbol)}
-                      className="min-h-11 px-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                      className="min-h-11 px-2.5 sm:px-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-[11px] sm:text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                     >
-                      <Plus size={15} /> {isEn ? "Buy More" : "Ekle (Alış)"}
+                      <Plus size={15} className="shrink-0" />
+                      <span className="truncate">{isEn ? "Buy More" : "Ekle (Alış)"}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenSell(pos.symbol)}
-                      className="min-h-11 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                      className="min-h-11 px-2.5 sm:px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] sm:text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
-                      <Minus size={15} /> {isEn ? "Sell" : "Satış Yap"}
+                      <Minus size={15} className="shrink-0" />
+                      <span className="truncate">{isEn ? "Sell" : "Satış Yap"}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenPriceModal(pos)}
                       aria-label={isEn ? `Edit current price for ${pos.symbol}` : `${pos.symbol} güncel fiyatını düzenle`}
-                      className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                      className="min-h-11 px-2.5 sm:px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-[11px] sm:text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
-                      <Edit3 size={13} className="text-[var(--primary)]" />
-                      <span>{isEn ? "Set Price" : "Fiyat Gir"}</span>
+                      <Edit3 size={13} className="text-[var(--primary)] shrink-0" />
+                      <span className="truncate">{isEn ? "Set Price" : "Fiyat Gir"}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenOrdersModal(pos)}
                       aria-label={isEn ? `Edit orders and costs for ${pos.symbol}` : `${pos.symbol} emir ve maliyetlerini düzenle`}
-                      className="min-h-11 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                      className="min-h-11 px-2.5 sm:px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-[var(--outline)] text-white text-[11px] sm:text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
-                      <ListOrdered size={13} className="text-blue-400" />
-                      <span>{isEn ? "Cost/Orders" : "Maliyet/Emirler"}</span>
+                      <ListOrdered size={13} className="text-blue-400 shrink-0" />
+                      <span className="truncate">{isEn ? "Cost/Orders" : "Maliyet/Emirler"}</span>
                     </button>
                   </div>
                 </div>

@@ -211,7 +211,7 @@ export function AddTransactionForm({
         <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] text-white font-medium transition-colors cursor-pointer">
           {isEn ? "Cancel" : "İptal"}
         </button>
-        <button type="submit" disabled={isLoading} className={`flex-[2] py-3 rounded-xl text-black font-bold transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}>
+        <button type="submit" disabled={isLoading} className={`flex-[2] py-3 rounded-xl text-black font-bold transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69] text-black' : 'bg-[var(--primary)] hover:brightness-105'}`}>
           {isLoading ? <LoadingSpinner size="sm" /> : (isEn ? (type === 'income' ? 'Add Income' : 'Add Expense') : (type === 'income' ? 'Gelir Ekle' : 'Gider Ekle'))}
         </button>
       </div>

@@ -258,7 +258,7 @@ export function EditTransactionForm({ transaction, categories, accounts, onClose
         <button 
           type="submit" 
           disabled={isSubmitting} 
-          className={`flex-[2] py-3 rounded-xl text-black font-bold transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69]' : 'bg-[var(--primary)] hover:bg-[#3d3fb3]'}`}
+          className={`flex-[2] py-3 rounded-xl text-black font-bold transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50 ${type === 'income' ? 'bg-[#4ade80] hover:bg-[#3bca69]' : 'bg-[var(--primary)] hover:brightness-105'}`}
         >
           {isSubmitting ? <LoadingSpinner size="sm" /> : (isEn ? "Update" : "Güncelle")}
         </button>

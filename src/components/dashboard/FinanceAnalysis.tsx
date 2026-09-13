@@ -75,7 +75,7 @@ export function FinanceAnalysis({ onBack }: { onBack: () => void }) {
             <button onClick={onBack} aria-label={isEn ? "Go back" : "Geri dön"} className="p-2 rounded-full bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer">
               <ArrowLeft size={20} className="text-white" />
             </button>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
               {isEn ? "Detailed Financial Analysis" : "Detaylı Finans Analizi"}
             </h2>
           </div>

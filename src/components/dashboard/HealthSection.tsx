@@ -50,6 +50,11 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   const totalBurned = data.burnedCalories;
   const netCalories = data.consumedCalories - totalBurned;
 
+  const totalMacroGrams = (data.carbs || 0) + (data.protein || 0) + (data.fat || 0);
+  const carbsPct = totalMacroGrams > 0 ? Math.round(((data.carbs || 0) / totalMacroGrams) * 100) : 0;
+  const proteinPct = totalMacroGrams > 0 ? Math.round(((data.protein || 0) / totalMacroGrams) * 100) : 0;
+  const fatPct = totalMacroGrams > 0 ? Math.max(0, 100 - carbsPct - proteinPct) : 0;
+
   const toggleMeal = (mealId: string) => {
     setExpandedMeals(prev => 
       prev.includes(mealId) ? prev.filter(id => id !== mealId) : [...prev, mealId]
@@ -342,21 +347,21 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             <span className="text-caption text-[var(--primary)]">{isEn ? "CARBS" : "KARB"}</span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-headline text-white">{data.carbs || 0}g</span>
-              <span className="text-caption text-[var(--on-surface-variant)]">52%</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">{carbsPct}%</span>
             </div>
           </div>
           <div className="flex flex-col">
             <span className="text-caption text-white">{isEn ? "PROTEIN" : "PROTEİN"}</span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-headline text-white">{data.protein || 0}g</span>
-              <span className="text-caption text-[var(--on-surface-variant)]">33%</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">{proteinPct}%</span>
             </div>
           </div>
           <div className="flex flex-col">
             <span className="text-caption text-white">{isEn ? "FAT" : "YAĞ"}</span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-headline text-white">{data.fat || 0}g</span>
-              <span className="text-caption text-[var(--on-surface-variant)]">15%</span>
+              <span className="text-caption text-[var(--on-surface-variant)]">{fatPct}%</span>
             </div>
           </div>
           <div className="flex flex-col">

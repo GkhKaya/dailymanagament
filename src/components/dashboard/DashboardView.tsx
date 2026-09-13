@@ -180,7 +180,7 @@ export function DashboardView() {
 
         {/* Mobile Mode Switcher (shows below header on small screens) */}
         <div className="w-full px-4 pb-4 sm:hidden flex justify-center relative z-10">
-          {mode !== 'health-analysis' && mode !== 'finance-analysis' && (
+          {mode !== 'health-analysis' && mode !== 'finance-analysis' && mode !== 'stocks-analysis' && (
             <div className="grid grid-cols-4 gap-1 w-full bg-[rgba(255,255,255,0.03)] backdrop-blur-lg p-1 rounded-[var(--radius-btn)] border border-[rgba(255,255,255,0.05)]">
               <button
                 data-tour="nav-overview"

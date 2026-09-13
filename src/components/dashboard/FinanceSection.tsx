@@ -178,12 +178,13 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           <div className="flex items-center gap-[var(--space-2)]">
             <h3 className="text-caption text-[var(--on-surface-variant)]">{isEn ? "TRANSACTION HISTORY" : "İŞLEM GEÇMİŞİ"}</h3>
             <button 
+              type="button"
               data-tour="finance-add-transaction"
               onClick={() => onOpenSheet && onOpenSheet('transaction')}
               aria-label={isEn ? "Add transaction" : "İşlem ekle"}
-              className="w-5 h-5 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
+              className="w-7 h-7 sm:w-6 sm:h-6 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors cursor-pointer"
             >
-              <Plus size={12} />
+              <Plus size={14} />
             </button>
           </div>
           <span className="text-caption text-[var(--on-surface-variant)] uppercase">{new Intl.DateTimeFormat(isEn ? 'en-US' : 'tr-TR', { month: 'long', year: 'numeric' }).format(currentDate || new Date()).toLocaleUpperCase(isEn ? 'en-US' : 'tr-TR')}</span>

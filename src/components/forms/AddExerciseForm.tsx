@@ -28,7 +28,7 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
           <select 
             value={exerciseType}
             onChange={(e) => handleExerciseTypeChange(e.target.value)}
-            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all appearance-none cursor-pointer"
+            className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 pl-4 pr-10 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer"
           >
             <option value="Koşu" className="bg-[#1A1A26]">{isEn ? "Running" : "Koşu"}</option>
             <option value="Yürüyüş" className="bg-[#1A1A26]">{isEn ? "Walking" : "Yürüyüş"}</option>
