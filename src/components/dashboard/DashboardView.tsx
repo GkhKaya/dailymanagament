@@ -227,7 +227,7 @@ export function DashboardView() {
         </div>
 
         {/* ── Main Content Area ── */}
-        <main id="main-content" className="w-full px-4 pt-8 sm:px-[var(--space-6)] sm:pt-10 pb-[var(--space-10)] relative z-0" tabIndex={-1}>
+        <main id="main-content" className="w-full px-4 pt-8 sm:px-[var(--space-6)] sm:pt-10 pb-36 sm:pb-24 relative z-0" tabIndex={-1}>
           <h1 className="sr-only">{isEn ? "DailyM Personal Dashboard" : "DailyM kişisel yönetim paneli"}</h1>
 
           {/* ── BMR & Health Profile Missing Warning Banner ── */}

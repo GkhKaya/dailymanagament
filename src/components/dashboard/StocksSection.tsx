@@ -251,7 +251,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
 
 
   return (
-    <div className="flex flex-col gap-[var(--space-4)] w-full max-w-[1600px] mx-auto animate-fade-in">
+    <div className="flex flex-col gap-[var(--space-4)] w-full max-w-[1600px] mx-auto animate-fade-in pb-16 sm:pb-8">
       
       {/* ── HEADER BANNER ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">

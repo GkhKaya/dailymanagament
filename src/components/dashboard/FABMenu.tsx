@@ -22,66 +22,84 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
-      {/* Menu Options */}
-      <div 
-        className={`flex flex-col items-end gap-3 transition-all duration-300 ease-out origin-bottom ${
-          isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-10 pointer-events-none'
-        }`}
-      >
-        <button 
-          onClick={() => handleAction('transaction')}
-          className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
-        >
-          <span className="font-medium text-sm">{t("dashboard.fab.addExpense")} / {t("dashboard.fab.addIncome")}</span>
-          <div className="w-8 h-8 rounded-full bg-[rgba(73,75,214,0.3)] flex items-center justify-center text-[#c0c1ff]">
-            <DollarSign size={16} />
-          </div>
-        </button>
+    <>
+      {/* Overlay Backdrop when FAB is open */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs pointer-events-auto transition-opacity"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-        <button 
-          onClick={() => handleAction('exercise')}
-          className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 pointer-events-none">
+        {/* Menu Options */}
+        <div 
+          className={`flex flex-col items-end gap-3 transition-all duration-300 ease-out origin-bottom ${
+            isOpen 
+              ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto visible' 
+              : 'opacity-0 scale-90 translate-y-10 pointer-events-none invisible'
+          }`}
         >
-          <span className="font-medium text-sm">{t("dashboard.fab.addExercise")}</span>
-          <div className="w-8 h-8 rounded-full bg-[rgba(217,119,33,0.3)] flex items-center justify-center text-orange-400">
-            <Activity size={16} />
-          </div>
-        </button>
+          <button 
+            type="button"
+            onClick={() => handleAction('transaction')}
+            className="pointer-events-auto flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          >
+            <span className="font-medium text-sm">{t("dashboard.fab.addExpense")} / {t("dashboard.fab.addIncome")}</span>
+            <div className="w-8 h-8 rounded-full bg-[rgba(73,75,214,0.3)] flex items-center justify-center text-[#c0c1ff]">
+              <DollarSign size={16} />
+            </div>
+          </button>
 
-        <button 
-          onClick={() => handleAction('aiPhotoMeal')}
-          className="flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-md text-emerald-400 px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
-        >
-          <span className="font-semibold text-sm">{t("dashboard.fab.aiPhotoMeal")}</span>
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Camera size={16} />
-          </div>
-        </button>
+          <button 
+            type="button"
+            onClick={() => handleAction('exercise')}
+            className="pointer-events-auto flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          >
+            <span className="font-medium text-sm">{t("dashboard.fab.addExercise")}</span>
+            <div className="w-8 h-8 rounded-full bg-[rgba(217,119,33,0.3)] flex items-center justify-center text-orange-400">
+              <Activity size={16} />
+            </div>
+          </button>
 
+          <button 
+            type="button"
+            onClick={() => handleAction('aiPhotoMeal')}
+            className="pointer-events-auto flex items-center gap-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-md text-emerald-400 px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          >
+            <span className="font-semibold text-sm">{t("dashboard.fab.aiPhotoMeal")}</span>
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Camera size={16} />
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => handleAction('meal')}
+            className="pointer-events-auto flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          >
+            <span className="font-medium text-sm">{t("dashboard.fab.addMeal")}</span>
+            <div className="w-8 h-8 rounded-full bg-[rgba(142,193,59,0.3)] flex items-center justify-center text-[#8ec13b]">
+              <Utensils size={16} />
+            </div>
+          </button>
+        </div>
+
+        {/* Main FAB */}
         <button 
-          onClick={() => handleAction('meal')}
-          className="flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105"
+          type="button"
+          data-tour="quick-add"
+          onClick={toggleMenu}
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 z-50 relative pointer-events-auto cursor-pointer ${
+            isOpen 
+              ? 'bg-[rgba(255,255,255,0.1)] text-white rotate-90 border border-[rgba(255,255,255,0.1)]' 
+              : 'bg-[var(--primary)] text-white hover:bg-[#3d3fb3] hover:scale-105 hover:shadow-[0_0_20px_rgba(73,75,214,0.4)]'
+          }`}
         >
-          <span className="font-medium text-sm">{t("dashboard.fab.addMeal")}</span>
-          <div className="w-8 h-8 rounded-full bg-[rgba(142,193,59,0.3)] flex items-center justify-center text-[#8ec13b]">
-            <Utensils size={16} />
-          </div>
+          {isOpen ? <X size={24} /> : <Plus size={24} />}
         </button>
       </div>
-
-      {/* Main FAB */}
-      <button 
-        data-tour="quick-add"
-        onClick={toggleMenu}
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 z-50 relative ${
-          isOpen 
-            ? 'bg-[rgba(255,255,255,0.1)] text-white rotate-90 border border-[rgba(255,255,255,0.1)]' 
-            : 'bg-[var(--primary)] text-white hover:bg-[#3d3fb3] hover:scale-105 hover:shadow-[0_0_20px_rgba(73,75,214,0.4)]'
-        }`}
-      >
-        {isOpen ? <X size={24} /> : <Plus size={24} />}
-      </button>
-    </div>
+    </>
   );
 }

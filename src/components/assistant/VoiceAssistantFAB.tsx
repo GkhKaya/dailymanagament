@@ -640,7 +640,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
   return (
     <>
       {/* ── FAB BUTTON ── */}
-      <div className="fixed bottom-6 left-6 z-[90] flex items-center">
+      <div className="fixed bottom-6 left-6 z-[90] flex items-center pointer-events-none">
         <button
           type="button"
           data-tour="voice-assistant"
@@ -653,7 +653,7 @@ export function VoiceAssistantFAB({ onSuccess, currentDate }: { onSuccess?: () =
             }
           }}
           aria-label="DailyM Sesli Asistanı Başlat"
-          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.6)] border transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+          className={`pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.6)] border transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
             isListening
               ? 'bg-rose-500 border-rose-400 text-white ring-4 ring-rose-500/30 animate-pulse'
               : 'bg-[var(--primary)] border-[var(--primary-hover)] text-black hover:bg-[var(--primary-hover)]'
