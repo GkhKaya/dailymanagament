@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle } from 'lucide-react';
 import { getExerciseVideoUrl } from '@/lib/workout-utils';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -527,9 +527,9 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                         {/* Expanded Exercises */}
                         {isExpanded && day.exercises && day.exercises.length > 0 && (
                           <div className="flex flex-col border-t border-[rgba(255,255,255,0.06)] bg-[#12121D] p-3 gap-2">
-                            <div className="flex items-center gap-1.5 px-1 pb-1 text-[10px] text-[var(--on-surface-variant)] font-medium">
-                              <PlayCircle size={12} className="text-[var(--primary)]" />
-                              <span>{isEn ? "Click an exercise to open video tutorial" : "Videolu yapılış anlatımını açmak için harekete tıklayın"}</span>
+                            <div className="flex items-center gap-1.5 px-1 pb-1 text-[11px] text-[var(--on-surface-variant)] font-medium">
+                              <PlayCircle size={13} className="text-[var(--primary)] shrink-0" />
+                              <span>{isEn ? "Tap any exercise to watch video tutorial" : "Yapılış videosunu izlemek için harekete dokunun"}</span>
                             </div>
                             {day.exercises.map((ex: any, idx: number) => (
                               <a
@@ -537,30 +537,31 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                                 href={getExerciseVideoUrl(ex.name)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-between p-2.5 bg-[#181826] hover:bg-[#202032] rounded-lg border border-[rgba(255,255,255,0.04)] hover:border-[var(--primary)]/40 transition-all group/ex cursor-pointer"
-                                title={isEn ? `Watch video for "${ex.name}"` : `"${ex.name}" hareketinin videosunu izle`}
+                                className="flex items-center justify-between gap-3 p-3 bg-[#181826] hover:bg-[#202032] rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[var(--primary)]/40 transition-all group/ex cursor-pointer"
+                                title={isEn ? `Watch video for "${ex.name}"` : `"${ex.name}" videosunu izle`}
                               >
-                                <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                  <span className="w-6 h-6 rounded-md bg-[var(--primary)]/15 text-[var(--primary)] text-xs font-bold flex items-center justify-center shrink-0">
+                                <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                                  <span className="w-6 h-6 rounded-lg bg-[var(--primary)]/15 text-[var(--primary)] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
                                     {idx + 1}
                                   </span>
-                                  <span className="text-xs font-semibold text-white truncate group-hover/ex:text-[var(--primary)] transition-colors">
-                                    {ex.name}
-                                  </span>
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--primary)] bg-[var(--primary)]/10 px-1.5 py-0.5 rounded opacity-75 group-hover/ex:opacity-100 transition-opacity shrink-0">
-                                    <PlayCircle size={11} /> Video
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                                    {ex.sets} {isEn ? "Set" : "Set"} {ex.reps ? `x ${ex.reps}` : ''}
-                                  </span>
-                                  {ex.weight_kg ? (
-                                    <span className="text-[11px] text-[var(--on-surface-variant)] font-medium">
-                                      ({ex.weight_kg} kg)
+                                  <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-sm font-semibold text-white group-hover/ex:text-[var(--primary)] transition-colors leading-snug break-words">
+                                      {ex.name || (isEn ? "Exercise" : "Hareket")}
                                     </span>
-                                  ) : null}
-                                  <ExternalLink size={13} className="text-[var(--on-surface-variant)] group-hover/ex:text-white transition-colors ml-0.5" />
+                                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                      <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                                        {ex.sets} {isEn ? "Set" : "Set"}{ex.reps ? ` · ${ex.reps}` : ''}
+                                      </span>
+                                      {ex.weight_kg ? (
+                                        <span className="text-[11px] text-[var(--on-surface-variant)] font-medium bg-white/[0.04] px-1.5 py-0.5 rounded-md">
+                                          {ex.weight_kg} kg
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="w-8 h-8 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] group-hover/ex:bg-[var(--primary)] group-hover/ex:text-black transition-all flex items-center justify-center shrink-0 ml-1">
+                                  <PlayCircle size={16} />
                                 </div>
                               </a>
                             ))}
