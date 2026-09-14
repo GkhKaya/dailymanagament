@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { t, getCurrencySymbol } from '@/lib/i18n';
-import { Calendar } from 'lucide-react';
+import { Calendar, ArrowRightLeft } from 'lucide-react';
 import { useAddTransactionViewModel } from '@/viewmodels/useAddTransactionViewModel';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -10,6 +10,7 @@ import { CustomSelect } from '@/components/ui/CustomSelect';
 import { localizeCategoryName } from '@/lib/category-helpers';
 import { getCategoryIcon } from '@/lib/category-icons';
 import { CategoryInfo } from '@/models/DashboardTypes';
+import { TransferAccountsForm } from './TransferAccountsForm';
 
 export function AddTransactionForm({ 
   onClose,
@@ -23,12 +24,14 @@ export function AddTransactionForm({
   onSuccess: () => void,
   onOpenCategories?: () => void,
   categories: CategoryInfo[],
-  accounts: { id: string; name: string }[],
+  accounts: { id: string; name: string; balance?: number; type?: string }[],
   currentDate?: string
 }) {
   const { locale, isAbroad: userAbroad } = useTranslation();
   const isEn = userAbroad || locale === 'en';
   const currencySym = getCurrencySymbol();
+
+  const [activeTab, setActiveTab] = useState<'expense' | 'income' | 'transfer'>('expense');
 
   const {
     type, setType,
@@ -42,23 +45,70 @@ export function AddTransactionForm({
 
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
+  // If user selected Transfer tab, show TransferAccountsForm with tab switcher
+  if (activeTab === 'transfer') {
+    return (
+      <div className="flex flex-col gap-6 animate-fade-in">
+        <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
+          <button 
+            type="button"
+            onClick={() => { setActiveTab('expense'); setType('expense'); }}
+            className="flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-medium transition-all cursor-pointer text-[var(--on-surface-variant)] hover:text-white"
+          >
+            {isEn ? "Expense" : "Gider"}
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setActiveTab('income'); setType('income'); }}
+            className="flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-medium transition-all cursor-pointer text-[var(--on-surface-variant)] hover:text-white"
+          >
+            {isEn ? "Income" : "Gelir"}
+          </button>
+          <button 
+            type="button"
+            onClick={() => setActiveTab('transfer')}
+            className="flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-bold transition-all cursor-pointer bg-[var(--primary)] shadow-sm text-black flex items-center justify-center gap-1.5"
+          >
+            <ArrowRightLeft size={15} />
+            <span>{isEn ? "Transfer" : "Transfer"}</span>
+          </button>
+        </div>
+
+        <TransferAccountsForm 
+          accounts={accounts as any} 
+          currentDate={date || currentDate || new Date().toISOString().split('T')[0]} 
+          onSuccess={onSuccess} 
+          onClose={onClose} 
+        />
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
       {/* Tabs */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.05)] rounded-2xl">
         <button 
           type="button"
-          onClick={() => { setType('expense'); setCategoryId(''); }}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all cursor-pointer ${type === 'expense' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          onClick={() => { setActiveTab('expense'); setType('expense'); setCategoryId(''); }}
+          className={`flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-medium transition-all cursor-pointer ${type === 'expense' ? 'bg-[var(--primary)] shadow-sm text-black font-bold' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           {isEn ? "Expense" : "Gider"}
         </button>
         <button 
           type="button"
-          onClick={() => { setType('income'); setCategoryId(''); }}
-          className={`flex-1 py-2.5 text-center rounded-xl text-body font-medium transition-all cursor-pointer ${type === 'income' ? 'bg-[var(--primary)] shadow-sm text-black' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
+          onClick={() => { setActiveTab('income'); setType('income'); setCategoryId(''); }}
+          className={`flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-medium transition-all cursor-pointer ${type === 'income' ? 'bg-[var(--primary)] shadow-sm text-black font-bold' : 'text-[var(--on-surface-variant)] hover:text-white'}`}
         >
           {isEn ? "Income" : "Gelir"}
+        </button>
+        <button 
+          type="button"
+          onClick={() => { setActiveTab('transfer'); }}
+          className="flex-1 py-2.5 text-center rounded-xl text-xs sm:text-body font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 text-[var(--on-surface-variant)] hover:text-white"
+        >
+          <ArrowRightLeft size={15} />
+          <span>{isEn ? "Transfer" : "Transfer"}</span>
         </button>
       </div>
 

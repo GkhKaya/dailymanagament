@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FinanceDataDTO } from "@/models/DashboardTypes";
-import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download } from "lucide-react";
+import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download, ArrowRightLeft } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatCurrency } from "@/lib/i18n";
@@ -129,13 +129,16 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
               <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
                 {isEn ? "Accounts" : "Hesaplar"} <Wallet size={16} className="text-[var(--on-surface-variant)]" />
               </button>
+              <button onClick={() => onOpenSheet && onOpenSheet('transferAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-cyan-500/10 border border-cyan-500/20 transition-colors text-xs sm:text-sm font-medium text-cyan-300">
+                {isEn ? "Transfer" : "Para Transferi"} <ArrowRightLeft size={16} className="text-cyan-400" />
+              </button>
               <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
                 {isEn ? "Categories" : "Kategoriler"} <Tag size={16} className="text-[var(--on-surface-variant)]" />
               </button>
               <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
                 {isEn ? "Debts" : "Borçlar"} <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
               </button>
-              <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+              <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white col-span-2">
                 {isEn ? "Subscriptions" : "Abonelikler"} <Repeat size={16} className="text-[var(--on-surface-variant)]" />
               </button>
             </div>
@@ -146,12 +149,23 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
             <div className="glass-card p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider">{isEn ? "MY ACCOUNTS" : "HESAPLARIM"} ({data.accounts.length})</span>
-                <button 
-                  onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} 
-                  className="text-xs text-[var(--primary)] hover:underline font-semibold"
-                >
-                  {isEn ? "Manage" : "Yönet"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => onOpenSheet && onOpenSheet('transferAccounts')} 
+                    className="text-xs text-cyan-400 hover:text-cyan-300 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ArrowRightLeft size={12} />
+                    {isEn ? "Transfer" : "Transfer"}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} 
+                    className="text-xs text-[var(--primary)] hover:underline font-semibold cursor-pointer"
+                  >
+                    {isEn ? "Manage" : "Yönet"}
+                  </button>
+                </div>
               </div>
               <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
                 {data.accounts.map(acc => (
@@ -183,9 +197,19 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
               data-tour="finance-add-transaction"
               onClick={() => onOpenSheet && onOpenSheet('transaction')}
               aria-label={isEn ? "Add transaction" : "İşlem ekle"}
+              title={isEn ? "Add Transaction" : "İşlem Ekle"}
               className="w-7 h-7 sm:w-6 sm:h-6 rounded-full border border-[var(--primary)] text-[var(--primary)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors cursor-pointer"
             >
               <Plus size={14} />
+            </button>
+            <button 
+              type="button"
+              onClick={() => onOpenSheet && onOpenSheet('transferAccounts')}
+              aria-label={isEn ? "Transfer between accounts" : "Hesaplar arası transfer"}
+              title={isEn ? "Transfer Between Accounts" : "Hesaplar Arası Transfer"}
+              className="w-7 h-7 sm:w-6 sm:h-6 rounded-full border border-cyan-500/30 text-cyan-400 flex items-center justify-center hover:bg-cyan-500/20 hover:text-cyan-300 transition-colors cursor-pointer"
+            >
+              <ArrowRightLeft size={12} />
             </button>
           </div>
           <span className="text-caption text-[var(--on-surface-variant)] uppercase">{new Intl.DateTimeFormat(isEn ? 'en-US' : 'tr-TR', { month: 'long', year: 'numeric' }).format(currentDate || new Date()).toLocaleUpperCase(isEn ? 'en-US' : 'tr-TR')}</span>

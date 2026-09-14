@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle, ArrowRightLeft } from 'lucide-react';
 import { getExerciseVideoUrl } from '@/lib/workout-utils';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -10,6 +10,7 @@ import { ManageCategoriesForm } from '@/components/forms/ManageCategoriesForm';
 import { ManageDebtsForm } from '@/components/forms/ManageDebtsForm';
 import { ManageSubscriptionsForm } from '@/components/forms/ManageSubscriptionsForm';
 import { AddAccountForm } from '@/components/forms/AddAccountForm';
+import { TransferAccountsForm } from '@/components/forms/TransferAccountsForm';
 import { UpdateEmailForm } from '@/components/forms/UpdateEmailForm';
 import { UpdateUsernameForm } from '@/components/forms/UpdateUsernameForm';
 import { UpdatePasswordForm } from '@/components/forms/UpdatePasswordForm';
@@ -179,11 +180,19 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
         <ManageAccountsForm 
           onClose={() => setActiveSheet(null)} 
           onOpenAdd={() => setActiveSheet('addAccount')}
+          onOpenTransfer={() => setActiveSheet('transferAccounts')}
           onOpenEdit={(id) => { setActiveSheet(`editAccount_${id}`) }}
           accounts={financeData?.accounts || []} 
         />
       );
       case 'addAccount': return <AddAccountForm onClose={() => setActiveSheet('manageAccounts')} onSuccess={handleSuccess} />;
+      case 'transferAccounts': return (
+        <TransferAccountsForm 
+          accounts={financeData?.accounts || []} 
+          onSuccess={handleSuccess} 
+          onClose={() => setActiveSheet(null)} 
+        />
+      );
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
       case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editDebt_${id}`) }} debts={financeData?.debts || []} />;
       case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editSubscription_${id}`) }} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
@@ -222,6 +231,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
       case 'age': return isEn ? 'Update Age' : 'Yaş Bilgisini Güncelle';
       case 'manageAccounts': return isEn ? 'Manage Accounts' : 'Mevcut Hesaplar';
       case 'addAccount': return isEn ? 'Create Account' : 'Hesap Oluştur';
+      case 'transferAccounts': return isEn ? 'Transfer Between Accounts' : 'Hesaplar Arası Transfer';
       case 'debts': return isEn ? 'Debt Management' : 'Borç Yönetimi';
       case 'subscriptions': return isEn ? 'Subscription Management' : 'Abonelik Yönetimi';
       case 'markets': return isEn ? 'Active Investment Markets' : 'Aktif Borsa & Piyasalar';
@@ -302,6 +312,17 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                     </span>
                   </div>
                   <ArrowRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                </button>
+                <button onClick={() => setActiveSheet('transferAccounts')} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container)] hover:bg-[#27272a] transition-colors group">
+                  <div className="flex flex-col text-left">
+                    <span className="text-white font-bold text-sm group-hover:text-cyan-400 transition-colors">
+                      {isEn ? "Transfer Between Accounts" : "Hesaplar Arası Para Transferi"}
+                    </span>
+                    <span className="text-xs text-[var(--on-surface-variant)]">
+                      {isEn ? "Move money between bank & cash accounts" : "Banka ve nakit hesapları arasında aktarım"}
+                    </span>
+                  </div>
+                  <ArrowRightLeft size={16} className="text-[var(--on-surface-variant)] group-hover:text-cyan-400 transition-colors" />
                 </button>
                 <button onClick={() => setActiveSheet('subscriptions')} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container)] hover:bg-[#27272a] transition-colors group">
                   <div className="flex flex-col text-left">
