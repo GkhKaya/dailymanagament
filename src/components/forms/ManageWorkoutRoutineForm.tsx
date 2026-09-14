@@ -28,6 +28,7 @@ export function ManageWorkoutRoutineForm({
   const isEn = isAbroad || locale === 'en';
 
   const [dayName, setDayName] = useState(initialData?.day_name || '');
+  const [note, setNote] = useState(initialData?.note || '');
   const [exercises, setExercises] = useState<ExerciseRow[]>(() => {
     if (initialData?.exercises && initialData.exercises.length > 0) {
       return initialData.exercises.map((e: any) => ({
@@ -82,6 +83,7 @@ export function ManageWorkoutRoutineForm({
       const res = await saveWorkoutDayAction({
         day_id: initialData?.id,
         day_name: dayName,
+        note: note,
         exercises: validExercises
       });
 
@@ -142,6 +144,20 @@ export function ManageWorkoutRoutineForm({
             required
           />
         </div>
+      </div>
+
+      {/* Günün Notu / İpuçları */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center justify-between">
+          <span>{isEn ? 'DAY NOTES / TIPS (OPTIONAL)' : 'GÜNÜN NOTU / İPUÇLARI (OPSİYONEL)'}</span>
+        </label>
+        <textarea
+          rows={2}
+          placeholder={isEn ? 'e.g. Focus on form, 5 min warm-up, drop set on last set...' : 'Örn: Isınma 5 dk bisiklet, form odaklı çalış, son sette drop set yap...'}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 px-4 text-[13px] text-white focus:outline-none focus:border-[var(--primary)] transition-all resize-none"
+        />
       </div>
 
       {/* Hareketler Listesi */}
