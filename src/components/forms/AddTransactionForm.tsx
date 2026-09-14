@@ -1,33 +1,15 @@
 "use client";
 
-import { t, getCurrencySymbol } from '@/lib/i18n';
 import React, { useState } from 'react';
-import { Calendar, ShoppingCart, Car, Film, Coffee, Home, Zap, Heart, Gift, Briefcase, Wallet, TrendingUp, Cpu, Utensils, Music, Book } from 'lucide-react';
+import { t, getCurrencySymbol } from '@/lib/i18n';
+import { Calendar } from 'lucide-react';
 import { useAddTransactionViewModel } from '@/viewmodels/useAddTransactionViewModel';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { localizeCategoryName } from '@/lib/category-helpers';
-
-const ICONS = [
-  { id: 'cart', component: <ShoppingCart size={24} /> },
-  { id: 'car', component: <Car size={24} /> },
-  { id: 'film', component: <Film size={24} /> },
-  { id: 'coffee', component: <Coffee size={24} /> },
-  { id: 'home', component: <Home size={24} /> },
-  { id: 'zap', component: <Zap size={24} /> },
-  { id: 'heart', component: <Heart size={24} /> },
-  { id: 'gift', component: <Gift size={24} /> },
-  { id: 'briefcase', component: <Briefcase size={24} /> },
-  { id: 'wallet', component: <Wallet size={24} /> },
-  { id: 'trending', component: <TrendingUp size={24} /> },
-  { id: 'tech', component: <Cpu size={24} /> },
-  { id: 'food', component: <Utensils size={24} /> },
-  { id: 'music', component: <Music size={24} /> },
-  { id: 'book', component: <Book size={24} /> },
-];
-
-const getIcon = (id: string) => ICONS.find(i => i.id === id)?.component || <ShoppingCart size={24} />;
+import { getCategoryIcon } from '@/lib/category-icons';
+import { CategoryInfo } from '@/models/DashboardTypes';
 
 export function AddTransactionForm({ 
   onClose,
@@ -40,7 +22,7 @@ export function AddTransactionForm({
   onClose: () => void,
   onSuccess: () => void,
   onOpenCategories?: () => void,
-  categories: { id: string; name: string; type: string }[],
+  categories: CategoryInfo[],
   accounts: { id: string; name: string }[],
   currentDate?: string
 }) {
@@ -137,14 +119,25 @@ export function AddTransactionForm({
             onClick={() => setIsCategoryOpen(!isCategoryOpen)}
             className="w-full flex items-center justify-between bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-xl py-3 px-4 text-body text-white hover:bg-[rgba(255,255,255,0.05)] transition-all focus:outline-none focus:border-[var(--inverse-primary)] cursor-pointer"
           >
-            {categoryId ? (
-              <div className="flex items-center gap-2">
-                <div className={`${type === 'income' ? 'text-[#4ade80]' : 'text-orange-400'}`}>
-                  {getIcon((categories.find(c => c.id === categoryId) as any)?.icon || 'cart')}
+            {categoryId ? (() => {
+              const selectedCat = categories.find(c => c.id === categoryId);
+              const selectedColor = selectedCat?.color || (type === 'income' ? '#22c55e' : '#f97316');
+              return (
+                <div className="flex items-center gap-2.5">
+                  <div 
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                    style={{ 
+                      backgroundColor: `${selectedColor}22`, 
+                      color: selectedColor,
+                      border: `1px solid ${selectedColor}44` 
+                    }}
+                  >
+                    {getCategoryIcon(selectedCat?.icon, 16)}
+                  </div>
+                  <span className="font-semibold text-white">{localizeCategoryName(selectedCat?.name || '', isEn)}</span>
                 </div>
-                <span>{localizeCategoryName(categories.find(c => c.id === categoryId)?.name || '', isEn)}</span>
-              </div>
-            ) : (
+              );
+            })() : (
               <span className="text-[var(--on-surface-variant)]">{isEn ? "Select category..." : "Kategori seçiniz..."}</span>
             )}
             <div className={`transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`}>
@@ -153,24 +146,37 @@ export function AddTransactionForm({
           </button>
 
           {isCategoryOpen && (
-            <div className="grid grid-cols-4 gap-3 max-h-[200px] overflow-y-auto hide-scrollbar mt-2 p-2 bg-[rgba(0,0,0,0.2)] rounded-xl border border-[rgba(255,255,255,0.05)]">
+            <div className="grid grid-cols-4 gap-2.5 max-h-[220px] overflow-y-auto hide-scrollbar mt-2 p-2.5 bg-[rgba(0,0,0,0.25)] rounded-2xl border border-[rgba(255,255,255,0.08)]">
               {categories.filter(c => c.type === type).map(c => {
                 const isSelected = categoryId === c.id;
+                const catColor = c.color || (type === 'income' ? '#22c55e' : '#f97316');
                 return (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => { setCategoryId(c.id); setIsCategoryOpen(false); }}
-                    className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all cursor-pointer ${
+                    className={`aspect-square flex flex-col items-center justify-center gap-1.5 rounded-2xl border transition-all cursor-pointer ${
                       isSelected 
-                        ? 'border-[var(--inverse-primary)] bg-[rgba(73,75,214,0.1)] text-[var(--primary)] shadow-md shadow-[var(--primary)]/20' 
-                        : 'border-transparent bg-[rgba(255,255,255,0.03)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.08)]'
+                        ? 'shadow-md scale-102' 
+                        : 'border-white/5 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/15'
                     }`}
+                    style={isSelected ? {
+                      borderColor: catColor,
+                      backgroundColor: `${catColor}22`,
+                      boxShadow: `0 4px 12px ${catColor}33`,
+                    } : {}}
                   >
-                    <div className={`${type === 'income' ? 'text-[#4ade80]' : 'text-orange-400'}`}>
-                      {getIcon((c as any).icon || 'cart')}
+                    <div 
+                      className="w-8 h-8 rounded-xl flex items-center justify-center transition-transform"
+                      style={{ 
+                        backgroundColor: `${catColor}1c`, 
+                        color: catColor,
+                        border: `1px solid ${catColor}33`
+                      }}
+                    >
+                      {getCategoryIcon(c.icon, 18)}
                     </div>
-                    <span className={`text-[10px] text-center px-1 truncate w-full ${isSelected ? 'font-bold text-white' : 'font-medium group-hover:text-white'}`}>
+                    <span className={`text-[11px] text-center px-1 truncate w-full ${isSelected ? 'font-bold text-white' : 'font-medium text-white/80'}`}>
                       {localizeCategoryName(c.name, isEn)}
                     </span>
                   </button>
@@ -180,12 +186,12 @@ export function AddTransactionForm({
                 <button
                   type="button"
                   onClick={onOpenCategories}
-                  className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.05)] hover:text-white hover:border-[rgba(255,255,255,0.2)] transition-all cursor-pointer"
+                  className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[rgba(255,255,255,0.15)] text-[var(--on-surface-variant)] hover:bg-[rgba(255,255,255,0.05)] hover:text-white hover:border-[rgba(255,255,255,0.3)] transition-all cursor-pointer"
                 >
                   <div className="text-[var(--on-surface-variant)]">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                   </div>
-                  <span className="text-[10px] text-center px-1 font-medium group-hover:text-white">
+                  <span className="text-[10px] text-center px-1 font-medium text-white/70">
                     {isEn ? "Add New" : "Yeni Ekle"}
                   </span>
                 </button>

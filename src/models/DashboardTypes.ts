@@ -77,6 +77,8 @@ export interface TransactionInfo {
   type: TransactionType;
   category?: string;
   categoryId?: string;
+  categoryColor?: string;
+  categoryIcon?: string;
   accountName?: string;
   accountId?: string;
   relatedAccountName?: string;
@@ -90,6 +92,7 @@ export interface CategoryInfo {
   name: string;
   type: CategoryType;
   icon?: string;
+  color?: string;
 }
 
 export interface DebtInfo {

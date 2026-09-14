@@ -5,9 +5,8 @@ import { addCategoryAction, deleteCategoryAction } from '@/actions/finance';
 export function useManageCategoriesViewModel(onSuccess: () => void) {
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [name, setName] = useState('');
-  // For now, hardcode icon and color, or provide simple options
-  const [icon, setIcon] = useState('tag');
-  const [color, setColor] = useState('#8b5cf6');
+  const [icon, setIcon] = useState('cart');
+  const [color, setColor] = useState('#f97316');
   
   const [isLoading, setIsLoading] = useState(false);
   

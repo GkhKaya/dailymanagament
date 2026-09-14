@@ -319,6 +319,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         type: tx.type,
         category: tx.category_id?.name,
         categoryId: tx.category_id?._id?.toString(),
+        categoryColor: tx.category_id?.color || (tx.type === 'income' ? '#22c55e' : '#f97316'),
+        categoryIcon: tx.category_id?.icon,
         accountName: tx.account_id?.name,
         accountId: tx.account_id?._id?.toString(),
         relatedAccountName: tx.related_account_id?.name,
@@ -332,7 +334,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       id: cat._id.toString(),
       name: cat.name,
       type: cat.type,
-      icon: cat.icon
+      icon: cat.icon,
+      color: cat.color || (cat.type === 'income' ? '#22c55e' : '#f97316')
     }));
 
     const subscriptions = (subsRaw || []).map((sub: any) => ({

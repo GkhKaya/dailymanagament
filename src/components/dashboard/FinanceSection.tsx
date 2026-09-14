@@ -5,6 +5,7 @@ import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatCurrency } from "@/lib/i18n";
 import { localizeCategoryName } from "@/lib/category-helpers";
+import { getCategoryIcon } from "@/lib/category-icons";
 
 interface FinanceSectionProps {
   data: FinanceDataDTO;
@@ -208,6 +209,10 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                   {groupData.txns.map((txn) => {
                     const isIncome = txn.type === 'income';
                     const isTransfer = txn.type === 'transfer';
+                    const matchedCat = data.categories?.find(c => c.id === txn.categoryId);
+                    const catColor = txn.categoryColor || matchedCat?.color || (isIncome ? '#22c55e' : '#f97316');
+                    const catIcon = txn.categoryIcon || matchedCat?.icon;
+
                     return (
                       <div 
                         key={txn.id} 
@@ -215,8 +220,16 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                         className="flex items-center justify-between px-2 py-[var(--space-2)] hover:bg-[rgba(255,255,255,0.02)] rounded-[var(--radius-card)] transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-[var(--space-3)]">
-                          <div className="w-12 h-12 rounded-[var(--radius-input)] bg-[var(--surface-container)] flex items-center justify-center text-[var(--on-surface-variant)]">
-                            {isTransfer ? <Wallet size={18} /> : <TxnIcon title={txn.title} />}
+                          <div 
+                            className="w-12 h-12 rounded-[var(--radius-input)] flex items-center justify-center shrink-0 transition-colors"
+                            style={{
+                              backgroundColor: isTransfer ? 'var(--surface-container)' : `${catColor}1a`,
+                              color: isTransfer ? 'var(--on-surface-variant)' : catColor,
+                              border: isTransfer ? '1px solid rgba(255,255,255,0.05)' : `1px solid ${catColor}33`,
+                              boxShadow: isTransfer ? undefined : `0 2px 10px ${catColor}14`
+                            }}
+                          >
+                            {isTransfer ? <Wallet size={18} /> : getCategoryIcon(catIcon, 20, undefined, <TxnIcon title={txn.title} />)}
                           </div>
                           <div className="flex flex-col">
                             <div className="flex items-center gap-2">
