@@ -10,6 +10,7 @@
 
 import mongoose from 'mongoose';
 import { readFileSync } from 'fs';
+import { buildOpenFoodFactsSearchUrl } from './lib/openfoodfacts-query.mjs';
 
 function loadEnv() {
   try {
@@ -51,8 +52,8 @@ function cleanBrand(brandStr) {
   return first && first.length > 1 ? first : null;
 }
 
-async function fetchOffPage(page = 1, pageSize = 100) {
-  const url = `https://world.openfoodfacts.org/api/v2/search?countries_tags_en=turkey&fields=code,product_name,product_name_tr,brands,nutriments,serving_size&page_size=${pageSize}&page=${page}&sort_by=unique_scans_n`;
+async function fetchOffPage(page = 1, pageSize = 100, category) {
+  const url = buildOpenFoodFactsSearchUrl({ category, page, pageSize });
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       await new Promise(r => setTimeout(r, 1200 * attempt));
@@ -90,9 +91,18 @@ async function main() {
 
   const targetUserId = '6a6114afcbefbca0ab79c274'; // gkhnkya0000@gmail.com
 
-  console.log('📡 Open Food Facts Türkiye veri tabanından ürünler taranıyor...');
+  const args = process.argv.slice(2);
+  const getArg = (name) => {
+    const index = args.indexOf(name);
+    return index >= 0 ? args[index + 1] : undefined;
+  };
+  const category = getArg('--category');
+  const requestedPages = Number(getArg('--pages'));
+  const maxPages = Number.isInteger(requestedPages) && requestedPages > 0 ? Math.min(requestedPages, 100) : 8;
 
-  const MAX_PAGES = 8; // Toplam 800 ürün çeker
+  console.log(`📡 Open Food Facts Türkiye veri tabanından ${category ? `"${category}" kategorisindeki ` : ''}ürünler taranıyor...`);
+
+  const MAX_PAGES = maxPages;
   let totalFetched = 0;
   let totalInserted = 0;
   let totalSkipped = 0;
@@ -100,7 +110,7 @@ async function main() {
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     console.log(`⏳ Sayfa ${page}/${MAX_PAGES} çekiliyor...`);
-    const products = await fetchOffPage(page, 100);
+    const products = await fetchOffPage(page, 100, category);
     if (!products.length) break;
 
     totalFetched += products.length;
