@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, User, Key, Mail, Wallet, ArrowRight, ChevronRight, Star, Dumbbell, Plus, Edit2, ChevronDown, ChevronUp, Download, Upload, Info, HelpCircle, PlayCircle, ArrowRightLeft, StickyNote } from 'lucide-react';
 import { getExerciseVideoUrl } from '@/lib/workout-utils';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -22,6 +22,7 @@ import { EditSubscriptionForm } from '@/components/forms/EditSubscriptionForm';
 import { EditDebtForm } from '@/components/forms/EditDebtForm';
 import { ManageWorkoutRoutineForm } from '@/components/forms/ManageWorkoutRoutineForm';
 import { WorkoutDayCard } from '@/components/profile/WorkoutDayCard';
+import { WorkoutNotesSection } from '@/components/profile/WorkoutNotesSection';
 import { ManageMarketsForm } from '@/components/forms/ManageMarketsForm';
 import { getWorkoutRoutineAction, importWorkoutRoutineAction } from '@/actions/workout';
 import { FinanceDataDTO } from '@/models/DashboardTypes';
@@ -43,6 +44,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
   const [expandedWorkoutDays, setExpandedWorkoutDays] = useState<string[]>([]);
   const [selectedWorkoutDay, setSelectedWorkoutDay] = useState<any>(null);
   const [jsonText, setJsonText] = useState('');
+  const [workoutTab, setWorkoutTab] = useState<'routine' | 'notes'>('routine');
 
   useEffect(() => {
     setIsPwa(isPwaStandalone());
@@ -454,44 +456,73 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
               </div>
             </div>
 
-            {/* Antrenman Programım Card */}
+            {/* Antrenman Programım & Notlar Card */}
             <div className="bg-[var(--surface-container-low)] border border-[var(--outline)] rounded-xl p-6 shadow-xl flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Dumbbell className="text-[var(--primary)]" size={20} />
-                  <h3 className="text-lg font-bold text-white">
-                    {isEn ? "Workout Routine" : "Antrenman Programım"}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                {/* Tab Switcher */}
+                <div className="flex items-center gap-1.5 p-1 bg-black/40 border border-white/10 rounded-xl">
                   <button
-                    onClick={handleDownloadTemplate}
-                    className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors"
-                    title={isEn ? "Download Sample Template" : "Örnek Şablon İndir"}
+                    type="button"
+                    onClick={() => setWorkoutTab('routine')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      workoutTab === 'routine'
+                        ? 'bg-[var(--primary)] text-white shadow-md'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
                   >
-                    <Download size={14} />
+                    <Dumbbell size={14} />
+                    <span>{isEn ? "Workout Routine" : "Antrenman Programım"}</span>
                   </button>
+
                   <button
-                    onClick={() => setActiveSheet('pasteWorkoutJson')}
-                    className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors"
-                    title={isEn ? "Paste from Code" : "Koddan Yapıştır"}
+                    type="button"
+                    onClick={() => setWorkoutTab('notes')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      workoutTab === 'notes'
+                        ? 'bg-amber-500 text-black shadow-md'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
                   >
-                    <Edit2 size={14} />
-                  </button>
-                  <label className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors cursor-pointer" title={isEn ? "Import JSON" : "JSON İçeri Aktar"}>
-                    <Upload size={14} />
-                    <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
-                  </label>
-                  <button
-                    onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
-                    className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-white transition-colors flex items-center gap-1.5"
-                  >
-                    <Plus size={14} /> {isEn ? "+ Add Day / Split" : "+ Gün / Program Ekle"}
+                    <StickyNote size={14} />
+                    <span>{isEn ? "Notes" : "Notlar"}</span>
                   </button>
                 </div>
+
+                {/* Routine Controls (Only visible when routine tab is active) */}
+                {workoutTab === 'routine' && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadTemplate}
+                      className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors cursor-pointer"
+                      title={isEn ? "Download Sample Template" : "Örnek Şablon İndir"}
+                    >
+                      <Download size={14} />
+                    </button>
+                    <button
+                      onClick={() => setActiveSheet('pasteWorkoutJson')}
+                      className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-white hover:border-white transition-colors cursor-pointer"
+                      title={isEn ? "Paste from Code" : "Koddan Yapıştır"}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <label className="p-1.5 rounded-lg border border-[var(--on-surface-variant)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors cursor-pointer" title={isEn ? "Import JSON" : "JSON İçeri Aktar"}>
+                      <Upload size={14} />
+                      <input type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
+                    </label>
+                    <button
+                      onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
+                      className="px-3.5 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] font-bold text-xs hover:bg-[var(--primary)] hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus size={14} /> {isEn ? "+ Add Day / Split" : "+ Gün / Program Ekle"}
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {workoutDays.length === 0 ? (
+              {/* Tab Content */}
+              {workoutTab === 'notes' ? (
+                <WorkoutNotesSection isEn={isEn} />
+              ) : workoutDays.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-6 border border-dashed border-[rgba(255,255,255,0.1)] rounded-xl gap-3 text-center bg-[rgba(255,255,255,0.01)]">
                   <Dumbbell size={32} className="text-[var(--on-surface-variant)] opacity-40" />
                   <div className="flex flex-col gap-1">
@@ -506,7 +537,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </div>
                   <button
                     onClick={() => { setSelectedWorkoutDay(null); setActiveSheet('manageWorkoutRoutine'); }}
-                    className="mt-1 px-4 py-2 bg-[var(--primary)] text-white font-bold text-xs rounded-lg hover:bg-[var(--primary-hover)] transition-all"
+                    className="mt-1 px-4 py-2 bg-[var(--primary)] text-white font-bold text-xs rounded-lg hover:bg-[var(--primary-hover)] transition-all cursor-pointer"
                   >
                     {isEn ? "+ Add Workout Routine" : "+ Antrenman Programı Ekle"}
                   </button>

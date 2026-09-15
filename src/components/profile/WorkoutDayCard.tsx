@@ -3,16 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChevronDown, ChevronUp, Edit2, PlayCircle, Plus, Minus, 
-  Check, RotateCcw, FileText, Trash2, StickyNote, Dumbbell
+  Check, RotateCcw, Dumbbell
 } from 'lucide-react';
 import { getExerciseVideoUrl } from '@/lib/workout-utils';
 import { 
   toggleSetCompletedAction, 
   updateExerciseSetsAction, 
-  resetWorkoutDaySetsAction, 
-  saveWorkoutDayNoteAction,
-  addWorkoutDayNoteEntryAction,
-  deleteWorkoutDayNoteEntryAction
+  resetWorkoutDaySetsAction
 } from '@/actions/workout';
 import { IWorkoutDay, IWorkoutExercise, IExerciseSet } from '@/models/WorkoutRoutine';
 import toast from 'react-hot-toast';
@@ -36,17 +33,11 @@ export function WorkoutDayCard({
 }: WorkoutDayCardProps) {
   // Local state for exercises to allow instant, optimistic updates
   const [exercises, setExercises] = useState<IWorkoutExercise[]>(day.exercises || []);
-  const [dayNote, setDayNote] = useState<string>(day.note || '');
-  const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteDraft, setNoteDraft] = useState(day.note || '');
-  const [isSavingNote, setIsSavingNote] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   // Sync when day changes from parent
   useEffect(() => {
     setExercises(day.exercises || []);
-    setDayNote(day.note || '');
-    setNoteDraft(day.note || '');
   }, [day]);
 
   // Compute total and completed sets
@@ -204,44 +195,6 @@ export function WorkoutDayCard({
     }
   };
 
-  // Save Day Note
-  const handleSaveNote = async () => {
-    setIsSavingNote(true);
-    try {
-      const res = await saveWorkoutDayNoteAction(day.id || (day as any)._id, noteDraft);
-      if (res.success) {
-        setDayNote(res.note || '');
-        setIsEditingNote(false);
-        toast.success(isEn ? 'Note saved!' : 'Not kaydedildi!');
-      } else {
-        toast.error(res.error || (isEn ? 'Error saving note.' : 'Not kaydedilemedi.'));
-      }
-    } catch {
-      toast.error(isEn ? 'Error saving note.' : 'Not kaydedilemedi.');
-    } finally {
-      setIsSavingNote(false);
-    }
-  };
-
-  // Delete Day Note
-  const handleDeleteNote = async () => {
-    if (!window.confirm(isEn ? 'Delete this note?' : 'Bu notu silmek istediğinize emin misiniz?')) return;
-    setIsSavingNote(true);
-    try {
-      const res = await saveWorkoutDayNoteAction(day.id || (day as any)._id, '');
-      if (res.success) {
-        setDayNote('');
-        setNoteDraft('');
-        setIsEditingNote(false);
-        toast.success(isEn ? 'Note deleted.' : 'Not silindi.');
-      }
-    } catch {
-      toast.error(isEn ? 'Error deleting note.' : 'Not silinemedi.');
-    } finally {
-      setIsSavingNote(false);
-    }
-  };
-
   return (
     <div className="flex flex-col bg-[var(--surface-container)] border border-[rgba(255,255,255,0.06)] rounded-2xl overflow-hidden hover:border-[rgba(255,255,255,0.14)] transition-all">
       {/* Day Header */}
@@ -310,83 +263,9 @@ export function WorkoutDayCard({
         </div>
       </div>
 
-      {/* Expanded Content: Day Note & Exercises */}
+      {/* Expanded Content: Exercises & Set Tracker */}
       {isExpanded && (
         <div className="flex flex-col border-t border-[rgba(255,255,255,0.06)] bg-[#10101a] p-3.5 sm:p-4 gap-4">
-          {/* DAY NOTE SECTION */}
-          <div className="flex flex-col gap-2 p-3 bg-white/[0.02] border border-white/5 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <StickyNote size={15} className="text-amber-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-white/80">
-                  {isEn ? "Day Note / Focus" : "Günün Notu / Odak"}
-                </span>
-              </div>
-              {!isEditingNote && dayNote && (
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => { setNoteDraft(dayNote); setIsEditingNote(true); }}
-                    className="p-1 text-white/50 hover:text-white rounded-lg transition-colors text-xs flex items-center gap-1"
-                  >
-                    <Edit2 size={12} /> {isEn ? "Edit" : "Düzenle"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteNote}
-                    className="p-1 text-red-400/70 hover:text-red-400 rounded-lg transition-colors"
-                    title={isEn ? "Delete note" : "Notu sil"}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {isEditingNote ? (
-              <div className="flex flex-col gap-2 mt-1">
-                <textarea
-                  rows={2}
-                  autoFocus
-                  placeholder={isEn ? "Write down your notes for this workout day (e.g. PR records, form tips, feelings)..." : "Bu antrenman günü için notlarınızı yazın (Örn: Ağırlık rekorları, form hatırlatmaları, hisler)..."}
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.target.value)}
-                  className="w-full bg-black/40 border border-amber-500/40 rounded-xl p-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 transition-all resize-none"
-                />
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingNote(false)}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-colors"
-                  >
-                    {isEn ? "Cancel" : "İptal"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isSavingNote}
-                    onClick={handleSaveNote}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs transition-colors flex items-center gap-1"
-                  >
-                    {isEn ? "Save Note" : "Notu Kaydet"}
-                  </button>
-                </div>
-              </div>
-            ) : dayNote ? (
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs sm:text-sm text-amber-100 whitespace-pre-wrap leading-relaxed">
-                {dayNote}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setNoteDraft(''); setIsEditingNote(true); }}
-                className="w-full py-2 px-3 rounded-xl border border-dashed border-white/10 hover:border-amber-500/40 hover:bg-amber-500/5 text-white/50 hover:text-amber-300 text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Plus size={14} />
-                <span>{isEn ? "+ Add a note for this day" : "+ Bu güne ait not ekle"}</span>
-              </button>
-            )}
-          </div>
-
           {/* EXERCISES & SET TRACKER */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between px-1">
