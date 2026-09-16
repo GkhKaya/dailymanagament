@@ -110,7 +110,7 @@ export function DashboardView() {
         <a className="skip-link" href="#main-content">{isEn ? "Skip to main content" : "Ana içeriğe geç"}</a>
         {/* ── Top App Bar / Header ── */}
         <header className="w-full px-4 sm:px-[var(--space-6)] py-3 sm:py-[var(--space-4)] border-b border-[rgba(255,255,255,0)] bg-transparent backdrop-blur-xl sticky top-0 z-30">
-          <div className="w-full max-w-[1600px] mx-auto flex items-center justify-between">
+          <div className="w-full max-w-[1920px] mx-auto flex items-center justify-between">
             <div className="flex items-center gap-[var(--space-6)]">
               {/* Logo & Brand */}
               <button type="button" aria-label={isEn ? "Go to overview" : "Genel bakışa git"} className="flex items-center gap-2.5 cursor-pointer" onClick={() => setMode('overview')}>
@@ -228,7 +228,7 @@ export function DashboardView() {
         </div>
 
         {/* ── Main Content Area ── */}
-        <main id="main-content" className="w-full px-4 pt-8 sm:px-[var(--space-6)] sm:pt-10 pb-36 sm:pb-24 relative z-0" tabIndex={-1}>
+        <main id="main-content" className="w-full px-3 sm:px-6 lg:px-8 xl:px-10 pt-6 sm:pt-8 pb-36 sm:pb-24 relative z-0" tabIndex={-1}>
           <h1 className="sr-only">{isEn ? "DailyM Personal Dashboard" : "DailyM kişisel yönetim paneli"}</h1>
 
           {/* ── BMR & Health Profile Missing Warning Banner ── */}
@@ -238,7 +238,7 @@ export function DashboardView() {
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/onboarding?step=health'); }}
-              className="w-full max-w-[1600px] mx-auto mb-6 sm:mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/30 hover:border-amber-500/50 shadow-lg shadow-amber-950/20 backdrop-blur-md transition-all duration-300 cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in"
+              className="w-full max-w-[1920px] mx-auto mb-6 sm:mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/30 hover:border-amber-500/50 shadow-lg shadow-amber-950/20 backdrop-blur-md transition-all duration-300 cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in"
             >
               <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
                 <div className="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-105 group-hover:bg-amber-500/25 transition-all">
@@ -268,9 +268,9 @@ export function DashboardView() {
           )}
 
           {mode === 'overview' && (
-            <div className="flex flex-col gap-6 w-full max-w-[1750px] mx-auto animate-fade-in">
+            <div className="flex flex-col gap-6 w-full max-w-[1920px] mx-auto animate-fade-in">
               {/* Split Screen for Overview + Right Sidebar Tracker */}
-              <div className="flex flex-col xl:flex-row gap-6 w-full items-start">
+              <div className="flex flex-col xl:flex-row gap-5 2xl:gap-7 w-full items-start">
                 <div className="flex-1 min-w-0 w-full relative">
                   {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} currentDate={currentDate} onOpenSheet={handleOpenSheet} onAddBmr={handleAddBmr} onRefresh={refreshData} />}
                 </div>
@@ -278,7 +278,7 @@ export function DashboardView() {
                   {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} currentDate={currentDate} />}
                 </div>
                 {/* Desktop: En Sağda Sabit/Minimal Kolon | Mobil: En Altta */}
-                <div className="w-full xl:w-80 2xl:w-88 shrink-0 xl:sticky xl:top-20">
+                <div className="w-full xl:w-72 2xl:w-80 shrink-0 xl:sticky xl:top-20">
                   <DailyHabitsTracker currentDate={currentDate} isEn={isEn} />
                 </div>
               </div>

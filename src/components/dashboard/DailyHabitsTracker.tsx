@@ -152,7 +152,7 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
   const isAllCompleted = totalCount > 0 && completedCount === totalCount;
 
   return (
-    <div className="glass-card p-4 sm:p-5 rounded-2xl flex flex-col gap-3.5 border border-[rgba(255,255,255,0.06)] transition-all">
+    <div className="glass-card p-3.5 sm:p-4 rounded-2xl flex flex-col gap-3 border border-[rgba(255,255,255,0.06)] transition-all">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

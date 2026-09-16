@@ -133,7 +133,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   };
 
   return (
-    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'max-w-2xl' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
+    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'w-full' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
       
       {/* Title & Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-3">

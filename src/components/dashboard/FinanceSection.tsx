@@ -81,7 +81,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
   }, [displayedTransactions]);
 
   return (
-    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'max-w-2xl' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
+    <div className={`flex flex-col gap-[var(--space-6)] w-full ${isOverview ? 'w-full' : 'max-w-[1600px]'} mx-auto animate-slide-up`}>
       
       {/* Title */}
       <div className="flex flex-wrap items-center justify-between gap-3">
