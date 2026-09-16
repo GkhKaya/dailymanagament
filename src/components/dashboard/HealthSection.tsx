@@ -9,6 +9,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { deleteMealAction, deleteExerciseAction } from "@/actions/health";
 import toast from "react-hot-toast";
 import { downloadHealthStory } from "@/lib/healthStoryGenerator";
+import { DailyHabitsTracker } from "@/components/dashboard/DailyHabitsTracker";
 
 interface HealthSectionProps {
   data: HealthDataDTO;
@@ -742,6 +743,9 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
             </div>
           </div>
         </div>
+
+        {/* Günlük Takip & Rutinler */}
+        <DailyHabitsTracker currentDate={currentDate} isEn={isEn} />
       </div>
     )}
   </div>

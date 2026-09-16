@@ -69,7 +69,7 @@ test('toggle completion toggles date in completed_dates array', () => {
 
 test('validates custom task title is not empty and trims whitespace', () => {
   const sanitizeTitle = (t) => t ? t.trim() : '';
-  assert.equal(sanitizeTitle('  💊 Vitamin D3 + K2  '), '💊 Vitamin D3 + K2');
+  assert.equal(sanitizeTitle('  Vitamin D3 + K2  '), 'Vitamin D3 + K2');
   assert.equal(sanitizeTitle('   '), '');
   assert.equal(sanitizeTitle(null), '');
 });
