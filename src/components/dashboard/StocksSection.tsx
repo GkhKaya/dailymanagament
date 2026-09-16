@@ -21,7 +21,8 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Calendar
+  Calendar,
+  SlidersHorizontal
 } from "lucide-react";
 import { getStockPortfolioAction, deleteStockTradeAction, deleteStockPositionAction, syncStockMarketPricesAction } from "@/actions/stocks";
 import { StockPortfolioDTO, StockPositionDTO, StockTradeDTO } from "@/models/DashboardTypes";
@@ -32,6 +33,7 @@ import { StockPositionOrdersModal } from "@/components/forms/StockPositionOrders
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades, formatRealizedPeriodLabel } from "@/lib/stocks-ui";
+import { FuturesOrderBookSection } from "@/components/dashboard/FuturesOrderBookSection";
 import { useTranslation } from "@/hooks/useTranslation";
 import toast from "react-hot-toast";
 
@@ -42,6 +44,7 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [portfolio, setPortfolio] = useState<StockPortfolioDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncingPrices, setIsSyncingPrices] = useState(false);
+  const [marketMode, setMarketMode] = useState<'spot' | 'futures'>('spot');
   const [activeTab, setActiveTab] = useState<'positions' | 'realized' | 'trades'>('positions');
   const [searchQuery, setSearchQuery] = useState('');
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
@@ -338,26 +341,63 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
               <Activity size={18} />
             </button>
           )}
-          <button
-            type="button"
-            data-tour="stocks-buy"
-            onClick={() => handleOpenBuy()}
-            className="min-h-11 px-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Plus size={16} /> {isEn ? "Buy Order" : "Alış Emri Gir"}
-          </button>
-          <button
-            type="button"
-            data-tour="stocks-sell"
-            onClick={() => handleOpenSell()}
-            className="min-h-11 px-4 rounded-full bg-transparent hover:bg-white/5 border border-[var(--outline)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Minus size={16} /> {isEn ? "Sell Asset" : "Satış Yap"}
-          </button>
+          {marketMode === 'spot' && (
+            <>
+              <button
+                type="button"
+                data-tour="stocks-buy"
+                onClick={() => handleOpenBuy()}
+                className="min-h-11 px-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus size={16} /> {isEn ? "Buy Order" : "Alış Emri Gir"}
+              </button>
+              <button
+                type="button"
+                data-tour="stocks-sell"
+                onClick={() => handleOpenSell()}
+                className="min-h-11 px-4 rounded-full bg-transparent hover:bg-white/5 border border-[var(--outline)] text-white text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Minus size={16} /> {isEn ? "Sell Asset" : "Satış Yap"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Market Data Methodology Notice */}
+      {/* ── TOP LEVEL SECTION SWITCHER (Spot vs Vadeli / Long-Short) ── */}
+      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.03] border border-white/10 w-fit">
+        <button
+          type="button"
+          onClick={() => setMarketMode('spot')}
+          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            marketMode === 'spot'
+              ? 'bg-[var(--primary)] text-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <PieChart size={14} />
+          <span>{isEn ? "Spot Portfolio" : "Spot Piyasa (Hisse & Fon)"}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMarketMode('futures')}
+          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            marketMode === 'futures'
+              ? 'bg-[var(--primary)] text-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <SlidersHorizontal size={14} />
+          <span>{isEn ? "Futures (Long / Short)" : "Vadeli (Long / Short)"}</span>
+        </button>
+      </div>
+
+      {marketMode === 'futures' ? (
+        <FuturesOrderBookSection />
+      ) : (
+        <>
+          {/* Market Data Methodology Notice */}
       <div className="flex items-start sm:items-center gap-3 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
         <Info size={18} className="shrink-0 mt-0.5 sm:mt-0 text-amber-400" />
         <span className="leading-relaxed">
@@ -962,6 +1002,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
             </div>
           )}
         </div>
+      )}
+        </>
       )}
 
       {/* ── MODALS ── */}
