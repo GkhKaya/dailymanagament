@@ -11,6 +11,7 @@ import { GoogleTranslateWidget } from "@/components/ui/GoogleTranslateWidget";
 import { ResidenceOnboardingModal } from "@/components/onboarding/ResidenceOnboardingModal";
 import { HealthSection } from "@/components/dashboard/HealthSection";
 import { FinanceSection } from "@/components/dashboard/FinanceSection";
+import { DailyHabitsTracker } from "@/components/dashboard/DailyHabitsTracker";
 import { FABMenu } from "@/components/dashboard/FABMenu";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { VoiceAssistantFAB } from '@/components/assistant/VoiceAssistantFAB';
@@ -267,14 +268,18 @@ export function DashboardView() {
           )}
 
           {mode === 'overview' && (
-            <div className="flex flex-col gap-6 w-full max-w-[1600px] mx-auto animate-fade-in">
-              {/* Split Screen for Overview */}
-              <div className="flex flex-col xl:flex-row gap-[var(--space-8)] w-full">
-                <div className="flex-1 relative">
+            <div className="flex flex-col gap-6 w-full max-w-[1750px] mx-auto animate-fade-in">
+              {/* Split Screen for Overview + Right Sidebar Tracker */}
+              <div className="flex flex-col xl:flex-row gap-6 w-full items-start">
+                <div className="flex-1 min-w-0 w-full relative">
                   {isLoadingHealth || !healthData ? <LoadingSpinner /> : <HealthSection data={healthData} isOverview={true} currentDate={currentDate} onOpenSheet={handleOpenSheet} onAddBmr={handleAddBmr} onRefresh={refreshData} />}
                 </div>
-                <div className="flex-1 relative">
+                <div className="flex-1 min-w-0 w-full relative">
                   {isLoadingFinance || !financeData ? <LoadingSpinner /> : <FinanceSection data={financeData} isOverview={true} onOpenSheet={handleOpenSheet} currentDate={currentDate} />}
+                </div>
+                {/* Desktop: En Sağda Sabit/Minimal Kolon | Mobil: En Altta */}
+                <div className="w-full xl:w-80 2xl:w-88 shrink-0 xl:sticky xl:top-20">
+                  <DailyHabitsTracker currentDate={currentDate} isEn={isEn} />
                 </div>
               </div>
             </div>

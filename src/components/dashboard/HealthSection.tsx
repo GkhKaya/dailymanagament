@@ -419,12 +419,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
       {/* Main Content Layout: 2-Column on Desktop when !isOverview */}
       <div className={isOverview ? "flex flex-col gap-[var(--space-4)]" : "grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"}>
         {/* Left / Main Column: Meals */}
-        <div className={isOverview ? "w-full flex flex-col gap-4" : "lg:col-span-7 xl:col-span-8 flex flex-col"}>
-          {/* Günlük Rutinler & Takip (Genel Bakış ekranında) */}
-          {isOverview && (
-            <DailyHabitsTracker currentDate={currentDate} isEn={isEn} />
-          )}
-
+        <div className={isOverview ? "w-full" : "lg:col-span-7 xl:col-span-8 flex flex-col"}>
           {/* Meal Details */}
           <div className="mt-[var(--space-2)]">
         <div className="flex items-center justify-between mb-[var(--space-3)]">

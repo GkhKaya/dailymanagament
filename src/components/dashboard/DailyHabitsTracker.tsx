@@ -251,14 +251,14 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1.5">
           {[1, 2].map(i => (
-            <div key={i} className="h-10 rounded-xl bg-white/[0.02] border border-white/5 animate-pulse" />
+            <div key={i} className="h-9 rounded-xl bg-white/[0.02] border border-white/5 animate-pulse" />
           ))}
         </div>
       ) : habits.length === 0 ? (
         /* Empty State */
-        <div className="py-4 px-3 rounded-xl bg-white/[0.01] border border-dashed border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className="py-3 px-3 rounded-xl bg-white/[0.01] border border-dashed border-white/5 flex flex-col items-center justify-between gap-2.5 text-center">
           <span className="text-xs text-[var(--on-surface-variant)]">
             {isEn ? "No daily routines added yet." : "Henüz bir günlük rutin eklenmedi."}
           </span>
@@ -270,7 +270,7 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
                   key={idx}
                   type="button"
                   onClick={() => handleCreate(label)}
-                  className="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-white/70 hover:text-white text-[11px] font-medium transition-all border border-white/5 cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-white/70 hover:text-white text-[11px] font-medium transition-all border border-white/5 cursor-pointer"
                 >
                   + {label}
                 </button>
@@ -279,8 +279,8 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
           </div>
         </div>
       ) : (
-        /* Checklist items grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        /* Checklist items list */
+        <div className="flex flex-col gap-1.5">
           {habits.map((habit) => {
             const isDone = habit.is_completed;
 
@@ -288,7 +288,7 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
               <div
                 key={habit.id}
                 onClick={() => handleToggle(habit)}
-                className={`group/item flex items-center justify-between py-2 px-3 rounded-xl border transition-all cursor-pointer select-none ${
+                className={`group/item flex items-center justify-between py-2 px-2.5 rounded-xl border transition-all cursor-pointer select-none ${
                   isDone
                     ? 'bg-emerald-500/[0.05] border-emerald-500/20 text-emerald-100'
                     : 'bg-white/[0.02] hover:bg-white/[0.05] border-white/5 hover:border-white/10 text-white'
@@ -313,7 +313,7 @@ export function DailyHabitsTracker({ currentDate, isEn = false }: DailyHabitsTra
 
                   {/* Streak */}
                   {habit.streak > 1 && (
-                    <span className="text-[10px] text-amber-400/90 font-semibold shrink-0 flex items-center gap-0.5 ml-auto sm:ml-0">
+                    <span className="text-[10px] text-amber-400/90 font-semibold shrink-0 flex items-center gap-0.5 ml-auto">
                       <Flame size={10} />
                       {habit.streak} {isEn ? "d" : "g"}
                     </span>
