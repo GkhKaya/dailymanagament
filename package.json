@@ -9,7 +9,7 @@
     "lint": "eslint",
     "export:food-sugar": "node scripts/export-food-cache-sugar.mjs",
     "import:food-sugar": "node scripts/import-food-cache-sugar.mjs",
-    "test": "npm run test:finance && npm run test:categories && npm run test:ocr && npm run test:calories && npm run test:stocks && npm run test:workout && npm run test:translation && npm run test:nutrition-portions && npm run test:assistant && npm run test:residence && npm run test:seo && npm run test:security",
+    "test": "npm run test:finance && npm run test:categories && npm run test:ocr && npm run test:calories && npm run test:stocks && npm run test:workout && npm run test:translation && npm run test:nutrition-portions && npm run test:assistant && npm run test:residence && npm run test:seo && npm run test:security && npm run test:habits",
     "test:categories": "node --experimental-strip-types --test tests/category-colors-icons.test.mjs",
     "test:security": "node --experimental-strip-types --test tests/security.test.mjs",
     "test:assistant": "node --experimental-strip-types --test tests/voice-assistant.test.mjs",
@@ -21,7 +21,8 @@
     "test:translation": "node --experimental-strip-types --test tests/translation.test.mjs",
     "test:nutrition-portions": "node --experimental-strip-types --test tests/nutrition-portions.test.mjs",
     "test:residence": "node --experimental-strip-types --test tests/residence-i18n.test.mjs",
-    "test:seo": "node --experimental-strip-types --test tests/seo.test.mjs"
+    "test:seo": "node --experimental-strip-types --test tests/seo.test.mjs",
+    "test:habits": "node --experimental-strip-types --test tests/daily-habits.test.mjs"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.6.23",
