@@ -187,9 +187,18 @@ export function StockPositionOrdersModal({
                   className="p-3.5 rounded-2xl bg-black/40 border border-white/10 hover:border-white/20 transition-all flex items-center justify-between gap-3"
                 >
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-black text-emerald-400">+{t.lots} {isEn ? 'Shares' : 'Lot'}</span>
                       <span className="text-xs text-white/90">@ {formatStockCurrency(t.price)}</span>
+                      {t.account && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                          t.account.toLowerCase().includes('demo')
+                            ? 'bg-amber-500/15 text-amber-300 border-amber-500/25'
+                            : 'bg-white/5 text-white/70 border-white/10'
+                        }`}>
+                          {t.account}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-[11px] text-[var(--on-surface-variant)]">
                       <span>{isEn ? "Total:" : "Tutar:"} <strong>{formatStockCurrency(t.total_amount)}</strong></span>
@@ -238,9 +247,18 @@ export function StockPositionOrdersModal({
                     className="p-3 rounded-2xl bg-black/30 border border-white/5 flex items-center justify-between text-xs"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-rose-400">-{t.lots} {isEn ? 'Shares' : 'Lot'}</span>
                         <span>@ {formatStockCurrency(t.price)}</span>
+                        {t.account && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                            t.account.toLowerCase().includes('demo')
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/25'
+                              : 'bg-white/5 text-white/70 border-white/10'
+                          }`}>
+                            {t.account}
+                          </span>
+                        )}
                         <span className={`font-bold ${t.realized_pnl && t.realized_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           ({t.realized_pnl && t.realized_pnl >= 0 ? '+' : ''}{formatStockCurrency(t.realized_pnl || 0)} {isEn ? "P&L" : "K/Z"})
                         </span>

@@ -25,6 +25,7 @@ export interface IUser extends Document {
     language?: 'tr' | 'en';
     onboarding_residence_completed?: boolean;
     active_markets?: string[];
+    trading_accounts?: string[];
     prayer_location?: { province: string; district: string; timezone: string };
   };
   created_at: Date;
@@ -55,6 +56,7 @@ const UserSchema: Schema = new Schema({
     language: { type: String, enum: ['tr', 'en'], default: 'tr' },
     onboarding_residence_completed: { type: Boolean, default: false },
     active_markets: { type: [String], default: ['bist'] },
+    trading_accounts: { type: [String], default: ['Ana Hesap', 'Demo Hesabı'] },
     prayer_location: {
       province: { type: String },
       district: { type: String },

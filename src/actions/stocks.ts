@@ -26,11 +26,20 @@ async function getUserId() {
 /**
  * Synchronizes positions and calculates the complete portfolio for a user
  */
-async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolioDTO> {
+async function syncAndCalculatePortfolio(userId: string, account?: string): Promise<StockPortfolioDTO> {
   await connectDB();
 
-  // Fetch all trades for user
-  const rawTrades = await StockTrade.find({ user_id: userId })
+  // Fetch all trades for user, optionally filtered by trading account
+  const tradeFilter: any = { user_id: userId };
+  if (account && account !== 'all') {
+    if (account === 'Ana Hesap') {
+      tradeFilter.$or = [{ account: 'Ana Hesap' }, { account: { $exists: false } }, { account: null }, { account: '' }];
+    } else {
+      tradeFilter.account = account;
+    }
+  }
+
+  const rawTrades = await StockTrade.find(tradeFilter)
     .sort({ date: 1, created_at: 1 })
     .lean();
 
@@ -46,9 +55,10 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
   }
 
   // Format raw trades for computation
-  const formattedRaw: RawTrade[] = rawTrades.map((t: any) => ({
+  const formattedRaw: (RawTrade & { account?: string })[] = rawTrades.map((t: any) => ({
     _id: t._id.toString(),
     id: t._id.toString(),
+    account: t.account || 'Ana Hesap',
     symbol: t.symbol,
     name: t.name,
     assetType: (t.asset_type || 'stock') as any,
@@ -86,29 +96,31 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     await StockTrade.bulkWrite(bulkTradeOps);
   }
 
-  // Update StockPosition documents
-  const allPositions = [...calc.openPositions, ...calc.closedPositions];
-  for (const pos of allPositions) {
-    await StockPosition.findOneAndUpdate(
-      { user_id: userId, symbol: pos.symbol },
-      {
-        $set: {
-          name: pos.name,
-          asset_type: pos.assetType,
-          market: pos.market || (pos.assetType === 'crypto' ? 'crypto' : 'bist'),
-          currency: pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'),
-          total_lots: pos.total_lots,
-          average_cost: pos.average_cost,
-          total_cost: pos.total_cost,
-          current_price: pos.current_price,
-          current_value: pos.current_value,
-          unrealized_pnl: pos.unrealized_pnl,
-          unrealized_pnl_percent: pos.unrealized_pnl_percent,
-          last_trade_date: pos.last_trade_date ? new Date(pos.last_trade_date) : undefined,
+  // Update StockPosition documents (only persist to DB if computing all/main portfolio so demo positions don't overwrite)
+  if (!account || account === 'all' || account === 'Ana Hesap') {
+    const allPositions = [...calc.openPositions, ...calc.closedPositions];
+    for (const pos of allPositions) {
+      await StockPosition.findOneAndUpdate(
+        { user_id: userId, symbol: pos.symbol },
+        {
+          $set: {
+            name: pos.name,
+            asset_type: pos.assetType,
+            market: pos.market || (pos.assetType === 'crypto' ? 'crypto' : 'bist'),
+            currency: pos.currency || (pos.market === 'us' || pos.market === 'crypto' ? 'USD' : 'TRY'),
+            total_lots: pos.total_lots,
+            average_cost: pos.average_cost,
+            total_cost: pos.total_cost,
+            current_price: pos.current_price,
+            current_value: pos.current_value,
+            unrealized_pnl: pos.unrealized_pnl,
+            unrealized_pnl_percent: pos.unrealized_pnl_percent,
+            last_trade_date: pos.last_trade_date ? new Date(pos.last_trade_date) : undefined,
+          },
         },
-      },
-      { upsert: true, new: true }
-    );
+        { upsert: true, new: true }
+      );
+    }
   }
 
   // Format DTOs
@@ -162,6 +174,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
 
   const realizedTradesDTO: StockTradeDTO[] = calc.realizedTrades.map((t) => ({
     id: t._id?.toString() || t.id || '',
+    account: (t as any).account || 'Ana Hesap',
     symbol: t.symbol,
     name: t.name,
     assetType: (t.assetType || 'stock') as 'stock' | 'fund' | 'crypto',
@@ -192,6 +205,7 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     .reverse()
     .map((t) => ({
       id: t._id?.toString() || t.id || '',
+      account: (t as any).account || 'Ana Hesap',
       symbol: t.symbol,
       name: t.name,
       assetType: (t.assetType || 'stock') as 'stock' | 'fund' | 'crypto',
@@ -217,8 +231,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
       created_at: t.created_at ? new Date(t.created_at).toISOString() : undefined,
     }));
 
-  // Fetch user's active markets preference
-  const user = await User.findById(userId).select('settings.active_markets').lean();
+  // Fetch user's active markets preference and trading accounts
+  const user = await User.findById(userId).select('settings.active_markets settings.trading_accounts').lean();
   const activeMarkets: string[] = (user?.settings?.active_markets && user.settings.active_markets.length > 0)
     ? user.settings.active_markets
     : ['bist'];
@@ -308,6 +322,10 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     }
   }
 
+  const userAccounts: string[] = user?.settings?.trading_accounts || ['Ana Hesap', 'Demo Hesabı'];
+  const distinctStockAccounts: string[] = await StockTrade.distinct('account', { user_id: userId });
+  const allAccounts = Array.from(new Set<string>(['Ana Hesap', 'Demo Hesabı', ...userAccounts, ...distinctStockAccounts.filter(Boolean)]));
+
   return {
     positions: positionsDTO,
     closedPositions: closedPositionsDTO,
@@ -316,6 +334,8 @@ async function syncAndCalculatePortfolio(userId: string): Promise<StockPortfolio
     knownStocks: knownStocksDTO,
     totals: calc.totals,
     activeMarkets,
+    accounts: allAccounts,
+    selectedAccount: account || 'all',
   };
 }
 
@@ -509,7 +529,7 @@ export async function updateStockSymbolNameAction(
 /**
  * Get entire stock portfolio with realized P/L and position calculations
  */
-export async function getStockPortfolioAction(): Promise<{ success: boolean; data?: StockPortfolioDTO; error?: string }> {
+export async function getStockPortfolioAction(params?: { account?: string }): Promise<{ success: boolean; data?: StockPortfolioDTO; error?: string }> {
   try {
     await connectDB();
     const userId = await getUserId();
@@ -530,7 +550,7 @@ export async function getStockPortfolioAction(): Promise<{ success: boolean; dat
       await refreshOpenPositionPrices(userId);
     }
 
-    const portfolio = await syncAndCalculatePortfolio(userId);
+    const portfolio = await syncAndCalculatePortfolio(userId, params?.account);
     return { success: true, data: portfolio };
   } catch (error: any) {
     console.error("getStockPortfolioAction error:", error);
@@ -542,6 +562,7 @@ export async function getStockPortfolioAction(): Promise<{ success: boolean; dat
  * Add a Buy or Sell stock
  */
 export async function addStockTradeAction(data: {
+  account?: string;
   symbol: string;
   name?: string;
   assetType?: 'stock' | 'fund' | 'crypto';
@@ -639,8 +660,14 @@ export async function addStockTradeAction(data: {
       }
     }
 
+    const account = data.account?.trim() || 'Ana Hesap';
+    if (account && account !== 'Ana Hesap' && account !== 'Demo Hesabı') {
+      await User.updateOne({ _id: userId }, { $addToSet: { 'settings.trading_accounts': account } });
+    }
+
     await StockTrade.create({
       user_id: userId,
+      account,
       symbol,
       name: resolvedName || undefined,
       asset_type: data.assetType || (market === 'crypto' ? 'crypto' : 'stock'),
@@ -699,6 +726,7 @@ export async function addStockTradeAction(data: {
 export async function updateStockTradeAction(
   tradeId: string,
   data: {
+    account?: string;
     symbol: string;
     name?: string;
     assetType?: 'stock' | 'fund' | 'crypto';
@@ -743,6 +771,7 @@ export async function updateStockTradeAction(
       tradeDate = new Date();
     }
 
+    if (data.account !== undefined) trade.account = data.account.trim() || 'Ana Hesap';
     trade.symbol = symbol;
     trade.name = data.name?.trim() || undefined;
     trade.asset_type = data.assetType === 'fund' ? 'fund' : (data.assetType === 'crypto' ? 'crypto' : 'stock');
@@ -850,3 +879,4 @@ export async function deleteStockPositionAction(
     return { success: false, error: error.message || "Hisse silinemedi." };
   }
 }
+

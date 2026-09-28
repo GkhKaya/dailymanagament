@@ -6,6 +6,7 @@ export type FuturesStatus = 'open' | 'closed' | 'limit';
 
 export interface IFuturesTrade extends Document {
   user_id: string;
+  account?: string;
   symbol: string;
   market: FuturesMarket;
   side: FuturesSide;
@@ -28,6 +29,7 @@ export interface IFuturesTrade extends Document {
 
 const FuturesTradeSchema = new Schema<IFuturesTrade>({
   user_id: { type: String, required: true, index: true },
+  account: { type: String, trim: true, default: 'Ana Hesap', index: true },
   symbol: { type: String, required: true, uppercase: true, trim: true },
   market: { type: String, enum: ['crypto', 'viop', 'forex', 'us', 'other'], default: 'crypto' },
   side: { type: String, enum: ['long', 'short'], required: true },

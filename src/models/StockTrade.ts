@@ -3,6 +3,7 @@ import { StockTradeType } from './Enums';
 
 export interface IStockTrade extends Document {
   user_id: string;
+  account?: string;
   symbol: string;
   name?: string;
   asset_type: 'stock' | 'fund' | 'crypto';
@@ -26,6 +27,7 @@ export interface IStockTrade extends Document {
 
 const StockTradeSchema: Schema = new Schema({
   user_id: { type: String, ref: 'User', required: true },
+  account: { type: String, trim: true, default: 'Ana Hesap', index: true },
   symbol: { type: String, required: true, uppercase: true, trim: true },
   name: { type: String, trim: true },
   asset_type: { type: String, enum: ['stock', 'fund', 'crypto'], default: 'stock', required: true },

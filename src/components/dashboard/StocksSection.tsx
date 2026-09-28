@@ -34,6 +34,7 @@ import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { filterRealizedTrades, formatStockCurrency, getPortfolioPerformance, summarizeRealizedTrades, formatRealizedPeriodLabel } from "@/lib/stocks-ui";
 import { FuturesOrderBookSection } from "@/components/dashboard/FuturesOrderBookSection";
+import { TradingAccountSelector } from "@/components/stocks/TradingAccountSelector";
 import { useTranslation } from "@/hooks/useTranslation";
 import toast from "react-hot-toast";
 
@@ -45,6 +46,8 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncingPrices, setIsSyncingPrices] = useState(false);
   const [marketMode, setMarketMode] = useState<'spot' | 'futures'>('spot');
+  const [selectedAccount, setSelectedAccount] = useState<string>('all');
+  const [availableAccounts, setAvailableAccounts] = useState<string[]>(['Ana Hesap', 'Demo Hesabı']);
   const [activeTab, setActiveTab] = useState<'positions' | 'realized' | 'trades'>('positions');
   const [searchQuery, setSearchQuery] = useState('');
   const [tradeFilter, setTradeFilter] = useState<'all' | 'buy' | 'sell'>('all');
@@ -91,12 +94,16 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
   const [isEditSymbolModalOpen, setIsEditSymbolModalOpen] = useState(false);
   const [editSymbolModalData, setEditSymbolModalData] = useState<{ symbol: string; name?: string; assetType: 'stock' | 'fund' | 'crypto' } | null>(null);
 
-  const fetchPortfolio = useCallback(async () => {
+  const fetchPortfolio = useCallback(async (accountToFetch?: string) => {
     setIsLoading(true);
     try {
-      const res = await getStockPortfolioAction();
+      const acc = accountToFetch !== undefined ? accountToFetch : selectedAccount;
+      const res = await getStockPortfolioAction({ account: acc });
       if (res.success && res.data) {
         setPortfolio(res.data);
+        if (res.data.accounts && res.data.accounts.length > 0) {
+          setAvailableAccounts(res.data.accounts);
+        }
       } else {
         toast.error(res.error || "Borsa verileri alınamadı.");
       }
@@ -105,11 +112,16 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedAccount]);
 
   useEffect(() => {
     fetchPortfolio();
   }, [fetchPortfolio]);
+
+  const handleSelectAccount = (account: string) => {
+    setSelectedAccount(account);
+    fetchPortfolio(account);
+  };
 
   const handleSyncPrices = async () => {
     setIsSyncingPrices(true);
@@ -364,37 +376,53 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
         </div>
       </div>
 
-      {/* ── TOP LEVEL SECTION SWITCHER (Spot vs Vadeli / Long-Short) ── */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.03] border border-white/10 w-fit">
-        <button
-          type="button"
-          onClick={() => setMarketMode('spot')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            marketMode === 'spot'
-              ? 'bg-[var(--primary)] text-black shadow-md'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <PieChart size={14} />
-          <span>{isEn ? "Spot Portfolio" : "Spot Piyasa (Hisse & Fon)"}</span>
-        </button>
+      {/* ── TOP LEVEL SECTION SWITCHER & ACCOUNT SELECTOR ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.03] border border-white/10 w-fit">
+          <button
+            type="button"
+            onClick={() => setMarketMode('spot')}
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              marketMode === 'spot'
+                ? 'bg-[var(--primary)] text-black shadow-md'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <PieChart size={14} />
+            <span>{isEn ? "Spot Portfolio" : "Spot Piyasa (Hisse & Fon)"}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setMarketMode('futures')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-            marketMode === 'futures'
-              ? 'bg-[var(--primary)] text-black shadow-md'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <SlidersHorizontal size={14} />
-          <span>{isEn ? "Futures (Long / Short)" : "Vadeli (Long / Short)"}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setMarketMode('futures')}
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              marketMode === 'futures'
+                ? 'bg-[var(--primary)] text-black shadow-md'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <SlidersHorizontal size={14} />
+            <span>{isEn ? "Futures (Long / Short)" : "Vadeli (Long / Short)"}</span>
+          </button>
+        </div>
+
+        {/* Global Trading Account Selector */}
+        <TradingAccountSelector
+          accounts={availableAccounts}
+          selectedAccount={selectedAccount}
+          onSelectAccount={handleSelectAccount}
+          onAccountsUpdated={(newAccs) => setAvailableAccounts(newAccs)}
+          isEn={isEn}
+        />
       </div>
 
       {marketMode === 'futures' ? (
-        <FuturesOrderBookSection />
+        <FuturesOrderBookSection
+          selectedAccount={selectedAccount}
+          onSelectAccount={handleSelectAccount}
+          availableAccounts={availableAccounts}
+          onAccountsUpdated={(newAccs) => setAvailableAccounts(newAccs)}
+        />
       ) : (
         <>
           {/* Market Data Methodology Notice */}
@@ -828,11 +856,20 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         {trade.symbol.slice(0, 4)}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="text-base font-bold text-white">{trade.symbol}</h4>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
                             {isEn ? "SELL" : "SATIŞ"}
                           </span>
+                          {trade.account && (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              trade.account.toLowerCase().includes('demo')
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/25'
+                                : 'bg-white/5 text-white/70 border-white/10'
+                            }`}>
+                              {trade.account}
+                            </span>
+                          )}
                           <span className="text-xs text-[var(--on-surface-variant)]">
                             {trade.date}{trade.time ? ` (${trade.time})` : ''} · {isEn ? (trade.holding_duration_en || `${trade.holding_days ?? 0} days`) : (trade.holding_duration_text || `${trade.holding_days ?? 0} gün`)}
                           </span>
@@ -946,13 +983,22 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
                         {isBuy ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-white text-sm">{trade.symbol}</span>
                           <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
                             isBuy ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
                           }`}>
                             {isBuy ? (isEn ? 'BUY' : 'ALIŞ') : (isEn ? 'SELL' : 'SATIŞ')}
                           </span>
+                          {trade.account && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                              trade.account.toLowerCase().includes('demo')
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/25'
+                                : 'bg-white/5 text-white/70 border-white/10'
+                            }`}>
+                              {trade.account}
+                            </span>
+                          )}
                           <span className="text-[11px] text-[var(--on-surface-variant)]">{trade.date}{trade.time ? ` · ${trade.time}` : ''}</span>
                         </div>
                         <p className="text-xs text-[var(--on-surface-variant)]">
@@ -1010,12 +1056,14 @@ export function StocksSection({ onShowAnalysis }: { onShowAnalysis?: () => void 
       <AddStockTradeModal
         isOpen={isTradeModalOpen}
         onClose={() => setIsTradeModalOpen(false)}
-        onSuccess={fetchPortfolio}
+        onSuccess={() => fetchPortfolio(selectedAccount)}
         initialType={tradeModalType}
         initialSymbol={tradeModalSymbol}
         editTrade={editTrade}
         positions={portfolio?.positions || []}
         knownStocks={portfolio?.knownStocks || []}
+        accounts={availableAccounts}
+        initialAccount={selectedAccount !== 'all' ? selectedAccount : 'Ana Hesap'}
       />
 
       <UpdateStockPriceModal

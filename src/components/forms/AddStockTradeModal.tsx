@@ -19,6 +19,8 @@ interface AddStockTradeModalProps {
   editTrade?: StockTradeDTO | null;
   positions?: StockPositionDTO[];
   knownStocks?: KnownStockDTO[];
+  accounts?: string[];
+  initialAccount?: string;
 }
 
 export function AddStockTradeModal({
@@ -30,9 +32,14 @@ export function AddStockTradeModal({
   editTrade = null,
   positions = [],
   knownStocks = [],
+  accounts = ['Ana Hesap', 'Demo Hesabı'],
+  initialAccount,
 }: AddStockTradeModalProps) {
   const { locale, isAbroad: abroadFromHook } = useTranslation();
   const isEn = abroadFromHook || locale === 'en' || isAbroad();
+  const [account, setAccount] = useState<string>(
+    editTrade?.account || (initialAccount && initialAccount !== 'all' ? initialAccount : 'Ana Hesap')
+  );
   const [userActiveMarkets, setUserActiveMarkets] = useState<string[]>(['bist']);
   const [market, setMarket] = useState<'bist' | 'us' | 'crypto'>((editTrade as any)?.market || 'bist');
   const [currency, setCurrency] = useState<'TRY' | 'USD'>((editTrade as any)?.currency || 'TRY');
@@ -236,6 +243,7 @@ export function AddStockTradeModal({
     try {
       if (editTrade) {
         const res = await updateStockTradeAction(editTrade.id, {
+          account: account.trim() || 'Ana Hesap',
           symbol: cleanSymbol,
           name: name || undefined,
           assetType,
@@ -258,6 +266,7 @@ export function AddStockTradeModal({
         }
       } else {
         const res = await addStockTradeAction({
+          account: account.trim() || 'Ana Hesap',
           symbol: cleanSymbol,
           name: name || undefined,
           assetType,
@@ -331,6 +340,29 @@ export function AddStockTradeModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-4">
           
+          {/* Account Selector */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider flex items-center justify-between">
+              <span>{isEn ? "Trading Account" : "Borsa Hesabı"}</span>
+              {account.toLowerCase().includes('demo') && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                  DEMO
+                </span>
+              )}
+            </label>
+            <select
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-[#8ec13b]"
+            >
+              {accounts.map(acc => (
+                <option key={acc} value={acc} className="bg-[#141416] text-white">
+                  {acc}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Active Market Switcher (if user trades in multiple markets) */}
           {!editTrade && userActiveMarkets.length > 1 && (
             <div className="flex flex-col gap-1.5">

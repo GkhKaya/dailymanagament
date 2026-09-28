@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { FuturesTrade, IFuturesTrade, FuturesMarket, FuturesSide, FuturesStatus } from "@/models/FuturesTrade";
+import { User } from "@/models/User";
 import { calculateFuturesPnl, calculateFuturesSummary } from "@/lib/futures-engine";
 import { revalidatePath } from "next/cache";
 
@@ -17,6 +18,7 @@ async function getUserId() {
 
 export interface FuturesTradeDTO {
   id: string;
+  account?: string;
   symbol: string;
   market: FuturesMarket;
   side: FuturesSide;
@@ -38,6 +40,8 @@ export interface FuturesTradeDTO {
 
 export interface FuturesDashboardDTO {
   trades: FuturesTradeDTO[];
+  accounts?: string[];
+  selectedAccount?: string;
   summary: {
     totalRealizedPnl: number;
     openPositionsCount: number;
@@ -54,6 +58,7 @@ export interface FuturesDashboardDTO {
 function mapTradeToDTO(t: any): FuturesTradeDTO {
   return {
     id: t._id.toString(),
+    account: t.account || 'Ana Hesap',
     symbol: t.symbol,
     market: t.market || 'crypto',
     side: t.side,
@@ -75,9 +80,9 @@ function mapTradeToDTO(t: any): FuturesTradeDTO {
 }
 
 /**
- * Fetches all futures trades for the user and computes summary metrics.
+ * Fetches all futures trades for the user and computes summary metrics, filtered by account if specified.
  */
-export async function getFuturesDashboardAction(): Promise<{
+export async function getFuturesDashboardAction(params?: { account?: string }): Promise<{
   success: boolean;
   data?: FuturesDashboardDTO;
   error?: string;
@@ -86,7 +91,24 @@ export async function getFuturesDashboardAction(): Promise<{
     await connectDB();
     const userId = await getUserId();
 
-    const trades = await FuturesTrade.find({ user_id: userId })
+    // Fetch user trading accounts list
+    const user = await User.findOne({ _id: userId }).select('settings.trading_accounts').lean();
+    const userAccounts: string[] = user?.settings?.trading_accounts || ['Ana Hesap', 'Demo Hesabı'];
+    const distinctAccounts: string[] = await FuturesTrade.distinct('account', { user_id: userId });
+    const allAccountsSet = new Set<string>(['Ana Hesap', 'Demo Hesabı', ...userAccounts, ...distinctAccounts.filter(Boolean)]);
+    const accounts = Array.from(allAccountsSet);
+
+    // Build filter
+    const filter: any = { user_id: userId };
+    if (params?.account && params.account !== 'all') {
+      if (params.account === 'Ana Hesap') {
+        filter.$or = [{ account: 'Ana Hesap' }, { account: { $exists: false } }, { account: null }, { account: '' }];
+      } else {
+        filter.account = params.account;
+      }
+    }
+
+    const trades = await FuturesTrade.find(filter)
       .sort({ entry_date: -1, created_at: -1 })
       .lean();
 
@@ -105,6 +127,8 @@ export async function getFuturesDashboardAction(): Promise<{
       success: true,
       data: {
         trades: dtos,
+        accounts,
+        selectedAccount: params?.account || 'all',
         summary
       }
     };
@@ -119,6 +143,7 @@ export async function getFuturesDashboardAction(): Promise<{
  * Creates a new futures trade / position.
  */
 export async function createFuturesTradeAction(input: {
+  account?: string;
   symbol: string;
   market?: FuturesMarket;
   side: FuturesSide;
@@ -155,6 +180,7 @@ export async function createFuturesTradeAction(input: {
     const leverage = Math.max(1, Number(input.leverage) || 1);
     const side = input.side === 'short' ? 'short' : 'long';
     const status = input.status || 'open';
+    const account = input.account?.trim() || 'Ana Hesap';
 
     let margin = Number(input.margin) || 0;
     let size = Number(input.size) || 0;
@@ -189,8 +215,14 @@ export async function createFuturesTradeAction(input: {
       }
     }
 
+    // Save account to user settings if custom
+    if (account && account !== 'Ana Hesap' && account !== 'Demo Hesabı') {
+      await User.updateOne({ _id: userId }, { $addToSet: { 'settings.trading_accounts': account } });
+    }
+
     const newTrade = await FuturesTrade.create({
       user_id: userId,
+      account,
       symbol: cleanSymbol,
       market: input.market || 'crypto',
       side,
@@ -286,6 +318,7 @@ export async function closeFuturesPositionAction(
 export async function updateFuturesTradeAction(
   tradeId: string,
   input: {
+    account?: string;
     symbol?: string;
     market?: FuturesMarket;
     side?: FuturesSide;
@@ -315,6 +348,7 @@ export async function updateFuturesTradeAction(
       return { success: false, error: "İşlem bulunamadı." };
     }
 
+    if (input.account !== undefined) trade.account = input.account.trim() || 'Ana Hesap';
     if (input.symbol) trade.symbol = input.symbol.trim().toUpperCase();
     if (input.market) trade.market = input.market;
     if (input.side) trade.side = input.side;
@@ -355,6 +389,45 @@ export async function updateFuturesTradeAction(
     const err = e as Error;
     console.error("updateFuturesTradeAction error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Adds a new custom trading account to the user's trading accounts list
+ */
+export async function addTradingAccountAction(name: string): Promise<{
+  success: boolean;
+  accounts?: string[];
+  error?: string;
+}> {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const cleanName = name?.trim();
+    if (!cleanName) {
+      return { success: false, error: "Hesap adı boş olamaz." };
+    }
+
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      return { success: false, error: "Kullanıcı bulunamadı." };
+    }
+
+    if (!user.settings) user.settings = {} as any;
+    if (!user.settings.trading_accounts) user.settings.trading_accounts = ['Ana Hesap', 'Demo Hesabı'];
+
+    if (!user.settings.trading_accounts.includes(cleanName)) {
+      user.settings.trading_accounts.push(cleanName);
+      await user.save();
+    }
+
+    const distinctAccounts: string[] = await FuturesTrade.distinct('account', { user_id: userId });
+    const allAccountsSet = new Set<string>(['Ana Hesap', 'Demo Hesabı', ...(user.settings.trading_accounts || []), ...distinctAccounts.filter(Boolean)]);
+
+    return { success: true, accounts: Array.from(allAccountsSet) };
+  } catch (err: any) {
+    console.error("addTradingAccountAction error:", err);
+    return { success: false, error: err.message || "Hesap eklenemedi." };
   }
 }
 

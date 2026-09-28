@@ -125,6 +125,7 @@ export interface FinanceDataDTO {
 // ── Stock & Portfolio Data Models ──
 export interface StockTradeDTO {
   id: string;
+  account?: string;
   symbol: string;
   name?: string;
   assetType: 'stock' | 'fund' | 'crypto';
@@ -186,6 +187,8 @@ export interface StockPortfolioDTO {
   allTrades: StockTradeDTO[];
   knownStocks: KnownStockDTO[];
   activeMarkets?: string[];
+  accounts?: string[];
+  selectedAccount?: string;
   totals: {
     totalInvestedCost: number;        // Açık pozisyonlardaki toplam maliyet
     totalCurrentValue: number;         // Açık pozisyonlardaki güncel değer (varsa)
