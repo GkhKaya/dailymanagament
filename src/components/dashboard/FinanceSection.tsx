@@ -124,25 +124,23 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
           </div>
 
           {/* Management Buttons */}
-          {!isOverview && (
-            <div className="grid w-full grid-cols-2 gap-2">
-              <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                {isEn ? "Accounts" : "Hesaplar"} <Wallet size={16} className="text-[var(--on-surface-variant)]" />
-              </button>
-              <button onClick={() => onOpenSheet && onOpenSheet('transferAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-cyan-500/10 border border-cyan-500/20 transition-colors text-xs sm:text-sm font-medium text-cyan-300">
-                {isEn ? "Transfer" : "Para Transferi"} <ArrowRightLeft size={16} className="text-cyan-400" />
-              </button>
-              <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                {isEn ? "Categories" : "Kategoriler"} <Tag size={16} className="text-[var(--on-surface-variant)]" />
-              </button>
-              <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
-                {isEn ? "Debts" : "Borçlar"} <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
-              </button>
-              <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white col-span-2">
-                {isEn ? "Subscriptions" : "Abonelikler"} <Repeat size={16} className="text-[var(--on-surface-variant)]" />
-              </button>
-            </div>
-          )}
+          <div className="grid w-full grid-cols-2 gap-2">
+            <button onClick={() => onOpenSheet && onOpenSheet('manageAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+              {isEn ? "Accounts" : "Hesaplar"} <Wallet size={16} className="text-[var(--on-surface-variant)]" />
+            </button>
+            <button onClick={() => onOpenSheet && onOpenSheet('transferAccounts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-cyan-500/10 border border-cyan-500/20 transition-colors text-xs sm:text-sm font-medium text-cyan-300">
+              {isEn ? "Transfer" : "Para Transferi"} <ArrowRightLeft size={16} className="text-cyan-400" />
+            </button>
+            <button onClick={() => onOpenSheet && onOpenSheet('categories')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+              {isEn ? "Categories" : "Kategoriler"} <Tag size={16} className="text-[var(--on-surface-variant)]" />
+            </button>
+            <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+              {isEn ? "Debts" : "Borçlar"} <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
+            </button>
+            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white col-span-2">
+              {isEn ? "Subscriptions" : "Abonelikler"} <Repeat size={16} className="text-[var(--on-surface-variant)]" />
+            </button>
+          </div>
 
           {/* Accounts List on Desktop (when full view) */}
           {!isOverview && data.accounts && data.accounts.length > 0 && (

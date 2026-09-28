@@ -315,6 +315,17 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
                   </div>
                   <ArrowRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
                 </button>
+                <button onClick={() => setActiveSheet('categories')} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container)] hover:bg-[#27272a] transition-colors group">
+                  <div className="flex flex-col text-left">
+                    <span className="text-white font-bold text-sm group-hover:text-[var(--primary)] transition-colors">
+                      {isEn ? "Category Management" : "Kategori Yönetimi"}
+                    </span>
+                    <span className="text-xs text-[var(--on-surface-variant)]">
+                      {isEn ? "Income and expense categories" : "Gelir ve gider kategorileri"}
+                    </span>
+                  </div>
+                  <ArrowRight size={16} className="text-[var(--on-surface-variant)] group-hover:text-white transition-colors" />
+                </button>
                 <button onClick={() => setActiveSheet('transferAccounts')} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container)] hover:bg-[#27272a] transition-colors group">
                   <div className="flex flex-col text-left">
                     <span className="text-white font-bold text-sm group-hover:text-cyan-400 transition-colors">
