@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, User, Flame, ArrowRight } from "lucide-react";
+import { LogOut, User, Flame, ArrowRight, Building2 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardViewModel } from "@/viewmodels/useDashboardViewModel";
@@ -160,6 +160,13 @@ export function DashboardView() {
             {/* Action icons (Notifications, Settings, Profile) */}
             <div className="flex items-center gap-[var(--space-3)]">
               <GoogleTranslateWidget />
+              <button
+                onClick={() => router.push('/company')}
+                aria-label={isEn ? "My companies" : "Şirketlerim"}
+                className="min-h-11 min-w-11 rounded bg-[var(--outline)] flex items-center justify-center hover:bg-[var(--primary)] hover:text-white transition-colors"
+              >
+                <Building2 size={16} />
+              </button>
               <button 
                 data-tour="profile"
                 onClick={() => router.push('/profile')}
