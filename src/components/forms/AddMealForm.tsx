@@ -20,7 +20,7 @@ const MACRO_COLORS = {
 };
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading';
+type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading' | 'prompt_form' | 'prompt_loading';
 
 import { getSmartPortionOptions, type FoodPortionOption } from '@/lib/food-portions';
 
@@ -45,6 +45,8 @@ interface SelectedFood {
   portions?: Array<{ name: string; gram_weight: number; label?: string }>;
   brand_name?: string | null;
   is_custom?: boolean;
+  is_prompt?: boolean;
+  serving_description?: string;
 }
 
 function getPortionOptions(food: SelectedFood): FoodPortionOption[] {
@@ -148,6 +150,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [isOcrReady, setIsOcrReady] = useState(false);
   const [ocrProvider, setOcrProvider] = useState<'gemini' | 'mistral'>('gemini');
+  const [promptMealText, setPromptMealText] = useState('');
+  const [promptMealUseDatabase, setPromptMealUseDatabase] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const ocrInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -216,6 +220,11 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     const opt = availablePortions[selectedPortionIdx];
     let effectiveMultiplier = qty;
     let desc = `${qty} ${unitType}`;
+
+    if (selectedFood.is_prompt) {
+      effectiveMultiplier = qty;
+      desc = qty === 1 ? (selectedFood.serving_description || '1 porsiyon') : `${qty} x ${selectedFood.serving_description || 'porsiyon'}`;
+    } else
 
     if (selectedFood.unit_type === 'gram') {
       if (opt && !opt.isRawGram) {
@@ -362,6 +371,53 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     }
   };
 
+  const handlePromptMealCalculation = async () => {
+    if (!promptMealText.trim()) {
+      toast.error(isEn ? 'Describe what you ate first.' : 'Önce ne yediğinizi yazın.');
+      return;
+    }
+    setSearchStep('prompt_loading');
+    setShowDropdown(false);
+    try {
+      const response = await fetch('/api/food/prompt-meal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptMealText, useDatabase: promptMealUseDatabase }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'AI tarif hesabı başarısız oldu.');
+      const calculated = data.calculated;
+      const selection: SelectedFood = {
+        id: null,
+        name: data.food_name,
+        unit_type: 'adet',
+        per_unit: calculated,
+        is_prompt: true,
+        serving_description: data.serving_description,
+      };
+      setSelectedFood(selection);
+      setFoodName(data.food_name);
+      setFoodCacheId(null);
+      setSaveAsRecipe(false);
+      setGeminiResult({ provider: data.provider, prompt: true });
+      setUnitType('adet');
+      setAmount('1');
+      setSelectedPortionIdx(0);
+      setCalories(String(calculated.calories));
+      setProtein(String(calculated.protein_g));
+      setCarbs(String(calculated.carbs_g));
+      setFat(String(calculated.fat_g));
+      setSugar(String(calculated.sugar_g));
+      setQuantity(String(data.quantity || 1));
+      setServingDescription(data.serving_description);
+      setSearchStep('gemini_result');
+      toast.success(isEn ? 'AI estimate is ready. Review and add it.' : 'AI tahmini hazır. Kontrol edip öğüne ekleyin.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'AI tarif hesabı başarısız oldu.');
+      setSearchStep('prompt_form');
+    }
+  };
+
   const handleManualSubmit = async () => {
     if (!searchQuery || !manualCalories || !manualProtein || !manualCarbs || !manualFat || !manualSugar) {
       toast.error('Lütfen kalori, karp, protein, yağ ve şeker alanlarını doldurun.');
@@ -472,6 +528,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     setManualFat('');
     setManualSugar('');
     setManualBrand('');
+    setPromptMealText('');
+    setPromptMealUseDatabase(false);
     setIsOcrReady(false);
     setSearchStep('idle');
     setSearchResults([]);
@@ -651,6 +709,14 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
           {/* ── ARAMA ALANI ── */}
           {!selectedFood ? (
             <div className="flex flex-col gap-2 relative">
+              <button
+                type="button"
+                onClick={() => { setSearchStep('prompt_form'); setShowDropdown(false); }}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-purple-400/25 bg-purple-500/10 px-4 text-sm font-bold text-purple-200 transition-colors hover:bg-purple-500/15"
+              >
+                <Sparkles size={17} className="text-purple-300" />
+                {isEn ? 'Describe a meal with AI' : 'AI ile tarif / porsiyon hesapla'}
+              </button>
               {/* Input */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -807,6 +873,28 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                 </div>
               )}
 
+              {searchStep === 'prompt_form' && (
+                <section className="mt-2 flex flex-col gap-3 rounded-2xl border border-purple-400/25 bg-purple-500/[0.07] p-4 animate-fade-in">
+                  <div className="flex items-start gap-2">
+                    <Sparkles size={17} className="mt-0.5 shrink-0 text-purple-300" />
+                    <div><h3 className="text-sm font-bold text-purple-100">{isEn ? 'Describe what you ate' : 'Yediğini anlat'}</h3><p className="mt-0.5 text-xs leading-5 text-purple-100/65">{isEn ? 'For example: I ate one quarter of the dessert made with 1 pudding packet and half a biscuit packet.' : 'Örn: 1 paket puding ve yarım paket petibörle yaptığım tatlının dörtte birini yedim.'}</p></div>
+                  </div>
+                  <textarea
+                    value={promptMealText}
+                    onChange={(event) => setPromptMealText(event.target.value)}
+                    maxLength={1500}
+                    rows={4}
+                    placeholder={isEn ? 'Write ingredients, amounts and how much you ate…' : 'Malzemeleri, miktarları ve ne kadar yediğini yaz…'}
+                    className="w-full resize-y rounded-xl border border-white/10 bg-black/25 p-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-purple-400"
+                  />
+                  <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/15 px-3">
+                    <span><span className="block text-sm font-semibold text-white">{isEn ? 'Use database references' : 'Veritabanı referanslarını kullan'}</span><span className="block text-xs text-white/45">{isEn ? 'Reads existing foods only; never saves a new food.' : 'Yalnızca mevcut besinleri okur; yeni besin kaydetmez.'}</span></span>
+                    <input type="checkbox" checked={promptMealUseDatabase} onChange={(event) => setPromptMealUseDatabase(event.target.checked)} className="h-5 w-5 accent-[var(--primary)]" />
+                  </label>
+                  <button type="button" onClick={handlePromptMealCalculation} disabled={!promptMealText.trim()} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 text-sm font-bold text-white transition hover:bg-purple-400 disabled:cursor-not-allowed disabled:opacity-45"><Sparkles size={16} />{isEn ? 'Calculate with AI' : 'AI ile hesapla'}</button>
+                </section>
+              )}
+
               {/* AI Ekleme Formu */}
               {searchStep === 'gemini_form' && (
                 <div className="flex flex-col gap-3 p-4 bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.2)] rounded-2xl animate-fade-in">
@@ -955,13 +1043,13 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               )}
 
               {/* Yükleniyor (Manuel/Gemini) */}
-              {(searchStep === 'gemini_loading' || searchStep === 'manual_loading') && (
+              {(searchStep === 'gemini_loading' || searchStep === 'manual_loading' || searchStep === 'prompt_loading') && (
                 <div className="flex flex-col items-center gap-3 py-6 animate-fade-in">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${searchStep === 'gemini_loading' ? 'bg-[rgba(139,92,246,0.15)]' : 'bg-[rgba(var(--primary-rgb),0.15)]'}`}>
-                    {searchStep === 'gemini_loading' ? <Sparkles size={18} className="text-purple-400 animate-pulse" /> : <Loader2 size={18} className="text-[var(--primary)] animate-spin" />}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${searchStep === 'gemini_loading' || searchStep === 'prompt_loading' ? 'bg-[rgba(139,92,246,0.15)]' : 'bg-[rgba(var(--primary-rgb),0.15)]'}`}>
+                    {searchStep === 'gemini_loading' || searchStep === 'prompt_loading' ? <Sparkles size={18} className="text-purple-400 animate-pulse" /> : <Loader2 size={18} className="text-[var(--primary)] animate-spin" />}
                   </div>
                   <span className={`text-[13px] animate-pulse ${searchStep === 'gemini_loading' ? 'text-purple-300' : 'text-[var(--primary)]'}`}>
-                    {searchStep === 'gemini_loading' ? (isEn ? 'AI is calculating nutrition...' : 'AI besin değerlerini hesaplıyor...') : (isEn ? 'Saving to database...' : 'Veritabanına kaydediliyor...')}
+                    {searchStep === 'gemini_loading' || searchStep === 'prompt_loading' ? (isEn ? 'AI is calculating nutrition...' : 'AI besin değerlerini hesaplıyor...') : (isEn ? 'Saving to database...' : 'Veritabanına kaydediliyor...')}
                   </span>
                 </div>
               )}
@@ -1159,8 +1247,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                 </div>
               )}
 
-              {/* Favorilere kaydet */}
-              <button
+              {/* AI tarif tahminleri yalnızca günlük öğüne yazılır; favori/cache kaydı oluşturulmaz. */}
+              {!geminiResult?.prompt && <button
                 type="button"
                 onClick={() => setSaveAsRecipe(!saveAsRecipe)}
                 className={`flex items-center gap-2.5 py-2.5 px-3 rounded-xl transition-all text-[13px] font-medium border cursor-pointer ${
@@ -1173,7 +1261,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                   {saveAsRecipe && <Check size={10} className="text-black" />}
                 </div>
                 {isEn ? "Add to my favorites" : "Favorilerime ekle"}
-              </button>
+              </button>}
             </div>
           )}
         </div>
