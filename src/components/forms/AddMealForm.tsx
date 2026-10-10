@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils, UtensilsCrossed, Sunrise, Sun, Moon, Apple, GlassWater, Soup, PenTool, BookmarkCheck } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { deleteMealAction } from '@/actions/health';
+import { addMealsAction, deleteMealAction } from '@/actions/health';
 import toast from 'react-hot-toast';
 import { t, getLocale, isAbroad } from '@/lib/i18n';
 import { resolveFoodName } from '@/lib/mistral-ocr';
 import { useTranslation } from '@/hooks/useTranslation';
+import { buildPromptMealEntries, type PromptMealBatchResult } from '@/lib/ai-prompt-meal';
 
 // Makro renk kodları
 const MACRO_COLORS = {
@@ -20,7 +21,7 @@ const MACRO_COLORS = {
 };
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading' | 'prompt_form' | 'prompt_loading';
+type SearchStep = 'idle' | 'searching' | 'results' | 'gemini_form' | 'gemini_loading' | 'gemini_result' | 'manual_form' | 'manual_loading' | 'prompt_form' | 'prompt_loading' | 'prompt_result';
 
 import { getSmartPortionOptions, type FoodPortionOption } from '@/lib/food-portions';
 
@@ -152,6 +153,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [ocrProvider, setOcrProvider] = useState<'gemini' | 'mistral'>('gemini');
   const [promptMealText, setPromptMealText] = useState('');
   const [promptMealUseDatabase, setPromptMealUseDatabase] = useState(false);
+  const [promptMealResult, setPromptMealResult] = useState<PromptMealBatchResult | null>(null);
+  const [isPromptMealSaving, setIsPromptMealSaving] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const ocrInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -386,35 +389,50 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'AI tarif hesabı başarısız oldu.');
-      const calculated = data.calculated;
-      const selection: SelectedFood = {
-        id: null,
-        name: data.food_name,
-        unit_type: 'adet',
-        per_unit: calculated,
-        is_prompt: true,
-        serving_description: data.serving_description,
-      };
-      setSelectedFood(selection);
-      setFoodName(data.food_name);
+      const result = data as PromptMealBatchResult;
+      if (!Array.isArray(result.items) || result.items.length === 0) throw new Error('AI eklenecek ürün bulamadı.');
+      setPromptMealResult(result);
       setFoodCacheId(null);
       setSaveAsRecipe(false);
-      setGeminiResult({ provider: data.provider, prompt: true });
-      setUnitType('adet');
-      setAmount('1');
-      setSelectedPortionIdx(0);
-      setCalories(String(calculated.calories));
-      setProtein(String(calculated.protein_g));
-      setCarbs(String(calculated.carbs_g));
-      setFat(String(calculated.fat_g));
-      setSugar(String(calculated.sugar_g));
-      setQuantity(String(data.quantity || 1));
-      setServingDescription(data.serving_description);
-      setSearchStep('gemini_result');
-      toast.success(isEn ? 'AI estimate is ready. Review and add it.' : 'AI tahmini hazır. Kontrol edip öğüne ekleyin.');
+      setSearchStep('prompt_result');
+      toast.success(isEn ? `${result.items.length} items are ready for review.` : `${result.items.length} ürün kontrol için hazır.`);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'AI tarif hesabı başarısız oldu.');
       setSearchStep('prompt_form');
+    }
+  };
+
+  const handlePromptMealAddAll = async () => {
+    if (!promptMealResult) return;
+    setIsPromptMealSaving(true);
+    try {
+      const entries = buildPromptMealEntries(promptMealResult, currentDate || new Date().toISOString());
+      const result = await addMealsAction(entries);
+      if (!result.success) throw new Error(result.error || 'Öğünler eklenemedi.');
+      setAddedCount((count) => count + entries.length);
+      setSessionAddedMeals((items) => [
+        ...entries.map((entry, index) => ({
+          entry_id: result.entry_ids?.[index] || `${entry.food_name}-${index}`,
+          food_name: entry.food_name,
+          quantity: entry.quantity,
+          unit_type: entry.unit_type || 'porsiyon',
+          serving_description: entry.serving_description,
+          calories: entry.calories,
+          protein_g: entry.protein_g,
+          carbs_g: entry.carbs_g,
+          fat_g: entry.fat_g,
+          sugar_g: entry.sugar_g || 0,
+          type: entry.type,
+        })),
+        ...items,
+      ]);
+      toast.success(isEn ? `${entries.length} foods added to their meals.` : `${entries.length} ürün ilgili öğünlerine eklendi.`);
+      onSuccess();
+      handleClearSelection();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Öğünler eklenemedi.');
+    } finally {
+      setIsPromptMealSaving(false);
     }
   };
 
@@ -530,6 +548,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     setManualBrand('');
     setPromptMealText('');
     setPromptMealUseDatabase(false);
+    setPromptMealResult(null);
     setIsOcrReady(false);
     setSearchStep('idle');
     setSearchResults([]);
@@ -892,6 +911,19 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                     <input type="checkbox" checked={promptMealUseDatabase} onChange={(event) => setPromptMealUseDatabase(event.target.checked)} className="h-5 w-5 accent-[var(--primary)]" />
                   </label>
                   <button type="button" onClick={handlePromptMealCalculation} disabled={!promptMealText.trim()} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-purple-500 px-4 text-sm font-bold text-white transition hover:bg-purple-400 disabled:cursor-not-allowed disabled:opacity-45"><Sparkles size={16} />{isEn ? 'Calculate with AI' : 'AI ile hesapla'}</button>
+                </section>
+              )}
+
+              {searchStep === 'prompt_result' && promptMealResult && (
+                <section className="mt-2 flex flex-col gap-3 rounded-2xl border border-purple-400/25 bg-purple-500/[0.07] p-4 animate-fade-in">
+                  <div className="flex items-start justify-between gap-3"><div><h3 className="flex items-center gap-2 text-sm font-bold text-purple-100"><Sparkles size={17} className="text-purple-300" />{isEn ? 'AI day summary' : 'AI günlük özeti'}</h3><p className="mt-1 text-xs text-purple-100/65">{isEn ? 'Unlabelled foods were assigned to Snack. Remove anything before saving.' : 'Zamanı belirtilmeyen ürünler Ara Öğün’e atandı. Kaydetmeden önce istemediklerini çıkar.'}</p></div><button type="button" onClick={handleClearSelection} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-white/55 hover:bg-white/10"><X size={17} /></button></div>
+                  <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                    {promptMealResult.items.map((item, index) => {
+                      const mealLabel = item.meal_type === 'breakfast' ? (isEn ? 'Breakfast' : 'Kahvaltı') : item.meal_type === 'lunch' ? (isEn ? 'Lunch' : 'Öğle') : item.meal_type === 'dinner' ? (isEn ? 'Dinner' : 'Akşam') : (isEn ? 'Snack' : 'Ara Öğün');
+                      return <article key={`${item.food_name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3"><div className="min-w-0"><p className="truncate text-sm font-bold text-white">{item.food_name}</p><p className="mt-0.5 text-xs text-white/50">{mealLabel} · {item.serving_description}</p><p className="mt-1 text-xs text-purple-200">{item.calculated.calories} kcal · P {item.calculated.protein_g}g · K {item.calculated.carbs_g}g · Y {item.calculated.fat_g}g</p></div><button type="button" aria-label={isEn ? 'Remove food' : 'Ürünü çıkar'} onClick={() => setPromptMealResult({ items: promptMealResult.items.filter((_, itemIndex) => itemIndex !== index) })} className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-red-300 hover:bg-red-500/10"><Trash2 size={16} /></button></article>;
+                    })}
+                  </div>
+                  <button type="button" onClick={handlePromptMealAddAll} disabled={isPromptMealSaving || promptMealResult.items.length === 0} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-bold text-black transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-45">{isPromptMealSaving ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}{isEn ? 'Add all to meals' : 'Tümünü öğünlere ekle'}</button>
                 </section>
               )}
 

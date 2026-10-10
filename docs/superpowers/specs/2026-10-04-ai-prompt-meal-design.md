@@ -18,8 +18,9 @@ Kullanıcı, hazırladığı veya tükettiği yiyeceği doğal dilde anlatır. S
    - Kapalıyken AI hiçbir `FoodCache` veya kayıtlı besin sorgusu yapmaz; yalnızca model tahmini kullanır.
    - Açıkken AI, yalnızca mevcut görünür besin verilerini referans olarak kullanabilir. Yeni FoodCache/SavedFood/recipe kaydı kesinlikle oluşturulmaz veya güncellenmez.
 4. AI malzemeleri, toplam tarifi, tüketim miktarını/oranını ve besin değerlerini çıkarır.
-5. Arayüz; yemek adı, tüketim açıklaması, kalori ve makroları düzenlenebilir önizleme olarak gösterir.
-6. Kullanıcı `Öğüne ekle` dediğinde yalnızca `DailyLog.meals` içine besin kaydı eklenir. `food_cache_id` boş kalır.
+5. Birden çok ürün veya tüm gün anlatıldığında AI her ürünü ayrı satırda döndürür; kahvaltı/öğle/akşam ifadelerini tanır, zamanı belirtilmeyen her ürünü `Ara Öğün`e atar.
+6. Arayüz; ürünleri kendi öğünleri, tüketim açıklamaları ve makrolarıyla önizler. Kullanıcı istemediği satırları çıkarabilir.
+7. Kullanıcı `Tümünü öğünlere ekle` dediğinde yalnızca `DailyLog.meals` içine ayrı besin kayıtları eklenir. `food_cache_id` boş kalır.
 
 ## Teknik Tasarım
 

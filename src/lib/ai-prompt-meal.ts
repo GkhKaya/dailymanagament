@@ -6,6 +6,8 @@ export type PromptMealCalculated = {
   sugar_g: number;
 };
 
+export type PromptMealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 export type PromptMealResult = {
   food_name: string;
   serving_description: string;
@@ -15,6 +17,8 @@ export type PromptMealResult = {
   source?: 'ai' | 'ai_with_database_context';
   provider?: 'gemini' | 'openrouter';
 };
+
+export type PromptMealBatchResult = { items: Array<PromptMealResult & { meal_type: PromptMealType }> };
 
 export function validatePromptMealRequest(value: unknown) {
   if (!value || typeof value !== 'object') throw new Error('Geçerli bir istek gerekli.');
@@ -51,6 +55,20 @@ export function validatePromptMealResult(value: unknown): PromptMealResult {
   };
 }
 
+export function validatePromptMealBatchResult(value: unknown): PromptMealBatchResult {
+  if (!value || typeof value !== 'object' || !Array.isArray((value as { items?: unknown }).items)) throw new Error('AI ürün listesi geçersiz.');
+  const items = (value as { items: unknown[] }).items;
+  if (items.length === 0 || items.length > 30) throw new Error('AI ürün listesi 1-30 kayıt arasında olmalıdır.');
+  return {
+    items: items.map((item) => {
+      const result = validatePromptMealResult(item);
+      const rawMealType = typeof item === 'object' && item ? (item as { meal_type?: unknown }).meal_type : undefined;
+      const meal_type: PromptMealType = rawMealType === 'breakfast' || rawMealType === 'lunch' || rawMealType === 'dinner' || rawMealType === 'snack' ? rawMealType : 'snack';
+      return { ...result, meal_type };
+    }),
+  };
+}
+
 export function buildPromptMealEntry(result: PromptMealResult, date: string, type: 'breakfast' | 'lunch' | 'dinner' | 'snack') {
   return {
     date,
@@ -65,4 +83,8 @@ export function buildPromptMealEntry(result: PromptMealResult, date: string, typ
     fat_g: result.calculated.fat_g,
     sugar_g: result.calculated.sugar_g,
   };
+}
+
+export function buildPromptMealEntries(result: PromptMealBatchResult, date: string) {
+  return result.items.map((item) => buildPromptMealEntry(item, date, item.meal_type));
 }

@@ -6,8 +6,8 @@ import { connectDB } from '@/lib/db';
 import { FoodCache } from '@/models/FoodCache';
 import {
   validatePromptMealRequest,
-  validatePromptMealResult,
-  type PromptMealResult,
+  validatePromptMealBatchResult,
+  type PromptMealBatchResult,
 } from '@/lib/ai-prompt-meal';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -16,22 +16,32 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const responseSchema = {
   type: Type.OBJECT,
   properties: {
-    food_name: { type: Type.STRING },
-    serving_description: { type: Type.STRING },
-    quantity: { type: Type.NUMBER, minimum: 0.01 },
-    calculated: {
-      type: Type.OBJECT,
-      properties: {
-        calories: { type: Type.NUMBER, minimum: 0 },
-        protein_g: { type: Type.NUMBER, minimum: 0 },
-        carbs_g: { type: Type.NUMBER, minimum: 0 },
-        fat_g: { type: Type.NUMBER, minimum: 0 },
-        sugar_g: { type: Type.NUMBER, minimum: 0 },
+    items: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          meal_type: { type: Type.STRING, enum: ['breakfast', 'lunch', 'dinner', 'snack'] },
+          food_name: { type: Type.STRING },
+          serving_description: { type: Type.STRING },
+          quantity: { type: Type.NUMBER, minimum: 0.01 },
+          calculated: {
+            type: Type.OBJECT,
+            properties: {
+              calories: { type: Type.NUMBER, minimum: 0 },
+              protein_g: { type: Type.NUMBER, minimum: 0 },
+              carbs_g: { type: Type.NUMBER, minimum: 0 },
+              fat_g: { type: Type.NUMBER, minimum: 0 },
+              sugar_g: { type: Type.NUMBER, minimum: 0 },
+            },
+            required: ['calories', 'protein_g', 'carbs_g', 'fat_g', 'sugar_g'],
+          },
+        },
+        required: ['meal_type', 'food_name', 'serving_description', 'quantity', 'calculated'],
       },
-      required: ['calories', 'protein_g', 'carbs_g', 'fat_g', 'sugar_g'],
     },
   },
-  required: ['food_name', 'serving_description', 'quantity', 'calculated'],
+  required: ['items'],
 };
 
 function stripJsonFence(text: string) {
@@ -47,10 +57,13 @@ Kurallar:
 - Paket, yarım paket, gram, adet, kase, bardak, tabak, kepçe, porsiyon, 1/4, yarısı, üçte biri, 2.5 tabak gibi her miktarı yorumla.
 - Önce hazırlanan/ifade edilen toplamı tahmin et, ardından kullanıcının yediği oran veya miktar için makroları hesapla.
 - Tüketim oranı belirtilmemişse metinde doğrudan belirtilen tüketim miktarını baz al.
-- food_name yalnızca kullanıcının yediği yemeğin kısa Türkçe adı olsun.
+- Her farklı yiyecek/içecek için items dizisine AYRI bir kayıt koy. Birden fazla ürünü tek satırda birleştirme.
+- Kullanıcı "kahvaltı", "sabah" derse breakfast; "öğle" derse lunch; "akşam" derse dinner kullan.
+- Bir ürünün zamanı veya öğünü metinde açıkça belirtilmemişse meal_type her zaman snack olmalı.
+- food_name yalnızca o satırdaki yiyeceğin kısa Türkçe adı olsun.
 - serving_description tüketim açıklamasını taşısın; örnek: "Tarifin 1/4'ü" veya "2,5 tabak".
 - quantity tüketilen porsiyon sayısı olsun. Bir tarifin 1/4'ü için 0.25 kullan.
-- calculated yalnızca tüketilen miktarın toplam kalori ve makrolarıdır.
+- calculated yalnızca o satırdaki tüketim miktarının toplam kalori ve makrolarıdır.
 - Değerler tahmindir; negatif, NaN veya gerçek dışı büyüklükte değer üretme.
 - Sadece belirtilen alanlardan oluşan JSON döndür.
 ${databaseContext}`;
@@ -123,14 +136,14 @@ export async function POST(request: Request) {
     const context = input.useDatabase ? await readDatabaseContext(input.prompt) : '';
     const contents = promptContext(input.prompt, context);
 
-    let result: PromptMealResult;
+    let result: PromptMealBatchResult;
     try {
-      result = { ...validatePromptMealResult(await queryGemini(contents)), source: input.useDatabase ? 'ai_with_database_context' : 'ai', provider: 'gemini' };
+      result = validatePromptMealBatchResult(await queryGemini(contents));
     } catch (geminiError) {
       if (!process.env.OPENROUTER_API_KEY) throw geminiError;
-      result = { ...validatePromptMealResult(await queryOpenRouter(contents)), source: input.useDatabase ? 'ai_with_database_context' : 'ai', provider: 'openrouter' };
+      result = validatePromptMealBatchResult(await queryOpenRouter(contents));
     }
-    return NextResponse.json({ success: true, ...result, warning: 'AI tahminidir; öğüne eklemeden önce değerleri kontrol edin.' });
+    return NextResponse.json({ success: true, ...result, source: input.useDatabase ? 'ai_with_database_context' : 'ai', warning: 'AI tahminidir; öğünlere eklemeden önce değerleri kontrol edin.' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'AI tarif hesabı tamamlanamadı.';
     return NextResponse.json({ error: message }, { status: 400 });
