@@ -6,6 +6,7 @@ import {
   validatePromptMealBatchResult,
   validatePromptMealRequest,
 } from '../src/lib/ai-prompt-meal.ts';
+import { DAILY_LOG_UNITS } from '../src/lib/meal-units.ts';
 
 test('keeps free-text recipe portions and honors the database choice', () => {
   const request = validatePromptMealRequest({
@@ -34,6 +35,10 @@ test('creates a daily meal payload without a food cache id', () => {
   assert.equal(entry.type, 'dinner');
   assert.equal(entry.food_cache_id, undefined);
   assert.equal(entry.calories, 260);
+});
+
+test('allows the portion unit emitted by AI meal entries', () => {
+  assert.equal(DAILY_LOG_UNITS.includes('porsiyon'), true);
 });
 
 test('splits a full-day prompt into separate meal entries and defaults unlabelled items to snack', () => {

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { ExerciseSource } from './Enums';
+import { DAILY_LOG_UNITS, type DailyMealUnit } from '@/lib/meal-units';
 
 export interface IFoodEntry {
   entry_id: mongoose.Types.ObjectId;
@@ -9,7 +10,7 @@ export interface IFoodEntry {
   brand_name?: string;
   serving_description: string;
   quantity: number;
-  unit_type?: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı';
+  unit_type?: DailyMealUnit;
   nutrition_snapshot: {
     calories: number;
     protein_g: number;
@@ -67,7 +68,7 @@ const FoodEntrySchema = new Schema({
   brand_name: { type: String, default: null },
   serving_description: { type: String, required: true },
   quantity: { type: Number, required: true },
-  unit_type: { type: String, enum: ['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'], default: 'gram' },
+  unit_type: { type: String, enum: DAILY_LOG_UNITS, default: 'gram' },
   nutrition_snapshot: {
     calories: { type: Number, required: true },
     protein_g: { type: Number, required: true },

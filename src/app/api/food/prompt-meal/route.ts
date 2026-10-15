@@ -54,7 +54,10 @@ function promptContext(prompt: string, databaseContext: string) {
 Kullanıcı metni: "${prompt}"
 
 Kurallar:
-- Paket, yarım paket, gram, adet, kase, bardak, tabak, kepçe, porsiyon, 1/4, yarısı, üçte biri, 2.5 tabak gibi her miktarı yorumla.
+- Paket, yarım paket, gram, adet, kase, bardak, tabak, kepçe, porsiyon, 1/4, 3/5, yarısı, üçte biri, 2.5 tabak gibi her miktarı yorumla.
+- Kesirleri eksiksiz hesapla: “3 paket petibörün 3/5'i” toplam 3 paketin %60'ıdır, yani tüketim 1,8 pakettir. Önce toplam miktarı kesirle çarp; 3/5'i 0,3 kabul etme veya yok sayma.
+- “a/b”, “a bölü b”, “beşte üç”, “üçte iki”, “yarım” ve virgüllü ondalık miktarları aynı anlama gelecek şekilde yorumla. serving_description içinde hem kesri hem hesaplanan tüketimi belirt; örnek: “3 paketin 3/5'i (1,8 paket)”.
+- Yazım hatası ve sesle yazılmış yakın ürün adlarını da yorumla; örneğin “petöbür” ifadesini petibör bisküvi olarak değerlendirebilirsin.
 - Önce hazırlanan/ifade edilen toplamı tahmin et, ardından kullanıcının yediği oran veya miktar için makroları hesapla.
 - Tüketim oranı belirtilmemişse metinde doğrudan belirtilen tüketim miktarını baz al.
 - Her farklı yiyecek/içecek için items dizisine AYRI bir kayıt koy. Birden fazla ürünü tek satırda birleştirme.
@@ -62,7 +65,7 @@ Kurallar:
 - Bir ürünün zamanı veya öğünü metinde açıkça belirtilmemişse meal_type her zaman snack olmalı.
 - food_name yalnızca o satırdaki yiyeceğin kısa Türkçe adı olsun.
 - serving_description tüketim açıklamasını taşısın; örnek: "Tarifin 1/4'ü" veya "2,5 tabak".
-- quantity tüketilen porsiyon sayısı olsun. Bir tarifin 1/4'ü için 0.25 kullan.
+- quantity tüketilen gerçek miktar/oran olsun. Bir tarifin 1/4'ü için 0.25; 3 paketin 3/5'i için 1.8 kullan.
 - calculated yalnızca o satırdaki tüketim miktarının toplam kalori ve makrolarıdır.
 - Değerler tahmindir; negatif, NaN veya gerçek dışı büyüklükte değer üretme.
 - Sadece belirtilen alanlardan oluşan JSON döndür.
