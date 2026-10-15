@@ -126,7 +126,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     isLoading, handleSubmit, handleMultiSubmit
   } = useAddMealViewModel(onSuccess, currentDate);
 
-  const [activeTab, setActiveTab] = useState<'new' | 'saved'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'manual' | 'saved'>('new');
   const [searchStep, setSearchStep] = useState<SearchStep>('idle');
   const [searchResults, setSearchResults] = useState<DBFoodResult[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -649,18 +649,33 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
 
       {/* ── TABS ── */}
       <div className="flex p-1 bg-[rgba(255,255,255,0.04)] rounded-2xl">
-        {(['new', 'saved'] as const).map(tab => (
+        {(['new', 'manual', 'saved'] as const).map(tab => (
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
+            onClick={() => {
+              setActiveTab(tab);
+              if (tab === 'manual') {
+                setShowDropdown(false);
+                if (searchQuery.trim() && !foodName) {
+                  setFoodName(searchQuery.trim());
+                }
+              }
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === tab
-                ? 'bg-[var(--primary)] text-black shadow-sm'
+                ? 'bg-[var(--primary)] text-black shadow-sm font-bold'
                 : 'text-[var(--on-surface-variant)] hover:text-white'
             }`}
           >
-            {tab === 'new' ? (isEn ? 'New Meal' : 'Yeni Öğün') : (isEn ? 'Saved' : 'Kaydedilenler')}
+            {tab === 'manual' && <PenTool size={13} className={activeTab === 'manual' ? 'text-black' : 'text-emerald-400'} />}
+            <span>
+              {tab === 'new' 
+                ? (isEn ? 'Search & AI' : 'Besin Ara') 
+                : tab === 'manual' 
+                ? (isEn ? 'Manual Entry' : 'Manuel Giriş') 
+                : (isEn ? 'Saved' : 'Kaydedilenler')}
+            </span>
           </button>
         ))}
       </div>
@@ -688,42 +703,42 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
         })}
       </div>
 
-      {activeTab === 'new' ? (
-        <div className="flex flex-col gap-4">
+      {/* ── BU OTURUMDA EKLENEN ÖĞÜNLER LİSTESİ ── */}
+      {sessionAddedMeals.length > 0 && (
+        <div className="flex flex-col gap-2 p-3.5 bg-[rgba(74,222,128,0.06)] border border-[rgba(74,222,128,0.2)] rounded-2xl animate-fade-in">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[12px] font-semibold text-emerald-400 flex items-center gap-1.5">
+              <CheckCircle2 size={15} /> {isEn ? "Added this session" : "Bu Oturumda Eklenenler"} ({sessionAddedMeals.length})
+            </span>
+            <span className="text-[12px] font-bold text-emerald-300">
+              {isEn ? "Total:" : "Toplam:"} {sessionAddedMeals.reduce((sum, item) => sum + item.calories, 0)} kcal
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+            {sessionAddedMeals.map((item) => (
+              <div key={item.entry_id} className="flex items-center justify-between p-2.5 bg-[#161622] rounded-xl border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors">
+                <div className="flex flex-col min-w-0 pr-2">
+                  <span className="text-[13px] font-semibold text-white truncate">{item.food_name}</span>
+                  <span className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
+                    {item.serving_description || `${item.quantity} ${item.unit_type}`} — <strong className="text-emerald-400">{item.calories} kcal</strong> (P:{item.protein_g}g, {isEn ? 'C' : 'K'}:{item.carbs_g}g, {isEn ? 'F' : 'Y'}:{item.fat_g}g)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSessionMeal(item)}
+                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded-lg transition-colors shrink-0 cursor-pointer"
+                  title={isEn ? "Remove meal" : "Öğünlerden Çıkar"}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-          {/* ── BU OTURUMDA EKLENEN ÖĞÜNLER LİSTESİ ── */}
-          {sessionAddedMeals.length > 0 && (
-            <div className="flex flex-col gap-2 p-3.5 bg-[rgba(74,222,128,0.06)] border border-[rgba(74,222,128,0.2)] rounded-2xl animate-fade-in">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[12px] font-semibold text-emerald-400 flex items-center gap-1.5">
-                  <CheckCircle2 size={15} /> {isEn ? "Added this session" : "Bu Oturumda Eklenenler"} ({sessionAddedMeals.length})
-                </span>
-                <span className="text-[12px] font-bold text-emerald-300">
-                  {isEn ? "Total:" : "Toplam:"} {sessionAddedMeals.reduce((sum, item) => sum + item.calories, 0)} kcal
-                </span>
-              </div>
-              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
-                {sessionAddedMeals.map((item) => (
-                  <div key={item.entry_id} className="flex items-center justify-between p-2.5 bg-[#161622] rounded-xl border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition-colors">
-                    <div className="flex flex-col min-w-0 pr-2">
-                      <span className="text-[13px] font-semibold text-white truncate">{item.food_name}</span>
-                      <span className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
-                        {item.serving_description || `${item.quantity} ${item.unit_type}`} — <strong className="text-emerald-400">{item.calories} kcal</strong> (P:{item.protein_g}g, {isEn ? 'C' : 'K'}:{item.carbs_g}g, {isEn ? 'F' : 'Y'}:{item.fat_g}g)
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSessionMeal(item)}
-                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/15 rounded-lg transition-colors shrink-0 cursor-pointer"
-                      title={isEn ? "Remove meal" : "Öğünlerden Çıkar"}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {activeTab === 'new' && (
+        <div className="flex flex-col gap-4">
 
           {/* ── ARAMA ALANI ── */}
           {!selectedFood ? (
@@ -754,6 +769,25 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                   placeholder={isEn ? "Search food (e.g. Rice, Chicken, Oatmeal...)" : "Türkçe yemek arayın (Örn: Bulgur, Tavuk...)"}
                   className="w-full bg-[#16161F] border-2 border-[rgba(255,255,255,0.06)] rounded-2xl py-4 pl-12 pr-4 text-[15px] font-medium text-white focus:outline-none focus:border-[var(--primary)] focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.12)] transition-all placeholder:text-[var(--on-surface-variant)] placeholder:font-normal"
                 />
+              </div>
+
+              {/* Direct manual entry link */}
+              <div className="flex items-center justify-between px-2 text-xs">
+                <span className="text-[var(--on-surface-variant)]">{isEn ? "Not in food list?" : "Listede bulamadınız mı?"}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('manual');
+                    if (searchQuery.trim()) {
+                      setFoodName(searchQuery.trim());
+                    }
+                    setShowDropdown(false);
+                  }}
+                  className="text-[var(--primary)] hover:underline font-semibold flex items-center gap-1.5 cursor-pointer py-1"
+                >
+                  <PenTool size={13} />
+                  <span>{isEn ? "Add without DB" : "DB'ye eklemeden manuel gir"}</span>
+                </button>
               </div>
 
               {/* Dropdown */}
@@ -826,12 +860,19 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                           </span>
                         </div>
                         <div
-                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setActiveTab('manual');
+                            if (searchQuery.trim()) {
+                              setFoodName(searchQuery.trim());
+                            }
+                            setShowDropdown(false);
+                          }}
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
                         >
                           <PenTool size={16} className="text-emerald-400 shrink-0" />
                           <span className="text-[12px] font-medium">
-                            {isAbroad() || getLocale() === 'en' ? 'Add Manually' : 'Manuel Ekle'}
+                            {isAbroad() || getLocale() === 'en' ? 'Add Manually (No DB)' : 'Manuel Ekle (DB\'siz)'}
                           </span>
                         </div>
                       </div>
@@ -850,11 +891,18 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                           <span className="text-[12px] text-purple-300 font-medium">{isEn ? "Find with AI" : "AI ile Bul"}</span>
                         </div>
                         <div
-                          onMouseDown={(e) => { e.preventDefault(); setSearchStep('manual_form'); setShowDropdown(false); }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setActiveTab('manual');
+                            if (searchQuery.trim()) {
+                              setFoodName(searchQuery.trim());
+                            }
+                            setShowDropdown(false);
+                          }}
                           className="flex-1 px-4 py-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.08)] transition-colors text-[var(--on-surface-variant)]"
                         >
                           <PenTool size={16} className="text-emerald-400 shrink-0" />
-                          <span className="text-[12px] font-medium">{isEn ? "Add Manually" : "Manuel Ekle"}</span>
+                          <span className="text-[12px] font-medium">{isEn ? "Add Manually (No DB)" : "Manuel Ekle (DB'siz)"}</span>
                         </div>
                       </div>
                     </>
@@ -1297,7 +1345,208 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
             </div>
           )}
         </div>
-      ) : (
+      )}
+
+      {/* ── MANUEL ÖĞÜN GİRİŞİ (DB'YE EKLEMEDEN DİREKT ÖĞÜNE) ── */}
+      {activeTab === 'manual' && (
+        <div className="flex flex-col gap-4 animate-fade-in">
+          {/* Reassuring Info Banner */}
+          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs">
+            <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
+            <span className="leading-snug">
+              {isEn
+                ? "This meal will be added directly to your daily log without being saved to the food database."
+                : "Bu öğün veritabanına eklenmeden doğrudan bugünkü öğün günlüğünüze eklenir."}
+            </span>
+          </div>
+
+          {/* Yemek Adı */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold flex items-center justify-between">
+              <span>{isEn ? "Food / Meal Name" : "Yemek / Öğün Adı"} *</span>
+            </label>
+            <div className="relative">
+              <Utensils size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" />
+              <input
+                type="text"
+                value={foodName}
+                onChange={e => setFoodName(e.target.value)}
+                placeholder={isEn ? "e.g. Chicken Rice, Toast, Home Stew..." : "Örn: Tavuklu Pilav, Tost, Ev Yemeği..."}
+                required
+                className="w-full bg-[#161622] border border-[rgba(255,255,255,0.1)] rounded-2xl py-3 pl-10 pr-3.5 text-sm text-white placeholder:text-[var(--on-surface-variant)] focus:outline-none focus:border-[var(--primary)] transition-all font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Miktar & Birim ve Porsiyon Açıklaması */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
+                {isEn ? "Quantity & Unit" : "Miktar & Birim"}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={quantity}
+                  onChange={e => {
+                    const q = e.target.value;
+                    setQuantity(q);
+                    setServingDescription(`${q} ${unitType}`);
+                  }}
+                  className="w-24 bg-[#161622] border border-[rgba(255,255,255,0.1)] rounded-xl py-2.5 px-3 text-sm text-white font-medium focus:outline-none focus:border-[var(--primary)]"
+                />
+                <select
+                  value={unitType}
+                  onChange={e => {
+                    const u = e.target.value;
+                    setUnitType(u as any);
+                    setServingDescription(`${quantity || '1'} ${u}`);
+                  }}
+                  className="flex-1 bg-[#161622] border border-[rgba(255,255,255,0.1)] rounded-xl py-2.5 px-3 text-sm text-white font-medium focus:outline-none focus:border-[var(--primary)] cursor-pointer"
+                >
+                  {['porsiyon', 'gram', 'adet', 'tabak', 'kase', 'bardak', 'dilim', 'avuç', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'].map(u => (
+                    <option key={u} value={u} className="bg-[#161622]">{u}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
+                {isEn ? "Serving Description (Optional)" : "Porsiyon Açıklaması (İsteğe bağlı)"}
+              </label>
+              <input
+                type="text"
+                value={servingDescription}
+                onChange={e => setServingDescription(e.target.value)}
+                placeholder={isEn ? "e.g. 1 plate, 1 portion" : "Örn: 1 tabak, 1 porsiyon"}
+                className="w-full bg-[#161622] border border-[rgba(255,255,255,0.1)] rounded-xl py-2.5 px-3 text-sm text-white font-medium focus:outline-none focus:border-[var(--primary)]"
+              />
+            </div>
+          </div>
+
+          {/* Besin Değerleri (Kalori & Makrolar) */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
+                {isEn ? "Nutritional Values" : "Besin Değerleri"}
+              </label>
+              <button
+                type="button"
+                onClick={() => ocrInputRef.current?.click()}
+                disabled={isOcrLoading}
+                className="text-[11px] text-[var(--primary)] hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              >
+                {isOcrLoading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+                <span>{isOcrLoading ? (isEn ? "Reading label..." : "Etiket okunuyor...") : (isEn ? "Scan Label" : "Besin Etiketi Tara")}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <div className="flex flex-col gap-1 col-span-2 sm:col-span-1">
+                <label className="text-[10px] text-orange-400 font-bold pl-1">{isEn ? "Calories (kcal)" : "Kalori (kcal)"} *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={calories}
+                  onChange={e => setCalories(e.target.value)}
+                  placeholder="0"
+                  required
+                  className="w-full bg-[#161622] border border-orange-500/40 rounded-xl py-2.5 px-3 text-sm font-bold text-white focus:outline-none focus:border-orange-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-blue-400 font-semibold pl-1">{isEn ? "Carbs (g)" : "Karb (g)"}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={carbs}
+                  onChange={e => setCarbs(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-[#161622] border border-blue-500/30 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-green-400 font-semibold pl-1">{isEn ? "Protein (g)" : "Protein (g)"}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={protein}
+                  onChange={e => setProtein(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-[#161622] border border-green-500/30 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-green-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-yellow-400 font-semibold pl-1">{isEn ? "Fat (g)" : "Yağ (g)"}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={fat}
+                  onChange={e => setFat(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-[#161622] border border-yellow-500/30 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-pink-400 font-semibold pl-1">{isEn ? "Sugar (g)" : "Şeker (g)"}</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={sugar}
+                  onChange={e => setSugar(e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-[#161622] border border-pink-500/30 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-pink-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Makro Dağılım Önizleme */}
+          {(nutrients.calories > 0 || nutrients.protein > 0 || nutrients.carbs > 0 || nutrients.fat > 0) && (
+            <div className="p-3 bg-[rgba(255,255,255,0.02)] rounded-xl border border-[rgba(255,255,255,0.06)] flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-white">{nutrients.calories} kcal</span>
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span style={{ color: MACRO_COLORS.protein }}>P: {nutrients.protein}g (%{nutrients.proteinPct})</span>
+                  <span style={{ color: MACRO_COLORS.carbs }}>K: {nutrients.carbs}g (%{nutrients.carbsPct})</span>
+                  <span style={{ color: MACRO_COLORS.fat }}>Y: {nutrients.fat}g (%{nutrients.fatPct})</span>
+                </div>
+              </div>
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden flex">
+                {nutrients.proteinPct > 0 && <div style={{ width: `${nutrients.proteinPct}%`, backgroundColor: MACRO_COLORS.protein }} />}
+                {nutrients.carbsPct > 0 && <div style={{ width: `${nutrients.carbsPct}%`, backgroundColor: MACRO_COLORS.carbs }} />}
+                {nutrients.fatPct > 0 && <div style={{ width: `${nutrients.fatPct}%`, backgroundColor: MACRO_COLORS.fat }} />}
+              </div>
+            </div>
+          )}
+
+          {/* İsteğe Bağlı Favorilere Kaydetme */}
+          <button
+            type="button"
+            onClick={() => setSaveAsRecipe(!saveAsRecipe)}
+            className={`flex items-center gap-2.5 py-2.5 px-3 rounded-xl transition-all text-[13px] font-medium border cursor-pointer ${
+              saveAsRecipe
+                ? 'bg-[rgba(var(--primary-rgb),0.12)] border-[var(--primary)] text-[var(--primary)]'
+                : 'bg-transparent border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:border-[rgba(255,255,255,0.15)] hover:text-white'
+            }`}
+          >
+            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${saveAsRecipe ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[rgba(255,255,255,0.3)]'}`}>
+              {saveAsRecipe && <Check size={10} className="text-black" />}
+            </div>
+            {isEn ? "Also save to my favorites" : "Favorilerime / tariflerime de kaydet"}
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'saved' && (
         /* ── KAYDEDİLENLER SEKMESI ── */
         <div className="flex flex-col gap-2.5">
           {isLoadingSaved ? (
@@ -1365,6 +1614,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
           disabled={
             isLoading
             || (activeTab === 'new' && ((!selectedFood && !isOcrReady) || !calories))
+            || (activeTab === 'manual' && (!foodName.trim() || !calories))
             || (activeTab === 'saved' && selectedSavedFoods.length === 0)
           }
           className="flex-[2] py-3.5 rounded-2xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black text-[13px] font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"

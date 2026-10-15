@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import { addMealAction, getSavedFoodsAction } from '@/actions/health';
+import { DailyMealUnit } from '@/lib/meal-units';
 
 export function useAddMealViewModel(onSuccess: () => void, currentDateStr?: string) {
   const [type, setType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
@@ -12,7 +13,7 @@ export function useAddMealViewModel(onSuccess: () => void, currentDateStr?: stri
   const [carbs, setCarbs] = useState('0');
   const [fat, setFat] = useState('0');
   const [sugar, setSugar] = useState('0');
-  const [unitType, setUnitType] = useState<'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı'>('gram');
+  const [unitType, setUnitType] = useState<DailyMealUnit | string>('gram');
   const [fatsecretFoodId, setFatsecretFoodId] = useState<string | null>(null);
   const [saveAsRecipe, setSaveAsRecipe] = useState(false);
   
