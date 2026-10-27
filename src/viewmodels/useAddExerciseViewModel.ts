@@ -2,6 +2,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { addExerciseAction } from '@/actions/health';
 import { calculateStepsCalories } from '@/lib/calories';
+import { buildExerciseSubmission, MANUAL_EXERCISE_TYPE } from '@/lib/exercise-submission';
 
 const MET_VALUES: Record<string, number> = {
   "Koşu": 8.0,
@@ -14,6 +15,7 @@ const MET_VALUES: Record<string, number> = {
 
 export function useAddExerciseViewModel(onSuccess: () => void, userWeight: number = 70, currentDateStr?: string) {
   const [exerciseType, setExerciseType] = useState('Yürüyüş');
+  const [manualName, setManualName] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('');
   const [stepCount, setStepCount] = useState('');
   const [burnedCalories, setBurnedCalories] = useState('');
@@ -21,6 +23,7 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
   const [isLoading, setIsLoading] = useState(false);
 
   const calculateExerciseCalories = (type: string, durationValue: string) => {
+    if (type === MANUAL_EXERCISE_TYPE) return '';
     const duration = Number(durationValue);
     if (!Number.isFinite(duration) || duration <= 0) return '';
     const met = MET_VALUES[type] || 4.0;
@@ -33,6 +36,8 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
       setDurationMinutes('');
       setStepCount('');
       setBurnedCalories('');
+    } else if (value === MANUAL_EXERCISE_TYPE) {
+      setBurnedCalories('');
     } else {
       setBurnedCalories(calculateExerciseCalories(value, durationMinutes));
     }
@@ -40,7 +45,9 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
 
   const handleDurationChange = (value: string) => {
     setDurationMinutes(value);
-    setBurnedCalories(calculateExerciseCalories(exerciseType, value));
+    if (exerciseType !== MANUAL_EXERCISE_TYPE) {
+      setBurnedCalories(calculateExerciseCalories(exerciseType, value));
+    }
   };
 
   const handleStepCountChange = (value: string) => {
@@ -53,16 +60,23 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
     setIsLoading(true);
 
     try {
-      if (exerciseType === 'Adım Sayısı' && (!stepCount || Number(stepCount) <= 0)) throw new Error("Adım sayısı zorunludur.");
-      if (exerciseType !== 'Adım Sayısı' && !durationMinutes) throw new Error("Süre zorunludur.");
-      if (!burnedCalories) throw new Error("Yakılan kalori zorunludur.");
+      if (exerciseType === 'Adım Sayısı') {
+        if (!stepCount || Number(stepCount) <= 0) throw new Error("Adım sayısı zorunludur.");
+        if (!burnedCalories) throw new Error("Yakılan kalori zorunludur.");
+      }
+
+      const exercise = exerciseType === 'Adım Sayısı'
+        ? {
+          name: exerciseType,
+          duration_minutes: 0,
+          calories_burned: Number(burnedCalories),
+          step_count: Number(stepCount),
+        }
+        : buildExerciseSubmission({ exerciseType, manualName, durationMinutes, burnedCalories });
 
       const res = await addExerciseAction({
         date: currentDateStr || new Date().toISOString(),
-        name: exerciseType,
-        duration_minutes: exerciseType === 'Adım Sayısı' ? 0 : parseInt(durationMinutes),
-        calories_burned: parseFloat(burnedCalories),
-        ...(exerciseType === 'Adım Sayısı' ? { step_count: parseInt(stepCount) } : {})
+        ...exercise,
       });
 
       if (res.success) {
@@ -80,6 +94,7 @@ export function useAddExerciseViewModel(onSuccess: () => void, userWeight: numbe
 
   return {
     exerciseType, handleExerciseTypeChange,
+    manualName, setManualName,
     durationMinutes, handleDurationChange,
     stepCount, handleStepCountChange,
     burnedCalories, setBurnedCalories,

@@ -6,6 +6,7 @@ import { Activity } from 'lucide-react';
 import { useAddExerciseViewModel } from '@/viewmodels/useAddExerciseViewModel';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { MANUAL_EXERCISE_TYPE } from '@/lib/exercise-submission';
 
 export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDate }: { onClose: () => void, onSuccess: () => void, userWeight?: number, currentDate?: string }) {
   const { locale, isAbroad: userAbroad } = useTranslation();
@@ -13,6 +14,7 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
 
   const {
     exerciseType, handleExerciseTypeChange,
+    manualName, setManualName,
     durationMinutes, handleDurationChange,
     stepCount, handleStepCountChange,
     burnedCalories, setBurnedCalories,
@@ -37,8 +39,26 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
             <option value="Yüzme" className="bg-[#1A1A26]">{isEn ? "Swimming" : "Yüzme"}</option>
             <option value="Yoga" className="bg-[#1A1A26]">Yoga</option>
             <option value="Adım Sayısı" className="bg-[#1A1A26]">{isEn ? "Step Count" : "Adım Sayısı"}</option>
+            <option value={MANUAL_EXERCISE_TYPE} className="bg-[#1A1A26]">{isEn ? "Manual entry" : "Manuel giriş"}</option>
           </select>
         </div>
+
+        {exerciseType === MANUAL_EXERCISE_TYPE && (
+          <div className="flex flex-col gap-2">
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider" htmlFor="manual-exercise-name">
+              {isEn ? "Exercise name" : "Egzersiz adı"}
+            </label>
+            <input
+              id="manual-exercise-name"
+              type="text"
+              required
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              placeholder={isEn ? "e.g. Rowing machine" : "Örn. Kürek ergometresi"}
+              className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] rounded-2xl py-4 px-4 text-body text-white focus:outline-none focus:border-[var(--primary)] focus:bg-[rgba(255,255,255,0.05)] transition-all"
+            />
+          </div>
+        )}
 
         {exerciseType === 'Adım Sayısı' ? (
           <div className="flex flex-col gap-2">
@@ -88,6 +108,8 @@ export function AddExerciseForm({ onClose, onSuccess, userWeight = 70, currentDa
           <span className="text-caption text-[var(--on-surface-variant)] mt-1 ml-2">
             {exerciseType === 'Adım Sayısı' 
               ? (isEn ? 'Estimated based on your weight and steps and added to BMR total.' : 'Kilon ve adım sayına göre tahmini olarak hesaplanır ve BMR toplamına eklenir.')
+              : exerciseType === MANUAL_EXERCISE_TYPE
+                ? (isEn ? 'Enter the calorie value shown by your device or your own calculation.' : 'Saatinde ya da kendi hesabında gördüğün kalori değerini gir.')
               : (isEn ? 'Estimated based on your activity data. Using smartwatch readings is recommended.' : 'Bu bilgilerine göre tahmini bir kaloridir. Akıllı saat ile ölçtüğün veriyi girmen daha sağlıklı olacaktır.')}
           </span>
         </div>
