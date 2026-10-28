@@ -10,7 +10,7 @@ export interface IFoodCache extends Document {
   user_id?: string | null;    // Kullanıcıya özel besinler için (null = global herkes görür)
   food_name: string;          // Türkçe yemek adı (arama için)
   food_name_en?: string;      // İngilizce karşılığı
-  unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı'; // Birimi
+  unit_type: 'gram' | 'adet' | 'kase' | 'bardak' | 'tabak' | 'porsiyon' | 'dilim' | 'avuç' | 'çay kaşığı' | 'tatlı kaşığı' | 'çorba kaşığı' | 'yemek kaşığı'; // Birimi
   per_unit: {
     // 1 gram veya 1 adet için beslenme değerleri
     calories: number;
@@ -41,7 +41,7 @@ const FoodCacheSchema: Schema = new Schema({
   user_id: { type: String, ref: 'User', default: null },
   food_name: { type: String, required: true },
   food_name_en: { type: String, default: null },
-  unit_type: { type: String, enum: ['gram', 'adet', 'kase', 'bardak', 'tabak', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'], default: 'gram' },
+  unit_type: { type: String, enum: ['gram', 'adet', 'kase', 'bardak', 'tabak', 'porsiyon', 'dilim', 'avuç', 'çay kaşığı', 'tatlı kaşığı', 'çorba kaşığı', 'yemek kaşığı'], default: 'gram' },
   per_unit: {
     calories: { type: Number, required: true },
     protein_g: { type: Number, required: true },

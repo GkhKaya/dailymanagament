@@ -47,7 +47,7 @@ export function useAddMealViewModel(onSuccess: () => void, currentDateStr?: stri
     fetchSaved();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent): Promise<{ success: boolean; item?: any }> => {
+  const handleSubmit = async (e: React.FormEvent, options?: { foodCacheId?: string }): Promise<{ success: boolean; item?: any }> => {
     e.preventDefault();
     
     setIsLoading(true);
@@ -76,7 +76,7 @@ export function useAddMealViewModel(onSuccess: () => void, currentDateStr?: stri
         carbs_g: parsedCarbs,
         fat_g: parsedFat,
         sugar_g: parsedSugar,
-        food_cache_id: fatsecretFoodId || undefined,
+        food_cache_id: options?.foodCacheId ?? fatsecretFoodId ?? undefined,
         save_as_recipe: saveAsRecipe
       });
 

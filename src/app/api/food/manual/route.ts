@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const sugar = parseFloat(sugar_g) || 0;
     const fiber = parseFloat(fiber_g) || 0;
 
-    // Unit type is 'gram' or 'adet'
+    // Gram entries are sent as per-100g values; other unit types are per one unit.
     // For 'gram', per_unit is per 1 gram (so divide 100g values by 100 if user entered per 100g or per 1 unit)
     const isGram = unit_type === 'gram';
     const divisor = isGram ? 100 : 1;

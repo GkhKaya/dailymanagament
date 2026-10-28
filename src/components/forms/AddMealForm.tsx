@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils, UtensilsCrossed, Sunrise, Sun, Moon, Apple, GlassWater, Soup, PenTool, BookmarkCheck } from 'lucide-react';
+import { Search, Sparkles, ChevronDown, Check, X, Loader2, Trash2, CheckCircle2, Camera, Scale, Utensils, UtensilsCrossed, Sunrise, Sun, Moon, Apple, GlassWater, Soup, PenTool, BookmarkCheck, ImagePlus, Database } from 'lucide-react';
 import { useAddMealViewModel } from '@/viewmodels/useAddMealViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { addMealsAction, deleteMealAction } from '@/actions/health';
@@ -10,6 +10,7 @@ import { t, getLocale, isAbroad } from '@/lib/i18n';
 import { resolveFoodName } from '@/lib/mistral-ocr';
 import { useTranslation } from '@/hooks/useTranslation';
 import { buildPromptMealEntries, type PromptMealBatchResult } from '@/lib/ai-prompt-meal';
+import { buildManualFoodStoragePayload, getFoodLabelInputAttributes } from '@/lib/manual-food-storage';
 
 // Makro renk kodları
 const MACRO_COLORS = {
@@ -148,6 +149,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [manualCarbs, setManualCarbs] = useState('');
   const [manualFat, setManualFat] = useState('');
   const [manualSugar, setManualSugar] = useState('');
+  const [saveManualFoodToDatabase, setSaveManualFoodToDatabase] = useState(false);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [isOcrReady, setIsOcrReady] = useState(false);
   const [ocrProvider, setOcrProvider] = useState<'gemini' | 'mistral'>('gemini');
@@ -156,7 +158,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
   const [promptMealResult, setPromptMealResult] = useState<PromptMealBatchResult | null>(null);
   const [isPromptMealSaving, setIsPromptMealSaving] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  const ocrInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Ölçü birimi menüsü dışına tıklanınca kapat
@@ -525,7 +528,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
       toast.error(error instanceof Error ? error.message : 'Etiket okunamadı.');
     } finally {
       setIsOcrLoading(false);
-      if (ocrInputRef.current) ocrInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -546,6 +550,7 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
     setManualFat('');
     setManualSugar('');
     setManualBrand('');
+    setSaveManualFoodToDatabase(false);
     setPromptMealText('');
     setPromptMealUseDatabase(false);
     setPromptMealResult(null);
@@ -577,7 +582,36 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
         setAddedCount(prev => prev + countToAdd);
       }
     } else {
-      const res = await handleSubmit(e);
+      let foodCacheId: string | undefined;
+      if (activeTab === 'manual' && saveManualFoodToDatabase) {
+        try {
+          const payload = buildManualFoodStoragePayload({
+            foodName,
+            brandName: '',
+            unitType,
+            quantity,
+            calories,
+            protein,
+            carbs,
+            fat,
+            sugar,
+          });
+          const response = await fetch('/api/food/manual', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || 'Besin veritabanına kaydedilemedi.');
+          foodCacheId = data.food?.id;
+          if (!foodCacheId) throw new Error('Besin veritabanı kaydı oluşturulamadı.');
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'Besin veritabanına kaydedilemedi.');
+          return;
+        }
+      }
+
+      const res = await handleSubmit(e, { foodCacheId });
       if (res.success) {
         setAddedCount(prev => prev + 1);
         if (res.item) {
@@ -634,6 +668,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
       onSubmit={onFormSubmit}
       className="flex flex-col gap-5"
     >
+      <input ref={cameraInputRef} type="file" {...getFoodLabelInputAttributes('camera')} className="sr-only" onChange={(event) => handleLabelImage(event.target.files?.[0])} />
+      <input ref={galleryInputRef} type="file" {...getFoodLabelInputAttributes('gallery')} className="sr-only" onChange={(event) => handleLabelImage(event.target.files?.[0])} />
       {/* ── AI PHOTO BUTTON ── */}
       {onOpenAIPhoto && (
         <button
@@ -1021,14 +1057,6 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                     <span className="text-[13px] font-semibold text-white">{isEn ? "Add Food Manually" : "Yemeği Manuel Olarak Ekle"}</span>
                   </div>
 
-                  <input
-                    ref={ocrInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/avif"
-                    capture="environment"
-                    className="hidden"
-                    onChange={(event) => handleLabelImage(event.target.files?.[0])}
-                  />
                   <select
                     value={ocrProvider}
                     onChange={(event) => setOcrProvider(event.target.value as 'gemini' | 'mistral')}
@@ -1041,13 +1069,21 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
                   </select>
                   <button
                     type="button"
-                    onClick={() => ocrInputRef.current?.click()}
+                    onClick={() => cameraInputRef.current?.click()}
                     disabled={isOcrLoading}
                     className="min-h-[48px] w-full rounded-xl border border-[rgba(142,193,59,0.35)] bg-[rgba(142,193,59,0.08)] px-3 py-2.5 text-sm font-semibold text-[var(--primary)] transition-colors hover:bg-[rgba(142,193,59,0.14)] disabled:cursor-wait disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                     aria-label={t('forms.foodLabelOcr')}
                   >
                     {isOcrLoading ? <Loader2 size={17} className="animate-spin" /> : <Camera size={17} />}
                     {isOcrLoading ? t('forms.foodLabelOcrReading') : `${ocrProvider === 'gemini' ? 'Gemini Vision' : 'Mistral OCR'} ${isEn ? 'Scan' : 'ile oku'}`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={isOcrLoading}
+                    className="min-h-[48px] w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.09] disabled:cursor-wait disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ImagePlus size={17} /> {isEn ? 'Choose from gallery' : 'Galeriden seç'}
                   </button>
                   <span className="text-center text-[11px] text-[var(--on-surface-variant)]">{t('forms.foodLabelOcrHint')}</span>
                   
@@ -1355,8 +1391,8 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
             <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
             <span className="leading-snug">
               {isEn
-                ? "This meal will be added directly to your daily log without being saved to the food database."
-                : "Bu öğün veritabanına eklenmeden doğrudan bugünkü öğün günlüğünüze eklenir."}
+                ? "Choose whether this meal is also saved to your personal food database."
+                : "Bu öğünün besin veritabanına da kaydedilip kaydedilmeyeceğini aşağıdan seçebilirsin."}
             </span>
           </div>
 
@@ -1433,15 +1469,15 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               <label className="text-[11px] text-[var(--on-surface-variant)] uppercase tracking-wider font-semibold">
                 {isEn ? "Nutritional Values" : "Besin Değerleri"}
               </label>
-              <button
-                type="button"
-                onClick={() => ocrInputRef.current?.click()}
-                disabled={isOcrLoading}
-                className="text-[11px] text-[var(--primary)] hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50"
-              >
-                {isOcrLoading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
-                <span>{isOcrLoading ? (isEn ? "Reading label..." : "Etiket okunuyor...") : (isEn ? "Scan Label" : "Besin Etiketi Tara")}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={isOcrLoading} className="min-h-11 rounded-xl px-2 text-[11px] text-[var(--primary)] hover:bg-[var(--primary)]/10 font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50" aria-label={isEn ? 'Scan nutrition label with camera' : 'Kamerayla besin etiketi tara'}>
+                  {isOcrLoading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
+                  <span>{isOcrLoading ? (isEn ? 'Reading label...' : 'Etiket okunuyor...') : (isEn ? 'Scan' : 'Kamerayla tara')}</span>
+                </button>
+                <button type="button" onClick={() => galleryInputRef.current?.click()} disabled={isOcrLoading} className="min-h-11 rounded-xl px-2 text-[11px] text-white/75 hover:bg-white/10 font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50" aria-label={isEn ? 'Select nutrition label from gallery' : 'Galeriden besin etiketi seç'}>
+                  <ImagePlus size={13} /> <span>{isEn ? 'Gallery' : 'Galeri'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
@@ -1527,6 +1563,23 @@ export function AddMealForm({ onClose, onSuccess, currentDate, onOpenAIPhoto }: 
               </div>
             </div>
           )}
+
+          {/* İsteğe Bağlı Besin Veritabanı Kaydı */}
+          <button
+            type="button"
+            onClick={() => setSaveManualFoodToDatabase(!saveManualFoodToDatabase)}
+            className={`flex items-center gap-2.5 py-2.5 px-3 rounded-xl transition-all text-[13px] font-medium border cursor-pointer ${
+              saveManualFoodToDatabase
+                ? 'bg-[rgba(var(--primary-rgb),0.12)] border-[var(--primary)] text-[var(--primary)]'
+                : 'bg-transparent border-[rgba(255,255,255,0.08)] text-[var(--on-surface-variant)] hover:border-[rgba(255,255,255,0.15)] hover:text-white'
+            }`}
+          >
+            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${saveManualFoodToDatabase ? 'bg-[var(--primary)] border-[var(--primary)]' : 'border-[rgba(255,255,255,0.3)]'}`}>
+              {saveManualFoodToDatabase && <Check size={10} className="text-black" />}
+            </div>
+            <Database size={15} />
+            <span>{isEn ? 'Also save to my food database' : 'Besin veritabanıma da kaydet'}</span>
+          </button>
 
           {/* İsteğe Bağlı Favorilere Kaydetme */}
           <button
