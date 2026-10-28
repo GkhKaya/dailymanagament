@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { HealthDataDTO } from "@/models/DashboardTypes";
 import { t } from "@/lib/i18n";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil, Camera, Sparkles, ImageDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, Plus, ChevronDown, ChevronUp, Download, Flame, Dumbbell, Footprints, Trash2, Pencil, Camera, Sparkles, ImageDown, Share2 } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { SwipeableItem } from "@/components/ui/SwipeableItem";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { deleteMealAction, deleteExerciseAction } from "@/actions/health";
 import toast from "react-hot-toast";
-import { downloadHealthStory } from "@/lib/healthStoryGenerator";
+import { canShareHealthStoryImage, createHealthStoryImage, downloadHealthStoryImage, shareHealthStoryImage, type HealthStoryImage } from "@/lib/healthStoryGenerator";
 import { DailyHabitsTracker } from "@/components/dashboard/DailyHabitsTracker";
 
 interface HealthSectionProps {
@@ -32,6 +32,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   const [isBurnedModalOpen, setIsBurnedModalOpen] = useState(false);
   const [isStoryMenuOpen, setIsStoryMenuOpen] = useState(false);
   const [isDownloadingStory, setIsDownloadingStory] = useState(false);
+  const [preparedStory, setPreparedStory] = useState<HealthStoryImage | null>(null);
   const storyMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -55,6 +56,40 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
   const carbsPct = totalMacroGrams > 0 ? Math.round(((data.carbs || 0) / totalMacroGrams) * 100) : 0;
   const proteinPct = totalMacroGrams > 0 ? Math.round(((data.protein || 0) / totalMacroGrams) * 100) : 0;
   const fatPct = totalMacroGrams > 0 ? Math.max(0, 100 - carbsPct - proteinPct) : 0;
+
+  const prepareStory = async (lang: 'tr' | 'en') => {
+    setPreparedStory(null);
+    setIsDownloadingStory(true);
+    try {
+      const story = await createHealthStoryImage(data, lang);
+      if (canShareHealthStoryImage(story)) {
+        setPreparedStory(story);
+        toast.success(isEn ? 'Story image is ready. Tap Save / Share.' : 'Hikaye görseli hazır. Kaydet / Paylaş düğmesine dokun.');
+      } else {
+        downloadHealthStoryImage(story);
+        toast.success(isEn ? 'Story image downloaded.' : 'Hikaye görseli indirildi.');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : (isEn ? 'Story image could not be created.' : 'Hikaye görseli oluşturulamadı.'));
+    } finally {
+      setIsDownloadingStory(false);
+    }
+  };
+
+  const savePreparedStory = async () => {
+    if (!preparedStory) return;
+    try {
+      const result = await shareHealthStoryImage(preparedStory);
+      if (result === 'shared') {
+        toast.success(isEn ? 'Share menu opened. Choose Save Image.' : 'Paylaş menüsü açıldı. “Görsele Kaydet” seçeneğini seç.');
+      } else if (result === 'downloaded') {
+        toast.success(isEn ? 'Story image downloaded.' : 'Hikaye görseli indirildi.');
+      }
+      if (result !== 'cancelled') setPreparedStory(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : (isEn ? 'Story image could not be saved.' : 'Hikaye görseli kaydedilemedi.'));
+    }
+  };
 
   const toggleMeal = (mealId: string) => {
     setExpandedMeals(prev => 
@@ -183,18 +218,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                 <button
                   type="button"
                   disabled={isDownloadingStory}
-                  onClick={async () => {
-                    setIsStoryMenuOpen(false);
-                    setIsDownloadingStory(true);
-                    try {
-                      await downloadHealthStory(data, 'tr');
-                      toast.success(isEn ? "Turkish story image downloaded." : "Türkçe hikaye görseli (1080x1920) indirildi.");
-                    } catch (error) {
-                      toast.error(error instanceof Error ? error.message : (isEn ? "Story image could not be created." : "Hikaye görseli oluşturulamadı."));
-                    } finally {
-                      setIsDownloadingStory(false);
-                    }
-                  }}
+                  onClick={() => prepareStory('tr')}
                   className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   <div className="flex items-center gap-2">
@@ -206,18 +230,7 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                 <button
                   type="button"
                   disabled={isDownloadingStory}
-                  onClick={async () => {
-                    setIsStoryMenuOpen(false);
-                    setIsDownloadingStory(true);
-                    try {
-                      await downloadHealthStory(data, 'en');
-                      toast.success(isEn ? "English story image (1080x1920) downloaded." : "English story image (1080x1920) indirildi.");
-                    } catch (error) {
-                      toast.error(error instanceof Error ? error.message : (isEn ? "Story image could not be created." : "Hikaye görseli oluşturulamadı."));
-                    } finally {
-                      setIsDownloadingStory(false);
-                    }
-                  }}
+                  onClick={() => prepareStory('en')}
                   className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-white transition-colors hover:bg-white/10"
                 >
                   <div className="flex items-center gap-2">
@@ -226,6 +239,12 @@ export function HealthSection({ data, isOverview = true, currentDate, onPrevDay,
                   </div>
                   <span className="text-[10px] opacity-60">Story</span>
                 </button>
+                {preparedStory && (
+                  <div className="mt-1 rounded-xl border border-[#5eead4]/25 bg-[#14b8a6]/10 p-2">
+                    <p className="mb-2 px-1 text-[11px] leading-4 text-[#ccfbf1]">{isEn ? 'Image ready. Open the system menu to save it to Photos.' : 'Görsel hazır. Fotoğraflara kaydetmek için sistem menüsünü aç.'}</p>
+                    <button type="button" onClick={savePreparedStory} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#14b8a6] px-3 text-xs font-bold text-[#042f2e] transition-colors hover:bg-[#2dd4bf]"><Share2 size={15} />{isEn ? 'Save / Share image' : 'Görseli Kaydet / Paylaş'}</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

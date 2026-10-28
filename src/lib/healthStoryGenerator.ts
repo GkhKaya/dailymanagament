@@ -1,6 +1,7 @@
 import { HealthDataDTO } from '@/models/DashboardTypes';
 import pica from 'pica';
 import { translateBatch } from '@/lib/translation-service';
+import { deliverImageFile, type ImageDeliveryResult } from '@/lib/image-export';
 
 // Standard Instagram/WhatsApp Story Resolution (9:16)
 const BASE_WIDTH = 1080;
@@ -151,7 +152,12 @@ export function formatEnglishAmount(rawAmount: string | undefined, translatedMap
     .replace(/\byar[ıi]m\b/gi, 'half');
 }
 
-export async function downloadHealthStory(data: HealthDataDTO, lang: 'tr' | 'en' = 'tr') {
+export type HealthStoryImage = {
+  blob: Blob;
+  filename: string;
+};
+
+export async function createHealthStoryImage(data: HealthDataDTO, lang: 'tr' | 'en' = 'tr'): Promise<HealthStoryImage> {
   const isEn = lang === 'en';
 
   // ── TRANSLATE FOODS & PORTIONS TO ENGLISH VIA API ──
@@ -661,16 +667,62 @@ export async function downloadHealthStory(data: HealthDataDTO, lang: 'tr' | 'en'
   );
   ctx.textAlign = 'left';
 
-  // ── 9. RESAMPLE TO 1080x1920 WITH PICA & DOWNLOAD IMAGE ──
+  // ── 9. RESAMPLE TO 1080x1920 WITH PICA ──
   const outputCanvas = document.createElement('canvas');
   outputCanvas.width = BASE_WIDTH;
   outputCanvas.height = BASE_HEIGHT;
 
   await pica().resize(canvas, outputCanvas, { quality: 3 });
 
-  const link = document.createElement('a');
   const dateStr = (data.date || new Date().toISOString()).slice(0, 10);
-  link.download = isEn ? `dailym-nutrition-${dateStr}-story.png` : `dailym-beslenme-${dateStr}-story.png`;
-  link.href = outputCanvas.toDataURL('image/png');
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    outputCanvas.toBlob((result) => {
+      if (result) resolve(result);
+      else reject(new Error('Hikaye görseli PNG olarak oluşturulamadı.'));
+    }, 'image/png');
+  });
+
+  return {
+    blob,
+    filename: isEn ? `dailym-nutrition-${dateStr}-story.png` : `dailym-beslenme-${dateStr}-story.png`,
+  };
+}
+
+function createStoryFile(story: HealthStoryImage) {
+  return new File([story.blob], story.filename, { type: 'image/png' });
+}
+
+export function canShareHealthStoryImage(story: HealthStoryImage) {
+  if (typeof navigator === 'undefined' || typeof navigator.canShare !== 'function' || typeof navigator.share !== 'function') return false;
+  try {
+    return navigator.canShare({ files: [createStoryFile(story)] });
+  } catch {
+    return false;
+  }
+}
+
+export function downloadHealthStoryImage(story: HealthStoryImage) {
+  const url = URL.createObjectURL(story.blob);
+  const link = document.createElement('a');
+  link.download = story.filename;
+  link.href = url;
+  link.style.display = 'none';
+  document.body.appendChild(link);
   link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+export async function shareHealthStoryImage(story: HealthStoryImage): Promise<ImageDeliveryResult> {
+  const file = createStoryFile(story);
+  return deliverImageFile(file, {
+    canShareFiles: (files) => typeof navigator.canShare === 'function' && navigator.canShare({ files }),
+    shareFiles: (files) => navigator.share({ files, title: 'DailyM Story' }),
+    downloadFile: () => downloadHealthStoryImage(story),
+  });
+}
+
+export async function downloadHealthStory(data: HealthDataDTO, lang: 'tr' | 'en' = 'tr') {
+  const story = await createHealthStoryImage(data, lang);
+  downloadHealthStoryImage(story);
 }
