@@ -51,18 +51,31 @@ export async function addAccountAction(data: { name: string; type: any; balance:
   }
 }
 
-export async function updateAccountAction(id: string, data: { name: string; balance: number; credit_card_details?: { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number } }) {
+export async function updateAccountAction(id: string, data: {
+  name: string;
+  balance: number;
+  credit_card_details?: { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number };
+  // When set, the balance/debt difference is also recorded as an income or expense transaction.
+  recordDifference?: { type: 'income' | 'expense'; category_id?: string; description?: string };
+}) {
   try {
     await connectDB();
     const userId = await getUserId();
-    
+
     const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(id) as any, user_id: userId as any });
     if (!account) {
       return { success: false, error: "Hesap bulunamadı." };
     }
 
     account.name = data.name;
-    
+
+    const isCreditCard = account.type === 'credit_card' && !!account.credit_card_details;
+    const previousValue = isCreditCard
+      ? getCreditCardDebt({ balance: parseFloat(account.balance.toString()), credit_card_details: { current_debt: account.credit_card_details!.current_debt ? parseFloat(account.credit_card_details!.current_debt.toString()) : null } })
+      : parseFloat(account.balance.toString());
+    const nextValue = isCreditCard ? (data.credit_card_details?.current_debt ?? data.balance) : data.balance;
+    const difference = Math.round(Math.abs(nextValue - previousValue) * 100) / 100;
+
     if (account.type === 'credit_card' && account.credit_card_details) {
       const debt = data.credit_card_details?.current_debt ?? data.balance;
       account.credit_card_details.current_debt = mongoose.Types.Decimal128.fromString(debt.toString());
@@ -75,6 +88,27 @@ export async function updateAccountAction(id: string, data: { name: string; bala
     }
 
     await account.save();
+
+    // The balance is already set directly above, so the transaction is only a record of the change.
+    if (data.recordDifference && difference > 0 && ['income', 'expense'].includes(data.recordDifference.type)) {
+      const categoryId = data.recordDifference.category_id && mongoose.Types.ObjectId.isValid(data.recordDifference.category_id)
+        ? new mongoose.Types.ObjectId(data.recordDifference.category_id)
+        : null;
+      const fallbackDescription = data.recordDifference.type === 'expense'
+        ? `${account.name} harcaması`
+        : `${account.name} geliri`;
+      await Transaction.create({
+        user_id: userId,
+        type: data.recordDifference.type === 'expense' ? TransactionType.EXPENSE : TransactionType.INCOME,
+        amount: mongoose.Types.Decimal128.fromString(difference.toString()),
+        date: new Date(),
+        description: data.recordDifference.description?.trim() || fallbackDescription,
+        category_id: categoryId,
+        account_id: account._id,
+        source: TransactionSource.ACCOUNT_EDIT
+      });
+    }
+
     revalidatePath('/dashboard');
     console.log("Account update result: Success");
     

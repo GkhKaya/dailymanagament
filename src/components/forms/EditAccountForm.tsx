@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText } from 'lucide-react';
+import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -26,6 +26,12 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
     paymentAccountId, setPaymentAccountId,
     isExternalPayment, setIsExternalPayment,
     isLoading,
+    hasDifference, differenceAmount, differenceType, suggestedDifferenceType,
+    setDifferenceTypeOverride,
+    recordDifference, setRecordDifference,
+    differenceCategoryId, setDifferenceCategoryId,
+    differenceDescription, setDifferenceDescription,
+    differenceCategories,
     handleUpdate, handleDelete, handlePayment
   } = useEditAccountViewModel(initialData, onSuccess);
   const isCreditCard = accountType === 'credit';
@@ -168,6 +174,54 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
               />
             </div>
           </div>
+        )}
+
+        {hasDifference && (
+          <section className="flex flex-col gap-3 rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] p-4 sm:p-5 animate-fade-in">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-white">
+                  {isEn ? 'Balance changed' : 'Bakiye değişti'}
+                </h3>
+                <p className="text-xs leading-5 text-[var(--on-surface-variant)]">
+                  {isEn
+                    ? `Difference: ${currencySymbol}${differenceAmount.toLocaleString('en-US')}. Record it as ${suggestedDifferenceType}?`
+                    : `Fark: ${differenceAmount.toLocaleString('tr-TR')} ${currencySymbol}. ${suggestedDifferenceType === 'expense' ? 'Harcama' : 'Gelir'} olarak eklensin mi?`}
+                </p>
+              </div>
+              <span className={`shrink-0 text-base font-bold ${differenceType === 'expense' ? 'text-red-400' : 'text-emerald-400'}`}>
+                {differenceType === 'expense' ? '−' : '+'}{differenceAmount.toLocaleString(isEn ? 'en-US' : 'tr-TR')} {currencySymbol}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => { setRecordDifference(true); setDifferenceTypeOverride('expense'); }} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-2 text-sm font-medium transition-colors ${recordDifference && differenceType === 'expense' ? 'border-red-400 bg-red-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
+                <ArrowDownCircle size={16} />{isEn ? 'Expense' : 'Gider'}
+              </button>
+              <button type="button" onClick={() => { setRecordDifference(true); setDifferenceTypeOverride('income'); }} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-2 text-sm font-medium transition-colors ${recordDifference && differenceType === 'income' ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
+                <ArrowUpCircle size={16} />{isEn ? 'Income' : 'Gelir'}
+              </button>
+              <button type="button" onClick={() => setRecordDifference(false)} className={`min-h-11 rounded-xl border px-2 text-sm font-medium transition-colors ${!recordDifference ? 'border-white/40 bg-white/15 text-white' : 'border-[rgba(255,255,255,0.1)] text-[var(--on-surface-variant)] hover:text-white'}`}>
+                {isEn ? "Don't record" : 'Ekleme'}
+              </button>
+            </div>
+
+            {recordDifference && (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <select value={differenceCategoryId} onChange={(event) => setDifferenceCategoryId(event.target.value)} className="min-h-11 w-full appearance-none rounded-xl border border-[rgba(255,255,255,0.1)] bg-[var(--surface-container)] px-3 text-sm text-white focus:border-[var(--inverse-primary)] focus:outline-none">
+                  <option value="">{isEn ? 'No category' : 'Kategori (opsiyonel)'}</option>
+                  {differenceCategories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+                <input
+                  type="text"
+                  value={differenceDescription}
+                  onChange={(event) => setDifferenceDescription(event.target.value)}
+                  placeholder={isEn ? 'Description (optional)' : 'Açıklama (opsiyonel)'}
+                  className="min-h-11 w-full rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 text-sm text-white focus:border-[var(--inverse-primary)] focus:outline-none"
+                />
+              </div>
+            )}
+          </section>
         )}
 
         {isCreditCard && (
