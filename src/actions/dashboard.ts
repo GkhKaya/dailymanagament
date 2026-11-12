@@ -14,6 +14,7 @@ import { User } from "@/models/User";
 import { WeightLog } from "@/models/WeightLog";
 import { HealthDataDTO, FinanceDataDTO } from "@/models/DashboardTypes";
 import { syncSubscriptions } from "./sync";
+import { syncInstallments } from "@/lib/installment-sync";
 import { calculateBMR, calculateAge } from "@/lib/calories";
 
 async function getSession() {
@@ -260,6 +261,9 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
 
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Charge due installments first so the balances read below already include them.
+    await syncInstallments(userId);
 
     // Fetch all finance data in parallel for maximum performance
     const [_, accountsRaw, txRaw, categoriesRaw, subsRaw, debtsRaw, monthlyStats] = await Promise.all([

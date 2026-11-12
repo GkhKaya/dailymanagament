@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FinanceDataDTO } from "@/models/DashboardTypes";
-import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download, ArrowRightLeft } from "lucide-react";
+import { Plus, Home, ShoppingCart, DollarSign, Wifi, CreditCard, Wallet, Activity, Tag, Repeat, Download, ArrowRightLeft, CalendarClock } from "lucide-react";
 import { ExportPdfModal } from "@/components/ui/ExportPdfModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatCurrency } from "@/lib/i18n";
@@ -137,8 +137,11 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
             <button onClick={() => onOpenSheet && onOpenSheet('debts')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
               {isEn ? "Debts" : "Borçlar"} <CreditCard size={16} className="text-[var(--on-surface-variant)]" />
             </button>
-            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white col-span-2">
+            <button onClick={() => onOpenSheet && onOpenSheet('subscriptions')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
               {isEn ? "Subscriptions" : "Abonelikler"} <Repeat size={16} className="text-[var(--on-surface-variant)]" />
+            </button>
+            <button onClick={() => onOpenSheet && onOpenSheet('installments')} className="glass-card min-h-11 px-3 py-2 flex items-center justify-between gap-2 hover:bg-white/5 transition-colors text-xs sm:text-sm font-medium text-white">
+              {isEn ? "Installments" : "Taksitler"} <CalendarClock size={16} className="text-[var(--on-surface-variant)]" />
             </button>
           </div>
 

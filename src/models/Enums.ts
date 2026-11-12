@@ -54,6 +54,7 @@ export enum TransactionSource {
   MANUAL = 'manual',
   SUBSCRIPTION = 'subscription',
   ACCOUNT_EDIT = 'account_edit',
+  INSTALLMENT = 'installment',
   VOICE = 'voice',
 }
 

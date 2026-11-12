@@ -128,6 +128,7 @@
     },
     "fab": {
       "addMeal": "Yemek Ekle",
+      "addInstallment": "Taksitli Alışveriş",
       "addExercise": "Egzersiz",
       "addExpense": "Gider",
       "addIncome": "Gelir",

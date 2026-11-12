@@ -87,9 +87,21 @@ export function useEditAccountViewModel(initialData: { id: string, name: string,
       
       if (res.success) {
         if (payload.recordDifference) {
-          toast.success(differenceType === 'expense'
-            ? (isEn ? 'Difference saved as expense.' : 'Fark gider olarak eklendi.')
-            : (isEn ? 'Difference saved as income.' : 'Fark gelir olarak eklendi.'));
+          const recorded = 'recordedAmount' in res ? Number(res.recordedAmount) || 0 : 0;
+          const fmt = (n: number) => n.toLocaleString(isEn ? 'en-US' : 'tr-TR', { maximumFractionDigits: 2 });
+          if (recorded <= 0) {
+            toast(isEn ? 'No new difference to record; it was already entered.' : 'Kaydedilecek yeni fark yok; bu tutar zaten girilmiş.');
+          } else if (Math.abs(recorded - differenceAmount) > 0.009) {
+            // The saved value moved since this form opened (e.g. expenses added on this card meanwhile).
+            toast.success(isEn
+              ? `${fmt(recorded)} recorded as ${differenceType}. The rest of the ${fmt(differenceAmount)} change was already entered as transactions.`
+              : `${fmt(recorded)} ${differenceType === 'expense' ? 'gider' : 'gelir'} olarak eklendi. ${fmt(differenceAmount)} farkın geri kalanı zaten işlem olarak girilmişti.`,
+              { duration: 6000 });
+          } else {
+            toast.success(isEn
+              ? `${fmt(recorded)} recorded as ${differenceType}.`
+              : `${fmt(recorded)} ${differenceType === 'expense' ? 'gider' : 'gelir'} olarak eklendi.`);
+          }
         }
         onSuccess && onSuccess();
       } else {

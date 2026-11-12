@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Utensils, Activity, DollarSign, X, Camera, ArrowRightLeft } from "lucide-react";
+import { Plus, Utensils, Activity, DollarSign, X, Camera, ArrowRightLeft, CalendarClock } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DashboardMode } from "@/models/DashboardTypes";
 
@@ -60,6 +60,17 @@ export function FABMenu({ mode, onOpenSheet }: FABMenuProps) {
             <span className="font-medium text-sm">{t("dashboard.fab.transfer")}</span>
             <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
               <ArrowRightLeft size={16} />
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => handleAction('installments')}
+            className="pointer-events-auto flex items-center gap-3 bg-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.05)] backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          >
+            <span className="font-medium text-sm">{t("dashboard.fab.addInstallment")}</span>
+            <div className="w-8 h-8 rounded-full bg-[rgba(142,193,59,0.2)] flex items-center justify-center text-[#8ec13b]">
+              <CalendarClock size={16} />
             </div>
           </button>
 

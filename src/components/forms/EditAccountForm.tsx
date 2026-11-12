@@ -1,9 +1,10 @@
 import React from 'react';
-import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { Wallet, CreditCard, Building2, Calendar, CreditCard as CardIcon, Landmark, ReceiptText, ArrowDownCircle, ArrowUpCircle, CalendarClock } from 'lucide-react';
 import { useEditAccountViewModel } from '@/viewmodels/useEditAccountViewModel';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getCurrencySymbol } from '@/lib/i18n';
+import { ManageInstallmentsForm } from './ManageInstallmentsForm';
 
 type AccountOption = { id: string; name: string; balance: number; type: string };
 type CreditCardDetails = { total_limit: number; current_debt: number; statement_day: number; payment_due_day: number };
@@ -278,6 +279,18 @@ export function EditAccountForm({ onSuccess, initialData, accounts = [] }: { onS
           </section>
         )}
       </div>
+
+      {isCreditCard && initialData?.id && (
+        <details className="group rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)] p-4 sm:p-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-bold text-white">
+            <span className="flex items-center gap-2"><CalendarClock size={18} className="text-[var(--primary)]" />{isEn ? 'Installments on this card' : 'Bu karttaki taksitler'}</span>
+            <span className="text-xs font-medium text-[var(--on-surface-variant)] group-open:hidden">{isEn ? 'Show' : 'Göster'}</span>
+          </summary>
+          <div className="mt-4">
+            <ManageInstallmentsForm accounts={accounts} accountId={initialData.id} />
+          </div>
+        </details>
+      )}
 
       <div className="mt-2 flex flex-col gap-3">
         <button onClick={handleUpdate} disabled={isLoading} className="w-full py-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-colors flex items-center justify-center">

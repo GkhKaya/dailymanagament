@@ -90,7 +90,10 @@ export async function updateAccountAction(id: string, data: {
     await account.save();
 
     // The balance is already set directly above, so the transaction is only a record of the change.
+    // The difference is measured against the saved value, so entries already added on this account are not counted twice.
+    let recordedAmount = 0;
     if (data.recordDifference && difference > 0 && ['income', 'expense'].includes(data.recordDifference.type)) {
+      recordedAmount = difference;
       const categoryId = data.recordDifference.category_id && mongoose.Types.ObjectId.isValid(data.recordDifference.category_id)
         ? new mongoose.Types.ObjectId(data.recordDifference.category_id)
         : null;
@@ -112,7 +115,7 @@ export async function updateAccountAction(id: string, data: {
     revalidatePath('/dashboard');
     console.log("Account update result: Success");
     
-    return { success: true };
+    return { success: true, recordedAmount, previousValue };
   } catch (e: unknown) {
     const err = e as Error;
     return { success: false, error: err.message };
