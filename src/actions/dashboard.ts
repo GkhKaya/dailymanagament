@@ -330,7 +330,8 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
         relatedAccountName: tx.related_account_id?.name,
         relatedAccountId: tx.related_account_id?._id?.toString(),
         source: tx.source,
-        createdAt: tx.created_at ? new Date(tx.created_at).toISOString() : undefined
+        createdAt: tx.created_at ? new Date(tx.created_at).toISOString() : undefined,
+        flow: tx.flow ?? null
       };
     });
 
@@ -355,7 +356,12 @@ export async function getFinanceDataAction(): Promise<{ success: boolean; data?:
       direction: debt.direction,
       amount: parseFloat(debt.original_amount.toString()),
       remainingAmount: parseFloat(debt.remaining_amount.toString()),
-      dueDate: debt.due_date ? new Date(debt.due_date).toISOString().split("T")[0] : ""
+      dueDate: debt.due_date ? new Date(debt.due_date).toISOString().split("T")[0] : "",
+      payments: (debt.payments || []).map((p: any) => ({
+        date: new Date(p.date).toISOString(),
+        amount: parseFloat(p.amount.toString()),
+        note: p.note ?? null
+      }))
     }));
 
     let monthlyIncome = 0;

@@ -13,6 +13,7 @@ export interface ITransaction extends Document {
   is_external_payment: boolean;
   show_as_expense: boolean;
   affects_account_balance: boolean;
+  flow?: 'in' | 'out' | null; // debt payments: which way money moved on account_id
   source: TransactionSource;
   subscription_id?: mongoose.Types.ObjectId | null;
   debt_id?: mongoose.Types.ObjectId | null;
@@ -36,6 +37,7 @@ const TransactionSchema: Schema = new Schema({
   is_external_payment: { type: Boolean, default: false },
   show_as_expense: { type: Boolean, default: false },
   affects_account_balance: { type: Boolean, default: true },
+  flow: { type: String, enum: ['in', 'out', null], default: null },
   source: { 
     type: String, 
     enum: Object.values(TransactionSource), 

@@ -8,6 +8,7 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
   const [personName, setPersonName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [accountId, setAccountId] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
   
@@ -26,7 +27,8 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
         direction: debtDirection,
         amount: parseFloat(amount),
         date: new Date().toISOString(), // Created date
-        due_date: dueDate || undefined
+        due_date: dueDate || undefined,
+        account_id: accountId || undefined
       });
 
       if (res.success) {
@@ -47,6 +49,7 @@ export function useManageDebtsViewModel(onSuccess: () => void) {
     personName, setPersonName,
     amount, setAmount,
     dueDate, setDueDate,
+    accountId, setAccountId,
     isLoading,
     handleAdd
   };

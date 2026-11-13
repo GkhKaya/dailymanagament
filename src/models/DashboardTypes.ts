@@ -85,6 +85,7 @@ export interface TransactionInfo {
   relatedAccountId?: string;
   source?: string;
   createdAt?: string;
+  flow?: 'in' | 'out' | null; // debt transactions: money into or out of the account
 }
 
 export interface CategoryInfo {
@@ -102,6 +103,7 @@ export interface DebtInfo {
   amount: number;
   remainingAmount: number;
   dueDate: string;
+  payments?: { date: string; amount: number; note?: string | null }[];
 }
 
 export interface SubscriptionInfo {

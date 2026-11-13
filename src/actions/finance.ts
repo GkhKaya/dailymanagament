@@ -8,12 +8,13 @@ import { Account } from "@/models/Account";
 import { Transaction } from "@/models/Transaction";
 import { Category } from "@/models/Category";
 import { Debt } from "@/models/Debt";
-import { DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
+import { DebtDirection, DebtStatus, TransactionSource, TransactionType } from "@/models/Enums";
 import { Subscription } from "@/models/Subscription";
 import { User } from "@/models/User";
 import { revalidatePath } from "next/cache";
 import { applyTransactionEffect, getCreditCardDebt, validateTransfer } from "@/lib/finance-rules";
 import { localizeCategoryName } from "@/lib/category-helpers";
+import { applyDebtPayment, debtFlow, remainingAfterEdit, signedAmount } from "@/lib/debt-rules";
 
 // Helper to check session
 async function getUserId() {
@@ -312,6 +313,28 @@ export async function deleteTransactionAction(id: string) {
 
     // Revert account balance and, for transfers, restore the target account.
     const account = await Account.findOne({ _id: txn.account_id, user_id: userId });
+    if (txn.type === TransactionType.DEBT_PAYMENT && txn.flow) {
+      // Undo the money movement and, for a repayment, give the amount back to the debt.
+      const amount = parseFloat(txn.amount.toString());
+      if (account) {
+        account.balance = mongoose.Types.Decimal128.fromString((parseFloat(account.balance.toString()) - signedAmount(txn.flow, amount)).toString());
+        await account.save();
+      }
+      if (txn.debt_id) {
+        const debt = await Debt.findOne({ _id: txn.debt_id, user_id: userId });
+        const payment = debt?.payments.find((p: { transaction_id?: mongoose.Types.ObjectId | null }) => p.transaction_id?.toString() === txn._id.toString());
+        if (debt && payment) {
+          debt.payments = debt.payments.filter((p: { transaction_id?: mongoose.Types.ObjectId | null }) => p.transaction_id?.toString() !== txn._id.toString());
+          const remaining = Math.round((parseFloat(debt.remaining_amount.toString()) + amount) * 100) / 100;
+          debt.remaining_amount = mongoose.Types.Decimal128.fromString(remaining.toString());
+          debt.status = debt.payments.length > 0 ? DebtStatus.PARTIALLY_PAID : DebtStatus.OPEN;
+          await debt.save();
+        }
+      }
+      await Transaction.deleteOne({ _id: txn._id });
+      revalidatePath('/dashboard');
+      return { success: true };
+    }
     if (account) {
       if (txn.type === TransactionType.TRANSFER && txn.related_account_id) {
         account.balance = mongoose.Types.Decimal128.fromString((parseFloat(account.balance.toString()) + parseFloat(txn.amount.toString())).toString());
@@ -355,6 +378,9 @@ export async function updateTransactionAction(id: string, data: { type: any; amo
     }
     if (txn.type === TransactionType.TRANSFER || data.type === TransactionType.TRANSFER) {
       return { success: false, error: 'Transfer işlemleri bu ekrandan düzenlenemez.' };
+    }
+    if (txn.type === TransactionType.DEBT_PAYMENT || txn.type === TransactionType.CREDIT_CARD_PAYMENT) {
+      return { success: false, error: 'Bu işlem borç/kart ekranından yönetilir; burada yalnızca silinebilir.' };
     }
 
     const oldAmount = parseFloat(txn.amount.toString());
@@ -493,21 +519,102 @@ export async function deleteCategoryAction(id: string) {
 }
 
 // ── DEBTS ──
-export async function addDebtAction(data: { person_name: string; direction: string; amount: number; date: string; due_date?: string }) {
+const DEBT_ACCOUNT_TYPES = ['cash', 'bank_account', 'debit_card'];
+
+/** Moves money on an account for a debt event and records it as a debt transaction (not income/expense). */
+async function recordDebtMoney(userId: string, accountId: string, debtId: mongoose.Types.ObjectId, flow: 'in' | 'out', amount: number, date: Date, description: string) {
+  const account = await Account.findOne({ _id: new mongoose.Types.ObjectId(accountId), user_id: userId, type: { $in: DEBT_ACCOUNT_TYPES } });
+  if (!account) throw new Error('Geçerli bir nakit veya banka hesabı seçin.');
+  const balance = parseFloat(account.balance.toString());
+  account.balance = mongoose.Types.Decimal128.fromString((balance + signedAmount(flow, amount)).toString());
+  await account.save();
+  return Transaction.create({
+    user_id: userId,
+    type: TransactionType.DEBT_PAYMENT,
+    amount: mongoose.Types.Decimal128.fromString(amount.toString()),
+    date,
+    description,
+    account_id: account._id,
+    debt_id: debtId,
+    flow,
+    show_as_expense: false,
+    affects_account_balance: true,
+    source: TransactionSource.MANUAL
+  });
+}
+
+export async function addDebtAction(data: { person_name: string; direction: string; amount: number; date: string; due_date?: string; account_id?: string }) {
   try {
     await connectDB();
     const userId = await getUserId();
-    await Debt.create({
+    const amount = Number(data.amount);
+    if (!Number.isFinite(amount) || amount <= 0) return { success: false, error: 'Tutar 0’dan büyük olmalıdır.' };
+    const direction = data.direction === DebtDirection.TAKEN ? DebtDirection.TAKEN : DebtDirection.GIVEN;
+
+    const debt = await Debt.create({
       user_id: userId,
       person_name: data.person_name,
-      direction: data.direction,
-      original_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
-      remaining_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
+      direction,
+      original_amount: mongoose.Types.Decimal128.fromString(amount.toString()),
+      remaining_amount: mongoose.Types.Decimal128.fromString(amount.toString()),
       date: new Date(data.date),
       due_date: data.due_date ? new Date(data.due_date) : null,
       status: DebtStatus.OPEN
     });
+
+    // Lending takes the money out of the chosen account; borrowing puts it in.
+    if (data.account_id) {
+      try {
+        const flow = debtFlow(direction, 'open');
+        await recordDebtMoney(userId, data.account_id, debt._id, flow, amount, new Date(),
+          direction === DebtDirection.GIVEN ? `${data.person_name} kişisine borç verildi` : `${data.person_name} kişisinden borç alındı`);
+      } catch (moneyError) {
+        await Debt.deleteOne({ _id: debt._id });
+        throw moneyError;
+      }
+    }
+
+    revalidatePath('/dashboard');
     return { success: true };
+  } catch (e: unknown) {
+    const err = e as Error;
+    return { success: false, error: err.message };
+  }
+}
+
+/** Records a (partial) payment on a debt and moves the money on the chosen account. */
+export async function payDebtAction(data: { debt_id: string; amount: number; account_id?: string; date?: string; note?: string }) {
+  try {
+    await connectDB();
+    const userId = await getUserId();
+    const debt = await Debt.findOne({ _id: new mongoose.Types.ObjectId(data.debt_id), user_id: userId });
+    if (!debt) return { success: false, error: 'Borç bulunamadı.' };
+
+    const remaining = parseFloat(debt.remaining_amount.toString());
+    const amount = Math.round(Number(data.amount) * 100) / 100;
+    const next = applyDebtPayment(remaining, amount);
+    const date = data.date ? new Date(data.date) : new Date();
+
+    let transactionId: mongoose.Types.ObjectId | null = null;
+    if (data.account_id) {
+      const flow = debtFlow(debt.direction as 'given' | 'taken', 'payment');
+      const txn = await recordDebtMoney(userId, data.account_id, debt._id, flow, amount, date,
+        debt.direction === DebtDirection.GIVEN ? `${debt.person_name} borç ödemesi yaptı` : `${debt.person_name} kişisine borç ödendi`);
+      transactionId = txn._id;
+    }
+
+    debt.payments.push({
+      date,
+      amount: mongoose.Types.Decimal128.fromString(amount.toString()),
+      transaction_id: transactionId,
+      note: data.note?.trim() || null
+    });
+    debt.remaining_amount = mongoose.Types.Decimal128.fromString(next.remaining.toString());
+    debt.status = next.status === 'closed' ? DebtStatus.CLOSED : DebtStatus.PARTIALLY_PAID;
+    await debt.save();
+
+    revalidatePath('/dashboard');
+    return { success: true, remaining: next.remaining, closed: next.status === 'closed' };
   } catch (e: unknown) {
     const err = e as Error;
     return { success: false, error: err.message };
@@ -593,19 +700,17 @@ export async function updateDebtAction(id: string, data: { person_name: string; 
   try {
     await connectDB();
     const userIdStr = await getUserId();
-    const updated = await Debt.findOneAndUpdate(
-      { _id: new mongoose.Types.ObjectId(id), user_id: userIdStr },
-      { 
-        $set: { 
-          person_name: data.person_name,
-          original_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
-          remaining_amount: mongoose.Types.Decimal128.fromString(data.amount.toString()),
-          date: new Date(data.date),
-          due_date: data.due_date ? new Date(data.due_date) : undefined
-        } 
-      }
-    );
-    if (!updated) return { success: false, error: "Borç bulunamadı" };
+    const debt = await Debt.findOne({ _id: new mongoose.Types.ObjectId(id), user_id: userIdStr });
+    if (!debt) return { success: false, error: "Borç bulunamadı" };
+    // Payments already made still count against the new amount.
+    const paid = (debt.payments || []).reduce((sum: number, p: { amount: mongoose.Types.Decimal128 }) => sum + parseFloat(p.amount.toString()), 0);
+    const remaining = remainingAfterEdit(Number(data.amount), paid);
+    debt.person_name = data.person_name;
+    debt.original_amount = mongoose.Types.Decimal128.fromString(data.amount.toString());
+    debt.remaining_amount = mongoose.Types.Decimal128.fromString(remaining.toString());
+    debt.status = remaining === 0 ? DebtStatus.CLOSED : paid > 0 ? DebtStatus.PARTIALLY_PAID : DebtStatus.OPEN;
+    if (data.due_date) debt.due_date = new Date(data.due_date);
+    await debt.save();
     return { success: true };
   } catch (e: unknown) {
     const err = e as Error;

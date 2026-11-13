@@ -174,7 +174,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
     if (activeSheet?.startsWith('editDebt_')) {
       const id = activeSheet.replace('editDebt_', '');
       const data = financeData?.debts.find(d => d.id === id);
-      return <EditDebtForm onClose={() => setActiveSheet('debts')} onSuccess={handleSuccess} initialData={data} />;
+      return <EditDebtForm onClose={() => setActiveSheet('debts')} onSuccess={handleSuccess} initialData={data} accounts={financeData?.accounts || []} />;
     }
 
     switch (activeSheet) {
@@ -196,7 +196,7 @@ export function ProfileView({ initialUser, financeData }: { initialUser: { name:
         />
       );
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
-      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editDebt_${id}`) }} debts={financeData?.debts || []} />;
+      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editDebt_${id}`) }} debts={financeData?.debts || []} accounts={financeData?.accounts || []} />;
       case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} onOpenEdit={(id) => { setActiveSheet(`editSubscription_${id}`) }} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       case 'email': return <UpdateEmailForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialEmail={initialUser.email} />;
       case 'username': return <UpdateUsernameForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} initialUsername={initialUser.name} />;

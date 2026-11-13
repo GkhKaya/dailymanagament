@@ -9,9 +9,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { getCurrencySymbol, formatCurrency } from '@/lib/i18n';
 
 export function ManageDebtsForm({ 
-  onClose, onSuccess, onOpenEdit, debts 
+  onClose, onSuccess, onOpenEdit, debts, accounts = []
 }: { 
-  onClose: () => void, onSuccess: () => void, onOpenEdit?: (id: string) => void, debts: { id: string, personName: string, amount: number, remainingAmount: number, direction: string, dueDate: string }[] 
+  onClose: () => void, onSuccess: () => void, onOpenEdit?: (id: string) => void, debts: { id: string, personName: string, amount: number, remainingAmount: number, direction: string, dueDate: string }[],
+  accounts?: { id: string; name: string; type?: string }[]
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const { locale, isAbroad: userAbroad } = useTranslation();
@@ -23,6 +24,7 @@ export function ManageDebtsForm({
     personName, setPersonName,
     amount, setAmount,
     dueDate, setDueDate,
+    accountId, setAccountId,
     isLoading, handleAdd
   } = useManageDebtsViewModel(() => {
     setIsAdding(false);
@@ -30,6 +32,8 @@ export function ManageDebtsForm({
   });
 
   // Compute totals
+  const moneyAccounts = accounts.filter(a => ['cash', 'bank_account', 'debit_card'].includes(a.type || ''));
+
   const totalGiven = debts.filter(d => d.direction === DebtDirection.GIVEN).reduce((acc, curr) => acc + (curr.remainingAmount || curr.amount), 0);
   const totalTaken = debts.filter(d => d.direction === DebtDirection.TAKEN).reduce((acc, curr) => acc + (curr.remainingAmount || curr.amount), 0);
 
@@ -70,10 +74,15 @@ export function ManageDebtsForm({
                       <span className="text-caption text-[var(--on-surface-variant)]">
                         {isEn ? "Due Date: " : "Son Ödeme: "}{dDate}
                       </span>
+                      {debt.remainingAmount < debt.amount && (
+                        <span className="text-xs text-[var(--on-surface-variant)]">
+                          {isEn ? `${formatCurrency(debt.amount - debt.remainingAmount, locale, userAbroad)} of ${formatCurrency(debt.amount, locale, userAbroad)} paid` : `${formatCurrency(debt.amount, locale, userAbroad)} borcun ${formatCurrency(debt.amount - debt.remainingAmount, locale, userAbroad)} ödendi`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className={`text-body font-bold ${isLent ? 'text-[#4ade80]' : 'text-orange-400'}`}>
-                    {isLent ? '+' : '-'}{formatCurrency(debt.remainingAmount || debt.amount, locale, userAbroad)}
+                    {isLent ? '+' : '-'}{formatCurrency(debt.remainingAmount, locale, userAbroad)}
                   </span>
                 </div>
               );
@@ -161,6 +170,25 @@ export function ManageDebtsForm({
                 />
               </div>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-caption text-[var(--on-surface-variant)] uppercase tracking-wider" htmlFor="debt-account">
+              {debtDirection === DebtDirection.GIVEN
+                ? (isEn ? "Paid from account" : "Hangi hesaptan verdin?")
+                : (isEn ? "Received into account" : "Hangi hesaba geldi?")}
+            </label>
+            <select id="debt-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full appearance-none rounded-xl border border-[rgba(255,255,255,0.1)] bg-[var(--surface-container)] py-3 px-4 text-body text-white focus:outline-none focus:border-[var(--inverse-primary)]">
+              <option value="">{isEn ? "Don't change any account" : "Hesaba işleme (sadece kayıt)"}</option>
+              {moneyAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+            {accountId && (
+              <p className="text-xs text-[var(--on-surface-variant)]">
+                {debtDirection === DebtDirection.GIVEN
+                  ? (isEn ? 'The amount is deducted from this account.' : 'Tutar bu hesaptan düşülür.')
+                  : (isEn ? 'The amount is added to this account.' : 'Tutar bu hesaba eklenir.')}
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 mt-4">

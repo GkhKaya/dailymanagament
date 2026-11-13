@@ -17,6 +17,7 @@ const AddWeightForm = dynamic(() => import("@/components/forms/AddWeightForm").t
 const AddAccountForm = dynamic(() => import("@/components/forms/AddAccountForm").then(m => m.AddAccountForm), { ssr: false });
 const EditAccountForm = dynamic(() => import("@/components/forms/EditAccountForm").then(m => m.EditAccountForm), { ssr: false });
 const ManageCategoriesForm = dynamic(() => import("@/components/forms/ManageCategoriesForm").then(m => m.ManageCategoriesForm), { ssr: false });
+const EditDebtForm = dynamic(() => import("@/components/forms/EditDebtForm").then(m => m.EditDebtForm), { ssr: false });
 const ManageDebtsForm = dynamic(() => import("@/components/forms/ManageDebtsForm").then(m => m.ManageDebtsForm), { ssr: false });
 const ManageInstallmentsForm = dynamic(() => import("@/components/forms/ManageInstallmentsForm").then(m => m.ManageInstallmentsForm), { ssr: false });
 const ManageSubscriptionsForm = dynamic(() => import("@/components/forms/ManageSubscriptionsForm").then(m => m.ManageSubscriptionsForm), { ssr: false });
@@ -113,7 +114,8 @@ export function DashboardSheetManager({
       case 'transferAccounts': return <TransferAccountsForm accounts={financeData?.accounts || []} currentDate={localDateStr} onSuccess={handleSuccess} onClose={() => setActiveSheet(null)} />;
       case 'editAccount': return <EditAccountForm onSuccess={handleSuccess} initialData={sheetPayload} accounts={financeData?.accounts || []} />;
       case 'categories': return <ManageCategoriesForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} categories={financeData?.categories || []} />;
-      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} />;
+      case 'debts': return <ManageDebtsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} debts={financeData?.debts || []} accounts={financeData?.accounts || []} onOpenEdit={(id) => { setSheetPayload(financeData?.debts?.find((d: { id: string }) => d.id === id) ?? null); setActiveSheet('editDebt'); }} />;
+      case 'editDebt': return <EditDebtForm onClose={() => setActiveSheet('debts')} onSuccess={handleSuccess} initialData={sheetPayload} accounts={financeData?.accounts || []} />;
       case 'installments': return <ManageInstallmentsForm accounts={financeData?.accounts || []} categories={financeData?.categories || []} onChanged={refreshData} />;
       case 'subscriptions': return <ManageSubscriptionsForm onClose={() => setActiveSheet(null)} onSuccess={handleSuccess} subscriptions={financeData?.subscriptions || []} categories={financeData?.categories || []} accounts={financeData?.accounts || []} />;
       default: return null;
@@ -136,6 +138,7 @@ export function DashboardSheetManager({
       case 'editAccount': return isEn ? 'Edit Account' : 'Hesabı Düzenle';
       case 'categories': return isEn ? 'Category Management' : 'Kategori Yönetimi';
       case 'debts': return isEn ? 'Debt Management' : 'Borç Yönetimi';
+      case 'editDebt': return isEn ? 'Debt / Receivable' : 'Borç / Alacak';
       case 'installments': return isEn ? 'Installment Purchases' : 'Taksitli Alışverişler';
       case 'subscriptions': return isEn ? 'Subscriptions' : 'Abonelikler';
       default: return '';

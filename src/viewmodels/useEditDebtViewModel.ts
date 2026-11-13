@@ -1,10 +1,10 @@
 import { useState, FormEvent } from 'react';
 import toast from 'react-hot-toast';
-import { updateDebtAction, deleteDebtAction } from '@/actions/finance';
+import { updateDebtAction, deleteDebtAction, payDebtAction } from '@/actions/finance';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export function useEditDebtViewModel(
-  initialData?: { id: string; personName: string; amount: number; dueDate?: string },
+  initialData?: { id: string; personName: string; amount: number; dueDate?: string; remainingAmount?: number; direction?: string },
   onSuccess?: () => void
 ) {
   const { locale, isAbroad } = useTranslation();
@@ -14,6 +14,44 @@ export function useEditDebtViewModel(
   const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
   const [dueDate, setDueDate] = useState(initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '');
   const [isLoading, setIsLoading] = useState(false);
+
+  const todayKey = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentAccountId, setPaymentAccountId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(todayKey());
+
+  const handlePayment = async () => {
+    if (!initialData) return;
+    const value = parseFloat(paymentAmount);
+    if (!Number.isFinite(value) || value <= 0) {
+      toast.error(isEn ? 'Enter the paid amount.' : 'Ödenen tutarı gir.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await payDebtAction({
+        debt_id: initialData.id,
+        amount: value,
+        account_id: paymentAccountId || undefined,
+        date: paymentDate ? new Date(`${paymentDate}T12:00:00`).toISOString() : undefined,
+      });
+      if (!res.success) {
+        toast.error(res.error || (isEn ? 'Payment could not be saved.' : 'Ödeme kaydedilemedi.'));
+        return;
+      }
+      const closed = 'closed' in res && res.closed;
+      toast.success(closed
+        ? (isEn ? 'Fully paid, debt closed.' : 'Borç tamamen ödendi ve kapandı.')
+        : (isEn ? 'Payment saved.' : 'Ödeme kaydedildi.'));
+      setPaymentAmount('');
+      if (onSuccess) onSuccess();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,6 +110,10 @@ export function useEditDebtViewModel(
     personName, setPersonName,
     amount, setAmount,
     dueDate, setDueDate,
+    paymentAmount, setPaymentAmount,
+    paymentAccountId, setPaymentAccountId,
+    paymentDate, setPaymentDate,
+    handlePayment,
     isLoading,
     handleUpdate,
     handleDelete

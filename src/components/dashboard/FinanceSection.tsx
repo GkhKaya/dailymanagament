@@ -232,7 +232,7 @@ export function FinanceSection({ data, isOverview = true, onOpenSheet, onShowAna
                 </div>
                 <div className="flex flex-col gap-[var(--space-1)]">
                   {groupData.txns.map((txn) => {
-                    const isIncome = txn.type === 'income';
+                    const isIncome = txn.type === 'income' || (txn.type === 'debt_payment' && txn.flow === 'in');
                     const isTransfer = txn.type === 'transfer';
                     const matchedCat = data.categories?.find(c => c.id === txn.categoryId);
                     const catColor = txn.categoryColor || matchedCat?.color || (isIncome ? '#22c55e' : '#f97316');
