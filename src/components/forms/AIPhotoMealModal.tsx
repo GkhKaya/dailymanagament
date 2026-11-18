@@ -59,7 +59,8 @@ export function AIPhotoMealModal({
   const [userDirective, setUserDirective] = useState("");
   const [items, setItems] = useState<AnalyzedItem[]>([]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null); // gallery / file picker
+  const cameraInputRef = useRef<HTMLInputElement>(null); // opens the camera directly
 
   if (!isOpen) return null;
 
@@ -210,6 +211,7 @@ export function AIPhotoMealModal({
     setImagePreview(null);
     setItems([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   return (
@@ -244,8 +246,17 @@ export function AIPhotoMealModal({
         <div className="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-5">
           
           {/* Hidden File Input */}
+          {/* Gallery: no `capture`, so phones show the photo library / file picker */}
           <input
             ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {/* Camera: `capture` opens the camera app directly */}
+          <input
+            ref={cameraInputRef}
             type="file"
             accept="image/*"
             capture="environment"
@@ -319,25 +330,27 @@ export function AIPhotoMealModal({
           {!imagePreview ? (
             /* Upload / Camera Dropzone */
             <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-[rgba(255,255,255,0.15)] hover:border-emerald-500/50 hover:bg-emerald-500/5 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all group"
+              className="border-2 border-dashed border-[rgba(255,255,255,0.15)] rounded-3xl p-8 flex flex-col items-center justify-center gap-4"
             >
               <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                 <Camera size={32} />
               </div>
               <div className="flex flex-col items-center text-center gap-1">
                 <span className="text-base font-semibold text-white">
-                  {isEn ? 'Upload or Take a Meal Photo' : 'Yemek Fotoğrafı Yükleyin veya Çekin'}
+                  {isEn ? 'Take or Choose a Meal Photo' : 'Yemek Fotoğrafı Çekin veya Seçin'}
                 </span>
                 <span className="text-xs text-[var(--on-surface-variant)] max-w-sm">
                   {isEn 
-                    ? 'Take a photo of your plate. AI will detect foods and estimate portions.' 
-                    : 'Kameranızla tabağınızın fotoğrafını çekin. Yapay zeka yiyecekleri tespit edip gramaj tahmini yapacaktır.'}
+                    ? 'Take a photo of your plate or pick one from your gallery. AI will detect foods and estimate portions.' 
+                    : 'Tabağınızın fotoğrafını çekin ya da galeriden seçin. Yapay zeka yiyecekleri tespit edip gramaj tahmini yapacaktır.'}
                 </span>
               </div>
-              <div className="flex items-center gap-3 mt-2">
-                <button type="button" className="px-4 py-2 rounded-xl bg-emerald-500 text-black text-xs font-bold flex items-center gap-2 hover:bg-emerald-400 transition-colors shadow-md">
-                  <Camera size={16} /> {isEn ? 'Take / Select Photo' : 'Fotoğraf Çek / Seç'}
+              <div className="mt-2 grid w-full max-w-sm grid-cols-2 gap-3">
+                <button type="button" onClick={() => cameraInputRef.current?.click()} className="min-h-12 px-4 py-2 rounded-xl bg-emerald-500 text-black text-sm font-bold flex items-center justify-center gap-2 hover:bg-emerald-400 transition-colors shadow-md">
+                  <Camera size={18} /> {isEn ? 'Take Photo' : 'Fotoğraf Çek'}
+                </button>
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-12 px-4 py-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-sm font-bold flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition-colors">
+                  <Upload size={18} /> {isEn ? 'From Gallery' : 'Galeriden Seç'}
                 </button>
               </div>
             </div>
